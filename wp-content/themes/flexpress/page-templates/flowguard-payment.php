@@ -255,26 +255,426 @@ document.addEventListener('DOMContentLoaded', function() {
     window.flowguardConfig = {
         shopId: '<?php echo esc_js($flowguard_settings['shop_id'] ?? ''); ?>',
         environment: '<?php echo esc_js($flowguard_settings['environment'] ?? 'sandbox'); ?>',
-        nonce: '<?php echo wp_create_nonce('flowguard_payment'); ?>'
+        nonce: '<?php echo wp_create_nonce('flowguard_nonce'); ?>'
     };
     
-    // Initialize Flowguard payment form
-    initFlowguardPayment(sessionId, {
-        theme: 'dark',
-        locale: 'en_US',
-        customStyles: {
-            primaryColor: '#ff6b6b',
-            backgroundColor: '#1a1a1a',
-            textColor: '#ffffff',
-            borderColor: '#333333',
-            borderRadius: '8px',
-            fontFamily: 'Inter, sans-serif'
-        }
+    // Check if session ID is valid
+    if (!sessionId || sessionId === '') {
+        console.error('No session ID provided');
+        document.getElementById('payment-error').textContent = 'Invalid payment session. Please try again.';
+        document.getElementById('payment-error').style.display = 'block';
+        return;
+    }
+    
+    // Show loading message
+    document.getElementById('payment-pending').textContent = 'Loading secure payment form...';
+    document.getElementById('payment-pending').style.display = 'block';
+    
+    // Load Flowguard SDK and initialize payment form
+    loadFlowguardSDK().then(() => {
+        initializePaymentForm(sessionId);
     }).catch(error => {
-        console.error('Error initializing payment form:', error);
+        console.error('Failed to load Flowguard SDK:', error);
         document.getElementById('payment-error').textContent = 'Error loading payment form. Please try again.';
         document.getElementById('payment-error').style.display = 'block';
+        document.getElementById('payment-pending').style.display = 'none';
     });
+    
+    // Load Flowguard SDK
+    function loadFlowguardSDK() {
+        return new Promise((resolve, reject) => {
+            // Check if SDK is already loaded
+            if (window.Flowguard) {
+                resolve();
+                return;
+            }
+            
+            const script = document.createElement('script');
+            script.src = 'https://flowguard.yoursafe.com/js/flowguard.js';
+            script.onload = () => {
+                console.log('Flowguard SDK loaded successfully');
+                resolve();
+            };
+            script.onerror = (error) => {
+                console.error('Failed to load Flowguard SDK:', error);
+                reject(error);
+            };
+            document.head.appendChild(script);
+        });
+    }
+    
+    // Initialize payment form
+    function initializePaymentForm(sessionId) {
+        try {
+            const container = document.getElementById('flowguard-payment-form');
+            if (!container) {
+                throw new Error('Payment container not found');
+            }
+            
+            // Debug: Check what Flowguard object contains
+            console.log('Flowguard object:', window.Flowguard);
+            console.log('Flowguard type:', typeof window.Flowguard);
+            
+            // Flowguard is the constructor itself, not an object with methods
+            if (typeof window.Flowguard !== 'function') {
+                throw new Error('Flowguard is not a constructor function');
+            }
+            
+            // Create target elements with loading indicators
+            container.innerHTML = `
+                <div class="flowguard-form-fields">
+                    <div class="field-group">
+                        <label>Card Number</label>
+                        <div id="card-number-element" class="flowguard-field-container">
+                            <div class="field-loading">
+                                <div class="loading-spinner"></div>
+                                <span>Loading secure field...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>Expiry Date</label>
+                        <div id="exp-date-element" class="flowguard-field-container">
+                            <div class="field-loading">
+                                <div class="loading-spinner"></div>
+                                <span>Loading secure field...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>Cardholder Name</label>
+                        <div id="cardholder-element" class="flowguard-field-container">
+                            <div class="field-loading">
+                                <div class="loading-spinner"></div>
+                                <span>Loading secure field...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>CVV</label>
+                        <div id="cvv-element" class="flowguard-field-container">
+                            <div class="field-loading">
+                                <div class="loading-spinner"></div>
+                                <span>Loading secure field...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>Price</label>
+                        <div id="price-element" class="flowguard-field-container">
+                            <div class="field-loading">
+                                <div class="loading-spinner"></div>
+                                <span>Loading secure field...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="submit-payment" class="btn btn-primary btn-lg w-100 mt-3" disabled>
+                        <i class="fas fa-spinner fa-spin me-2"></i>
+                        Loading Payment Form...
+                    </button>
+                </div>
+                <style>
+                    .flowguard-form-fields {
+                        max-width: 500px;
+                        margin: 0 auto;
+                        padding: 2rem;
+                    }
+                    .field-group {
+                        margin-bottom: 1rem;
+                    }
+                    .field-group label {
+                        color: #ffffff;
+                        font-weight: 500;
+                        font-size: 0.9rem;
+                        display: block;
+                        margin-bottom: 0.5rem;
+                    }
+                    .flowguard-field-container {
+                        position: relative;
+                        min-height: 40px;
+                        border: 1px solid #333;
+                        border-radius: 8px;
+                        background: rgba(255, 255, 255, 0.08);
+                        overflow: hidden;
+                    }
+                    
+                    .field-loading {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 0.5rem;
+                        height: 40px;
+                        color: #888;
+                        font-size: 0.8rem;
+                        transition: opacity 0.3s ease;
+                    }
+                    
+                    .loading-spinner {
+                        width: 16px;
+                        height: 16px;
+                        border: 2px solid rgba(255, 107, 107, 0.3);
+                        border-top: 2px solid #ff6b6b;
+                        border-radius: 50%;
+                        animation: spin 1s linear infinite;
+                    }
+                    
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                    
+                    .flowguard-field-container.loaded .field-loading {
+                        display: none;
+                    }
+                    
+                    .flowguard-field-container iframe {
+                        width: 100%;
+                        height: 40px;
+                        border: none;
+                        border-radius: 8px;
+                    }
+                    
+                    /* Special styling for price field */
+                    #price-element iframe {
+                        height: 40px !important;
+                        width: 100% !important;
+                        min-width: 200px;
+                    }
+                    
+                    /* Ensure price field container maintains proper dimensions */
+                    #price-element.flowguard-field-container {
+                        min-height: 40px;
+                        height: 40px;
+                    }
+                    
+                    @keyframes pulse {
+                        0% { transform: scale(1); }
+                        50% { transform: scale(1.02); }
+                        100% { transform: scale(1); }
+                    }
+                    
+                    .btn-primary {
+                        background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+                        border: none;
+                        border-radius: 12px;
+                        font-weight: 600;
+                        padding: 1rem 2rem;
+                        font-size: 1.1rem;
+                        transition: all 0.3s ease;
+                    }
+                    
+                    .btn-primary:hover:not(:disabled) {
+                        transform: translateY(-2px);
+                        box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
+                    }
+                    
+                    .btn-primary:disabled {
+                        opacity: 0.7;
+                        cursor: not-allowed;
+                    }
+                </style>
+            `;
+            
+            // Initialize Flowguard exactly as per documentation
+            const flowguard = new Flowguard({
+                sessionId: sessionId,
+                cardNumber: {
+                    target: '#card-number-element'
+                },
+                cvv: {
+                    target: '#cvv-element'
+                },
+                cardholder: {
+                    target: '#cardholder-element'
+                },
+                expDate: {
+                    target: '#exp-date-element'
+                },
+                price: {
+                    target: '#price-element'
+                }
+            });
+            
+            console.log('Flowguard initialized with field elements');
+            
+            // Wait for elements to be ready before enabling submit
+            const submitButton = document.getElementById('submit-payment');
+            if (submitButton) {
+                // Initially disable the button
+                submitButton.disabled = true;
+                submitButton.textContent = 'Loading payment form...';
+                
+                // Track which elements have loaded
+                const loadedElements = new Set();
+                const allElements = ['cardNumber', 'expDate', 'cardholder', 'cvv', 'price'];
+                
+                // Check if elements are ready periodically
+                const checkElementsReady = setInterval(() => {
+                    try {
+                        // Try to get mounted elements to see if they're ready
+                        const notMountedElements = flowguard.getNotMountedElements ? flowguard.getNotMountedElements() : [];
+                        
+                        // Check which elements are now loaded
+                        allElements.forEach(elementName => {
+                            if (!notMountedElements.includes(elementName) && !loadedElements.has(elementName)) {
+                                // Element just loaded, hide its loading spinner
+                                loadedElements.add(elementName);
+                                const elementId = elementName === 'cardNumber' ? 'card-number-element' :
+                                                elementName === 'expDate' ? 'exp-date-element' :
+                                                elementName === 'cardholder' ? 'cardholder-element' :
+                                                elementName === 'cvv' ? 'cvv-element' : 'price-element';
+                                
+                                const fieldContainer = document.getElementById(elementId);
+                                if (fieldContainer) {
+                                    fieldContainer.classList.add('loaded');
+                                    console.log('Field loaded:', elementName);
+                                }
+                            }
+                        });
+                        
+                        if (notMountedElements.length === 0) {
+                            // All elements are mounted
+                            clearInterval(checkElementsReady);
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = '<i class="fas fa-credit-card me-2"></i>Complete Payment';
+                            console.log('All Flowguard elements are ready');
+                            
+                            // Add a subtle success animation
+                            submitButton.style.animation = 'pulse 0.5s ease-in-out';
+                            setTimeout(() => {
+                                submitButton.style.animation = '';
+                            }, 500);
+                        } else {
+                            console.log('Still loading elements:', notMountedElements);
+                        }
+                    } catch (error) {
+                        console.log('Error checking element readiness:', error);
+                        // Fallback: enable after 5 seconds
+                        setTimeout(() => {
+                            clearInterval(checkElementsReady);
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = '<i class="fas fa-credit-card me-2"></i>Complete Payment';
+                            console.log('Enabled submit button after timeout');
+                            
+                            // Hide all loading spinners
+                            document.querySelectorAll('.flowguard-field-container').forEach(container => {
+                                container.classList.add('loaded');
+                            });
+                        }, 5000);
+                    }
+                }, 200); // Check more frequently for smoother UX
+                
+                submitButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Submit button clicked');
+                    
+                    if (this.disabled) {
+                        console.log('Submit button is disabled, payment form not ready');
+                        return;
+                    }
+                    
+                    if (typeof flowguard.submit === 'function') {
+                        console.log('Calling flowguard.submit()');
+                        this.disabled = true;
+                        this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+                        
+                        try {
+                            flowguard.submit();
+                        } catch (error) {
+                            console.error('Error submitting payment:', error);
+                            this.disabled = false;
+                            this.innerHTML = '<i class="fas fa-credit-card me-2"></i>Complete Payment';
+                        }
+                    } else {
+                        console.error('flowguard.submit is not a function');
+                    }
+                });
+            }
+            
+            // Debug: Check what methods are available on the payment form
+            console.log('Payment form methods:', Object.getOwnPropertyNames(flowguard));
+            console.log('Payment form prototype methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(flowguard)));
+            
+            setupEventHandlers(flowguard);
+            
+            // Hide loading message
+            document.getElementById('payment-pending').style.display = 'none';
+            console.log('Flowguard payment form initialized successfully');
+            
+        } catch (error) {
+            console.error('Error initializing payment form:', error);
+            document.getElementById('payment-error').textContent = 'Error initializing payment form. Please try again.';
+            document.getElementById('payment-error').style.display = 'block';
+            document.getElementById('payment-pending').style.display = 'none';
+        }
+    }
+    
+    // Setup event handlers for payment form
+    function setupEventHandlers(paymentForm) {
+        // Check if the payment form has event handling methods
+        if (typeof paymentForm.on === 'function') {
+            // Setup event handlers using .on() method
+            paymentForm.on('payment.success', (event) => {
+                console.log('Payment successful:', event);
+                document.getElementById('payment-pending').style.display = 'none';
+                document.getElementById('payment-success').textContent = 'Payment successful! Redirecting...';
+                document.getElementById('payment-success').style.display = 'block';
+                
+                // Redirect to success page
+                setTimeout(() => {
+                    const successUrl = new URL(window.location.origin + '/payment-success');
+                    if (event.transactionId) {
+                        successUrl.searchParams.set('transaction_id', event.transactionId);
+                    }
+                    if (event.saleId) {
+                        successUrl.searchParams.set('sale_id', event.saleId);
+                    }
+                    window.location.href = successUrl.toString();
+                }, 2000);
+            });
+            
+            paymentForm.on('payment.error', (event) => {
+                console.error('Payment error:', event);
+                document.getElementById('payment-pending').style.display = 'none';
+                document.getElementById('payment-error').textContent = event.message || 'Payment failed. Please try again.';
+                document.getElementById('payment-error').style.display = 'block';
+            });
+            
+            paymentForm.on('payment.pending', (event) => {
+                console.log('Payment pending:', event);
+                document.getElementById('payment-pending').textContent = event.message || 'Payment is being processed...';
+            });
+        } else if (typeof paymentForm.addEventListener === 'function') {
+            // Try addEventListener if available
+            paymentForm.addEventListener('payment.success', (event) => {
+                console.log('Payment successful:', event);
+                document.getElementById('payment-pending').style.display = 'none';
+                document.getElementById('payment-success').textContent = 'Payment successful! Redirecting...';
+                document.getElementById('payment-success').style.display = 'block';
+                
+                setTimeout(() => {
+                    const successUrl = new URL(window.location.origin + '/payment-success');
+                    if (event.transactionId) {
+                        successUrl.searchParams.set('transaction_id', event.transactionId);
+                    }
+                    if (event.saleId) {
+                        successUrl.searchParams.set('sale_id', event.saleId);
+                    }
+                    window.location.href = successUrl.toString();
+                }, 2000);
+            });
+            
+            paymentForm.addEventListener('payment.error', (event) => {
+                console.error('Payment error:', event);
+                document.getElementById('payment-pending').style.display = 'none';
+                document.getElementById('payment-error').textContent = event.message || 'Payment failed. Please try again.';
+                document.getElementById('payment-error').style.display = 'block';
+            });
+        } else {
+            console.log('No event handling methods found on payment form');
+            console.log('Payment form will handle events internally');
+        }
+    }
     
     // Add keyboard shortcuts
     document.addEventListener('keydown', function(e) {

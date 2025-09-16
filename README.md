@@ -66,6 +66,8 @@ FlexPress now uses **Flowguard** as the primary payment processing system, repla
 
 #### Payment Pages
 
+- **Registration**: `/register-flowguard` - Cheeky user registration form
+- **Join Page**: `/join-flowguard` - Modern membership signup with Flowguard integration
 - **Payment Form**: `/flowguard-payment` - Embedded payment processing
 - **Success Page**: `/payment-success` - Payment completion confirmation
 - **Declined Page**: `/payment-declined` - Payment failure handling

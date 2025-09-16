@@ -134,8 +134,12 @@ function flexpress_enqueue_scripts_and_styles() {
     // Enqueue Bootstrap JS
     wp_enqueue_script('bootstrap-js', 'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js', array(), '5.1.3', true);
     
-    // Enqueue main JavaScript
-    wp_enqueue_script('flexpress-main', get_template_directory_uri() . '/assets/js/main.js', array('jquery'), wp_get_theme()->get('Version'), true);
+    // Enqueue main JavaScript (only on pages that need it)
+    if (!is_page_template('page-templates/register-flowguard.php') && 
+        !is_page_template('page-templates/join-flowguard.php') &&
+        !is_page_template('page-templates/flowguard-payment.php')) {
+        wp_enqueue_script('flexpress-main', get_template_directory_uri() . '/assets/js/main.js', array('jquery'), wp_get_theme()->get('Version'), true);
+    }
     
     // Enqueue hero video script on homepage
     if (is_page_template('page-templates/page-home.php')) {
@@ -190,8 +194,9 @@ function flexpress_enqueue_scripts_and_styles() {
     if (is_page_template('page-templates/flowguard-payment.php') || 
         is_page_template('page-templates/payment-success.php') || 
         is_page_template('page-templates/payment-declined.php') ||
-        is_page_template('page-templates/join.php')) {
-        wp_enqueue_script('flexpress-flowguard', get_template_directory_uri() . '/assets/js/flowguard.js', array('jquery'), wp_get_theme()->get('Version'), true);
+        is_page_template('page-templates/join-flowguard.php') ||
+        is_page_template('page-templates/register-flowguard.php')) {
+        wp_enqueue_script('flexpress-flowguard', get_template_directory_uri() . '/assets/js/flowguard.js', array('jquery'), wp_get_theme()->get('Version') . '.' . time(), true);
         
         // Get Flowguard settings
         $flowguard_settings = get_option('flexpress_flowguard_settings', []);
@@ -199,7 +204,7 @@ function flexpress_enqueue_scripts_and_styles() {
         wp_localize_script('flexpress-flowguard', 'flowguardConfig', array(
             'shopId' => $flowguard_settings['shop_id'] ?? '',
             'environment' => $flowguard_settings['environment'] ?? 'sandbox',
-            'nonce' => wp_create_nonce('flowguard_payment'),
+            'nonce' => wp_create_nonce('flowguard_nonce'),
             'ajaxUrl' => admin_url('admin-ajax.php')
         ));
     }
@@ -5439,14 +5444,14 @@ add_action('wp_ajax_flexpress_get_affiliate_dashboard_data', 'flexpress_get_affi
  * AJAX: Create Flowguard subscription
  */
 function flexpress_create_flowguard_subscription_ajax() {
-    check_ajax_referer('flowguard_payment', 'nonce');
+    check_ajax_referer('flowguard_nonce', 'nonce');
     
     if (!is_user_logged_in()) {
         wp_send_json_error('User not logged in');
     }
     
-    $plan_id = intval($_POST['plan_id'] ?? 0);
-    if (!$plan_id) {
+    $plan_id = sanitize_text_field($_POST['plan_id'] ?? '');
+    if (empty($plan_id)) {
         wp_send_json_error('Invalid plan ID');
     }
     
@@ -5466,7 +5471,7 @@ add_action('wp_ajax_nopriv_create_flowguard_subscription', 'flexpress_create_flo
  * AJAX: Create Flowguard PPV purchase
  */
 function flexpress_create_flowguard_ppv_purchase_ajax() {
-    check_ajax_referer('flowguard_payment', 'nonce');
+    check_ajax_referer('flowguard_nonce', 'nonce');
     
     if (!is_user_logged_in()) {
         wp_send_json_error('User not logged in');
@@ -5493,7 +5498,7 @@ add_action('wp_ajax_nopriv_create_flowguard_ppv_purchase', 'flexpress_create_flo
  * AJAX: Apply promo code
  */
 function flexpress_apply_promo_code_ajax() {
-    check_ajax_referer('flowguard_payment', 'nonce');
+    check_ajax_referer('flowguard_nonce', 'nonce');
     
     $promo_code = sanitize_text_field($_POST['promo_code'] ?? '');
     if (!$promo_code) {
@@ -5520,6 +5525,90 @@ function flexpress_apply_promo_code_ajax() {
 }
 add_action('wp_ajax_apply_promo_code', 'flexpress_apply_promo_code_ajax');
 add_action('wp_ajax_nopriv_apply_promo_code', 'flexpress_apply_promo_code_ajax');
+
+// AJAX handler for user registration
+add_action('wp_ajax_flexpress_register_user', 'flexpress_register_user_ajax');
+add_action('wp_ajax_nopriv_flexpress_register_user', 'flexpress_register_user_ajax');
+
+/**
+ * Handle user registration via AJAX
+ */
+function flexpress_register_user_ajax() {
+    // Verify nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'flowguard_nonce')) {
+        wp_send_json_error('Security check failed');
+    }
+    
+    // Sanitize input data
+    $username = sanitize_user($_POST['username']);
+    $email = sanitize_email($_POST['email']);
+    $password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
+    $promo_code = sanitize_text_field($_POST['promo_code'] ?? '');
+    $agree_terms = isset($_POST['agree_terms']) ? true : false;
+    
+    // Validation
+    if (empty($username) || empty($email) || empty($password)) {
+        wp_send_json_error('All fields are required');
+    }
+    
+    if ($password !== $confirm_password) {
+        wp_send_json_error('Passwords do not match');
+    }
+    
+    if (!$agree_terms) {
+        wp_send_json_error('You must agree to the terms and conditions');
+    }
+    
+    if (!is_email($email)) {
+        wp_send_json_error('Please enter a valid email address');
+    }
+    
+    if (strlen($password) < 8) {
+        wp_send_json_error('Password must be at least 8 characters long');
+    }
+    
+    // Check if username already exists
+    if (username_exists($username)) {
+        wp_send_json_error('Username already exists. Please choose another.');
+    }
+    
+    // Check if email already exists
+    if (email_exists($email)) {
+        wp_send_json_error('Email address already registered. Please sign in instead.');
+    }
+    
+    // Create user
+    $user_id = wp_create_user($username, $password, $email);
+    
+    if (is_wp_error($user_id)) {
+        wp_send_json_error($user_id->get_error_message());
+    }
+    
+    // Set display name
+    update_user_meta($user_id, 'flexpress_display_name', $username);
+    
+    // Store promo code if provided
+    if (!empty($promo_code)) {
+        update_user_meta($user_id, 'flexpress_promo_code', $promo_code);
+    }
+    
+    // Log activity
+    if (class_exists('FlexPress_Activity_Logger')) {
+        FlexPress_Activity_Logger::log_activity(
+            $user_id,
+            'user_registered',
+            'User registered via Flowguard registration form',
+            ['promo_code' => $promo_code]
+        );
+    }
+    
+    // Auto-login user
+    wp_set_current_user($user_id);
+    wp_set_auth_cookie($user_id);
+    
+    wp_send_json_success('Account created successfully!');
+}
 
 /**
  * Include ACF field groups

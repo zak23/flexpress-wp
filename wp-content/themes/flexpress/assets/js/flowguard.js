@@ -37,7 +37,7 @@ class FlexPressFlowguard {
             }
             
             const script = document.createElement('script');
-            script.src = 'https://flowguard.yoursafe.com/js/sdk/v1/flowguard.min.js';
+            script.src = 'https://flowguard.yoursafe.com/js/flowguard.js';
             script.onload = () => {
                 console.log('Flowguard SDK loaded successfully');
                 resolve();

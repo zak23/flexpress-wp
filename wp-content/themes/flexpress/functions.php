@@ -3609,6 +3609,92 @@ function flexpress_setup_support_pages() {
 }
 
 /**
+ * Create friends menu with default friend sites
+ * This function creates the "Our Friends" menu with partner sites
+ * and automatically organizes them in the Footer Friends Menu
+ */
+function flexpress_create_friends_menu() {
+    // Check if friends menu already exists
+    $friends_menu = wp_get_nav_menu_object('Footer Friends Menu');
+    
+    if (!$friends_menu) {
+        // Create the friends menu
+        $friends_menu_id = wp_create_nav_menu('Footer Friends Menu');
+        
+        if (is_wp_error($friends_menu_id)) {
+            error_log('Failed to create Footer Friends Menu: ' . $friends_menu_id->get_error_message());
+            return false;
+        }
+        
+        error_log('Created Footer Friends Menu with ID: ' . $friends_menu_id);
+    } else {
+        $friends_menu_id = $friends_menu->term_id;
+        error_log('Using existing Footer Friends Menu with ID: ' . $friends_menu_id);
+        
+        // Clear existing menu items
+        $menu_items = wp_get_nav_menu_items($friends_menu_id);
+        if ($menu_items) {
+            foreach ($menu_items as $menu_item) {
+                wp_delete_post($menu_item->ID, true);
+            }
+        }
+    }
+
+    // Default friend sites configuration
+    $friend_sites = array(
+        'Exclusv.Life' => array(
+            'url' => 'https://exclusv.life/',
+            'description' => 'Premium Adult Content Platform'
+        ),
+        'Adult Site Broker' => array(
+            'url' => 'https://adultsitebroker.com/',
+            'description' => 'Adult Website Brokerage Services'
+        ),
+        'Zak Ozbourne' => array(
+            'url' => 'https://zakozbourne.com/',
+            'description' => 'Adult Web Developer'
+        )
+    );
+
+    // Add friend sites to Friends Menu
+    $menu_order = 1;
+    foreach ($friend_sites as $site_name => $site_data) {
+        $menu_item_id = wp_update_nav_menu_item($friends_menu_id, 0, array(
+            'menu-item-title' => $site_name,
+            'menu-item-url' => $site_data['url'],
+            'menu-item-type' => 'custom',
+            'menu-item-status' => 'publish',
+            'menu-item-position' => $menu_order,
+            'menu-item-target' => '_blank',
+            'menu-item-description' => $site_data['description']
+        ));
+
+        if (is_wp_error($menu_item_id)) {
+            error_log('Failed to add ' . $site_name . ' to Friends Menu: ' . $menu_item_id->get_error_message());
+        }
+        
+        $menu_order++;
+    }
+
+    // Assign Friends Menu to footer-friends-menu location
+    $locations = get_theme_mod('nav_menu_locations', array());
+    $locations['footer-friends-menu'] = $friends_menu_id;
+    set_theme_mod('nav_menu_locations', $locations);
+
+    return true;
+}
+
+/**
+ * Quick helper function to create friends menu
+ * Can be called from anywhere to automatically set up friends menu
+ * 
+ * @return bool True on success, false on failure
+ */
+function flexpress_setup_friends_menu() {
+    return flexpress_create_friends_menu();
+}
+
+/**
  * COMPLETE AUTO-SETUP FOR FLEXPRESS THEME
  * Creates all required pages and menus for a turnkey paysite solution
  * Runs automatically on theme activation
@@ -3626,6 +3712,7 @@ function flexpress_complete_auto_setup() {
         'main_footer' => false,
         'support' => false,
         'legal' => false,
+        'friends' => false,
         'existing_pages' => 0
     );
     
@@ -3657,7 +3744,14 @@ function flexpress_complete_auto_setup() {
         $legal_result = flexpress_create_legal_pages_and_menu();
         $setup_results['legal'] = !empty($legal_result);
         
-        // 4. Create additional default pages if needed
+        // Small delay to prevent conflicts
+        usleep(500000); // 0.5 seconds
+        
+        // 4. Create Friends Menu (Our Friends section)
+        $friends_result = flexpress_create_friends_menu();
+        $setup_results['friends'] = $friends_result;
+        
+        // 5. Create additional default pages if needed
         flexpress_create_required_pages();
         
         // 5. Set up WordPress reading settings for a proper paysite
@@ -3774,6 +3868,7 @@ function flexpress_show_auto_setup_notice() {
                 <li>✅ <strong>Main Navigation:</strong> Home, Episodes, Models, Extras, Livestream, About, Casting, Contact</li>
                 <li>✅ <strong>Support Menu:</strong> Join, Login, My Account, Reset Password, Cancel, Affiliates, Log Out</li>
                 <li>✅ <strong>Legal Pages:</strong> Privacy Policy, Terms & Conditions, 2257 Compliance, Anti-Slavery Policy, Content Removal</li>
+                <li>✅ <strong>Our Friends:</strong> Exclusv.Life, Adult Site Broker, Zak Ozbourne</li>
                 <li>✅ <strong>WordPress Settings:</strong> Optimized for adult content sites</li>
             </ul>
             <p><strong>Next Steps:</strong></p>

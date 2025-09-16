@@ -85,7 +85,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Custom Post Types**: Episodes and Models
 - **Advanced Custom Fields (ACF)**: Content management
 - **User Roles**: Member and admin capabilities
-- **Menu Systems**: Automated navigation setup
+- **Menu Systems**: Automated navigation setup with Main, Support, Legal, and Friends menus
 - **Template Hierarchy**: Custom page and archive templates
 
 ---

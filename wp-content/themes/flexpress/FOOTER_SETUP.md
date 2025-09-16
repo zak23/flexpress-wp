@@ -32,7 +32,12 @@ FlexPress is designed as a **complete turnkey solution** for adult content paysi
 - **Anti-Slavery Policy** - Anti-trafficking policy
 - **Content Removal** - DMCA/content removal form
 
-### 4. WordPress Configuration
+### 4. Friends Menu (`footer-friends-menu`)
+- **Exclusv.Life** - Premium Adult Content Platform
+- **Adult Site Broker** - Adult Website Brokerage Services
+- **Zak Ozbourne** - Adult Web Developer
+
+### 5. WordPress Configuration
 - Search engine discouragement enabled
 - Comments disabled by default
 - Trackbacks/pingbacks disabled

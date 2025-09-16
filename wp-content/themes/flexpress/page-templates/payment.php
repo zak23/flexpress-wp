@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: Flowguard Payment
+ * Template Name: Payment
  * 
  * Payment page template for Flowguard embedded payment forms.
  * 
@@ -21,13 +21,13 @@ if (empty($session_id)) {
 $flowguard_settings = get_option('flexpress_flowguard_settings', []);
 ?>
 
-<main id="primary" class="site-main flowguard-payment-page">
+<main id="primary" class="site-main payment-page py-5">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="payment-container">
                     <div class="payment-header text-center mb-4">
-                        <h1 class="payment-title">Complete Your Payment</h1>
+                        <h1 class="payment-title">COMPLETE YOUR PAYMENT</h1>
                         <p class="payment-subtitle">Secure payment processing powered by Flowguard</p>
                     </div>
                     
@@ -112,19 +112,16 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
 </main>
 
 <style>
-.flowguard-payment-page {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+.payment-page {
+    background: #000;
     min-height: 100vh;
-    padding: 2rem 0;
 }
 
 .payment-container {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
+    background: #1a1a1a;
+    border-radius: 8px;
     padding: 2rem;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    border: 1px solid #333;
 }
 
 .payment-title {
@@ -132,20 +129,22 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
     font-size: 2rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .payment-subtitle {
-    color: #b0b0b0;
-    font-size: 1.1rem;
+    color: #888;
+    font-size: 1rem;
     margin-bottom: 0;
 }
 
 .payment-form-container {
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 12px;
+    background: #222;
+    border-radius: 8px;
     padding: 2rem;
     margin: 1.5rem 0;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid #333;
     min-height: 400px;
     display: flex;
     align-items: center;
@@ -169,9 +168,9 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
 }
 
 .payment-help .accordion-item {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 4px;
 }
 
 .payment-help .accordion-button {
@@ -182,7 +181,7 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
 }
 
 .payment-help .accordion-button:not(.collapsed) {
-    background: rgba(255, 255, 255, 0.05);
+    background: #333;
     color: #ffffff;
 }
 
@@ -191,33 +190,33 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
 }
 
 .payment-help .accordion-body {
-    background: rgba(255, 255, 255, 0.02);
-    color: #b0b0b0;
+    background: #222;
+    color: #888;
 }
 
 .alert {
-    border-radius: 8px;
+    border-radius: 4px;
     border: none;
     padding: 1rem 1.5rem;
     margin-bottom: 1rem;
 }
 
 .alert-success {
-    background: rgba(40, 167, 69, 0.2);
+    background: #1e3a1e;
     color: #28a745;
-    border-left: 4px solid #28a745;
+    border: 1px solid #28a745;
 }
 
 .alert-danger {
-    background: rgba(220, 53, 69, 0.2);
+    background: #3a1e1e;
     color: #dc3545;
-    border-left: 4px solid #dc3545;
+    border: 1px solid #dc3545;
 }
 
 .alert-warning {
-    background: rgba(255, 193, 7, 0.2);
+    background: #3a3a1e;
     color: #ffc107;
-    border-left: 4px solid #ffc107;
+    border: 1px solid #ffc107;
 }
 
 .btn-outline-primary {
@@ -243,6 +242,10 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
     
     .payment-form-container {
         padding: 1.5rem;
+    }
+    
+    .flowguard-form-fields {
+        padding: 1rem;
     }
 }
 </style>
@@ -392,9 +395,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     .flowguard-field-container {
                         position: relative;
                         min-height: 40px;
-                        border: 1px solid #333;
-                        border-radius: 8px;
-                        background: rgba(255, 255, 255, 0.08);
+                        border: 1px solid #444;
+                        border-radius: 4px;
+                        background: #333;
                         overflow: hidden;
                     }
                     
@@ -454,18 +457,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     .btn-primary {
-                        background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+                        background: #ff6b6b;
                         border: none;
-                        border-radius: 12px;
+                        border-radius: 4px;
                         font-weight: 600;
                         padding: 1rem 2rem;
                         font-size: 1.1rem;
                         transition: all 0.3s ease;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
                     }
                     
                     .btn-primary:hover:not(:disabled) {
-                        transform: translateY(-2px);
-                        box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
+                        background: #ff5252;
+                        transform: translateY(-1px);
                     }
                     
                     .btn-primary:disabled {

@@ -87,7 +87,7 @@ function flexpress_flowguard_create_subscription($user_id, $plan_id) {
         return [
             'success' => true,
             'session_id' => $result['session_id'],
-            'payment_url' => home_url('/flowguard-payment?session_id=' . $result['session_id'])
+            'payment_url' => home_url('/payment?session_id=' . $result['session_id'])
         ];
     }
     
@@ -143,7 +143,7 @@ function flexpress_flowguard_create_ppv_purchase($user_id, $episode_id) {
         return [
             'success' => true,
             'session_id' => $result['session_id'],
-            'payment_url' => home_url('/flowguard-payment?session_id=' . $result['session_id'])
+            'payment_url' => home_url('/payment?session_id=' . $result['session_id'])
         ];
     }
     

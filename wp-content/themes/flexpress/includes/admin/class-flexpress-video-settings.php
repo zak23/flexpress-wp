@@ -520,7 +520,7 @@ class FlexPress_Video_Settings {
                name="flexpress_video_settings[bunnycdn_serve_url]" 
                value="<?php echo esc_attr($value); ?>" 
                class="regular-text">
-        <p class="description"><?php esc_html_e('Enter your BunnyCDN Serve URL for gallery images (e.g., zaks-pov.b-cdn.net).', 'flexpress'); ?></p>
+        <p class="description"><?php esc_html_e('Enter your BunnyCDN Serve URL for gallery images (e.g., storage.b-cdn.net).', 'flexpress'); ?></p>
         <?php
     }
 

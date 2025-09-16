@@ -438,17 +438,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     /* Special styling for price field */
                     #price-element iframe {
-                        height: 60px !important;
+                        height: auto !important;
+                        min-height: 40px !important;
+                        max-height: none !important;
                         width: 100% !important;
                         min-width: 200px;
                         border: none !important;
                         border-radius: 8px !important;
+                        display: block !important;
+                        margin: 0 auto !important;
                     }
                     
                     /* Ensure price field container maintains proper dimensions */
                     #price-element.flowguard-field-container {
-                        min-height: 60px;
-                        height: 60px;
+                        min-height: auto;
+                        height: auto;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
                     }
                     
                     /* Override Flowguard SDK styling for price element */
@@ -489,6 +496,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     /* Fix HTML entities in price display */
                     .title.price * {
                         color: #ffffff !important;
+                    }
+                    
+                    /* Override any inline styles on the iframe */
+                    #price-element iframe[style*="height"] {
+                        height: auto !important;
+                        min-height: 40px !important;
+                        max-height: none !important;
                     }
                     
                     /* Additional styling for any price-related elements */
@@ -628,6 +642,17 @@ document.addEventListener('DOMContentLoaded', function() {
                                         if (loadingElement) {
                                             loadingElement.style.display = 'none';
                                         }
+                                        
+                                        // Adjust iframe height after it loads
+                                        setTimeout(() => {
+                                            const iframe = fieldContainer.querySelector('iframe');
+                                            if (iframe) {
+                                                iframe.style.height = 'auto';
+                                                iframe.style.minHeight = '40px';
+                                                iframe.style.maxHeight = 'none';
+                                                console.log('Adjusted iframe height to auto');
+                                            }
+                                        }, 100);
                                     } else {
                                         fieldContainer.classList.add('loaded');
                                     }
@@ -796,6 +821,30 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Payment page visible - resuming form updates');
         }
     });
+    
+    // Watch for iframe addition and adjust height
+    const priceContainer = document.getElementById('price-element');
+    if (priceContainer) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList') {
+                    const iframe = priceContainer.querySelector('iframe');
+                    if (iframe) {
+                        console.log('Iframe detected, adjusting height');
+                        iframe.style.height = 'auto';
+                        iframe.style.minHeight = '40px';
+                        iframe.style.maxHeight = 'none';
+                        iframe.style.width = '100%';
+                        iframe.style.display = 'block';
+                        iframe.style.margin = '0 auto';
+                    }
+                }
+            });
+        });
+        
+        observer.observe(priceContainer, { childList: true, subtree: true });
+        console.log('Started watching for iframe changes');
+    }
 });
 </script>
 

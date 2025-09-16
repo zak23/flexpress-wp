@@ -101,13 +101,14 @@ function flexpress_flowguard_create_subscription($user_id, $plan_id) {
  * @param int $episode_id Episode ID
  * @return array Response data
  */
-function flexpress_flowguard_create_ppv_purchase($user_id, $episode_id) {
+function flexpress_flowguard_create_ppv_purchase($user_id, $episode_id, $final_price = null) {
     $episode = get_post($episode_id);
     if (!$episode || $episode->post_type !== 'episode') {
         return ['success' => false, 'error' => 'Invalid episode'];
     }
     
-    $ppv_price = get_field('ppv_price', $episode_id);
+    // Get PPV price from episode (using episode_price ACF field)
+    $ppv_price = get_field('episode_price', $episode_id);
     if (!$ppv_price || $ppv_price <= 0) {
         return ['success' => false, 'error' => 'Episode not available for PPV'];
     }
@@ -122,14 +123,25 @@ function flexpress_flowguard_create_ppv_purchase($user_id, $episode_id) {
         return ['success' => false, 'error' => 'Flowguard API not configured'];
     }
     
+    // Use final price if provided (includes member discounts), otherwise use base PPV price
+    $price_to_charge = $final_price !== null ? $final_price : $ppv_price;
+    
+    // Ensure minimum price for Flowguard ($2.95)
+    if ($price_to_charge < 2.95) {
+        $price_to_charge = 2.95;
+    }
+    
+    // Create unique transaction reference
+    $transaction_ref = 'ppv_' . $episode_id . '_' . $user_id . '_' . time();
+    
     $purchase_data = [
-        'priceAmount' => number_format($ppv_price, 2, '.', ''),
+        'priceAmount' => number_format($price_to_charge, 2, '.', ''),
         'priceCurrency' => 'USD',
-        'successUrl' => home_url('/payment-success'),
-        'declineUrl' => home_url('/payment-declined'),
+        'successUrl' => home_url('/payment-success?episode_id=' . $episode_id . '&ref=' . $transaction_ref),
+        'declineUrl' => get_permalink($episode_id) . '?payment=cancelled',
         'postbackUrl' => home_url('/wp-admin/admin-ajax.php?action=flowguard_webhook'),
         'email' => $user->user_email,
-        'referenceId' => 'ppv_user_' . $user_id . '_episode_' . $episode_id
+        'referenceId' => $transaction_ref
     ];
     
     $result = $api->start_purchase($purchase_data);
@@ -138,7 +150,16 @@ function flexpress_flowguard_create_ppv_purchase($user_id, $episode_id) {
         // Store session data for webhook processing
         update_user_meta($user_id, 'flowguard_ppv_session_id', $result['session_id']);
         update_user_meta($user_id, 'flowguard_ppv_episode_id', $episode_id);
-        update_user_meta($user_id, 'flowguard_ppv_reference_id', $purchase_data['referenceId']);
+        update_user_meta($user_id, 'flowguard_ppv_reference_id', $transaction_ref);
+        update_user_meta($user_id, 'flowguard_ppv_price', $price_to_charge);
+        
+        // Store pending transaction for validation
+        update_user_meta($user_id, 'pending_ppv_' . $transaction_ref, [
+            'episode_id' => $episode_id,
+            'price' => $price_to_charge,
+            'base_price' => $ppv_price,
+            'created' => current_time('mysql')
+        ]);
         
         return [
             'success' => true,
@@ -205,7 +226,12 @@ function flexpress_flowguard_get_user_from_reference($reference_id) {
         return 0;
     }
     
-    // Extract user ID from reference format: "user_123_plan_456" or "ppv_user_123_episode_456"
+    // Handle new PPV reference format: ppv_123_456_789 (ppv_episodeId_userId_timestamp)
+    if (preg_match('/^ppv_(\d+)_(\d+)_\d+$/', $reference_id, $matches)) {
+        return intval($matches[2]); // Return user ID
+    }
+    
+    // Handle legacy format: "user_123_plan_456" or "ppv_user_123_episode_456"
     if (preg_match('/user_(\d+)/', $reference_id, $matches)) {
         return intval($matches[1]);
     }

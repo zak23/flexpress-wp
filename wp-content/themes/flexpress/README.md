@@ -11,9 +11,10 @@ FlexPress is designed specifically for content websites (primarily adult content
 ## 🌟 Core Features
 
 ### 💳 Payment Processing
-- **Verotel FlexPay Integration**: Complete payment processing system
+- **Flowguard Integration**: Modern payment processing with embedded forms
+- **Verotel FlexPay Integration**: Legacy payment processing system (being phased out)
 - **Subscription Management**: Recurring billing and membership tiers
-- **Pay-Per-View (PPV)**: Individual episode purchases
+- **Pay-Per-View (PPV)**: Individual episode purchases with unlock buttons
 - **Member Discounts**: Flexible pricing for subscribers
 - **Webhook Processing**: Real-time payment confirmations
 - **Affiliate System**: Commission tracking and management
@@ -52,7 +53,16 @@ FlexPress is designed specifically for content websites (primarily adult content
 
 ## 🔧 Technical Integrations
 
-### Verotel FlexPay
+### Flowguard Payment System
+- **Modern Payment Processing**: Embedded payment forms with no redirects
+- **JWT Authentication**: Secure API communication with signature validation
+- **Subscription Management**: Recurring and one-time subscription support
+- **PPV Purchases**: Individual episode unlock with member discounts
+- **Webhook Processing**: Real-time payment notifications and status updates
+- **Admin Interface**: Complete payment management and diagnostics
+- **Security**: PCI DSS compliance with 3D Secure support
+
+### Verotel FlexPay (Legacy)
 - **Merchant Integration**: Complete payment gateway setup
 - **Webhook Handling**: Real-time payment processing
 - **Security**: Signature validation and secure transactions
@@ -1153,6 +1163,51 @@ Enabled
 - Verotel FlexPay integration
 - WordPress user meta system
 - Advanced Custom Fields (ACF)
+
+### Flowguard Unlock Button Integration
+
+Modern PPV (Pay-Per-View) purchase system using Flowguard's embedded payment forms for seamless episode unlocking.
+
+#### Version
+1.0.0
+
+#### Status
+Enabled
+
+#### Features
+- **Embedded Payment Forms**: No redirects, seamless user experience
+- **Member Discount Support**: Automatic discount application for active members
+- **Secure Transaction Processing**: JWT-based API communication
+- **Real-time Webhook Processing**: Instant episode access upon payment approval
+- **Flexible Pricing**: Support for minimum Flowguard pricing ($2.95 USD)
+- **Transaction Tracking**: Complete purchase history and audit trails
+
+#### Technical Implementation
+- **API Client**: `FlexPress_Flowguard_API` class with JWT token generation
+- **Purchase Function**: `flexpress_flowguard_create_ppv_purchase()` with member discount handling (uses `episode_price` ACF field)
+- **Webhook Handler**: `flexpress_flowguard_webhook_handler()` for payment processing
+- **Reference Format**: `ppv_episodeId_userId_timestamp` for unique transaction tracking
+- **Payment Pages**: Dedicated templates for payment form and success handling
+
+#### Unlock Button Flow
+1. **User clicks unlock button** on episode page
+2. **AJAX request** creates Flowguard purchase session
+3. **Payment form** loads with embedded Flowguard SDK
+4. **User completes payment** without leaving the site
+5. **Webhook processes** payment approval
+6. **Episode access granted** and user redirected to success page
+
+#### Configuration
+- **FlexPress Settings → Flowguard**: Shop ID, Signature Key, Environment
+- **Webhook URL**: `/wp-admin/admin-ajax.php?action=flowguard_webhook`
+- **Payment Pages**: `/payment` and `/payment-success` templates
+- **Minimum Price**: $2.95 USD (Flowguard requirement)
+
+#### Dependencies
+- Flowguard API client
+- Advanced Custom Fields (ACF)
+- WordPress AJAX system
+- FlexPress Activity Logger
 
 ### Verotel Webhook Integration
 

@@ -808,12 +808,20 @@ function flexpress_validate_plan_for_flowguard($plan) {
         if (($plan['duration'] ?? 0) > 180) {
             $warnings[] = 'One-time purchase duration exceeds limit (180 days)';
         }
+    } elseif ($plan_type === 'lifetime') {
+        // Lifetime purchases: minimum 2 days (but typically much longer)
+        if (($plan['duration'] ?? 0) < 2) {
+            $warnings[] = 'Lifetime purchase duration below Flowguard minimum (2 days)';
+        }
+        // Lifetime purchases can exceed 180 days (they're special)
+        // No maximum duration warning for lifetime plans
     }
     
     // Check trial settings (only for recurring plans)
     if (!empty($plan['trial_enabled'])) {
-        if ($plan_type === 'one_time') {
-            $errors[] = 'Trial periods are not allowed for one-time purchases';
+        if ($plan_type === 'one_time' || $plan_type === 'lifetime') {
+            $planTypeText = $plan_type === 'lifetime' ? 'lifetime purchases' : 'one-time purchases';
+            $errors[] = 'Trial periods are not allowed for ' . $planTypeText;
         } else {
             if (($plan['trial_price'] ?? 0) < 0) {
                 $errors[] = 'Trial price cannot be negative';
@@ -938,7 +946,7 @@ function flexpress_create_flowguard_purchase_data($plan_id, $plan, $user_id) {
 function flexpress_create_flowguard_payment_data($plan_id, $plan, $user_id) {
     $plan_type = $plan['plan_type'] ?? 'recurring';
     
-    if ($plan_type === 'one_time') {
+    if ($plan_type === 'one_time' || $plan_type === 'lifetime') {
         return flexpress_create_flowguard_purchase_data($plan_id, $plan, $user_id);
     } else {
         return flexpress_create_flowguard_subscription_data($plan_id, $plan, $user_id);

@@ -12,10 +12,19 @@ get_header();
 
 $transaction_id = isset($_GET['transaction_id']) ? sanitize_text_field($_GET['transaction_id']) : '';
 $sale_id = isset($_GET['sale_id']) ? sanitize_text_field($_GET['sale_id']) : '';
+$episode_id = isset($_GET['episode_id']) ? intval($_GET['episode_id']) : 0;
+$ref = isset($_GET['ref']) ? sanitize_text_field($_GET['ref']) : '';
 
 // Get current user
 $current_user = wp_get_current_user();
 $user_id = $current_user->ID;
+
+// Check if this is a PPV purchase
+$is_ppv_purchase = $episode_id > 0;
+$episode = null;
+if ($is_ppv_purchase) {
+    $episode = get_post($episode_id);
+}
 
 // Get transaction details if available
 $transaction = null;
@@ -42,7 +51,11 @@ $membership_expires = get_user_meta($user_id, 'membership_expires', true);
                             <i class="fas fa-check-circle"></i>
                         </div>
                         <h1 class="success-title">Payment Successful!</h1>
-                        <p class="success-subtitle">Thank you for your purchase. Your account has been updated.</p>
+                        <?php if ($is_ppv_purchase && $episode): ?>
+                            <p class="success-subtitle">Episode unlocked! You now have access to "<?php echo esc_html($episode->post_title); ?>".</p>
+                        <?php else: ?>
+                            <p class="success-subtitle">Thank you for your purchase. Your account has been updated.</p>
+                        <?php endif; ?>
                     </div>
                     
                     <!-- Transaction Details -->
@@ -136,39 +149,75 @@ $membership_expires = get_user_meta($user_id, 'membership_expires', true);
                             </div>
                             <div class="card-body">
                                 <div class="steps-list">
-                                    <div class="step-item">
-                                        <div class="step-number">1</div>
-                                        <div class="step-content">
-                                            <h6>Access Your Dashboard</h6>
-                                            <p>Manage your account, view billing history, and update payment methods.</p>
-                                            <a href="<?php echo home_url('/dashboard'); ?>" class="btn btn-primary btn-sm">
-                                                <i class="fas fa-tachometer-alt me-1"></i>
-                                                Go to Dashboard
-                                            </a>
+                                    <?php if ($is_ppv_purchase && $episode): ?>
+                                        <div class="step-item">
+                                            <div class="step-number">1</div>
+                                            <div class="step-content">
+                                                <h6>Watch Your Episode</h6>
+                                                <p>You now have full access to "<?php echo esc_html($episode->post_title); ?>".</p>
+                                                <a href="<?php echo get_permalink($episode_id); ?>" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-play me-1"></i>
+                                                    Watch Episode
+                                                </a>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="step-item">
-                                        <div class="step-number">2</div>
-                                        <div class="step-content">
-                                            <h6>Explore Premium Content</h6>
-                                            <p>Browse our exclusive videos, galleries, and member-only features.</p>
-                                            <a href="<?php echo home_url('/episodes'); ?>" class="btn btn-outline-primary btn-sm">
-                                                <i class="fas fa-play me-1"></i>
-                                                Browse Content
-                                            </a>
+                                        <div class="step-item">
+                                            <div class="step-number">2</div>
+                                            <div class="step-content">
+                                                <h6>Access Your Dashboard</h6>
+                                                <p>View your purchased episodes and manage your account.</p>
+                                                <a href="<?php echo home_url('/dashboard'); ?>" class="btn btn-outline-primary btn-sm">
+                                                    <i class="fas fa-tachometer-alt me-1"></i>
+                                                    Go to Dashboard
+                                                </a>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="step-item">
-                                        <div class="step-number">3</div>
-                                        <div class="step-content">
-                                            <h6>Download Receipt</h6>
-                                            <p>Save your transaction receipt for your records.</p>
-                                            <button onclick="downloadReceipt()" class="btn btn-outline-secondary btn-sm">
-                                                <i class="fas fa-download me-1"></i>
-                                                Download Receipt
-                                            </button>
+                                        <div class="step-item">
+                                            <div class="step-number">3</div>
+                                            <div class="step-content">
+                                                <h6>Browse More Content</h6>
+                                                <p>Discover other exclusive episodes and premium content.</p>
+                                                <a href="<?php echo home_url('/episodes'); ?>" class="btn btn-outline-primary btn-sm">
+                                                    <i class="fas fa-search me-1"></i>
+                                                    Browse Episodes
+                                                </a>
+                                            </div>
                                         </div>
-                                    </div>
+                                    <?php else: ?>
+                                        <div class="step-item">
+                                            <div class="step-number">1</div>
+                                            <div class="step-content">
+                                                <h6>Access Your Dashboard</h6>
+                                                <p>Manage your account, view billing history, and update payment methods.</p>
+                                                <a href="<?php echo home_url('/dashboard'); ?>" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-tachometer-alt me-1"></i>
+                                                    Go to Dashboard
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="step-item">
+                                            <div class="step-number">2</div>
+                                            <div class="step-content">
+                                                <h6>Explore Premium Content</h6>
+                                                <p>Browse our exclusive videos, galleries, and member-only features.</p>
+                                                <a href="<?php echo home_url('/episodes'); ?>" class="btn btn-outline-primary btn-sm">
+                                                    <i class="fas fa-play me-1"></i>
+                                                    Browse Content
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="step-item">
+                                            <div class="step-number">3</div>
+                                            <div class="step-content">
+                                                <h6>Download Receipt</h6>
+                                                <p>Save your transaction receipt for your records.</p>
+                                                <button onclick="downloadReceipt()" class="btn btn-outline-secondary btn-sm">
+                                                    <i class="fas fa-download me-1"></i>
+                                                    Download Receipt
+                                                </button>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>

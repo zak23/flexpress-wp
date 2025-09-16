@@ -234,6 +234,9 @@ class FlexPress_Pricing_Settings {
         .plan-badge.inactive {
             background: #666;
         }
+        .plan-badge.lifetime {
+            background: #28a745;
+        }
         .form-row input.error,
         .form-row select.error,
         .form-row textarea.error {
@@ -333,7 +336,8 @@ class FlexPress_Pricing_Settings {
         $is_featured = !empty($plan['featured']);
         $is_active = !empty($plan['active']);
         $is_one_time = isset($plan['plan_type']) && $plan['plan_type'] === 'one_time';
-        $plan_type_class = $is_one_time ? 'plan-one-time' : 'plan-recurring';
+        $is_lifetime = isset($plan['plan_type']) && $plan['plan_type'] === 'lifetime';
+        $plan_type_class = $is_one_time ? 'plan-one-time' : ($is_lifetime ? 'plan-lifetime' : 'plan-recurring');
         ?>
         <div class="pricing-plan-card <?php echo $is_featured ? 'featured' : ''; ?> <?php echo !$is_active ? 'inactive' : ''; ?> <?php echo $plan_type_class; ?>" 
              data-plan-id="<?php echo esc_attr($plan_id); ?>"
@@ -350,6 +354,8 @@ class FlexPress_Pricing_Settings {
                         <?php endif; ?>
                         <?php if ($is_one_time): ?>
                             <span class="plan-badge one-time"><?php esc_html_e('One-Time', 'flexpress'); ?></span>
+                        <?php elseif ($is_lifetime): ?>
+                            <span class="plan-badge lifetime"><?php esc_html_e('Lifetime', 'flexpress'); ?></span>
                         <?php endif; ?>
                     </h3>
                     <p class="plan-description"><?php echo esc_html($plan['description'] ?? ''); ?></p>
@@ -440,6 +446,7 @@ class FlexPress_Pricing_Settings {
                         <select id="plan-type" name="plan_type" required>
                             <option value="recurring"><?php esc_html_e('Recurring Subscription', 'flexpress'); ?></option>
                             <option value="one_time"><?php esc_html_e('One-Time Payment', 'flexpress'); ?></option>
+                            <option value="lifetime"><?php esc_html_e('Lifetime Access', 'flexpress'); ?></option>
                         </select>
                     </div>
                 </div>
@@ -569,7 +576,7 @@ class FlexPress_Pricing_Settings {
             'flexpress-pricing-admin',
             get_template_directory_uri() . '/assets/js/pricing-admin.js',
             array('jquery'),
-            '1.6.0', // Updated version to force cache refresh
+            '1.7.0', // Updated version to force cache refresh
             true
         );
 

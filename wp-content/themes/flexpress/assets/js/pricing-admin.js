@@ -161,6 +161,20 @@ jQuery(document).ready(function($) {
             $durationSection.find('h3').text('Access Duration');
             $('#plan-duration-label').text('Lifetime Access');
             $durationNote.slideDown();
+        } else if (planType === 'lifetime') {
+            // Disable trial settings for lifetime access
+            $trialEnabled.prop('checked', false).prop('disabled', true);
+            $trialSettings.slideUp();
+            $trialSettings.find('input').prop('required', false);
+            
+            // Set duration to 'lifetime' (999 years)
+            $('#plan-duration').val('999').prop('disabled', true);
+            $('#plan-duration-unit').val('years').prop('disabled', true);
+            
+            // Update duration label and show note
+            $durationSection.find('h3').text('Access Duration');
+            $('#plan-duration-label').text('Lifetime Access');
+            $durationNote.slideDown();
         } else {
             // Enable trial settings
             $trialEnabled.prop('disabled', false);
@@ -178,7 +192,8 @@ jQuery(document).ready(function($) {
     });
 
     function handleTrialSettings() {
-        if ($trialEnabled.is(':checked') && $('#plan-type').val() !== 'one_time') {
+        const planType = $('#plan-type').val();
+        if ($trialEnabled.is(':checked') && planType !== 'one_time' && planType !== 'lifetime') {
             $trialSettings.slideDown();
             $trialSettings.find('input').prop('required', true);
         } else {
@@ -208,14 +223,15 @@ jQuery(document).ready(function($) {
         });
         
         // Plan type specific validation
-        if (planType === 'one_time') {
-            // No trial period allowed for one-time payments
+        if (planType === 'one_time' || planType === 'lifetime') {
+            // No trial period allowed for one-time payments or lifetime access
             if ($trialEnabled.is(':checked')) {
-                showError($trialEnabled, 'Trial periods are not allowed for one-time payments');
+                const planTypeText = planType === 'lifetime' ? 'lifetime access' : 'one-time payments';
+                showError($trialEnabled, 'Trial periods are not allowed for ' + planTypeText);
                 isValid = false;
             }
         } else {
-            // Validate trial settings if enabled
+            // Validate trial settings if enabled (only for recurring subscriptions)
             if ($trialEnabled.is(':checked')) {
                 $trialSettings.find('input[required]').each(function() {
                     if (!validateField($(this))) {

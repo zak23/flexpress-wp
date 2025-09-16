@@ -190,7 +190,21 @@ function flexpress_flowguard_handle_purchase_approved($payload) {
     
     // Extract episode ID from reference if it's a PPV purchase
     $episode_id = 0;
-    if (preg_match('/episode_(\d+)/', $payload['referenceId'] ?? '', $matches)) {
+    $reference_id = $payload['referenceId'] ?? '';
+    
+    // Handle new PPV reference format: ppv_123_456_789 (ppv_episodeId_userId_timestamp)
+    if (preg_match('/^ppv_(\d+)_(\d+)_\d+$/', $reference_id, $matches)) {
+        $episode_id = intval($matches[1]);
+        $user_id_from_ref = intval($matches[2]);
+        
+        // Verify user ID matches
+        if ($user_id_from_ref !== $user_id) {
+            error_log('Flowguard Webhook: User ID mismatch in reference. Expected: ' . $user_id . ', Found: ' . $user_id_from_ref);
+            return;
+        }
+    }
+    // Handle legacy format: ppv_user_123_episode_456
+    elseif (preg_match('/ppv_user_\d+_episode_(\d+)/', $reference_id, $matches)) {
         $episode_id = intval($matches[1]);
     }
     

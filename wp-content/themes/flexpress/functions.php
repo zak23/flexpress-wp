@@ -2539,8 +2539,8 @@ function flexpress_create_ppv_purchase() {
         // Log payment creation for debugging
         error_log('FlexPress PPV: Creating payment for episode ' . $episode_id . ', user ' . $user_id . ', price $' . $final_price);
         
-        // Create Flowguard PPV purchase
-        $result = flexpress_flowguard_create_ppv_purchase($user_id, $episode_id);
+        // Create Flowguard PPV purchase with final price
+        $result = flexpress_flowguard_create_ppv_purchase($user_id, $episode_id, $final_price);
         
         if (!$result['success']) {
             error_log('FlexPress PPV: Failed to create Flowguard purchase: ' . $result['error']);

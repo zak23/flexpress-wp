@@ -349,16 +349,9 @@ add_filter('body_class', function($classes) {
                                         <?php if ($has_flowguard_subscription): ?>
                                         <button type="button" class="btn btn-sm btn-outline-danger me-2" id="cancel-flowguard-subscription">
                                             <i class="fas fa-times-circle me-1"></i>
-                                            <?php esc_html_e('Cancel Flowguard Subscription', 'flexpress'); ?>
-                                        </button>
-                                        <?php endif; ?>
-                                        
-                                        <button type="button" class="btn btn-sm btn-outline-warning me-2" id="cancel-subscription">
                                             <?php esc_html_e('Cancel Subscription', 'flexpress'); ?>
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" id="update-payment-method">
-                                            <?php esc_html_e('Update Payment Method', 'flexpress'); ?>
-                                        </button>
+                                        <?php endif; ?>
                                     </div>
                                     <?php elseif ($membership_status === 'expired' || $membership_status === 'none'): ?>
                                     <div class="mt-3">
@@ -416,6 +409,9 @@ add_filter('body_class', function($classes) {
                                     <?php endif; ?>
                                 </div>
 
+                                <?php
+                                // Billing history section - hidden for now
+                                /*
                                 <div class="billing-history mt-4">
                                     <?php
                                     // Get user billing history from multiple sources - MOVED UP TO FIX SCOPE
@@ -521,6 +517,8 @@ add_filter('body_class', function($classes) {
                                         </table>
                                     </div>
                                 </div>
+                                */
+                                ?>
                             </div>
                         </div>
                     </div>
@@ -609,7 +607,7 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 if (response.success) {
                     // Show success message
-                    $button.closest('.mt-3').before('<div class="alert alert-success flowguard-alert"><i class="fas fa-check-circle me-2"></i>' + response.data.message + '</div>');
+                    $button.closest('.mt-3').before('<div class="alert alert-success flowguard-alert text-white"><i class="fas fa-check-circle me-2"></i>' + response.data.message + '</div>');
                     
                     // Hide the cancel button
                     $button.hide();

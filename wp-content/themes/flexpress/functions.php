@@ -2479,6 +2479,9 @@ function flexpress_create_ppv_purchase() {
     $base_price = isset($_POST['base_price']) ? floatval($_POST['base_price']) : 0;
     $member_discount = isset($_POST['member_discount']) ? floatval($_POST['member_discount']) : 0;
     
+    // Debug logging
+    error_log('FlexPress PPV Debug: Episode ID=' . $episode_id . ', Final Price=' . $final_price . ', Base Price=' . $base_price . ', Member Discount=' . $member_discount);
+    
     if (!$episode_id || !$final_price) {
         wp_send_json_error(array('message' => __('Invalid episode or price data', 'flexpress')));
         return;
@@ -2497,8 +2500,12 @@ function flexpress_create_ppv_purchase() {
         return;
     }
     
+    // Debug logging for price validation
+    error_log('FlexPress PPV Price Validation: Episode Price=' . $episode_price . ', Base Price=' . $base_price . ', Match=' . (floatval($episode_price) === $base_price ? 'YES' : 'NO'));
+    
     // Validate that the base price matches the episode price (before any discounts)
     if (floatval($episode_price) !== $base_price) {
+        error_log('FlexPress PPV Price Mismatch: Episode Price=' . $episode_price . ', Base Price=' . $base_price);
         wp_send_json_error(array('message' => __('Price mismatch. Please refresh and try again.', 'flexpress')));
         return;
     }

@@ -95,6 +95,22 @@
             const memberDiscount = parseFloat($button.data('discount')) || 0;
             const isActiveMember = $button.data('is-active-member') === 'true';
             
+            // Debug logging
+            console.log('PPV Purchase Debug:', {
+                episodeId: episodeId,
+                basePrice: basePrice,
+                finalPrice: finalPrice,
+                memberDiscount: memberDiscount,
+                isActiveMember: isActiveMember,
+                dataAttributes: {
+                    'data-episode-id': $button.data('episode-id'),
+                    'data-price': $button.data('price'),
+                    'data-original-price': $button.data('original-price'),
+                    'data-discount': $button.data('discount'),
+                    'data-is-active-member': $button.data('is-active-member')
+                }
+            });
+            
             if (!episodeId || !basePrice) {
                 alert('Invalid episode data. Please refresh the page and try again.');
                 return;

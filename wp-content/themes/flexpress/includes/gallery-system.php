@@ -166,10 +166,13 @@ class FlexPress_Gallery_System {
                         </th>
                         <td>
                             <select name="gallery_columns" id="gallery_columns">
-                                <option value="2" <?php selected(get_post_meta($post->ID, '_gallery_columns', true), '2'); ?>><?php _e('2 Columns', 'flexpress'); ?></option>
-                                <option value="3" <?php selected(get_post_meta($post->ID, '_gallery_columns', true), '3'); ?>><?php _e('3 Columns', 'flexpress'); ?></option>
-                                <option value="4" <?php selected(get_post_meta($post->ID, '_gallery_columns', true), '4'); ?>><?php _e('4 Columns', 'flexpress'); ?></option>
-                                <option value="5" <?php selected(get_post_meta($post->ID, '_gallery_columns', true), '5'); ?>><?php _e('5 Columns', 'flexpress'); ?></option>
+                                <?php 
+                                $current_columns = get_post_meta($post->ID, '_gallery_columns', true) ?: '5';
+                                ?>
+                                <option value="2" <?php selected($current_columns, '2'); ?>><?php _e('2 Columns', 'flexpress'); ?></option>
+                                <option value="3" <?php selected($current_columns, '3'); ?>><?php _e('3 Columns', 'flexpress'); ?></option>
+                                <option value="4" <?php selected($current_columns, '4'); ?>><?php _e('4 Columns', 'flexpress'); ?></option>
+                                <option value="5" <?php selected($current_columns, '5'); ?>><?php _e('5 Columns', 'flexpress'); ?></option>
                             </select>
                             <p class="description"><?php _e('Number of columns to display in the gallery grid.', 'flexpress'); ?></p>
                         </td>
@@ -985,7 +988,7 @@ function flexpress_display_episode_gallery($post_id = null, $columns = null) {
     
     // Get gallery settings
     if ($columns === null) {
-        $columns = get_post_meta($post_id, '_gallery_columns', true) ?: 3;
+        $columns = get_post_meta($post_id, '_gallery_columns', true) ?: 5;
     }
     
     $lightbox = get_post_meta($post_id, '_gallery_lightbox', true);

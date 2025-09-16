@@ -176,6 +176,7 @@ The FlexPress theme automatically generates square thumbnails for all gallery im
 
 ### Configuration
 - **Thumbnail Size**: Configurable from 100px to 800px (default: 300px)
+- **Gallery Columns**: Configurable grid layout (default: 5 columns)
 - **Format**: All thumbnails are saved as JPEG for optimal compression
 - **Quality**: High-quality JPEG compression maintains image clarity
 - **Crop Method**: Center-crop ensures the most important part of the image is preserved

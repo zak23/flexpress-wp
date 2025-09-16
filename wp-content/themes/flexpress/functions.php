@@ -1559,6 +1559,18 @@ function flexpress_create_required_pages() {
         'Reset Password' => array(
             'content' => 'Set a new password for your account.',
             'template' => 'page-templates/reset-password.php'
+        ),
+        'Payment' => array(
+            'content' => 'Complete your secure payment.',
+            'template' => 'page-templates/payment.php'
+        ),
+        'Payment Success' => array(
+            'content' => 'Your payment was successful.',
+            'template' => 'page-templates/payment-success.php'
+        ),
+        'Payment Declined' => array(
+            'content' => 'Your payment was declined.',
+            'template' => 'page-templates/payment-declined.php'
         )
     );
     

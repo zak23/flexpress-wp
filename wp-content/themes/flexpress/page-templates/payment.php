@@ -362,12 +362,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         </div>
                     </div>
-                    <div class="field-group">
-                        <label>Price</label>
-                        <div id="price-element" class="flowguard-field-container">
-                            <div class="field-loading">
+                    <div class="price-display-group">
+                        <div id="price-element" class="price-display-container">
+                            <div class="price-loading">
                                 <div class="loading-spinner"></div>
-                                <span>Loading secure field...</span>
+                                <span>Loading price information...</span>
                             </div>
                         </div>
                     </div>
@@ -439,15 +438,105 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     /* Special styling for price field */
                     #price-element iframe {
-                        height: 40px !important;
+                        height: 60px !important;
                         width: 100% !important;
                         min-width: 200px;
+                        border: none !important;
+                        border-radius: 8px !important;
                     }
                     
                     /* Ensure price field container maintains proper dimensions */
                     #price-element.flowguard-field-container {
-                        min-height: 40px;
-                        height: 40px;
+                        min-height: 60px;
+                        height: 60px;
+                    }
+                    
+                    /* Override Flowguard SDK styling for price element */
+                    #price-element.loaded {
+                        background: transparent !important;
+                        border: none !important;
+                        padding: 0.5rem 0 !important;
+                        min-height: auto !important;
+                        display: block !important;
+                        text-align: center !important;
+                    }
+                    
+                    /* Override Flowguard SDK price styling */
+                    .title.price {
+                        color: #ffffff !important;
+                        font-size: 1.1rem !important;
+                        font-weight: 600 !important;
+                        text-align: center !important;
+                        padding: 0 !important;
+                        background: transparent !important;
+                        border: none !important;
+                        margin: 0.5rem 0 !important;
+                        white-space: normal !important;
+                    }
+                    
+                    .title.price.svelte-1cjut88 {
+                        color: #ffffff !important;
+                        font-size: 1.1rem !important;
+                        font-weight: 600 !important;
+                        text-align: center !important;
+                        padding: 0 !important;
+                        background: transparent !important;
+                        border: none !important;
+                        margin: 0.5rem 0 !important;
+                        white-space: normal !important;
+                    }
+                    
+                    /* Fix HTML entities in price display */
+                    .title.price * {
+                        color: #ffffff !important;
+                    }
+                    
+                    /* Additional styling for any price-related elements */
+                    [class*="price"] {
+                        color: #ffffff !important;
+                        background: transparent !important;
+                        border: none !important;
+                        padding: 0 !important;
+                        margin: 0.5rem 0 !important;
+                        text-align: center !important;
+                        font-weight: 600 !important;
+                        font-size: 1.1rem !important;
+                    }
+                    
+                    /* Price display container styling */
+                    .price-display-group {
+                        margin: 1.5rem 0;
+                    }
+                    
+                    .price-display-label {
+                        color: #ffffff;
+                        font-weight: 600;
+                        font-size: 1rem;
+                        margin-bottom: 0.5rem;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                    }
+                    
+                    .price-display-container {
+                        background: transparent;
+                        border: none;
+                        padding: 0.5rem 0;
+                        text-align: center;
+                        min-height: auto;
+                        display: block;
+                    }
+                    
+                    .price-loading {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 0.5rem;
+                        color: #888;
+                        font-size: 0.9rem;
+                    }
+                    
+                    .price-display-container.loaded .price-loading {
+                        display: none;
                     }
                     
                     @keyframes pulse {
@@ -531,7 +620,17 @@ document.addEventListener('DOMContentLoaded', function() {
                                 
                                 const fieldContainer = document.getElementById(elementId);
                                 if (fieldContainer) {
-                                    fieldContainer.classList.add('loaded');
+                                    if (elementName === 'price') {
+                                        // Special handling for price element - it's a display container, not a form field
+                                        fieldContainer.classList.add('loaded');
+                                        // Hide the loading message
+                                        const loadingElement = fieldContainer.querySelector('.price-loading');
+                                        if (loadingElement) {
+                                            loadingElement.style.display = 'none';
+                                        }
+                                    } else {
+                                        fieldContainer.classList.add('loaded');
+                                    }
                                     console.log('Field loaded:', elementName);
                                 }
                             }

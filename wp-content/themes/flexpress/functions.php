@@ -19,6 +19,9 @@ require_once FLEXPRESS_PATH . '/includes/flowguard-integration.php';
 require_once FLEXPRESS_PATH . '/includes/flowguard-webhook-handler.php';
 require_once FLEXPRESS_PATH . '/includes/flowguard-database.php';
 
+// Discord Notifications
+require_once FLEXPRESS_PATH . '/includes/discord-notifications.php';
+
 // Legacy Verotel files (to be removed after migration)
 require_once FLEXPRESS_PATH . '/includes/verotel-integration.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-verotel.php';
@@ -5810,4 +5813,196 @@ function flexpress_ajax_reset_setup_status() {
     delete_transient('flexpress_last_skip_log');
     
     wp_send_json_success('Setup status reset successfully. Auto-setup can now run again.');
+}
+
+/**
+ * Sanitize Discord settings
+ * 
+ * @param array $input Raw input data
+ * @return array Sanitized data
+ */
+function flexpress_sanitize_discord_settings($input) {
+    $sanitized = array();
+    
+    if (isset($input['webhook_url'])) {
+        $sanitized['webhook_url'] = esc_url_raw($input['webhook_url']);
+    }
+    
+    if (isset($input['notify_subscriptions'])) {
+        $sanitized['notify_subscriptions'] = (bool) $input['notify_subscriptions'];
+    }
+    
+    if (isset($input['notify_rebills'])) {
+        $sanitized['notify_rebills'] = (bool) $input['notify_rebills'];
+    }
+    
+    if (isset($input['notify_cancellations'])) {
+        $sanitized['notify_cancellations'] = (bool) $input['notify_cancellations'];
+    }
+    
+    if (isset($input['notify_expirations'])) {
+        $sanitized['notify_expirations'] = (bool) $input['notify_expirations'];
+    }
+    
+    if (isset($input['notify_ppv'])) {
+        $sanitized['notify_ppv'] = (bool) $input['notify_ppv'];
+    }
+    
+    if (isset($input['notify_refunds'])) {
+        $sanitized['notify_refunds'] = (bool) $input['notify_refunds'];
+    }
+    
+    if (isset($input['notify_talent_applications'])) {
+        $sanitized['notify_talent_applications'] = (bool) $input['notify_talent_applications'];
+    }
+    
+    return $sanitized;
+}
+
+// AJAX handlers
+add_action('wp_ajax_test_discord_connection', 'flexpress_test_discord_connection_ajax');
+add_action('wp_ajax_nopriv_submit_talent_application', 'flexpress_handle_talent_application');
+add_action('wp_ajax_submit_talent_application', 'flexpress_handle_talent_application');
+
+/**
+ * Test Discord webhook connection (AJAX)
+ */
+function flexpress_test_discord_connection_ajax() {
+    check_ajax_referer('test_discord_connection', 'nonce');
+    
+    if (!current_user_can('manage_options')) {
+        wp_die('Unauthorized');
+    }
+    
+    $result = flexpress_discord_test_connection();
+    
+    if ($result) {
+        wp_send_json_success('Discord webhook test successful');
+    } else {
+        wp_send_json_error('Discord webhook test failed. Check your webhook URL and try again.');
+    }
+}
+
+/**
+ * Handle talent application submission
+ */
+function flexpress_handle_talent_application() {
+    // Verify nonce for security
+    if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'talent_application_nonce')) {
+        wp_send_json_error('Security verification failed');
+    }
+    
+    // Sanitize input data
+    $form_data = array(
+        'name' => sanitize_text_field($_POST['name'] ?? ''),
+        'email' => sanitize_email($_POST['email'] ?? ''),
+        'phone' => sanitize_text_field($_POST['phone'] ?? ''),
+        'age' => intval($_POST['age'] ?? 0),
+        'location' => sanitize_text_field($_POST['location'] ?? ''),
+        'experience' => sanitize_text_field($_POST['experience'] ?? ''),
+        'bio' => sanitize_textarea_field($_POST['bio'] ?? ''),
+        'social_media' => esc_url_raw($_POST['social_media'] ?? ''),
+        'portfolio' => esc_url_raw($_POST['portfolio'] ?? ''),
+        'terms' => isset($_POST['terms']) ? true : false,
+        'submitted_at' => current_time('mysql'),
+        'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '',
+        'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? ''
+    );
+    
+    // Validate required fields
+    if (empty($form_data['name']) || empty($form_data['email']) || empty($form_data['age']) || 
+        empty($form_data['location']) || empty($form_data['experience']) || empty($form_data['bio']) || 
+        !$form_data['terms']) {
+        wp_send_json_error('Please fill in all required fields and accept the terms.');
+    }
+    
+    // Validate age
+    if ($form_data['age'] < 18) {
+        wp_send_json_error('You must be at least 18 years old to apply.');
+    }
+    
+    // Validate email
+    if (!is_email($form_data['email'])) {
+        wp_send_json_error('Please enter a valid email address.');
+    }
+    
+    // Store application in database
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'flexpress_talent_applications';
+    
+    // Create table if it doesn't exist
+    $charset_collate = $wpdb->get_charset_collate();
+    $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        name varchar(100) NOT NULL,
+        email varchar(100) NOT NULL,
+        phone varchar(20),
+        age int(3) NOT NULL,
+        location varchar(100) NOT NULL,
+        experience varchar(50) NOT NULL,
+        bio text NOT NULL,
+        social_media varchar(255),
+        portfolio varchar(255),
+        submitted_at datetime NOT NULL,
+        ip_address varchar(45),
+        user_agent text,
+        status varchar(20) DEFAULT 'pending',
+        created_at datetime DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY email (email),
+        KEY status (status)
+    ) $charset_collate;";
+    
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+    
+    // Insert application
+    $result = $wpdb->insert(
+        $table_name,
+        $form_data,
+        array(
+            '%s', // name
+            '%s', // email
+            '%s', // phone
+            '%d', // age
+            '%s', // location
+            '%s', // experience
+            '%s', // bio
+            '%s', // social_media
+            '%s', // portfolio
+            '%s', // submitted_at
+            '%s', // ip_address
+            '%s'  // user_agent
+        )
+    );
+    
+    if ($result === false) {
+        wp_send_json_error('Failed to save application. Please try again.');
+    }
+    
+    // Send Discord notification
+    flexpress_discord_notify_talent_application($form_data);
+    
+    // Send email notification to admin (optional)
+    $admin_email = get_option('admin_email');
+    $subject = 'New Talent Application - ' . get_bloginfo('name');
+    $message = "A new talent application has been submitted:\n\n";
+    $message .= "Name: " . $form_data['name'] . "\n";
+    $message .= "Email: " . $form_data['email'] . "\n";
+    $message .= "Phone: " . $form_data['phone'] . "\n";
+    $message .= "Age: " . $form_data['age'] . "\n";
+    $message .= "Location: " . $form_data['location'] . "\n";
+    $message .= "Experience: " . $form_data['experience'] . "\n";
+    $message .= "Bio: " . $form_data['bio'] . "\n";
+    if (!empty($form_data['social_media'])) {
+        $message .= "Social Media: " . $form_data['social_media'] . "\n";
+    }
+    if (!empty($form_data['portfolio'])) {
+        $message .= "Portfolio: " . $form_data['portfolio'] . "\n";
+    }
+    $message .= "\nSubmitted at: " . $form_data['submitted_at'];
+    
+    wp_mail($admin_email, $subject, $message);
+    
+    wp_send_json_success('Application submitted successfully!');
 }

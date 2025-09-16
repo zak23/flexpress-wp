@@ -71,6 +71,16 @@ class FlexPress_Settings {
             'flexpress-auto-setup',
             array($this, 'render_auto_setup_page')
         );
+
+        // Add Discord Notifications submenu
+        add_submenu_page(
+            $this->page_slug,
+            __('Discord Notifications', 'flexpress'),
+            __('Discord', 'flexpress'),
+            'manage_options',
+            'flexpress-discord-settings',
+            array($this, 'render_discord_settings_page')
+        );
     }
 
     /**
@@ -84,6 +94,99 @@ class FlexPress_Settings {
         
         // Register auto-setup settings
         register_setting('flexpress_auto_setup_settings', 'flexpress_disable_auto_setup');
+        
+        // Register Discord settings
+        register_setting('flexpress_discord_settings', 'flexpress_discord_settings', array(
+            'sanitize_callback' => 'flexpress_sanitize_discord_settings'
+        ));
+        
+        // Discord Configuration Section
+        add_settings_section(
+            'discord_config_section',
+            'Discord Configuration',
+            array($this, 'render_discord_config_section'),
+            'flexpress_discord_settings'
+        );
+        
+        add_settings_field(
+            'webhook_url',
+            'Discord Webhook URL',
+            array($this, 'render_discord_webhook_url_field'),
+            'flexpress_discord_settings',
+            'discord_config_section'
+        );
+        
+        add_settings_field(
+            'test_connection',
+            'Test Connection',
+            array($this, 'render_discord_test_connection_field'),
+            'flexpress_discord_settings',
+            'discord_config_section'
+        );
+        
+        // Discord Notification Settings Section
+        add_settings_section(
+            'discord_notifications_section',
+            'Notification Settings',
+            array($this, 'render_discord_notifications_section'),
+            'flexpress_discord_settings'
+        );
+        
+        add_settings_field(
+            'notify_subscriptions',
+            'New Subscriptions',
+            array($this, 'render_discord_notify_subscriptions_field'),
+            'flexpress_discord_settings',
+            'discord_notifications_section'
+        );
+        
+        add_settings_field(
+            'notify_rebills',
+            'Subscription Rebills',
+            array($this, 'render_discord_notify_rebills_field'),
+            'flexpress_discord_settings',
+            'discord_notifications_section'
+        );
+        
+        add_settings_field(
+            'notify_cancellations',
+            'Subscription Cancellations',
+            array($this, 'render_discord_notify_cancellations_field'),
+            'flexpress_discord_settings',
+            'discord_notifications_section'
+        );
+        
+        add_settings_field(
+            'notify_expirations',
+            'Subscription Expirations',
+            array($this, 'render_discord_notify_expirations_field'),
+            'flexpress_discord_settings',
+            'discord_notifications_section'
+        );
+        
+        add_settings_field(
+            'notify_ppv',
+            'PPV Purchases',
+            array($this, 'render_discord_notify_ppv_field'),
+            'flexpress_discord_settings',
+            'discord_notifications_section'
+        );
+        
+        add_settings_field(
+            'notify_refunds',
+            'Refunds & Chargebacks',
+            array($this, 'render_discord_notify_refunds_field'),
+            'flexpress_discord_settings',
+            'discord_notifications_section'
+        );
+        
+        add_settings_field(
+            'notify_talent_applications',
+            'Talent Applications',
+            array($this, 'render_discord_notify_talent_applications_field'),
+            'flexpress_discord_settings',
+            'discord_notifications_section'
+        );
     }
 
     /**
@@ -397,6 +500,301 @@ class FlexPress_Settings {
             });
             </script>
         </div>
+        <?php
+    }
+
+    /**
+     * Render the Discord settings page
+     */
+    public function render_discord_settings_page() {
+        ?>
+        <div class="wrap">
+            <h1>💬 Discord Notifications</h1>
+            
+            <div class="card" style="max-width: 800px; margin-bottom: 20px;">
+                <h2>🎯 Real-Time Payment & Activity Notifications</h2>
+                <p>Get instant Discord notifications for all critical events happening on your site:</p>
+                
+                <div style="background: #f0f0f0; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <h3>📋 What You'll Get Notified About:</h3>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>🎉 New Member Signups</strong> - When someone subscribes to your site</li>
+                        <li><strong>💰 Subscription Rebills</strong> - Successful recurring payments</li>
+                        <li><strong>❌ Subscription Cancellations</strong> - When members cancel</li>
+                        <li><strong>⏰ Subscription Expirations</strong> - When memberships expire</li>
+                        <li><strong>🎬 PPV Purchases</strong> - Pay-per-view episode purchases</li>
+                        <li><strong>⚠️ Refunds & Chargebacks</strong> - Payment issues and disputes</li>
+                        <li><strong>🌟 Talent Applications</strong> - New performer applications</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <h3>🔧 How to Set Up Discord Webhooks:</h3>
+                    <ol style="margin-left: 20px;">
+                        <li><strong>Go to your Discord server</strong> → Server Settings → Integrations</li>
+                        <li><strong>Click "Create Webhook"</strong> in the Webhooks section</li>
+                        <li><strong>Choose a channel</strong> where you want notifications (e.g., #payments, #notifications)</li>
+                        <li><strong>Copy the webhook URL</strong> and paste it in the form below</li>
+                        <li><strong>Customize which events</strong> you want to be notified about</li>
+                        <li><strong>Test the connection</strong> to make sure everything works</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <form method="post" action="options.php">
+                <?php
+                settings_fields('flexpress_discord_settings');
+                do_settings_sections('flexpress_discord_settings');
+                submit_button('Save Discord Settings');
+                ?>
+            </form>
+            
+            <?php $this->render_discord_preview(); ?>
+        </div>
+        
+        <script>
+        function testDiscordConnection() {
+            var resultsDiv = document.getElementById('discord-test-results');
+            resultsDiv.innerHTML = '<p>Testing Discord connection...</p>';
+            
+            jQuery.post(ajaxurl, {
+                action: 'test_discord_connection',
+                nonce: '<?php echo wp_create_nonce('test_discord_connection'); ?>'
+            }, function(response) {
+                if (response.success) {
+                    resultsDiv.innerHTML = '<p style="color: green;">✓ Discord connection successful! Check your Discord channel for the test notification.</p>';
+                } else {
+                    resultsDiv.innerHTML = '<p style="color: red;">✗ Discord connection failed: ' + response.data + '</p>';
+                }
+            });
+        }
+        </script>
+        <?php
+    }
+
+    /**
+     * Render Discord notification preview
+     */
+    private function render_discord_preview() {
+        ?>
+        <div class="card" style="max-width: 800px; margin-top: 20px;">
+            <h2>👀 Notification Preview</h2>
+            <p>Here's what your Discord notifications will look like:</p>
+            
+            <div style="background: #2f3136; color: #dcddde; padding: 20px; border-radius: 8px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 15px 0;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <span style="font-size: 28px; margin-right: 12px;">🎉</span>
+                    <strong style="color: #ffffff; font-size: 18px;">New Member Signup!</strong>
+                </div>
+                
+                <div style="background: #36393f; padding: 15px; border-radius: 6px; margin: 15px 0;">
+                    <div style="display: grid; grid-template-columns: 120px 1fr; gap: 8px; margin-bottom: 8px;">
+                        <div style="color: #b9bbbe; font-weight: bold;">Member:</div>
+                        <div>John Doe</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 120px 1fr; gap: 8px; margin-bottom: 8px;">
+                        <div style="color: #b9bbbe; font-weight: bold;">Email:</div>
+                        <div>john@example.com</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 120px 1fr; gap: 8px; margin-bottom: 8px;">
+                        <div style="color: #b9bbbe; font-weight: bold;">Amount:</div>
+                        <div>USD 29.95</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 120px 1fr; gap: 8px; margin-bottom: 8px;">
+                        <div style="color: #b9bbbe; font-weight: bold;">Type:</div>
+                        <div>Recurring</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 120px 1fr; gap: 8px; margin-bottom: 8px;">
+                        <div style="color: #b9bbbe; font-weight: bold;">Next Charge:</div>
+                        <div>Jan 15, 2025</div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 12px; color: #72767d; margin-top: 15px; display: flex; align-items: center;">
+                    <img src="<?php echo get_site_icon_url(16); ?>" style="width: 16px; height: 16px; border-radius: 50%; margin-right: 8px;" />
+                    <?php echo get_bloginfo('name'); ?> • Flowguard • Just now
+                </div>
+            </div>
+            
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 6px; margin: 15px 0;">
+                <h4 style="margin-top: 0; color: #856404;">💡 Pro Tips:</h4>
+                <ul style="margin-bottom: 0; color: #856404;">
+                    <li><strong>Create separate channels</strong> for different types of notifications (e.g., #payments, #talent-applications)</li>
+                    <li><strong>Use @mentions</strong> in your Discord webhook settings to ping specific team members</li>
+                    <li><strong>Set up role-based notifications</strong> so different team members get different types of alerts</li>
+                    <li><strong>Test regularly</strong> to ensure notifications are working properly</li>
+                </ul>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render Discord config section description
+     */
+    public function render_discord_config_section() {
+        echo '<p>Configure your Discord webhook URL to receive real-time notifications for payment events and other activities.</p>';
+    }
+
+    /**
+     * Render Discord webhook URL field
+     */
+    public function render_discord_webhook_url_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $webhook_url = $options['webhook_url'] ?? '';
+        ?>
+        <input type="url" 
+               name="flexpress_discord_settings[webhook_url]" 
+               value="<?php echo esc_attr($webhook_url); ?>" 
+               class="regular-text" 
+               placeholder="https://discord.com/api/webhooks/..." />
+        <p class="description">Enter your Discord webhook URL. This should start with "https://discord.com/api/webhooks/".</p>
+        <?php
+    }
+
+    /**
+     * Render Discord test connection field
+     */
+    public function render_discord_test_connection_field() {
+        ?>
+        <button type="button" 
+                onclick="testDiscordConnection()" 
+                class="button button-secondary">Test Discord Connection</button>
+        <div id="discord-test-results" style="margin-top: 10px;"></div>
+        <p class="description">Test your Discord webhook connection by sending a test notification.</p>
+        <?php
+    }
+
+    /**
+     * Render Discord notifications section description
+     */
+    public function render_discord_notifications_section() {
+        echo '<p>Choose which events should trigger Discord notifications. All notifications include rich embeds with detailed information.</p>';
+    }
+
+    /**
+     * Render Discord notify subscriptions field
+     */
+    public function render_discord_notify_subscriptions_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $notify_subscriptions = $options['notify_subscriptions'] ?? true;
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="flexpress_discord_settings[notify_subscriptions]" 
+                   value="1" 
+                   <?php checked($notify_subscriptions); ?> />
+            Send notifications for new member subscriptions
+        </label>
+        <p class="description">🎉 Notifications include member name, email, amount, subscription type, and transaction details.</p>
+        <?php
+    }
+
+    /**
+     * Render Discord notify rebills field
+     */
+    public function render_discord_notify_rebills_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $notify_rebills = $options['notify_rebills'] ?? true;
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="flexpress_discord_settings[notify_rebills]" 
+                   value="1" 
+                   <?php checked($notify_rebills); ?> />
+            Send notifications for successful subscription rebills
+        </label>
+        <p class="description">💰 Notifications include member name, amount, transaction ID, and next charge date.</p>
+        <?php
+    }
+
+    /**
+     * Render Discord notify cancellations field
+     */
+    public function render_discord_notify_cancellations_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $notify_cancellations = $options['notify_cancellations'] ?? true;
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="flexpress_discord_settings[notify_cancellations]" 
+                   value="1" 
+                   <?php checked($notify_cancellations); ?> />
+            Send notifications for subscription cancellations
+        </label>
+        <p class="description">❌ Notifications include member name, cancellation reason, and access expiration date.</p>
+        <?php
+    }
+
+    /**
+     * Render Discord notify expirations field
+     */
+    public function render_discord_notify_expirations_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $notify_expirations = $options['notify_expirations'] ?? true;
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="flexpress_discord_settings[notify_expirations]" 
+                   value="1" 
+                   <?php checked($notify_expirations); ?> />
+            Send notifications for subscription expirations
+        </label>
+        <p class="description">⏰ Notifications include member name and subscription type.</p>
+        <?php
+    }
+
+    /**
+     * Render Discord notify PPV field
+     */
+    public function render_discord_notify_ppv_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $notify_ppv = $options['notify_ppv'] ?? true;
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="flexpress_discord_settings[notify_ppv]" 
+                   value="1" 
+                   <?php checked($notify_ppv); ?> />
+            Send notifications for PPV purchases
+        </label>
+        <p class="description">🎬 Notifications include member name, amount, episode title, and transaction details.</p>
+        <?php
+    }
+
+    /**
+     * Render Discord notify refunds field
+     */
+    public function render_discord_notify_refunds_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $notify_refunds = $options['notify_refunds'] ?? true;
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="flexpress_discord_settings[notify_refunds]" 
+                   value="1" 
+                   <?php checked($notify_refunds); ?> />
+            Send notifications for refunds and chargebacks
+        </label>
+        <p class="description">⚠️ Notifications include member name, amount, refund type, and transaction details.</p>
+        <?php
+    }
+
+    /**
+     * Render Discord notify talent applications field
+     */
+    public function render_discord_notify_talent_applications_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $notify_talent_applications = $options['notify_talent_applications'] ?? true;
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="flexpress_discord_settings[notify_talent_applications]" 
+                   value="1" 
+                   <?php checked($notify_talent_applications); ?> />
+            Send notifications for talent applications
+        </label>
+        <p class="description">🌟 Notifications include applicant name, contact info, experience, and bio.</p>
         <?php
     }
 }

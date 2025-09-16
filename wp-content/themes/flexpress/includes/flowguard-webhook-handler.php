@@ -170,6 +170,9 @@ function flexpress_flowguard_handle_subscription_approved($payload) {
         $payload
     );
     
+    // Send Discord notification
+    flexpress_discord_notify_subscription_approved($payload, $user_id);
+    
     error_log('Flowguard Webhook: Subscription approved for user ' . $user_id);
 }
 
@@ -221,6 +224,9 @@ function flexpress_flowguard_handle_purchase_approved($payload) {
         $payload
     );
     
+    // Send Discord notification
+    flexpress_discord_notify_purchase_approved($payload, $user_id, $episode_id);
+    
     error_log('Flowguard Webhook: Purchase approved for user ' . $user_id);
 }
 
@@ -265,6 +271,9 @@ function flexpress_flowguard_handle_subscription_rebill($payload) {
         $payload
     );
     
+    // Send Discord notification
+    flexpress_discord_notify_subscription_rebill($payload, $user_id);
+    
     error_log('Flowguard Webhook: Subscription rebill for user ' . $user_id);
 }
 
@@ -296,6 +305,9 @@ function flexpress_flowguard_handle_subscription_cancel($payload) {
         $payload
     );
     
+    // Send Discord notification
+    flexpress_discord_notify_subscription_cancel($payload, $user_id);
+    
     error_log('Flowguard Webhook: Subscription cancelled for user ' . $user_id);
 }
 
@@ -321,6 +333,9 @@ function flexpress_flowguard_handle_subscription_expiry($payload) {
         'Subscription expired via Flowguard',
         $payload
     );
+    
+    // Send Discord notification
+    flexpress_discord_notify_subscription_expiry($payload, $user_id);
     
     error_log('Flowguard Webhook: Subscription expired for user ' . $user_id);
 }
@@ -362,6 +377,9 @@ function flexpress_flowguard_handle_refund($payload) {
         'Refund processed via Flowguard',
         $payload
     );
+    
+    // Send Discord notification
+    flexpress_discord_notify_refund($payload, $user_id);
     
     error_log('Flowguard Webhook: Refund processed for user ' . $user_id);
 }

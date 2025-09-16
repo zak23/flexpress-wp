@@ -86,6 +86,75 @@ The integration creates three database tables:
 - `wp_flexpress_flowguard_transactions` - Transaction records
 - `wp_flexpress_flowguard_sessions` - Payment session tracking
 
+### Discord Notifications System
+
+FlexPress includes a comprehensive Discord notification system that provides real-time alerts for all critical payment events and activities.
+
+#### Discord Integration Features
+
+- **Real-Time Notifications**: Instant Discord alerts for all payment events
+- **Rich Embeds**: Beautiful, detailed notifications with color coding
+- **Customizable Events**: Choose which events trigger notifications
+- **Team Collaboration**: Keep your team informed of all activities
+- **Easy Setup**: Simple webhook configuration with test functionality
+
+#### Supported Notification Events
+
+- **🎉 New Member Signups** - When someone subscribes to your site
+- **💰 Subscription Rebills** - Successful recurring payments
+- **❌ Subscription Cancellations** - When members cancel
+- **⏰ Subscription Expirations** - When memberships expire
+- **🎬 PPV Purchases** - Pay-per-view episode purchases
+- **⚠️ Refunds & Chargebacks** - Payment issues and disputes
+- **🌟 Talent Applications** - New performer applications
+
+#### Discord Setup Instructions
+
+1. **Create Discord Webhook**:
+   - Go to your Discord server → Server Settings → Integrations
+   - Click "Create Webhook" in the Webhooks section
+   - Choose a channel for notifications (e.g., #payments, #notifications)
+   - Copy the webhook URL
+
+2. **Configure FlexPress**:
+   - Go to `FlexPress Settings → Discord`
+   - Paste your Discord webhook URL
+   - Choose which events to notify about
+   - Test the connection to verify setup
+
+3. **Customize Notifications**:
+   - Enable/disable specific event types
+   - All notifications include rich embeds with detailed information
+   - Color-coded notifications for easy identification
+
+#### Notification Examples
+
+**New Member Signup:**
+```
+🎉 New Member Signup!
+Member: John Doe
+Email: john@example.com
+Amount: USD 29.95
+Type: Recurring
+Next Charge: Jan 15, 2025
+```
+
+**PPV Purchase:**
+```
+🎬 PPV Purchase Approved
+Member: Jane Smith
+Amount: USD 9.95
+Episode: "Hot Summer Nights"
+Transaction ID: TXN_12345
+```
+
+#### Pro Tips
+
+- **Separate Channels**: Create different Discord channels for different types of notifications
+- **Role Mentions**: Use @mentions in webhook settings to ping specific team members
+- **Regular Testing**: Test notifications regularly to ensure they're working properly
+- **Team Coordination**: Set up role-based notifications for different team members
+
 #### Troubleshooting
 
 **Common Issues Fixed During Implementation:**

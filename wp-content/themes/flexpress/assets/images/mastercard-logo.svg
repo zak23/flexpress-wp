@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="24" viewBox="0 0 48 24">
+  <!-- Placeholder SVG for Mastercard logo -->
+  <circle cx="14" cy="12" r="10" fill="#EB001B"/>
+  <circle cx="26" cy="12" r="10" fill="#F79E1B"/>
+  <text x="40" y="14" font-family="Arial" font-size="6" fill="#000">MC</text>
+</svg> 

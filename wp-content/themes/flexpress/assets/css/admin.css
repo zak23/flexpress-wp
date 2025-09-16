@@ -1,0 +1,117 @@
+/* FlexPress Admin Styles */
+
+/* Membership Status Styling */
+.membership-status {
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.membership-status.status-active {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.membership-status.status-cancelled {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.membership-status.status-expired,
+.membership-status.status-banned {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.membership-status.status-none {
+  background-color: #e2e3e5;
+  color: #6c757d;
+  border: 1px solid #d6d8db;
+}
+
+/* Delete User Button Styling */
+.delete-user-btn {
+  color: #a00 !important;
+  border-color: #a00 !important;
+  background: transparent !important;
+  transition: all 0.2s ease;
+}
+
+.delete-user-btn:hover {
+  color: #fff !important;
+  background-color: #a00 !important;
+  border-color: #a00 !important;
+}
+
+.delete-user-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Members table improvements */
+.wp-list-table.users th,
+.wp-list-table.users td {
+  vertical-align: middle;
+}
+
+.wp-list-table.users .column-actions {
+  white-space: nowrap;
+}
+
+/* Form styling improvements */
+.form-table th {
+  width: 200px;
+}
+
+/* Admin notices styling */
+.notice.notice-success {
+  border-left-color: #00a32a;
+}
+
+.notice.notice-error {
+  border-left-color: #d63638;
+}
+
+.notice.notice-warning {
+  border-left-color: #dba617;
+}
+
+/* Card styling for tools */
+.card {
+  background: #fff;
+  border: 1px solid #c3c4c7;
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0,0,0,.04);
+  margin: 20px 0;
+}
+
+.card .title {
+  margin: 0;
+  padding: 14px 20px;
+  border-bottom: 1px solid #c3c4c7;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.card .inside {
+  padding: 20px;
+}
+
+/* Responsive improvements */
+@media screen and (max-width: 782px) {
+  .wp-list-table.users .column-actions {
+    text-align: left;
+  }
+  
+  .delete-user-btn {
+    margin-top: 5px;
+    display: block;
+    width: 100%;
+  }
+} 

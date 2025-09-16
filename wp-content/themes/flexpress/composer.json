@@ -1,0 +1,27 @@
+{
+    "name": "flexpress/wordpress-theme",
+    "description": "FlexPress Premium Dark Theme - WordPress development with linting tools",
+    "type": "project",
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^3.11",
+        "wp-coding-standards/wpcs": "^3.1",
+        "php-stubs/wordpress-stubs": "^6.6",
+        "szepeviktor/phpstan-wordpress": "^2.0",
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+        "phpstan/extension-installer": "^1.4",
+        "digitalrevolution/php-codesniffer-baseline": "^1.1"
+    },
+    "scripts": {
+        "phpcs": "./vendor/bin/phpcs --standard=phpcs.xml",
+        "phpcbf": "./vendor/bin/phpcbf --standard=phpcs.xml",
+        "phpstan": "./vendor/bin/phpstan analyse --memory-limit=2G"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true,
+            "digitalrevolution/php-codesniffer-baseline": true
+        }
+    },
+    "license": "GPL-3.0-or-later"
+} 

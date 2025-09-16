@@ -1,0 +1,209 @@
+# FlexPress Theme - Cursor Rules
+
+## Project Overview
+
+FlexPress is a premium WordPress theme for adult content websites with integrated payment processing, membership management, and secure video delivery. The theme follows WordPress coding standards and includes comprehensive affiliate management capabilities.
+
+## Code Style
+
+### PHP
+- Indentation: 4 spaces
+- Max line length: 120 characters
+- Quote style: Single quotes preferred
+- Follow WordPress PHP Coding Standards
+- All functions must have proper docblocks
+- Use meaningful variable and function names
+
+### CSS
+- Indentation: 2 spaces
+- Max line length: 80 characters
+- Quote style: Double quotes
+- Use CSS custom properties for theming
+- Follow BEM methodology for class naming
+
+### JavaScript
+- Indentation: 2 spaces
+- Max line length: 100 characters
+- Quote style: Single quotes
+- Use vanilla JS where possible
+- Comprehensive error handling required
+
+## Architecture Guidelines
+
+### Theme Structure
+```
+wp-content/themes/flexpress/
+├── assets/              # Theme assets (CSS, JS, images)
+├── includes/           # Core functionality and integrations
+│   ├── admin/         # Admin-specific functionality
+│   ├── verotel/       # Payment processing integration
+│   └── affiliate-helpers.php  # Affiliate system core
+├── page-templates/    # Custom page templates
+├── template-parts/    # Reusable template parts
+└── functions.php      # Theme setup and core functions
+```
+
+### Database Design
+- Use WordPress naming conventions (wp_ prefix)
+- Always include created_at and updated_at timestamps
+- Use proper indexes for performance
+- Follow referential integrity principles
+
+## Feature Implementation Rules
+
+### Affiliate System
+- **Core Files:** `affiliate-helpers.php`, `class-flexpress-affiliate-settings.php`
+- **Templates:** `affiliate-signup.php`, `affiliate-dashboard.php`
+- **Database:** Three-table architecture (affiliates, commissions, payouts)
+- **Integration:** Event-driven webhook processing for real-time tracking
+- **Security:** Multi-layer validation, sanitization, and fraud prevention
+
+### Payment Processing
+- **Verotel Integration:** Use official FlexPay client library
+- **Webhook Security:** Signature validation with fallback mechanisms
+- **Commission Tracking:** Dual system for legacy promo codes and new affiliates
+- **Error Handling:** Comprehensive logging and error recovery
+
+### Video Integration
+- **BunnyCDN:** Secure token-signed URLs with configurable cache duration
+- **Thumbnails:** API-based retrieval with intelligent fallback system
+- **Hero Videos:** Thumbnail-first loading with smooth video transitions
+- **Access Control:** Flexible system (free/PPV/membership/mixed)
+
+### Gallery System
+- **Episode Integration:** Galleries attached to episode post types
+- **BunnyCDN Storage:** Direct upload to CDN with automatic optimization
+- **Image Processing:** Multiple sizes (thumbnail, medium, large, full)
+- **Admin Interface:** Drag & drop upload with image management
+- **Frontend Display:** Responsive grid with lightbox viewer
+- **Performance:** CDN delivery with lazy loading and caching
+
+### Content Management
+- **Episodes:** Custom post type with ACF integration
+- **Models:** Relationship fields with social media integration
+- **Legal Pages:** Dynamic content generation with ACF settings
+- **Navigation:** Automated menu creation and organization
+
+## Development Standards
+
+### Security Requirements
+- Sanitize all user inputs
+- Escape all outputs
+- Use prepared statements for database queries
+- Implement proper user capability checks
+- Follow WordPress security best practices
+
+### Performance Optimization
+- Use WordPress caching mechanisms (transients, object cache)
+- Optimize database queries with proper indexing
+- Implement lazy loading for images and videos
+- Minimize HTTP requests and optimize assets
+
+### Responsive Design
+- Mobile-first approach
+- Bootstrap 5.0+ framework integration
+- Consistent breakpoints across all components
+- Touch-friendly interfaces for mobile devices
+
+## Integration Points
+
+### Third-Party Services
+- **BunnyCDN:** Video delivery and thumbnail generation
+- **Verotel:** Payment processing and subscription management
+- **Chart.js:** Analytics and performance visualization
+- **Discord:** Future notification system integration
+
+### WordPress Integration
+- **ACF:** Custom fields for content management
+- **Custom Post Types:** Episodes, models, legal pages
+- **User Roles:** Extended capabilities for affiliate management
+- **Hooks & Filters:** Event-driven architecture throughout
+
+## Testing Requirements
+
+### Automated Testing
+- Unit tests for all helper functions
+- Integration tests for payment workflows
+- Performance tests for database operations
+- Security tests for user input validation
+
+### Manual Testing Checklist
+- [ ] Responsive design across all breakpoints
+- [ ] Payment processing workflows
+- [ ] Affiliate commission tracking
+- [ ] Video playback and thumbnail loading
+- [ ] Form validation and submission
+- [ ] Admin interface functionality
+
+## Documentation Standards
+
+### Code Documentation
+- All functions must have PHPDoc comments
+- Complex algorithms require inline comments
+- Database schema changes must be documented
+- API endpoints need comprehensive documentation
+
+### User Documentation
+- README.md must reflect all current features
+- Installation and configuration guides
+- Troubleshooting documentation
+- Feature usage examples
+
+## Future Development Guidelines
+
+### Affiliate System Roadmap
+- **Phase 2:** Tiered commission structures and bonus events
+- **Phase 3:** Multi-method payout system with crypto support
+- **Phase 4:** Discord notifications and email automation
+- **Phase 5:** Progressive Web App and AI analytics
+- **Phase 6:** Third-party marketing platform integrations
+
+### Technical Debt Management
+- Regular code reviews and refactoring
+- Performance monitoring and optimization
+- Security audits and updates
+- Database optimization and maintenance
+
+## Deployment Rules
+
+### File Exclusions
+- Development files (node_modules, vendor)
+- Configuration files (docker-compose.yml, .env)
+- Documentation files (except README.md)
+- Build artifacts and logs
+
+### Required Checks
+- [ ] Theme metadata in style.css
+- [ ] All required WordPress theme files
+- [ ] Screenshot.png (880x660px)
+- [ ] README.md documentation
+- [ ] Affiliate system database tables
+- [ ] Payment integration configuration
+
+## Error Handling
+
+### Logging Strategy
+- Use WordPress debug logging for development
+- Implement custom logging for production
+- Log all payment and commission transactions
+- Monitor affiliate system performance
+
+### Graceful Degradation
+- Fallback mechanisms for all external services
+- Progressive enhancement for JavaScript features
+- Alternative content for failed video loads
+- Backup payment processing options
+
+## Compliance Requirements
+
+### Legal Considerations
+- GDPR/CCPA data privacy compliance
+- FTC affiliate disclosure requirements
+- Adult content regulations and age verification
+- International tax reporting obligations
+
+### Security Compliance
+- Regular security updates and patches
+- Vulnerability scanning and monitoring
+- Secure credential management
+- Data encryption for sensitive information 

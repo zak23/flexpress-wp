@@ -17,12 +17,12 @@ readme.html
 # WORDPRESS CONTENT (EXCEPT FLEXPRESS THEME)
 # ==============================================
 # Exclude all themes except FlexPress
-wp-content/themes/
+wp-content/themes/*
 !wp-content/themes/flexpress/
 !wp-content/themes/index.php
 
 # Exclude all plugins (they should be managed via composer or separately)
-wp-content/plugins/
+wp-content/plugins/*
 !wp-content/plugins/index.php
 
 # Exclude uploads and user-generated content
@@ -63,6 +63,9 @@ yarn.lock
 # Composer dependencies (for theme development)
 wp-content/themes/flexpress/vendor/
 wp-content/themes/flexpress/composer.lock
+
+# Embedded git repositories (Verotel SDK)
+wp-content/themes/flexpress/includes/verotel/
 
 # Build artifacts
 wp-content/themes/flexpress/assets/dist/

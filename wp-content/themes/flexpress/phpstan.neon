@@ -1,0 +1,16 @@
+parameters:
+    level: 5
+    checkExplicitMixedMissingReturn: false
+    reportUnmatchedIgnoredErrors: false
+    paths:
+        - ./
+    excludePaths:
+        - **/vendor/*
+        - **/node_modules/*
+        - **/assets/js/*
+        - **/assets/css/*
+    bootstrapFiles:
+        - ./stubs.php
+    ignoreErrors:
+        - '#Function wp_[a-zA-Z_]+ not found#'
+        - '#Constant [A-Z_]+ not found#' 

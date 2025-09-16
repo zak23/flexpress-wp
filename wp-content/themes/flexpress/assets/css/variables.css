@@ -1,0 +1,57 @@
+/* FlexPress Theme Variables */
+
+:root {
+  /* Colors */
+  --color-primary: #ffffff;
+  --color-secondary: #999999;
+  --color-background: #000000;
+  --color-surface: #0a0a0a;
+  --color-surface-hover: #1a1a1a;
+  --color-text: #ffffff;
+  --color-text-secondary: #aaaaaa;
+  --color-border: #222222;
+  
+  /* Accent Color System - Dynamically set via PHP */
+  --color-accent: #ff6b35; /* Fallback - overridden by theme settings */
+  --color-accent-hover: #e55a2b; /* Fallback - overridden by theme settings */
+  --color-accent-light: rgba(255, 107, 53, 0.2); /* Fallback - overridden by theme settings */
+  --color-accent-dark: #d4481f; /* Fallback - overridden by theme settings */
+  
+  /* Typography */
+  --font-primary: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-size-base: 16px;
+  --font-size-small: 14px;
+  --font-size-large: 18px;
+  --font-size-xlarge: 24px;
+  --font-size-xxlarge: 32px;
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  /* Grid */
+  --grid-gap: 16px;
+  --grid-columns: 6;
+  
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.6);
+  
+  /* Z-index */
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-popover: 1060;
+  --z-index-tooltip: 1070;
+} 

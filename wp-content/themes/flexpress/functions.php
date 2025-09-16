@@ -106,6 +106,16 @@ function flexpress_setup() {
 add_action('after_setup_theme', 'flexpress_setup');
 
 /**
+ * Disable admin toolbar for non-admin users
+ */
+function flexpress_disable_admin_bar_for_non_admins() {
+    if (!current_user_can('administrator')) {
+        show_admin_bar(false);
+    }
+}
+add_action('after_setup_theme', 'flexpress_disable_admin_bar_for_non_admins');
+
+/**
  * Enqueue scripts and styles
  */
 function flexpress_enqueue_scripts_and_styles() {

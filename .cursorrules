@@ -1,10 +1,17 @@
-# FlexPress WordPress Project Rules
+# FlexPress WordPress Theme Development Rules
 
 ## Project Overview
+FlexPress is a premium WordPress theme for content creators (primarily adult content) that integrates:
+- **Verotel FlexPay** - Payment processing and membership management
+- **BunnyCDN Stream & Storage** - Video streaming and file hosting
+- **Advanced Content Management** - Episodes, models, galleries, access control
+- **Comprehensive Admin System** - Built-in settings and management tools
+
 This is a WordPress website project running in Docker containers with the following setup:
 - WordPress: Port 8085 (http://localhost:8085)
 - phpMyAdmin: Port 8086 (http://localhost:8086)
 - MySQL Database: Internal container network
+- Test Site: ZaksPOV.com (development data only)
 
 ## Docker Configuration
 - Main service: `wordpress` (custom build)
@@ -16,6 +23,8 @@ This is a WordPress website project running in Docker containers with the follow
 - Always use IP addresses instead of localhost when configuring servers
 - Avoid port 3000 (reserved for MCP tools)
 - Use port 8085 for WordPress (8083 was occupied)
+- **ALL DEVELOPMENT WORK MUST BE CONTAINED WITHIN THE FLEXPRESS THEME DIRECTORY** (`wp-content/themes/flexpress/`)
+- **ALWAYS UPDATE README.md AS FEATURES ARE DEVELOPED** - Document new features, integrations, and capabilities
 - All WordPress customizations go in `wp-content/` directory
 - Database credentials are in `.env` file
 
@@ -37,8 +46,48 @@ flexpress/
 - Logs: `docker-compose logs -f`
 - Rebuild: `docker-compose up --build -d`
 
+## Theme Features & Integrations
+
+### Core Integrations
+- **Verotel FlexPay**: Complete payment processing system with webhooks, subscriptions, PPV purchases
+- **BunnyCDN Stream**: Video hosting, streaming, and thumbnail generation
+- **BunnyCDN Storage**: Image galleries and file management
+- **Advanced Custom Fields (ACF)**: Content management and admin interfaces
+
+### Content Management
+- **Episodes**: Video content with access control (free/PPV/membership/mixed)
+- **Models**: Performer profiles with relationship linking
+- **Galleries**: Image galleries attached to episodes with BunnyCDN Storage
+- **Access Control**: Flexible pricing and member discount systems
+
+### Membership System
+- **Registration**: Custom forms with password strength and validation
+- **Authentication**: Login/logout with dashboard integration
+- **Activity Logging**: Comprehensive user activity tracking
+- **Affiliate System**: Commission tracking and management
+
+### Admin Features
+- **Settings Panels**: General, Video, Membership, Verotel, Pricing, Affiliate, Contact
+- **Webhook Management**: Verotel payment processing and debugging
+- **User Management**: Member profiles, purchases, activity logs
+- **Legal Pages**: Dynamic content generation for compliance
+
+### Frontend Features
+- **Modern Dark Theme**: Vixen.com-inspired design with responsive layouts
+- **Video Interface**: Hero videos, episode archives, filtering systems
+- **Professional UI**: Card-based layouts with hover effects and animations
+- **Legal Compliance**: 2257, privacy policy, terms, content removal forms
+
+## Documentation Requirements
+- **README.md**: Must be updated immediately when features are added/modified
+- **Implementation Docs**: Feature-specific documentation in dedicated .md files
+- **Code Comments**: Inline documentation for complex functions and integrations
+- **Version Control**: All changes must include descriptive commit messages
+
 ## Security Notes
 - Change default passwords in production
 - Use environment variables for sensitive data
 - Enable SSL in production
 - Regular security updates required
+- Verotel webhook signature validation
+- Secure video token generation

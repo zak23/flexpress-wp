@@ -119,7 +119,11 @@ add_filter('body_class', function($classes) {
                                     <div class="row g-4">
                                         <?php
                                         while ($query->have_posts()): $query->the_post();
-                                            get_template_part('template-parts/content', 'episode-card');
+                                        ?>
+                                            <div class="col-md-6">
+                                                <?php get_template_part('template-parts/content', 'episode-card'); ?>
+                                            </div>
+                                        <?php
                                         endwhile;
                                         wp_reset_postdata();
                                         ?>

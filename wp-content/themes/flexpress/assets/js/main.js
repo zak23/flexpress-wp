@@ -120,12 +120,7 @@
                 discountText = ` (${memberDiscount}% member discount applied)`;
             }
             
-            // Show confirmation dialog
-            const confirmMessage = `Unlock this episode for $${finalPrice.toFixed(2)}?${discountText}`;
-            
-            if (!confirm(confirmMessage)) {
-                return;
-            }
+            // Process purchase directly without confirmation dialog
             
             this.processPurchase(episodeId, finalPrice, basePrice, memberDiscount, $button);
         },

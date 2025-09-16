@@ -976,7 +976,7 @@ function flexpress_has_episode_gallery($post_id = null) {
 /**
  * Display episode gallery
  */
-function flexpress_display_episode_gallery($post_id = null, $columns = null) {
+function flexpress_display_episode_gallery($post_id = null, $columns = null, $has_access = null) {
     if (!$post_id) {
         $post_id = get_the_ID();
     }
@@ -985,6 +985,17 @@ function flexpress_display_episode_gallery($post_id = null, $columns = null) {
     if (empty($gallery_images)) {
         return;
     }
+    
+    // Check access if not provided
+    if ($has_access === null) {
+        $access_info = function_exists('flexpress_check_episode_access') ? flexpress_check_episode_access($post_id) : array('has_access' => true);
+        $has_access = $access_info['has_access'];
+    }
+    
+    // Determine if we should show preview mode (only first 5 images)
+    $preview_mode = !$has_access && count($gallery_images) > 5;
+    $display_images = $preview_mode ? array_slice($gallery_images, 0, 5) : $gallery_images;
+    $remaining_count = $preview_mode ? count($gallery_images) - 5 : 0;
     
     // Get gallery settings
     if ($columns === null) {
@@ -999,7 +1010,7 @@ function flexpress_display_episode_gallery($post_id = null, $columns = null) {
          data-lightbox="<?php echo $lightbox ? 'true' : 'false'; ?>"
          data-autoplay="<?php echo $autoplay ? 'true' : 'false'; ?>">
         <div class="gallery-grid" style="grid-template-columns: repeat(<?php echo esc_attr($columns); ?>, 1fr);">
-            <?php foreach ($gallery_images as $index => $image) : ?>
+            <?php foreach ($display_images as $index => $image) : ?>
                 <?php
                 // Use BunnyCDN thumbnail URL if available, otherwise fallback to WordPress URLs
                 $thumbnail_url = !empty($image['bunnycdn_thumbnail_url']) ? 
@@ -1010,21 +1021,72 @@ function flexpress_display_episode_gallery($post_id = null, $columns = null) {
                 $large_url = !empty($image['bunnycdn_url']) ? 
                     FlexPress_Gallery_System::generate_bunnycdn_token_url($image['bunnycdn_url'], 24) : 
                     $image['large'];
+                
+                // Check if this is the 5th image in preview mode
+                $is_last_preview = $preview_mode && $index === 4;
                 ?>
                 <div class="gallery-item" data-index="<?php echo $index; ?>">
-                    <a href="<?php echo esc_url($large_url); ?>" 
-                       class="gallery-link" 
-                       data-lightbox="episode-gallery-<?php echo $post_id; ?>"
-                       data-title="<?php echo esc_attr($image['caption']); ?>">
-                        <img src="<?php echo esc_url($thumbnail_url); ?>" 
-                             alt="<?php echo esc_attr($image['alt']); ?>"
-                             loading="lazy">
-                        <?php if (!empty($image['caption'])) : ?>
-                            <div class="gallery-caption">
-                                <?php echo esc_html($image['caption']); ?>
+                    <?php if ($has_access || !$is_last_preview): ?>
+                        <a href="<?php echo esc_url($large_url); ?>" 
+                           class="gallery-link" 
+                           data-lightbox="episode-gallery-<?php echo $post_id; ?>"
+                           data-title="<?php echo esc_attr($image['caption']); ?>">
+                            <img src="<?php echo esc_url($thumbnail_url); ?>" 
+                                 alt="<?php echo esc_attr($image['alt']); ?>"
+                                 loading="lazy">
+                            <?php if (!empty($image['caption'])) : ?>
+                                <div class="gallery-caption">
+                                    <?php echo esc_html($image['caption']); ?>
+                                </div>
+                            <?php endif; ?>
+                        </a>
+                    <?php else: ?>
+                        <!-- 5th image with remaining count overlay - clickable with proper login/unlock logic -->
+                        <?php
+                        // Determine the appropriate URL and text based on login status
+                        if (!is_user_logged_in()) {
+                            $cta_url = home_url('/login?redirect_to=' . urlencode(get_permalink($post_id)));
+                            $cta_text = __('Login to unlock', 'flexpress');
+                            $cta_class = '';
+                        } else {
+                            // User is logged in but doesn't have access - check if they should purchase or get membership
+                            $access_info = function_exists('flexpress_check_episode_access') ? flexpress_check_episode_access($post_id) : array();
+                            
+                            if (isset($access_info['show_purchase_button']) && $access_info['show_purchase_button']) {
+                                // Direct purchase available
+                                $cta_url = '#';
+                                $cta_text = __('Click to unlock', 'flexpress');
+                                $cta_class = 'gallery-preview-purchase';
+                            } else {
+                                // Direct to membership
+                                $cta_url = home_url('/membership');
+                                $cta_text = __('Get membership', 'flexpress');
+                                $cta_class = '';
+                            }
+                        }
+                        ?>
+                        <a href="<?php echo esc_url($cta_url); ?>" 
+                           class="gallery-preview-last gallery-preview-cta <?php echo $cta_class; ?>"
+                           <?php if ($cta_class === 'gallery-preview-purchase'): ?>
+                           data-episode-id="<?php echo $post_id; ?>"
+                           data-price="<?php echo isset($access_info['final_price']) ? esc_attr($access_info['final_price']) : ''; ?>"
+                           data-access-type="<?php echo isset($access_info['access_type']) ? esc_attr($access_info['access_type']) : ''; ?>"
+                           <?php endif; ?>>
+                            <img src="<?php echo esc_url($thumbnail_url); ?>" 
+                                 alt="<?php echo esc_attr($image['alt']); ?>"
+                                 loading="lazy">
+                            <div class="gallery-preview-overlay">
+                                <div class="preview-overlay-content">
+                                    <div class="remaining-count">
+                                        +<?php echo $remaining_count; ?>
+                                    </div>
+                                    <div class="cta-hint">
+                                        <?php echo esc_html($cta_text); ?>
+                                    </div>
+                                </div>
                             </div>
-                        <?php endif; ?>
-                    </a>
+                        </a>
+                    <?php endif; ?>
                 </div>
             <?php endforeach; ?>
         </div>

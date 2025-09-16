@@ -209,15 +209,64 @@ The gallery section on episode pages uses intelligent display logic:
 - **Helper Function**: `flexpress_has_episode_gallery()` available for theme customization
 - **Performance**: Avoids unnecessary HTML output when no gallery exists
 
+### Preview Mode for Locked Episodes
+When episodes are not unlocked, the gallery implements a preview mode to encourage purchases:
+- **Access Control Integration**: Automatically detects episode access status
+- **5-Image Preview**: Shows only first 5 images for locked episodes with 6+ images
+- **Clickable CTA Overlay**: 5th image displays "+X" overlay that links to join page
+- **Interactive Design**: "Click to unlock" hint appears on hover with gold highlighting
+- **Direct Conversion**: One-click path from gallery preview to membership signup
+- **Smart Logic**: Episodes with ≤5 images show all (no preview mode needed)
+- **Responsive CTA**: Hover effects and sizing adapt to all screen sizes
+
 ### Template Integration
 ```php
 <?php if (function_exists('flexpress_has_episode_gallery') && flexpress_has_episode_gallery()): ?>
     <div class="episode-gallery-section">
         <h2><?php esc_html_e('Episode Gallery', 'flexpress'); ?></h2>
-        <?php flexpress_display_episode_gallery(); ?>
+        <?php 
+        // Pass access information for preview mode
+        $access_info = flexpress_check_episode_access();
+        flexpress_display_episode_gallery(null, null, $access_info['has_access']); 
+        ?>
     </div>
 <?php endif; ?>
 ```
+
+#### Preview Mode Integration
+The gallery automatically switches to preview mode based on episode access:
+```php
+// Gallery function signature with access parameter
+flexpress_display_episode_gallery($post_id = null, $columns = null, $has_access = null)
+
+// Examples:
+flexpress_display_episode_gallery(); // Auto-detects access
+flexpress_display_episode_gallery(123, 4, false); // Force preview mode
+flexpress_display_episode_gallery(123, 5, true); // Force full access
+```
+
+#### Conversion Funnel
+The gallery preview creates a seamless conversion path with smart user-state routing:
+
+**Not Logged In Users:**
+1. **Content Discovery**: User finds interesting episode
+2. **Preview Tease**: First 4 images show content quality  
+3. **CTA Trigger**: "+28 LOGIN TO UNLOCK" overlay
+4. **Authentication**: Click redirects to login with return URL
+5. **Access**: User returns and sees appropriate unlock options
+
+**Logged In Users:**
+1. **Content Discovery**: User views episode gallery
+2. **Preview Tease**: First 4 images demonstrate quality
+3. **Smart CTA**: "+28 CLICK TO UNLOCK" (purchase) or "+28 GET MEMBERSHIP"
+4. **Direct Action**: Purchase flow or membership signup
+5. **Satisfaction**: Immediate access to all gallery content
+
+**Access Control Integration:**
+- Automatically detects user authentication state
+- Matches episode access control logic exactly
+- Routes to login, purchase, or membership as appropriate
+- Maintains redirect URLs for seamless user experience
 
 ---
 

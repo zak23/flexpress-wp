@@ -82,6 +82,7 @@
         
         bindPurchaseButtons: function() {
             $(document).on('click', '.purchase-btn', this.handlePurchaseClick.bind(this));
+            $(document).on('click', '.gallery-preview-purchase', this.handleGalleryPurchaseClick.bind(this));
         },
         
         handlePurchaseClick: function(e) {
@@ -156,6 +157,18 @@
                     $button.prop('disabled', false).text(originalText);
                 }
             });
+        },
+        
+        handleGalleryPurchaseClick: function(e) {
+            e.preventDefault();
+            
+            const $link = $(e.currentTarget);
+            const episodeId = $link.data('episode-id');
+            const price = parseFloat($link.data('price'));
+            const accessType = $link.data('access-type');
+            
+            // Use the same purchase logic as the main purchase button
+            this.createPayment(episodeId, price);
         }
     };
     

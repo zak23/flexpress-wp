@@ -393,7 +393,7 @@ while (have_posts()):
             <div class="col-12">
                 <div class="episode-gallery-section mb-4">
                     <h2 class="section-title"><?php esc_html_e('Episode Gallery', 'flexpress'); ?></h2>
-                    <?php flexpress_display_episode_gallery(); ?>
+                    <?php flexpress_display_episode_gallery(null, null, $has_access); ?>
                 </div>
             </div>
         </div>

@@ -223,11 +223,19 @@ function flexpress_flowguard_handle_purchase_approved($payload) {
     
     // If it's a PPV purchase, grant access to the episode
     if ($episode_id > 0) {
+        error_log('Flowguard Webhook: Granting access to episode ' . $episode_id . ' for user ' . $user_id);
         $ppv_purchases = get_user_meta($user_id, 'ppv_purchases', true) ?: [];
+        error_log('Flowguard Webhook: Current PPV purchases: ' . print_r($ppv_purchases, true));
+        
         if (!in_array($episode_id, $ppv_purchases)) {
             $ppv_purchases[] = $episode_id;
-            update_user_meta($user_id, 'ppv_purchases', $ppv_purchases);
+            $result = update_user_meta($user_id, 'ppv_purchases', $ppv_purchases);
+            error_log('Flowguard Webhook: Updated PPV purchases: ' . print_r($ppv_purchases, true) . ' (Result: ' . ($result ? 'success' : 'failed') . ')');
+        } else {
+            error_log('Flowguard Webhook: Episode ' . $episode_id . ' already in user purchases');
         }
+    } else {
+        error_log('Flowguard Webhook: No episode ID found in reference: ' . $reference_id);
     }
     
     // Log activity

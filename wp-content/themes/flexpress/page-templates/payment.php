@@ -418,171 +418,55 @@ document.addEventListener('DOMContentLoaded', function() {
                         return;
                     }
                     
-                    // Validate form using Flowguard's validation methods
-                    let isValid = true;
-                    let validationErrors = [];
+                    // Let Flowguard handle validation - we'll just check if the form is ready
+                    console.log('Attempting payment submission - letting Flowguard handle validation');
                     
-                    try {
-                        // Check if Flowguard has validation methods
-                        if (typeof flowguard.validate === 'function') {
-                            const validationResult = flowguard.validate();
-                            isValid = validationResult.isValid;
-                            validationErrors = validationResult.errors || [];
-                        } else if (typeof flowguard.getValidationErrors === 'function') {
-                            const errors = flowguard.getValidationErrors();
-                            isValid = errors.length === 0;
-                            validationErrors = errors;
-                        } else {
-                            // Fallback: Check if all required fields have values
-                            // Core required fields (always required)
-                            const requiredFields = ['cardNumber', 'expDate'];
-                            // Optional fields (may be required by Flowguard)
-                            const optionalFields = ['cvv', 'cardholder'];
-                            const allFields = [...requiredFields, ...optionalFields];
-                            const fieldValues = {};
-                            
-                            allFields.forEach(fieldName => {
-                                try {
-                                    const fieldElement = document.getElementById(`${fieldName}-element`);
-                                    if (fieldElement) {
-                                        const iframe = fieldElement.querySelector('iframe');
-                                        if (iframe) {
-                                            // Try to get value from iframe (may fail due to CORS)
-                                            try {
-                                                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                                                const input = iframeDoc.querySelector('input');
-                                                fieldValues[fieldName] = input ? input.value.trim() : '';
-                                            } catch (error) {
-                                                // CORS restriction - assume field has value if iframe exists
-                                                fieldValues[fieldName] = 'has-iframe';
-                                            }
-                                        } else {
-                                            fieldValues[fieldName] = '';
-                                        }
-                                    } else {
-                                        fieldValues[fieldName] = '';
-                                    }
-                                } catch (error) {
-                                    fieldValues[fieldName] = '';
-                                }
-                            });
-                            
-                            // Check for empty required fields with human-readable messages
-                            const fieldLabels = {
-                                'cardNumber': 'Card number',
-                                'expDate': 'Expiry date',
-                                'cvv': 'Security code (CVV)',
-                                'cardholder': 'Cardholder name'
-                            };
-                            
-                            // Check core required fields first
-                            requiredFields.forEach(fieldName => {
-                                if (!fieldValues[fieldName] || fieldValues[fieldName] === '') {
-                                    isValid = false;
-                                    const fieldLabel = fieldLabels[fieldName] || fieldName;
-                                    validationErrors.push({
-                                        field: fieldName,
-                                        message: `Please enter your ${fieldLabel.toLowerCase()}`
-                                    });
-                                }
-                            });
-                            
-                            // Check optional fields (warn but don't block submission)
-                            optionalFields.forEach(fieldName => {
-                                if (!fieldValues[fieldName] || fieldValues[fieldName] === '') {
-                                    const fieldLabel = fieldLabels[fieldName] || fieldName;
-                                    validationErrors.push({
-                                        field: fieldName,
-                                        message: `${fieldLabel} is recommended for security`,
-                                        type: 'warning'
-                                    });
-                                }
-                            });
-                        }
+                    // Proceed with submission - let Flowguard handle validation
+                    if (typeof flowguard.submit === 'function') {
+                        console.log('Calling flowguard.submit() - Flowguard will handle validation');
+                        this.disabled = true;
+                        this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
                         
-                        // Show validation errors if any
-                        if (!isValid) {
-                            console.log('Form validation failed:', validationErrors);
-                            
-                            // Separate errors from warnings
-                            const errors = validationErrors.filter(error => error.type !== 'warning');
-                            const warnings = validationErrors.filter(error => error.type === 'warning');
-                            
-                            // Show error message for required fields
-                            if (errors.length > 0) {
-                                const errorMessage = errors.map(error => error.message).join(', ');
-                                document.getElementById('payment-error').textContent = errorMessage;
-                                document.getElementById('payment-error').style.display = 'block';
-                                
-                                // Reset button state
-                                this.disabled = false;
-                                this.innerHTML = '<i class="fas fa-credit-card me-2"></i>Complete Payment';
-                                
-                                return;
-                            }
-                            
-                            // If only warnings, show them but allow submission
-                            if (warnings.length > 0) {
-                                console.log('Validation warnings:', warnings);
-                                // Could show warnings in a different UI element if desired
-                            }
-                        }
+                        // Hide any previous error messages
+                        document.getElementById('payment-error').style.display = 'none';
                         
-                        // Form is valid, proceed with submission
-                        if (typeof flowguard.submit === 'function') {
-                            console.log('Form is valid, calling flowguard.submit()');
-                            this.disabled = true;
-                            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+                        // Show pending message
+                        document.getElementById('payment-pending').textContent = 'Processing your payment...';
+                        document.getElementById('payment-pending').style.display = 'block';
+                        
+                        try {
+                            flowguard.submit();
                             
-                            // Hide any previous error messages
-                            document.getElementById('payment-error').style.display = 'none';
-                            
-                            // Show pending message
-                            document.getElementById('payment-pending').textContent = 'Processing your payment...';
-                            document.getElementById('payment-pending').style.display = 'block';
-                            
-                            try {
-                                flowguard.submit();
-                                
-                                // Set a timeout to prevent infinite spinning
-                                const timeoutId = setTimeout(() => {
-                                    console.warn('Payment submission timeout - resetting button');
-                                    this.disabled = false;
-                                    this.innerHTML = '<i class="fas fa-credit-card me-2"></i>Complete Payment';
-                                    document.getElementById('payment-pending').style.display = 'none';
-                                    
-                                    document.getElementById('payment-error').textContent = 'Payment submission timed out. Please try again.';
-                                    document.getElementById('payment-error').style.display = 'block';
-                                }, 30000); // 30 second timeout
-                                
-                                // Store timeout ID for potential cleanup
-                                this._paymentTimeout = timeoutId;
-                                
-                            } catch (error) {
-                                console.error('Error submitting payment:', error);
+                            // Set a timeout to prevent infinite spinning
+                            const timeoutId = setTimeout(() => {
+                                console.warn('Payment submission timeout - resetting button');
                                 this.disabled = false;
                                 this.innerHTML = '<i class="fas fa-credit-card me-2"></i>Complete Payment';
                                 document.getElementById('payment-pending').style.display = 'none';
                                 
-                                // Show error message
-                                document.getElementById('payment-error').textContent = 'Failed to submit payment. Please try again.';
+                                document.getElementById('payment-error').textContent = 'Payment submission timed out. Please try again.';
                                 document.getElementById('payment-error').style.display = 'block';
-                            }
-                        } else {
-                            console.error('flowguard.submit is not a function');
+                            }, 30000); // 30 second timeout
+                            
+                            // Store timeout ID for potential cleanup
+                            this._paymentTimeout = timeoutId;
+                            
+                        } catch (error) {
+                            console.error('Error submitting payment:', error);
                             this.disabled = false;
                             this.innerHTML = '<i class="fas fa-credit-card me-2"></i>Complete Payment';
+                            document.getElementById('payment-pending').style.display = 'none';
                             
-                            document.getElementById('payment-error').textContent = 'Payment form is not ready. Please refresh the page.';
+                            // Show error message
+                            document.getElementById('payment-error').textContent = 'Failed to submit payment. Please try again.';
                             document.getElementById('payment-error').style.display = 'block';
                         }
-                        
-                    } catch (error) {
-                        console.error('Error during form validation:', error);
+                    } else {
+                        console.error('flowguard.submit is not a function');
                         this.disabled = false;
                         this.innerHTML = '<i class="fas fa-credit-card me-2"></i>Complete Payment';
                         
-                        document.getElementById('payment-error').textContent = 'Error validating form. Please try again.';
+                        document.getElementById('payment-error').textContent = 'Payment form is not ready. Please refresh the page.';
                         document.getElementById('payment-error').style.display = 'block';
                     }
                 });

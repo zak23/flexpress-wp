@@ -178,7 +178,8 @@ if ($test_episode) {
     $user_id = $current_user->ID;
     
     // Test access check
-    $has_access = flexpress_user_has_episode_access($user_id, $test_episode->ID);
+    $access_info = flexpress_check_episode_access($test_episode->ID, $user_id);
+    $has_access = $access_info['has_access'];
     echo "<p>User has access to episode: " . ($has_access ? 'Yes' : 'No') . "</p>\n";
     
     // Test PPV purchases list
@@ -186,7 +187,7 @@ if ($test_episode) {
     echo "<p>User's PPV purchases: " . implode(', ', $ppv_purchases) . "</p>\n";
     
     // Test access info
-    $access_info = flexpress_get_episode_access_info($test_episode->ID, $user_id);
+    $access_info = flexpress_check_episode_access($test_episode->ID, $user_id);
     echo "<p>Access info:</p>\n";
     echo "<pre>" . print_r($access_info, true) . "</pre>\n";
     

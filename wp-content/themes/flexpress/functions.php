@@ -2831,7 +2831,9 @@ function flexpress_check_episode_access($episode_id = null, $user_id = null) {
         $access_info['is_member'] = $is_active_member;
         
         // Check if user has purchased this episode
-        $access_info['is_purchased'] = (bool) get_user_meta($user_id, 'purchased_episode_' . $episode_id, true);
+        $purchased_episode_meta = get_user_meta($user_id, 'purchased_episode_' . $episode_id, true);
+        $ppv_purchases = get_user_meta($user_id, 'ppv_purchases', true) ?: [];
+        $access_info['is_purchased'] = (bool) $purchased_episode_meta || in_array($episode_id, $ppv_purchases);
     }
     
     // Handle different access types
@@ -2922,7 +2924,7 @@ function flexpress_get_episode_access_summary($episode_id = null) {
         case 'mixed':
             if ($price && $member_discount > 0) {
                 $discounted_price = $price * (1 - ($member_discount / 100));
-                return '$' . number_format($discounted_price, 2) . ' for Members • $' . number_format($price, 2) . ' for Non-Members';
+                return '$' . number_format($discounted_price, 2) . ' for Members<br>$' . number_format($price, 2) . ' for Non-Members';
             } else if ($price) {
                 return '$' . number_format($price, 2) . ' for Everyone';
             } else {

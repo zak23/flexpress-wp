@@ -38,7 +38,7 @@ add_filter('body_class', function($classes) {
                         <div class="list-group">
                             <a href="#purchases" class="list-group-item list-group-item-action active" data-bs-toggle="list">
                                 <i class="bi bi-collection-play me-2"></i>
-                                <?php esc_html_e('My Episodes', 'flexpress'); ?>
+                                <?php esc_html_e('Unlocked Episodes', 'flexpress'); ?>
                             </a>
                             <a href="#profile" class="list-group-item list-group-item-action" data-bs-toggle="list">
                                 <i class="bi bi-person me-2"></i>
@@ -97,15 +97,18 @@ add_filter('body_class', function($classes) {
                     <div class="tab-pane fade show active" id="purchases">
                         <div class="card">
                             <div class="card-header">
-                                <h2 class="h5 mb-0"><?php esc_html_e('My Episodes', 'flexpress'); ?></h2>
+                                <h2 class="h5 mb-0"><?php esc_html_e('Unlocked Episodes', 'flexpress'); ?></h2>
                             </div>
                             <div class="card-body">
                                 <?php
-                                $purchased_episodes = get_user_meta($user_id, 'purchased_episodes', true);
-                                if (!empty($purchased_episodes)):
+                                $purchased_episodes = get_user_meta($user_id, 'purchased_episodes', true) ?: [];
+                                $ppv_purchases = get_user_meta($user_id, 'ppv_purchases', true) ?: [];
+                                $all_purchased_episodes = array_unique(array_merge($purchased_episodes, $ppv_purchases));
+                                
+                                if (!empty($all_purchased_episodes)):
                                     $args = array(
                                         'post_type' => 'episode',
-                                        'post__in' => $purchased_episodes,
+                                        'post__in' => $all_purchased_episodes,
                                         'posts_per_page' => -1,
                                         'orderby' => 'meta_value',
                                         'meta_key' => 'release_date',

@@ -21,7 +21,7 @@ A modern WordPress website running in Docker containers with MySQL database and 
    ```
 
 3. **Access your WordPress site:**
-   - WordPress: http://localhost:8085
+   - WordPress: https://zakspov.com
    - phpMyAdmin: http://localhost:8086
 
 ## 📁 Project Structure

@@ -7,7 +7,17 @@ RUN docker-php-ext-install mysqli pdo pdo_mysql
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
+    curl \
     && rm -rf /var/lib/apt/lists/*
+
+# Install WP-CLI using composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+    && composer global require wp-cli/wp-cli composer/semver
+
+# Create wp-cli wrapper script and fix permissions
+RUN chmod +x /root/.composer/vendor/bin/wp \
+    && echo '#!/bin/bash\ncd /var/www/html\n/root/.composer/vendor/bin/wp --allow-root "$@"' > /usr/local/bin/wp \
+    && chmod +x /usr/local/bin/wp
 
 # Set proper permissions
 RUN chown -R www-data:www-data /var/www/html

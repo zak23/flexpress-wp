@@ -200,6 +200,54 @@ docker exec -it flexpress_wordpress bash
 docker exec -it flexpress_mysql mysql -u root -p
 ```
 
+## 🔧 WP-CLI Integration
+
+FlexPress includes WP-CLI for powerful WordPress management directly from the command line.
+
+### Using WP-CLI
+
+```bash
+# Use the convenient wrapper script
+./wp-cli.sh [command]
+
+# Examples:
+./wp-cli.sh plugin list
+./wp-cli.sh db export backup.sql
+./wp-cli.sh user list
+./wp-cli.sh theme status
+./wp-cli.sh core version
+
+# Or run directly in the container
+docker exec -it flexpress_wordpress wp [command]
+```
+
+### Common WP-CLI Commands
+
+```bash
+# Plugin management
+./wp-cli.sh plugin list
+./wp-cli.sh plugin install contact-form-7
+./wp-cli.sh plugin activate contact-form-7
+
+# Database operations
+./wp-cli.sh db export backup.sql
+./wp-cli.sh db import backup.sql
+./wp-cli.sh db search-replace 'old-domain.com' 'new-domain.com'
+
+# User management
+./wp-cli.sh user list
+./wp-cli.sh user create admin admin@example.com --role=administrator
+
+# Theme management
+./wp-cli.sh theme list
+./wp-cli.sh theme activate flexpress
+
+# Core WordPress
+./wp-cli.sh core version
+./wp-cli.sh core update
+./wp-cli.sh core download --force
+```
+
 ## 🔧 Troubleshooting
 
 ### Port Conflicts

@@ -32,8 +32,9 @@ This is a WordPress website project running in Docker containers with the follow
 ```
 flexpress/
 ├── docker-compose.yml    # Main Docker configuration
-├── Dockerfile           # Custom WordPress image
+├── Dockerfile           # Custom WordPress image (includes WP-CLI)
 ├── apache-config.conf   # Apache configuration
+├── wp-cli.sh            # WP-CLI wrapper script
 ├── .env                 # Environment variables
 ├── .env.example         # Environment template
 ├── wp-content/          # WordPress customizations
@@ -45,6 +46,7 @@ flexpress/
 - Stop: `docker-compose down`
 - Logs: `docker-compose logs -f`
 - Rebuild: `docker-compose up --build -d`
+- WP-CLI: `./wp-cli.sh [command]` (e.g., `./wp-cli.sh --version`, `./wp-cli.sh help`)
 
 ## Theme Features & Integrations
 

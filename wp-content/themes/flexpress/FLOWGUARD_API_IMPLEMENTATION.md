@@ -8,7 +8,7 @@ Based on the official Flowguard API documentation, here's the complete implement
 
 ### **Base URL**
 ```
-https://api.yoursafe.com/api/merchant
+https://flowguard.yoursafe.com/api/merchant
 ```
 
 ### **Authentication**
@@ -1073,5 +1073,43 @@ CREATE TABLE wp_flexpress_flowguard_transactions (
     KEY status (status)
 );
 ```
+
+## 🔧 **Troubleshooting & Common Issues**
+
+### **API Connection Issues**
+
+#### **1. cURL Error 6: Could not resolve host**
+**Problem**: Using incorrect API URL
+**Solution**: Use `https://flowguard.yoursafe.com/api/merchant` (not `api.yoursafe.com`)
+
+#### **2. API Error 422: Amount is less than minimum allowed**
+**Problem**: Test amount below Flowguard minimum
+**Solution**: Use minimum $2.95 USD for all test transactions
+
+#### **3. API Error 422: Minimum length is 2 day**
+**Problem**: Subscription period below minimum
+**Solution**: Use minimum `P2D` (2 days) for test subscriptions
+
+### **Correct Test Parameters**
+```php
+$test_data = [
+    'priceAmount' => '2.95',        // Minimum $2.95 USD
+    'priceCurrency' => 'USD',
+    'subscriptionType' => 'one-time',
+    'period' => 'P2D',              // Minimum 2 days
+    'referenceId' => 'test_connection_' . time()
+];
+```
+
+### **Environment Configuration**
+- **Sandbox & Production**: Both use the same URL (`https://flowguard.yoursafe.com/api/merchant`)
+- **Environment Setting**: Only affects how API processes requests, not the endpoint URL
+- **Credentials**: Same Shop ID and Signature Key work for both environments
+
+### **Webhook Testing**
+- **Endpoint**: `/wp-admin/admin-ajax.php?action=flowguard_webhook`
+- **Method**: POST with JWT payload
+- **Response**: Must return HTTP 200 OK within 30 seconds
+- **Retry Policy**: Up to 3 retries if not 200 OK
 
 This implementation provides a complete Flowguard integration that replaces Verotel FlexPay with enhanced security features, better user experience, and comprehensive webhook handling.

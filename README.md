@@ -45,6 +45,55 @@ flexpress/
 | MySQL | flexpress_mysql | 3306 (internal) | Database server |
 | phpMyAdmin | flexpress_phpmyadmin | 8086 | Database administration |
 
+## 💳 Payment Integration
+
+### Flowguard Payment System
+
+FlexPress now uses **Flowguard** as the primary payment processing system, replacing Verotel FlexPay. Flowguard provides:
+
+- **Embedded Payment Forms**: No redirects, seamless user experience
+- **PCI DSS Compliance**: Secure payment processing with hosted iframes
+- **3D Secure Support**: Enhanced security for card transactions
+- **Webhook Integration**: Real-time payment notifications
+- **Admin Dashboard**: Complete payment management interface
+
+#### Flowguard Configuration
+
+1. **Access Settings**: Go to `FlexPress Settings → Flowguard`
+2. **Configure API**: Enter your Shop ID and Signature Key from ControlCenter
+3. **Set Environment**: Choose between Sandbox (testing) or Production (live)
+4. **Test Integration**: Use the built-in testing tools to verify setup
+
+#### Payment Pages
+
+- **Payment Form**: `/flowguard-payment` - Embedded payment processing
+- **Success Page**: `/payment-success` - Payment completion confirmation
+- **Declined Page**: `/payment-declined` - Payment failure handling
+
+#### Webhook Endpoint
+
+Flowguard webhooks are automatically handled at:
+```
+/wp-admin/admin-ajax.php?action=flowguard_webhook
+```
+
+#### Database Tables
+
+The integration creates three database tables:
+- `wp_flexpress_flowguard_webhooks` - Webhook event logging
+- `wp_flexpress_flowguard_transactions` - Transaction records
+- `wp_flexpress_flowguard_sessions` - Payment session tracking
+
+#### Troubleshooting
+
+**Common Issues Fixed During Implementation:**
+
+1. **API URL**: Use `https://flowguard.yoursafe.com/api/merchant` (not `api.yoursafe.com`)
+2. **Minimum Amount**: Flowguard requires minimum $2.95 USD for transactions
+3. **Minimum Period**: Subscriptions require minimum 2 days (`P2D`)
+4. **Environment**: Sandbox and production use the same API URL
+5. **Credentials**: Shop ID `134837` and Signature Key from ControlCenter
+
 ## ⚙️ Configuration
 
 ### Environment Variables

@@ -2,7 +2,7 @@
 
 ## Project Overview
 FlexPress is a premium WordPress theme for content creators (primarily adult content) that integrates:
-- **Verotel FlexPay** - Payment processing and membership management
+- **Flowguard Payment System** - Modern embedded payment processing with webhooks
 - **BunnyCDN Stream & Storage** - Video streaming and file hosting
 - **Advanced Content Management** - Episodes, models, galleries, access control
 - **Comprehensive Admin System** - Built-in settings and management tools
@@ -49,7 +49,7 @@ flexpress/
 ## Theme Features & Integrations
 
 ### Core Integrations
-- **Verotel FlexPay**: Complete payment processing system with webhooks, subscriptions, PPV purchases
+- **Flowguard Payment System**: Complete payment processing with embedded forms, webhooks, subscriptions, PPV purchases
 - **BunnyCDN Stream**: Video hosting, streaming, and thumbnail generation
 - **BunnyCDN Storage**: Image galleries and file management
 - **Advanced Custom Fields (ACF)**: Content management and admin interfaces
@@ -60,6 +60,14 @@ flexpress/
 - **Galleries**: Image galleries attached to episodes with BunnyCDN Storage
 - **Access Control**: Flexible pricing and member discount systems
 
+### Payment System (Flowguard)
+- **Embedded Payment Forms**: No redirects, seamless user experience
+- **Subscription Management**: Recurring and one-time subscriptions with trials
+- **PPV Purchases**: Pay-per-view episode access
+- **Webhook Processing**: Real-time payment notifications and status updates
+- **Admin Interface**: Complete payment management and diagnostics
+- **Security**: PCI DSS compliance with 3D Secure support
+
 ### Membership System
 - **Registration**: Custom forms with password strength and validation
 - **Authentication**: Login/logout with dashboard integration
@@ -67,8 +75,8 @@ flexpress/
 - **Affiliate System**: Commission tracking and management
 
 ### Admin Features
-- **Settings Panels**: General, Video, Membership, Verotel, Pricing, Affiliate, Contact
-- **Webhook Management**: Verotel payment processing and debugging
+- **Settings Panels**: General, Video, Membership, Flowguard, Pricing, Affiliate, Contact
+- **Webhook Management**: Flowguard payment processing and debugging
 - **User Management**: Member profiles, purchases, activity logs
 - **Legal Pages**: Dynamic content generation for compliance
 
@@ -77,6 +85,35 @@ flexpress/
 - **Video Interface**: Hero videos, episode archives, filtering systems
 - **Professional UI**: Card-based layouts with hover effects and animations
 - **Legal Compliance**: 2257, privacy policy, terms, content removal forms
+
+## Flowguard Integration Details
+
+### API Configuration
+- **Shop ID**: 134837 (from ControlCenter)
+- **Signature Key**: QdqSpfTHzKKQChBB26xDcEAh3wkQtZ (from ControlCenter)
+- **Environment**: Sandbox for testing, Production for live
+- **Webhook URL**: `/wp-admin/admin-ajax.php?action=flowguard_webhook`
+
+### Database Tables
+- `wp_flexpress_flowguard_webhooks` - Webhook event logging
+- `wp_flexpress_flowguard_transactions` - Transaction records
+- `wp_flexpress_flowguard_sessions` - Payment session tracking
+
+### Payment Pages
+- `/flowguard-payment` - Embedded payment form
+- `/payment-success` - Payment completion page
+- `/payment-declined` - Payment failure page
+
+### Key Files
+- `includes/class-flexpress-flowguard-api.php` - API client
+- `includes/flowguard-integration.php` - Helper functions
+- `includes/flowguard-webhook-handler.php` - Webhook processing
+- `includes/flowguard-database.php` - Database management
+- `includes/admin/class-flexpress-flowguard-settings.php` - Admin interface
+- `assets/js/flowguard.js` - Frontend SDK integration
+- `page-templates/flowguard-payment.php` - Payment form template
+- `page-templates/payment-success.php` - Success page template
+- `page-templates/payment-declined.php` - Declined page template
 
 ## Documentation Requirements
 - **README.md**: Must be updated immediately when features are added/modified
@@ -89,5 +126,11 @@ flexpress/
 - Use environment variables for sensitive data
 - Enable SSL in production
 - Regular security updates required
-- Verotel webhook signature validation
+- Flowguard webhook signature validation
 - Secure video token generation
+
+## Migration Notes
+- **Verotel Integration**: Legacy Verotel files are still included but marked for removal
+- **Flowguard Priority**: Flowguard is now the primary payment system
+- **Backward Compatibility**: Existing user data is preserved during migration
+- **Testing**: All payment flows should be tested in sandbox mode before production

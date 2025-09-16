@@ -12,13 +12,24 @@ define('FLEXPRESS_URL', get_template_directory_uri());
 require_once FLEXPRESS_PATH . '/includes/post-types.php';
 require_once FLEXPRESS_PATH . '/includes/bunnycdn.php';
 require_once FLEXPRESS_PATH . '/includes/gallery-system.php';
+
+// Flowguard Integration (replaces Verotel)
+require_once FLEXPRESS_PATH . '/includes/class-flexpress-flowguard-api.php';
+require_once FLEXPRESS_PATH . '/includes/flowguard-integration.php';
+require_once FLEXPRESS_PATH . '/includes/flowguard-webhook-handler.php';
+require_once FLEXPRESS_PATH . '/includes/flowguard-database.php';
+
+// Legacy Verotel files (to be removed after migration)
 require_once FLEXPRESS_PATH . '/includes/verotel-integration.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-verotel.php';
 
 // Debug postback functionality removed - file no longer exists
 
-// Include Verotel admin tools (admin only)
+// Include Flowguard admin tools (admin only)
 if (is_admin()) {
+    require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-flowguard-settings.php';
+    
+    // Legacy Verotel admin tools (to be removed after migration)
     require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-verotel-orphaned-webhooks.php';
     require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-verotel-diagnostics.php';
 }
@@ -45,6 +56,8 @@ require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-general-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-video-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-membership-settings.php';
+require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-flowguard-settings.php';
+// Legacy Verotel settings (to be removed after migration)
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-verotel-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-pricing-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-affiliate-settings.php';
@@ -173,7 +186,25 @@ function flexpress_enqueue_scripts_and_styles() {
         wp_enqueue_script('flexpress-join', get_template_directory_uri() . '/assets/js/join.js', array(), wp_get_theme()->get('Version'), true);
     }
     
-    // Enqueue verotel script where needed
+    // Enqueue Flowguard script where needed
+    if (is_page_template('page-templates/flowguard-payment.php') || 
+        is_page_template('page-templates/payment-success.php') || 
+        is_page_template('page-templates/payment-declined.php') ||
+        is_page_template('page-templates/join.php')) {
+        wp_enqueue_script('flexpress-flowguard', get_template_directory_uri() . '/assets/js/flowguard.js', array('jquery'), wp_get_theme()->get('Version'), true);
+        
+        // Get Flowguard settings
+        $flowguard_settings = get_option('flexpress_flowguard_settings', []);
+        
+        wp_localize_script('flexpress-flowguard', 'flowguardConfig', array(
+            'shopId' => $flowguard_settings['shop_id'] ?? '',
+            'environment' => $flowguard_settings['environment'] ?? 'sandbox',
+            'nonce' => wp_create_nonce('flowguard_payment'),
+            'ajaxUrl' => admin_url('admin-ajax.php')
+        ));
+    }
+    
+    // Legacy Verotel script (to be removed after migration)
     if (is_page_template('page-templates/membership.php') || is_page_template('page-templates/dashboard.php')) {
         wp_enqueue_script('flexpress-verotel', get_template_directory_uri() . '/assets/js/verotel.js', array('jquery'), wp_get_theme()->get('Version'), true);
         
@@ -5399,6 +5430,96 @@ function flexpress_get_affiliate_dashboard_data_ajax() {
 }
 add_action('wp_ajax_flexpress_get_affiliate_dashboard_data', 'flexpress_get_affiliate_dashboard_data_ajax');
 // No nopriv version: dashboard is for logged-in users only
+
+/**
+ * Flowguard AJAX Handlers
+ */
+
+/**
+ * AJAX: Create Flowguard subscription
+ */
+function flexpress_create_flowguard_subscription_ajax() {
+    check_ajax_referer('flowguard_payment', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error('User not logged in');
+    }
+    
+    $plan_id = intval($_POST['plan_id'] ?? 0);
+    if (!$plan_id) {
+        wp_send_json_error('Invalid plan ID');
+    }
+    
+    $user_id = get_current_user_id();
+    $result = flexpress_flowguard_create_subscription($user_id, $plan_id);
+    
+    if ($result['success']) {
+        wp_send_json_success($result);
+    } else {
+        wp_send_json_error($result['error']);
+    }
+}
+add_action('wp_ajax_create_flowguard_subscription', 'flexpress_create_flowguard_subscription_ajax');
+add_action('wp_ajax_nopriv_create_flowguard_subscription', 'flexpress_create_flowguard_subscription_ajax');
+
+/**
+ * AJAX: Create Flowguard PPV purchase
+ */
+function flexpress_create_flowguard_ppv_purchase_ajax() {
+    check_ajax_referer('flowguard_payment', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error('User not logged in');
+    }
+    
+    $episode_id = intval($_POST['episode_id'] ?? 0);
+    if (!$episode_id) {
+        wp_send_json_error('Invalid episode ID');
+    }
+    
+    $user_id = get_current_user_id();
+    $result = flexpress_flowguard_create_ppv_purchase($user_id, $episode_id);
+    
+    if ($result['success']) {
+        wp_send_json_success($result);
+    } else {
+        wp_send_json_error($result['error']);
+    }
+}
+add_action('wp_ajax_create_flowguard_ppv_purchase', 'flexpress_create_flowguard_ppv_purchase_ajax');
+add_action('wp_ajax_nopriv_create_flowguard_ppv_purchase', 'flexpress_create_flowguard_ppv_purchase_ajax');
+
+/**
+ * AJAX: Apply promo code
+ */
+function flexpress_apply_promo_code_ajax() {
+    check_ajax_referer('flowguard_payment', 'nonce');
+    
+    $promo_code = sanitize_text_field($_POST['promo_code'] ?? '');
+    if (!$promo_code) {
+        wp_send_json_error('No promo code provided');
+    }
+    
+    // Get pricing plans
+    $pricing_plans = flexpress_get_pricing_plans();
+    
+    // Check if promo code matches any plan
+    foreach ($pricing_plans as $plan) {
+        if (strtolower($plan['name']) === strtolower($promo_code)) {
+            wp_send_json_success([
+                'plan_id' => $plan['id'],
+                'plan_name' => $plan['name'],
+                'price' => $plan['price'],
+                'currency' => $plan['currency'],
+                'description' => $plan['description']
+            ]);
+        }
+    }
+    
+    wp_send_json_error('Invalid promo code');
+}
+add_action('wp_ajax_apply_promo_code', 'flexpress_apply_promo_code_ajax');
+add_action('wp_ajax_nopriv_apply_promo_code', 'flexpress_apply_promo_code_ajax');
 
 /**
  * Include ACF field groups

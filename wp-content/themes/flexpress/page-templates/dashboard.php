@@ -134,7 +134,8 @@ add_filter('body_class', function($classes) {
                                 ?>
                                     <div class="text-center py-5">
                                         <i class="bi bi-collection-play display-1 text-muted mb-3"></i>
-                                        <h3 class="h5 mb-3"><?php esc_html_e('No Episodes Purchased Yet', 'flexpress'); ?></h3>
+                                        <h3 class="h5 mb-3"><?php esc_html_e('No Unlocked Episodes Yet', 'flexpress'); ?></h3>
+                                        <p class="text-muted mb-4"><?php esc_html_e('You have not unlocked any episodes yet. Your unlocked episodes will appear here once you purchase them.', 'flexpress'); ?></p>
                                         <a href="<?php echo esc_url(home_url('/episodes')); ?>" class="btn btn-primary">
                                             <?php esc_html_e('Browse Episodes', 'flexpress'); ?>
                                         </a>

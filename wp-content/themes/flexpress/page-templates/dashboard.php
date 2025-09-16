@@ -336,6 +336,20 @@ add_filter('body_class', function($classes) {
                                     
                                     <?php if ($membership_status === 'active'): ?>
                                     <div class="mt-3">
+                                        <?php
+                                        // Check if user has Flowguard subscription
+                                        $flowguard_sale_id = get_user_meta($user_id, 'flowguard_sale_id', true);
+                                        $flowguard_transaction_id = get_user_meta($user_id, 'flowguard_transaction_id', true);
+                                        $has_flowguard_subscription = !empty($flowguard_sale_id) || !empty($flowguard_transaction_id);
+                                        ?>
+                                        
+                                        <?php if ($has_flowguard_subscription): ?>
+                                        <button type="button" class="btn btn-sm btn-outline-danger me-2" id="cancel-flowguard-subscription">
+                                            <i class="fas fa-times-circle me-1"></i>
+                                            <?php esc_html_e('Cancel Flowguard Subscription', 'flexpress'); ?>
+                                        </button>
+                                        <?php endif; ?>
+                                        
                                         <button type="button" class="btn btn-sm btn-outline-warning me-2" id="cancel-subscription">
                                             <?php esc_html_e('Cancel Subscription', 'flexpress'); ?>
                                         </button>
@@ -559,6 +573,63 @@ jQuery(document).ready(function($) {
                 // Scroll to top of form to show alert
                 $('html, body').animate({
                     scrollTop: $('.profile-alert').offset().top - 100
+                }, 500);
+            }
+        });
+    });
+    
+    // Flowguard subscription cancellation
+    $('#cancel-flowguard-subscription').on('click', function(e) {
+        e.preventDefault();
+        
+        var $button = $(this);
+        var originalText = $button.html();
+        
+        // Show confirmation dialog
+        if (!confirm('<?php esc_html_e('Are you sure you want to cancel your Flowguard subscription? This action cannot be undone.', 'flexpress'); ?>')) {
+            return;
+        }
+        
+        // Show loading state
+        $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i><?php esc_html_e('Cancelling...', 'flexpress'); ?>');
+        
+        // Clear any existing alerts
+        $('.alert.flowguard-alert').remove();
+        
+        $.ajax({
+            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+            type: 'POST',
+            data: {
+                action: 'flexpress_cancel_flowguard_subscription',
+                nonce: '<?php echo wp_create_nonce('flexpress_cancel_flowguard_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Show success message
+                    $button.closest('.mt-3').before('<div class="alert alert-success flowguard-alert"><i class="fas fa-check-circle me-2"></i>' + response.data.message + '</div>');
+                    
+                    // Hide the cancel button
+                    $button.hide();
+                    
+                    // Reload page after 3 seconds to update the UI
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 3000);
+                } else {
+                    // Show error message
+                    $button.closest('.mt-3').before('<div class="alert alert-danger flowguard-alert"><i class="fas fa-exclamation-circle me-2"></i>' + response.data.message + '</div>');
+                }
+            },
+            error: function(xhr, status, error) {
+                $button.closest('.mt-3').before('<div class="alert alert-danger flowguard-alert"><i class="fas fa-exclamation-circle me-2"></i><?php esc_html_e('An error occurred while cancelling your subscription. Please try again.', 'flexpress'); ?></div>');
+            },
+            complete: function() {
+                // Reset button state
+                $button.prop('disabled', false).html(originalText);
+                
+                // Scroll to top of alerts to show message
+                $('html, body').animate({
+                    scrollTop: $('.flowguard-alert').offset().top - 100
                 }, 500);
             }
         });

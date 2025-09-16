@@ -5495,6 +5495,135 @@ add_action('wp_ajax_create_flowguard_ppv_purchase', 'flexpress_create_flowguard_
 add_action('wp_ajax_nopriv_create_flowguard_ppv_purchase', 'flexpress_create_flowguard_ppv_purchase_ajax');
 
 /**
+ * AJAX: Cancel Flowguard subscription
+ */
+function flexpress_cancel_flowguard_subscription_ajax() {
+    // Verify nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'flexpress_cancel_flowguard_nonce')) {
+        wp_send_json_error(array('message' => __('Security check failed. Please refresh the page and try again.', 'flexpress')));
+        return;
+    }
+    
+    // Check if user is logged in
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => __('You must be logged in to cancel your subscription.', 'flexpress')));
+        return;
+    }
+    
+    $user_id = get_current_user_id();
+    
+    // Check if user has Flowguard subscription
+    $flowguard_sale_id = get_user_meta($user_id, 'flowguard_sale_id', true);
+    if (empty($flowguard_sale_id)) {
+        wp_send_json_error(array('message' => __('No active Flowguard subscription found.', 'flexpress')));
+        return;
+    }
+    
+    // Check subscription type from user meta or transaction data
+    $subscription_type = get_user_meta($user_id, 'subscription_type', true);
+    $plan_id = get_user_meta($user_id, 'subscription_plan', true);
+    
+    // Determine if this is a one-time or recurring subscription
+    $is_one_time = false;
+    if ($plan_id) {
+        $plan = flexpress_get_pricing_plan($plan_id);
+        if ($plan && $plan['plan_type'] === 'one_time') {
+            $is_one_time = true;
+        }
+    }
+    
+    if ($is_one_time) {
+        // For one-time subscriptions, we can't cancel via API, but we can mark it as cancelled locally
+        // and update the membership status
+        flexpress_update_membership_status($user_id, 'cancelled');
+        
+        // Set expiration date to now or keep existing expiration
+        $current_expiration = get_user_meta($user_id, 'membership_expires', true);
+        if (!$current_expiration) {
+            // If no expiration date, set it to now
+            update_user_meta($user_id, 'membership_expires', current_time('mysql'));
+        }
+        
+        // Log activity
+        flexpress_flowguard_log_activity(
+            $user_id,
+            'flowguard_one_time_subscription_cancelled_by_user',
+            'One-time subscription cancelled by user via dashboard',
+            ['sale_id' => $flowguard_sale_id, 'subscription_type' => 'one-time']
+        );
+        
+        wp_send_json_success(array(
+            'message' => __('Your one-time subscription has been cancelled. Access will end on your subscription expiration date.', 'flexpress')
+        ));
+    } else {
+        // For recurring subscriptions, use the API to cancel
+        $result = flexpress_flowguard_cancel_subscription($user_id, 'buyer');
+        
+        if ($result['success']) {
+            // Log activity
+            flexpress_flowguard_log_activity(
+                $user_id,
+                'flowguard_recurring_subscription_cancelled_by_user',
+                'Recurring subscription cancelled by user via dashboard',
+                ['sale_id' => $flowguard_sale_id, 'subscription_type' => 'recurring']
+            );
+            
+            wp_send_json_success(array(
+                'message' => __('Your recurring subscription has been successfully cancelled. You will retain access until your current billing period ends.', 'flexpress')
+            ));
+        } else {
+            // Check if the error is about non-recurring subscription
+            if (strpos($result['error'], 'not recurring') !== false) {
+                // Fallback: treat as one-time subscription
+                flexpress_update_membership_status($user_id, 'cancelled');
+                
+                flexpress_flowguard_log_activity(
+                    $user_id,
+                    'flowguard_subscription_cancelled_fallback',
+                    'Subscription cancelled via fallback method (API returned non-recurring error)',
+                    ['sale_id' => $flowguard_sale_id, 'api_error' => $result['error']]
+                );
+                
+                wp_send_json_success(array(
+                    'message' => __('Your subscription has been cancelled. Access will end on your subscription expiration date.', 'flexpress')
+                ));
+            } else {
+                wp_send_json_error(array('message' => $result['error'] ?: __('Failed to cancel subscription. Please try again or contact support.', 'flexpress')));
+            }
+        }
+    }
+}
+
+add_action('wp_ajax_flexpress_cancel_flowguard_subscription', 'flexpress_cancel_flowguard_subscription_ajax');
+
+/**
+ * AJAX: Update pricing plans for testing
+ */
+function flexpress_update_test_pricing_plans_ajax() {
+    // Verify nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'flexpress_admin_nonce')) {
+        wp_send_json_error(array('message' => __('Security check failed.', 'flexpress')));
+        return;
+    }
+    
+    // Check if user has admin capabilities
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(array('message' => __('Insufficient permissions.', 'flexpress')));
+        return;
+    }
+    
+    // Force update pricing plans
+    $plans = flexpress_force_create_default_pricing_plans();
+    
+    wp_send_json_success(array(
+        'message' => __('Pricing plans updated successfully!', 'flexpress'),
+        'plans_count' => count($plans)
+    ));
+}
+
+add_action('wp_ajax_flexpress_update_test_pricing_plans', 'flexpress_update_test_pricing_plans_ajax');
+
+/**
  * AJAX: Apply promo code
  */
 function flexpress_apply_promo_code_ajax() {

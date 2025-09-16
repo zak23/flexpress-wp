@@ -90,10 +90,32 @@ $registered = isset($_GET['registered']) ? sanitize_text_field($_GET['registered
         </div>
         <?php endif; ?>
 
+        <!-- Plan Type Toggle -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-8">
+                <div class="plan-type-toggle">
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="plan_type" id="recurring-tab" value="recurring" checked>
+                        <label class="btn btn-outline-light btn-lg" for="recurring-tab">
+                            <i class="fas fa-sync-alt me-2"></i>Recurring Plans
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="plan_type" id="onetime-tab" value="one_time">
+                        <label class="btn btn-outline-light btn-lg" for="onetime-tab">
+                            <i class="fas fa-calendar-check me-2"></i>One-Time Plans
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Pricing Plans Section -->
         <div class="row justify-content-center">
-            <?php if (!empty($pricing_plans)): ?>
-                <?php foreach ($pricing_plans as $plan_id => $plan): ?>
+            <div id="plan-options-container">
+                <div id="recurring-plans" class="plan-group">
+                    <?php if (!empty($pricing_plans)): ?>
+                        <?php foreach ($pricing_plans as $plan_id => $plan): ?>
+                            <?php if ($plan['plan_type'] === 'recurring'): ?>
                     <div class="col-lg-4 col-md-6 mb-4">
                         <div class="pricing-card <?php echo $plan['featured'] ? 'featured' : ''; ?>" 
                              data-plan-id="<?php echo esc_attr($plan_id); ?>">
@@ -155,15 +177,93 @@ $registered = isset($_GET['registered']) ? sanitize_text_field($_GET['registered
                             </div>
                         </div>
                     </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="col-12 text-center">
-                    <div class="alert alert-warning">
-                        <h4>No Plans Available</h4>
-                        <p>Please contact support for assistance.</p>
-                    </div>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="col-12 text-center">
+                            <div class="alert alert-warning">
+                                <h4>No Recurring Plans Available</h4>
+                                <p>Please contact support for assistance.</p>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
-            <?php endif; ?>
+                
+                <div id="onetime-plans" class="plan-group" style="display: none;">
+                    <?php if (!empty($pricing_plans)): ?>
+                        <?php foreach ($pricing_plans as $plan_id => $plan): ?>
+                            <?php if ($plan['plan_type'] === 'one_time'): ?>
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="pricing-card <?php echo $plan['featured'] ? 'featured' : ''; ?>" 
+                             data-plan-id="<?php echo esc_attr($plan_id); ?>">
+                            
+                            <?php if ($plan['featured']): ?>
+                                <div class="featured-badge">Most Popular</div>
+                            <?php endif; ?>
+                            
+                            <div class="card-header text-center">
+                                <h3 class="plan-name"><?php echo esc_html($plan['name']); ?></h3>
+                                <div class="plan-price">
+                                    <span class="currency"><?php echo esc_html($plan['currency']); ?></span>
+                                    <span class="amount"><?php echo esc_html($plan['price']); ?></span>
+                                    <span class="period">one-time</span>
+                                </div>
+                                <?php if (!empty($plan['description'])): ?>
+                                    <p class="plan-description"><?php echo esc_html($plan['description']); ?></p>
+                                <?php endif; ?>
+                            </div>
+                            
+                            <div class="card-body">
+                                <?php if (!empty($plan['features'])): ?>
+                                    <ul class="plan-features">
+                                        <?php foreach ($plan['features'] as $feature): ?>
+                                            <li>
+                                                <i class="fas fa-check text-success me-2"></i>
+                                                <?php echo esc_html($feature); ?>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($plan['trial_enabled'])): ?>
+                                    <div class="trial-info">
+                                        <small class="text-muted">
+                                            <i class="fas fa-gift me-1"></i>
+                                            <?php echo esc_html($plan['trial_duration']); ?> 
+                                            <?php echo esc_html($plan['trial_duration_unit']); ?> 
+                                            trial for <?php echo esc_html($plan['currency'] . $plan['trial_price']); ?>
+                                        </small>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            
+                            <div class="card-footer">
+                                <button class="btn btn-primary w-100 select-plan-btn" 
+                                        data-plan-id="<?php echo esc_attr($plan_id); ?>"
+                                        data-plan-name="<?php echo esc_attr($plan['name']); ?>"
+                                        data-plan-price="<?php echo esc_attr($plan['price']); ?>"
+                                        data-plan-currency="<?php echo esc_attr($plan['currency']); ?>">
+                                    <?php if ($is_renewal_flow): ?>
+                                        Renew Membership
+                                    <?php else: ?>
+                                        Choose Plan
+                                    <?php endif; ?>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="col-12 text-center">
+                            <div class="alert alert-warning">
+                                <h4>No One-Time Plans Available</h4>
+                                <p>Please contact support for assistance.</p>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
 
         <!-- Payment Security Info -->
@@ -383,6 +483,49 @@ $registered = isset($_GET['registered']) ? sanitize_text_field($_GET['registered
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.plan-type-toggle {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.plan-type-toggle .btn-group {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.plan-type-toggle .btn-check:checked + .btn {
+    background: #ff6b6b;
+    border-color: #ff6b6b;
+    color: #ffffff;
+}
+
+.plan-type-toggle .btn {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #b0b0b0;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.plan-type-toggle .btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+}
+
+.plan-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.plan-group.active {
+    display: flex !important;
+}
+
 .security-info {
     background: rgba(255, 255, 255, 0.03);
     border-radius: 12px;
@@ -430,6 +573,32 @@ $registered = isset($_GET['registered']) ? sanitize_text_field($_GET['registered
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Plan type switching
+    const planTypeRadios = document.querySelectorAll('input[name="plan_type"]');
+    const recurringPlans = document.getElementById('recurring-plans');
+    const onetimePlans = document.getElementById('onetime-plans');
+    
+    planTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            const planType = this.value;
+            
+            // Hide all plan groups first
+            recurringPlans.style.display = 'none';
+            onetimePlans.style.display = 'none';
+            
+            // Show selected plan group
+            if (planType === 'recurring') {
+                recurringPlans.style.display = 'flex';
+                recurringPlans.classList.add('active');
+                onetimePlans.classList.remove('active');
+            } else {
+                onetimePlans.style.display = 'flex';
+                onetimePlans.classList.add('active');
+                recurringPlans.classList.remove('active');
+            }
+        });
+    });
+    
     // Promo code handling
     const promoInput = document.getElementById('promo-code-input');
     const applyPromoBtn = document.getElementById('apply-promo-btn');

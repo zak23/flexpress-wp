@@ -280,6 +280,63 @@ function flexpress_get_default_pricing_plans() {
             'verotel_site_id' => '133772',
             'verotel_product_id' => 'monthly995',
             'verotel_pricepoint_id' => '995'
+        ),
+        'yearly' => array(
+            'name' => __('Yearly Access', 'flexpress'),
+            'description' => __('Full access to all content, billed yearly (Save 20%)', 'flexpress'),
+            'price' => 95.95,
+            'currency' => '$',
+            'duration' => 365,
+            'duration_unit' => 'days',
+            'plan_type' => 'recurring',
+            'trial_enabled' => 1,
+            'trial_price' => 2.95,
+            'trial_duration' => 7,
+            'trial_duration_unit' => 'days',
+            'featured' => 1,
+            'active' => 1,
+            'sort_order' => 30,
+            'verotel_site_id' => '133772',
+            'verotel_product_id' => 'yearly9595',
+            'verotel_pricepoint_id' => '9595'
+        ),
+        'weekly_trial' => array(
+            'name' => __('7 Day Trial', 'flexpress'),
+            'description' => __('One-time payment for 7 days of access', 'flexpress'),
+            'price' => 2.95,
+            'currency' => '$',
+            'duration' => 7,
+            'duration_unit' => 'days',
+            'plan_type' => 'one_time',
+            'trial_enabled' => 0,
+            'trial_price' => 0,
+            'trial_duration' => 0,
+            'trial_duration_unit' => 'days',
+            'featured' => 0,
+            'active' => 1,
+            'sort_order' => 5,
+            'verotel_site_id' => '133772',
+            'verotel_product_id' => '7day295',
+            'verotel_pricepoint_id' => '295'
+        ),
+        'three_month_access' => array(
+            'name' => __('3 Month Access', 'flexpress'),
+            'description' => __('One-time payment for 3 months of access', 'flexpress'),
+            'price' => 49.95,
+            'currency' => '$',
+            'duration' => 90,
+            'duration_unit' => 'days',
+            'plan_type' => 'one_time',
+            'trial_enabled' => 0,
+            'trial_price' => 0,
+            'trial_duration' => 0,
+            'trial_duration_unit' => 'days',
+            'featured' => 0,
+            'active' => 1,
+            'sort_order' => 18,
+            'verotel_site_id' => '133772',
+            'verotel_product_id' => '3month4995',
+            'verotel_pricepoint_id' => '4995'
         )
     );
 }
@@ -300,6 +357,63 @@ function flexpress_maybe_create_default_pricing_plans() {
 function flexpress_force_create_default_pricing_plans() {
     $default_plans = flexpress_get_default_pricing_plans();
     update_option('flexpress_pricing_plans', $default_plans);
+    return $default_plans;
+}
+
+/**
+ * Add test pricing plans for Flowguard testing
+ * Call this function to add additional test plans
+ */
+function flexpress_add_test_pricing_plans() {
+    $current_plans = get_option('flexpress_pricing_plans', array());
+    
+    // Add test plans if they don't exist
+    $test_plans = array(
+        'test_recurring_monthly' => array(
+            'name' => __('Test Monthly Recurring', 'flexpress'),
+            'description' => __('Test recurring monthly subscription', 'flexpress'),
+            'price' => 2.95,
+            'currency' => '$',
+            'duration' => 30,
+            'duration_unit' => 'days',
+            'plan_type' => 'recurring',
+            'trial_enabled' => 0,
+            'trial_price' => 0,
+            'trial_duration' => 0,
+            'trial_duration_unit' => 'days',
+            'featured' => 0,
+            'active' => 1,
+            'sort_order' => 100,
+            'verotel_site_id' => '133772',
+            'verotel_product_id' => 'test_monthly295',
+            'verotel_pricepoint_id' => '295'
+        ),
+        'test_onetime_week' => array(
+            'name' => __('Test 7 Day One-Time', 'flexpress'),
+            'description' => __('Test one-time 7 day access', 'flexpress'),
+            'price' => 2.95,
+            'currency' => '$',
+            'duration' => 7,
+            'duration_unit' => 'days',
+            'plan_type' => 'one_time',
+            'trial_enabled' => 0,
+            'trial_price' => 0,
+            'trial_duration' => 0,
+            'trial_duration_unit' => 'days',
+            'featured' => 0,
+            'active' => 1,
+            'sort_order' => 101,
+            'verotel_site_id' => '133772',
+            'verotel_product_id' => 'test_7day295',
+            'verotel_pricepoint_id' => '295'
+        )
+    );
+    
+    // Merge test plans with existing plans
+    $updated_plans = array_merge($current_plans, $test_plans);
+    update_option('flexpress_pricing_plans', $updated_plans);
+    
+    return $updated_plans;
 }
 
 /**

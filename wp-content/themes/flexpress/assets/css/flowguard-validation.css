@@ -1,0 +1,534 @@
+/**
+ * Flowguard Payment Form Validation Styles
+ * 
+ * Comprehensive styling for payment form validation, error handling, and user feedback.
+ * 
+ * @package FlexPress
+ * @since 1.0.0
+ */
+
+/* Payment Page Base Styles */
+.payment-page {
+    background: #000;
+    min-height: 100vh;
+}
+
+.payment-container {
+    background: #1a1a1a;
+    border-radius: 8px;
+    padding: 2rem;
+    border: 1px solid #333;
+}
+
+.payment-title {
+    color: #ffffff;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.payment-subtitle {
+    color: #888;
+    font-size: 1rem;
+    margin-bottom: 0;
+}
+
+.payment-form-container {
+    background: #222;
+    border-radius: 8px;
+    padding: 2rem;
+    margin: 1.5rem 0;
+    border: 1px solid #333;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.payment-loading {
+    text-align: center;
+    color: #b0b0b0;
+}
+
+.payment-loading .spinner-border {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.3em;
+}
+
+.security-badges .badge {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.payment-help .accordion-item {
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 4px;
+}
+
+.payment-help .accordion-button {
+    background: transparent;
+    color: #ffffff;
+    border: none;
+    font-weight: 500;
+}
+
+.payment-help .accordion-button:not(.collapsed) {
+    background: #333;
+    color: #ffffff;
+}
+
+.payment-help .accordion-button:focus {
+    box-shadow: 0 0 0 0.25rem rgba(255, 107, 107, 0.25);
+}
+
+.payment-help .accordion-body {
+    background: #222;
+    color: #888;
+}
+
+/* Alert Styles */
+.alert {
+    border-radius: 4px;
+    border: none;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.alert-success {
+    background: #1e3a1e;
+    color: #28a745;
+    border: 1px solid #28a745;
+}
+
+.alert-danger {
+    background: #3a1e1e;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+}
+
+.alert-warning {
+    background: #3a3a1e;
+    color: #ffc107;
+    border: 1px solid #ffc107;
+}
+
+.btn-outline-primary {
+    border-color: #ff6b6b;
+    color: #ff6b6b;
+}
+
+.btn-outline-primary:hover {
+    background-color: #ff6b6b;
+    border-color: #ff6b6b;
+    color: #ffffff;
+}
+
+/* Validation Container Styles */
+.validation-container {
+    margin-top: 1rem;
+}
+
+.field-errors {
+    margin-bottom: 1rem;
+}
+
+.field-error {
+    background: #3a1e1e;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.field-error i {
+    color: #dc3545;
+}
+
+.global-errors {
+    margin-bottom: 1rem;
+}
+
+.global-error {
+    background: #3a1e1e;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+    border-radius: 4px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.global-error i {
+    color: #dc3545;
+    margin-top: 0.125rem;
+}
+
+.validation-help {
+    background: #1e3a1e;
+    color: #28a745;
+    border: 1px solid #28a745;
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    display: none;
+}
+
+.validation-help.show {
+    display: block;
+}
+
+.validation-help i {
+    color: #28a745;
+    margin-right: 0.5rem;
+}
+
+/* Field Container States */
+.field-container.error {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.field-container.warning {
+    border-color: #ffc107 !important;
+    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+}
+
+.field-container.success {
+    border-color: #28a745 !important;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.field-container.validation-enabled {
+    transition: all 0.3s ease;
+}
+
+/* Retry Button */
+.retry-button {
+    margin-top: 1rem;
+}
+
+/* Validation Summary */
+.validation-summary {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.validation-summary h6 {
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.validation-summary ul {
+    margin: 0;
+    padding-left: 1rem;
+    color: #888;
+    font-size: 0.85rem;
+}
+
+.validation-summary li {
+    margin-bottom: 0.25rem;
+}
+
+/* Loading States */
+.loading-validation {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #888;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.loading-validation .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 107, 107, 0.3);
+    border-top: 2px solid #ff6b6b;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Icons */
+.error-icon {
+    color: #dc3545;
+    margin-right: 0.5rem;
+}
+
+.warning-icon {
+    color: #ffc107;
+    margin-right: 0.5rem;
+}
+
+.success-icon {
+    color: #28a745;
+    margin-right: 0.5rem;
+}
+
+.help-icon {
+    color: #17a2b8;
+    margin-right: 0.5rem;
+}
+
+/* Animations */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+/* Flowguard Form Field Styles */
+.flowguard-form-fields {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.field-group {
+    margin-bottom: 1rem;
+}
+
+.field-group label {
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.flowguard-field-container {
+    position: relative;
+    min-height: 40px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background: #333;
+    overflow: hidden;
+}
+
+.field-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 40px;
+    color: #888;
+    font-size: 0.8rem;
+    transition: opacity 0.3s ease;
+}
+
+.loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 107, 107, 0.3);
+    border-top: 2px solid #ff6b6b;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.flowguard-field-container.loaded .field-loading {
+    display: none;
+}
+
+.flowguard-field-container iframe {
+    width: 100%;
+    height: 40px;
+    border: none;
+    border-radius: 8px;
+}
+
+/* Special styling for price field */
+#price-element iframe {
+    height: auto !important;
+    min-height: 40px !important;
+    max-height: none !important;
+    width: 100% !important;
+    min-width: 200px;
+    border: none !important;
+    border-radius: 8px !important;
+    display: block !important;
+    margin: 0 auto !important;
+}
+
+/* Ensure price field container maintains proper dimensions */
+#price-element.flowguard-field-container {
+    min-height: auto;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Override Flowguard SDK styling for price element */
+#price-element.loaded {
+    background: transparent !important;
+    border: none !important;
+    padding: 0.5rem 0 !important;
+    min-height: auto !important;
+    display: block !important;
+    text-align: center !important;
+}
+
+/* Override Flowguard SDK price styling */
+.title.price {
+    color: #ffffff !important;
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    margin: 0.5rem 0 !important;
+    white-space: normal !important;
+}
+
+.title.price.svelte-1cjut88 {
+    color: #ffffff !important;
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    margin: 0.5rem 0 !important;
+    white-space: normal !important;
+}
+
+/* Fix HTML entities in price display */
+.title.price * {
+    color: #ffffff !important;
+}
+
+/* Override any inline styles on the iframe */
+#price-element iframe[style*="height"] {
+    height: auto !important;
+    min-height: 40px !important;
+    max-height: none !important;
+}
+
+/* Additional styling for any price-related elements */
+[class*="price"] {
+    color: #ffffff !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0.5rem 0 !important;
+    text-align: center !important;
+    font-weight: 600 !important;
+    font-size: 1.1rem !important;
+}
+
+/* Price display container styling */
+.price-display-group {
+    margin: 1.5rem 0;
+}
+
+.price-display-label {
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.price-display-container {
+    background: transparent;
+    border: none;
+    padding: 0.5rem 0;
+    text-align: center;
+    min-height: auto;
+    display: block;
+}
+
+.price-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.price-display-container.loaded .price-loading {
+    display: none;
+}
+
+/* Button Styles */
+.btn-primary {
+    background: #ff6b6b;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #ff5252;
+    transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .payment-container {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+    
+    .payment-title {
+        font-size: 1.5rem;
+    }
+    
+    .payment-form-container {
+        padding: 1.5rem;
+    }
+    
+    .flowguard-form-fields {
+        padding: 1rem;
+    }
+    
+    .validation-container {
+        margin-top: 0.5rem;
+    }
+    
+    .field-error,
+    .global-error {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
+    
+    .validation-summary {
+        padding: 0.75rem;
+    }
+}

@@ -1,0 +1,260 @@
+/**
+ * Validation Test Page Styles
+ * 
+ * Styling for the Flowguard validation system test page.
+ * 
+ * @package FlexPress
+ * @since 1.0.0
+ */
+
+/* Test Page Base Styles */
+.validation-test-page {
+    background: #000;
+    min-height: 100vh;
+}
+
+.test-container {
+    background: #1a1a1a;
+    border-radius: 8px;
+    padding: 2rem;
+    border: 1px solid #333;
+}
+
+.test-title {
+    color: #ffffff;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.test-subtitle {
+    color: #888;
+    font-size: 1rem;
+    margin-bottom: 0;
+}
+
+/* Test Controls */
+.test-controls h5 {
+    color: #ffffff;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.test-results h5 {
+    color: #ffffff;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+/* Test Output */
+.test-output {
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 1rem;
+    min-height: 200px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.test-output .test-result {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.test-output .test-result.success {
+    background: #1e3a1e;
+    color: #28a745;
+    border: 1px solid #28a745;
+}
+
+.test-output .test-result.error {
+    background: #3a1e1e;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+}
+
+.test-output .test-result.warning {
+    background: #3a3a1e;
+    color: #ffc107;
+    border: 1px solid #ffc107;
+}
+
+.test-output .test-result.info {
+    background: #1e3a3a;
+    color: #17a2b8;
+    border: 1px solid #17a2b8;
+}
+
+/* Mock Payment Form */
+.mock-payment-form h5 {
+    color: #ffffff;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.form-group label {
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #ffffff;
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    background: #333;
+    border-color: #ff6b6b;
+    color: #ffffff;
+    box-shadow: 0 0 0 0.2rem rgba(255, 107, 107, 0.25);
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.form-control.is-valid {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.invalid-feedback {
+    color: #dc3545;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+
+/* Validation Status */
+.validation-status h5 {
+    color: #ffffff;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.status-display {
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 1rem;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    background: #333;
+    border-radius: 4px;
+}
+
+.status-label {
+    color: #888;
+    font-weight: 500;
+}
+
+.status-value {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.status-value.success {
+    color: #28a745;
+}
+
+.status-value.error {
+    color: #dc3545;
+}
+
+.status-value.warning {
+    color: #ffc107;
+}
+
+/* Button Styles */
+.btn {
+    border-radius: 4px;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary {
+    border-color: #ff6b6b;
+    color: #ff6b6b;
+}
+
+.btn-outline-primary:hover {
+    background-color: #ff6b6b;
+    border-color: #ff6b6b;
+    color: #ffffff;
+}
+
+.btn-outline-danger {
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: #ffffff;
+}
+
+.btn-primary {
+    background: #ff6b6b;
+    border: none;
+    color: #ffffff;
+}
+
+.btn-primary:hover {
+    background: #ff5252;
+    transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .test-container {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+    
+    .test-title {
+        font-size: 1.5rem;
+    }
+    
+    .test-output {
+        min-height: 150px;
+        max-height: 300px;
+        padding: 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    .form-control {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+    
+    .status-item {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .status-label,
+    .status-value {
+        font-size: 0.9rem;
+    }
+}

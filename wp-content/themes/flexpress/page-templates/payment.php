@@ -33,7 +33,14 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
                     
                     <!-- Payment Status Messages -->
                     <div id="payment-success" class="alert alert-success" style="display: none;"></div>
-                    <div id="payment-error" class="alert alert-danger" style="display: none;"></div>
+                    <div id="payment-error" class="alert alert-danger" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span id="error-message"></span>
+                            <button id="refresh-session" class="btn btn-outline-light btn-sm" style="display: none;">
+                                <i class="fas fa-refresh me-1"></i>Refresh
+                            </button>
+                        </div>
+                    </div>
                     <div id="payment-pending" class="alert alert-warning" style="display: none;"></div>
                     
                     <!-- Payment Form Container -->
@@ -79,13 +86,7 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
                                 </h2>
                                 <div id="helpCollapse" class="accordion-collapse collapse" aria-labelledby="helpHeading" data-bs-parent="#paymentHelpAccordion">
                                     <div class="accordion-body">
-                                        <h6>Payment Methods Accepted:</h6>
-                                        <ul class="list-unstyled">
-                                            <li><i class="fas fa-credit-card me-2"></i>Visa, Mastercard, American Express</li>
-                                            <li><i class="fas fa-university me-2"></i>Bank transfers</li>
-                                            <li><i class="fas fa-mobile-alt me-2"></i>Mobile payments</li>
-                                        </ul>
-                                        
+                                                                              
                                         <h6 class="mt-3">Security Features:</h6>
                                         <ul class="list-unstyled">
                                             <li><i class="fas fa-shield-alt me-2"></i>256-bit SSL encryption</li>
@@ -111,144 +112,8 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
     </div>
 </main>
 
-<style>
-.payment-page {
-    background: #000;
-    min-height: 100vh;
-}
-
-.payment-container {
-    background: #1a1a1a;
-    border-radius: 8px;
-    padding: 2rem;
-    border: 1px solid #333;
-}
-
-.payment-title {
-    color: #ffffff;
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.payment-subtitle {
-    color: #888;
-    font-size: 1rem;
-    margin-bottom: 0;
-}
-
-.payment-form-container {
-    background: #222;
-    border-radius: 8px;
-    padding: 2rem;
-    margin: 1.5rem 0;
-    border: 1px solid #333;
-    min-height: 400px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.payment-loading {
-    text-align: center;
-    color: #b0b0b0;
-}
-
-.payment-loading .spinner-border {
-    width: 3rem;
-    height: 3rem;
-    border-width: 0.3em;
-}
-
-.security-badges .badge {
-    font-size: 0.8rem;
-    padding: 0.5rem 0.75rem;
-}
-
-.payment-help .accordion-item {
-    background: #222;
-    border: 1px solid #333;
-    border-radius: 4px;
-}
-
-.payment-help .accordion-button {
-    background: transparent;
-    color: #ffffff;
-    border: none;
-    font-weight: 500;
-}
-
-.payment-help .accordion-button:not(.collapsed) {
-    background: #333;
-    color: #ffffff;
-}
-
-.payment-help .accordion-button:focus {
-    box-shadow: 0 0 0 0.25rem rgba(255, 107, 107, 0.25);
-}
-
-.payment-help .accordion-body {
-    background: #222;
-    color: #888;
-}
-
-.alert {
-    border-radius: 4px;
-    border: none;
-    padding: 1rem 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.alert-success {
-    background: #1e3a1e;
-    color: #28a745;
-    border: 1px solid #28a745;
-}
-
-.alert-danger {
-    background: #3a1e1e;
-    color: #dc3545;
-    border: 1px solid #dc3545;
-}
-
-.alert-warning {
-    background: #3a3a1e;
-    color: #ffc107;
-    border: 1px solid #ffc107;
-}
-
-.btn-outline-primary {
-    border-color: #ff6b6b;
-    color: #ff6b6b;
-}
-
-.btn-outline-primary:hover {
-    background-color: #ff6b6b;
-    border-color: #ff6b6b;
-    color: #ffffff;
-}
-
-@media (max-width: 768px) {
-    .payment-container {
-        padding: 1.5rem;
-        margin: 1rem;
-    }
-    
-    .payment-title {
-        font-size: 1.5rem;
-    }
-    
-    .payment-form-container {
-        padding: 1.5rem;
-    }
-    
-    .flowguard-form-fields {
-        padding: 1rem;
-    }
-}
-</style>
+<!-- Load validation styles -->
+<link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/assets/css/flowguard-validation.css">
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -269,15 +134,26 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
+    // Validate session ID format (basic check)
+    if (!sessionId.match(/^[a-f0-9-]{36}$/i)) {
+        console.error('Invalid session ID format:', sessionId);
+        document.getElementById('payment-error').textContent = 'Invalid payment session format. Please try again.';
+        document.getElementById('payment-error').style.display = 'block';
+        return;
+    }
+    
     // Show loading message
     document.getElementById('payment-pending').textContent = 'Loading secure payment form...';
     document.getElementById('payment-pending').style.display = 'block';
     
-    // Load Flowguard SDK and initialize payment form
-    loadFlowguardSDK().then(() => {
+    // Load Flowguard SDK and validation system
+    Promise.all([
+        loadFlowguardSDK(),
+        loadValidationSystem()
+    ]).then(() => {
         initializePaymentForm(sessionId);
     }).catch(error => {
-        console.error('Failed to load Flowguard SDK:', error);
+        console.error('Failed to load payment system:', error);
         document.getElementById('payment-error').textContent = 'Error loading payment form. Please try again.';
         document.getElementById('payment-error').style.display = 'block';
         document.getElementById('payment-pending').style.display = 'none';
@@ -300,6 +176,29 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             script.onerror = (error) => {
                 console.error('Failed to load Flowguard SDK:', error);
+                reject(error);
+            };
+            document.head.appendChild(script);
+        });
+    }
+    
+    // Load validation system
+    function loadValidationSystem() {
+        return new Promise((resolve, reject) => {
+            // Check if validation system is already loaded
+            if (window.FlowguardValidation) {
+                resolve();
+                return;
+            }
+            
+            const script = document.createElement('script');
+            script.src = '<?php echo get_template_directory_uri(); ?>/assets/js/flowguard-validation.js';
+            script.onload = () => {
+                console.log('Flowguard validation system loaded successfully');
+                resolve();
+            };
+            script.onerror = (error) => {
+                console.error('Failed to load validation system:', error);
                 reject(error);
             };
             document.head.appendChild(script);
@@ -375,212 +274,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         Loading Payment Form...
                     </button>
                 </div>
-                <style>
-                    .flowguard-form-fields {
-                        max-width: 500px;
-                        margin: 0 auto;
-                        padding: 2rem;
-                    }
-                    .field-group {
-                        margin-bottom: 1rem;
-                    }
-                    .field-group label {
-                        color: #ffffff;
-                        font-weight: 500;
-                        font-size: 0.9rem;
-                        display: block;
-                        margin-bottom: 0.5rem;
-                    }
-                    .flowguard-field-container {
-                        position: relative;
-                        min-height: 40px;
-                        border: 1px solid #444;
-                        border-radius: 4px;
-                        background: #333;
-                        overflow: hidden;
-                    }
-                    
-                    .field-loading {
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 0.5rem;
-                        height: 40px;
-                        color: #888;
-                        font-size: 0.8rem;
-                        transition: opacity 0.3s ease;
-                    }
-                    
-                    .loading-spinner {
-                        width: 16px;
-                        height: 16px;
-                        border: 2px solid rgba(255, 107, 107, 0.3);
-                        border-top: 2px solid #ff6b6b;
-                        border-radius: 50%;
-                        animation: spin 1s linear infinite;
-                    }
-                    
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                    
-                    .flowguard-field-container.loaded .field-loading {
-                        display: none;
-                    }
-                    
-                    .flowguard-field-container iframe {
-                        width: 100%;
-                        height: 40px;
-                        border: none;
-                        border-radius: 8px;
-                    }
-                    
-                    /* Special styling for price field */
-                    #price-element iframe {
-                        height: auto !important;
-                        min-height: 40px !important;
-                        max-height: none !important;
-                        width: 100% !important;
-                        min-width: 200px;
-                        border: none !important;
-                        border-radius: 8px !important;
-                        display: block !important;
-                        margin: 0 auto !important;
-                    }
-                    
-                    /* Ensure price field container maintains proper dimensions */
-                    #price-element.flowguard-field-container {
-                        min-height: auto;
-                        height: auto;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                    }
-                    
-                    /* Override Flowguard SDK styling for price element */
-                    #price-element.loaded {
-                        background: transparent !important;
-                        border: none !important;
-                        padding: 0.5rem 0 !important;
-                        min-height: auto !important;
-                        display: block !important;
-                        text-align: center !important;
-                    }
-                    
-                    /* Override Flowguard SDK price styling */
-                    .title.price {
-                        color: #ffffff !important;
-                        font-size: 1.1rem !important;
-                        font-weight: 600 !important;
-                        text-align: center !important;
-                        padding: 0 !important;
-                        background: transparent !important;
-                        border: none !important;
-                        margin: 0.5rem 0 !important;
-                        white-space: normal !important;
-                    }
-                    
-                    .title.price.svelte-1cjut88 {
-                        color: #ffffff !important;
-                        font-size: 1.1rem !important;
-                        font-weight: 600 !important;
-                        text-align: center !important;
-                        padding: 0 !important;
-                        background: transparent !important;
-                        border: none !important;
-                        margin: 0.5rem 0 !important;
-                        white-space: normal !important;
-                    }
-                    
-                    /* Fix HTML entities in price display */
-                    .title.price * {
-                        color: #ffffff !important;
-                    }
-                    
-                    /* Override any inline styles on the iframe */
-                    #price-element iframe[style*="height"] {
-                        height: auto !important;
-                        min-height: 40px !important;
-                        max-height: none !important;
-                    }
-                    
-                    /* Additional styling for any price-related elements */
-                    [class*="price"] {
-                        color: #ffffff !important;
-                        background: transparent !important;
-                        border: none !important;
-                        padding: 0 !important;
-                        margin: 0.5rem 0 !important;
-                        text-align: center !important;
-                        font-weight: 600 !important;
-                        font-size: 1.1rem !important;
-                    }
-                    
-                    /* Price display container styling */
-                    .price-display-group {
-                        margin: 1.5rem 0;
-                    }
-                    
-                    .price-display-label {
-                        color: #ffffff;
-                        font-weight: 600;
-                        font-size: 1rem;
-                        margin-bottom: 0.5rem;
-                        text-transform: uppercase;
-                        letter-spacing: 1px;
-                    }
-                    
-                    .price-display-container {
-                        background: transparent;
-                        border: none;
-                        padding: 0.5rem 0;
-                        text-align: center;
-                        min-height: auto;
-                        display: block;
-                    }
-                    
-                    .price-loading {
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 0.5rem;
-                        color: #888;
-                        font-size: 0.9rem;
-                    }
-                    
-                    .price-display-container.loaded .price-loading {
-                        display: none;
-                    }
-                    
-                    @keyframes pulse {
-                        0% { transform: scale(1); }
-                        50% { transform: scale(1.02); }
-                        100% { transform: scale(1); }
-                    }
-                    
-                    .btn-primary {
-                        background: #ff6b6b;
-                        border: none;
-                        border-radius: 4px;
-                        font-weight: 600;
-                        padding: 1rem 2rem;
-                        font-size: 1.1rem;
-                        transition: all 0.3s ease;
-                        text-transform: uppercase;
-                        letter-spacing: 1px;
-                    }
-                    
-                    .btn-primary:hover:not(:disabled) {
-                        background: #ff5252;
-                        transform: translateY(-1px);
-                    }
-                    
-                    .btn-primary:disabled {
-                        opacity: 0.7;
-                        cursor: not-allowed;
-                    }
-                </style>
             `;
             
             // Initialize Flowguard exactly as per documentation
@@ -613,6 +306,20 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             console.log('Flowguard initialized with field elements');
+            
+            // Initialize validation system
+            let validationSystem = null;
+            if (window.FlowguardValidation) {
+                validationSystem = new FlowguardValidation(flowguard, {
+                    showFieldErrors: true,
+                    showGlobalErrors: true,
+                    autoRetry: true,
+                    maxRetries: 3,
+                    retryDelay: 2000,
+                    enableHelp: true
+                });
+                console.log('Validation system initialized');
+            }
             
             // Wait for elements to be ready before enabling submit
             const submitButton = document.getElementById('submit-payment');
@@ -711,20 +418,172 @@ document.addEventListener('DOMContentLoaded', function() {
                         return;
                     }
                     
-                    if (typeof flowguard.submit === 'function') {
-                        console.log('Calling flowguard.submit()');
-                        this.disabled = true;
-                        this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+                    // Validate form using Flowguard's validation methods
+                    let isValid = true;
+                    let validationErrors = [];
+                    
+                    try {
+                        // Check if Flowguard has validation methods
+                        if (typeof flowguard.validate === 'function') {
+                            const validationResult = flowguard.validate();
+                            isValid = validationResult.isValid;
+                            validationErrors = validationResult.errors || [];
+                        } else if (typeof flowguard.getValidationErrors === 'function') {
+                            const errors = flowguard.getValidationErrors();
+                            isValid = errors.length === 0;
+                            validationErrors = errors;
+                        } else {
+                            // Fallback: Check if all required fields have values
+                            // Core required fields (always required)
+                            const requiredFields = ['cardNumber', 'expDate'];
+                            // Optional fields (may be required by Flowguard)
+                            const optionalFields = ['cvv', 'cardholder'];
+                            const allFields = [...requiredFields, ...optionalFields];
+                            const fieldValues = {};
+                            
+                            allFields.forEach(fieldName => {
+                                try {
+                                    const fieldElement = document.getElementById(`${fieldName}-element`);
+                                    if (fieldElement) {
+                                        const iframe = fieldElement.querySelector('iframe');
+                                        if (iframe) {
+                                            // Try to get value from iframe (may fail due to CORS)
+                                            try {
+                                                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                                                const input = iframeDoc.querySelector('input');
+                                                fieldValues[fieldName] = input ? input.value.trim() : '';
+                                            } catch (error) {
+                                                // CORS restriction - assume field has value if iframe exists
+                                                fieldValues[fieldName] = 'has-iframe';
+                                            }
+                                        } else {
+                                            fieldValues[fieldName] = '';
+                                        }
+                                    } else {
+                                        fieldValues[fieldName] = '';
+                                    }
+                                } catch (error) {
+                                    fieldValues[fieldName] = '';
+                                }
+                            });
+                            
+                            // Check for empty required fields with human-readable messages
+                            const fieldLabels = {
+                                'cardNumber': 'Card number',
+                                'expDate': 'Expiry date',
+                                'cvv': 'Security code (CVV)',
+                                'cardholder': 'Cardholder name'
+                            };
+                            
+                            // Check core required fields first
+                            requiredFields.forEach(fieldName => {
+                                if (!fieldValues[fieldName] || fieldValues[fieldName] === '') {
+                                    isValid = false;
+                                    const fieldLabel = fieldLabels[fieldName] || fieldName;
+                                    validationErrors.push({
+                                        field: fieldName,
+                                        message: `Please enter your ${fieldLabel.toLowerCase()}`
+                                    });
+                                }
+                            });
+                            
+                            // Check optional fields (warn but don't block submission)
+                            optionalFields.forEach(fieldName => {
+                                if (!fieldValues[fieldName] || fieldValues[fieldName] === '') {
+                                    const fieldLabel = fieldLabels[fieldName] || fieldName;
+                                    validationErrors.push({
+                                        field: fieldName,
+                                        message: `${fieldLabel} is recommended for security`,
+                                        type: 'warning'
+                                    });
+                                }
+                            });
+                        }
                         
-                        try {
-                            flowguard.submit();
-                        } catch (error) {
-                            console.error('Error submitting payment:', error);
+                        // Show validation errors if any
+                        if (!isValid) {
+                            console.log('Form validation failed:', validationErrors);
+                            
+                            // Separate errors from warnings
+                            const errors = validationErrors.filter(error => error.type !== 'warning');
+                            const warnings = validationErrors.filter(error => error.type === 'warning');
+                            
+                            // Show error message for required fields
+                            if (errors.length > 0) {
+                                const errorMessage = errors.map(error => error.message).join(', ');
+                                document.getElementById('payment-error').textContent = errorMessage;
+                                document.getElementById('payment-error').style.display = 'block';
+                                
+                                // Reset button state
+                                this.disabled = false;
+                                this.innerHTML = '<i class="fas fa-credit-card me-2"></i>Complete Payment';
+                                
+                                return;
+                            }
+                            
+                            // If only warnings, show them but allow submission
+                            if (warnings.length > 0) {
+                                console.log('Validation warnings:', warnings);
+                                // Could show warnings in a different UI element if desired
+                            }
+                        }
+                        
+                        // Form is valid, proceed with submission
+                        if (typeof flowguard.submit === 'function') {
+                            console.log('Form is valid, calling flowguard.submit()');
+                            this.disabled = true;
+                            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+                            
+                            // Hide any previous error messages
+                            document.getElementById('payment-error').style.display = 'none';
+                            
+                            // Show pending message
+                            document.getElementById('payment-pending').textContent = 'Processing your payment...';
+                            document.getElementById('payment-pending').style.display = 'block';
+                            
+                            try {
+                                flowguard.submit();
+                                
+                                // Set a timeout to prevent infinite spinning
+                                const timeoutId = setTimeout(() => {
+                                    console.warn('Payment submission timeout - resetting button');
+                                    this.disabled = false;
+                                    this.innerHTML = '<i class="fas fa-credit-card me-2"></i>Complete Payment';
+                                    document.getElementById('payment-pending').style.display = 'none';
+                                    
+                                    document.getElementById('payment-error').textContent = 'Payment submission timed out. Please try again.';
+                                    document.getElementById('payment-error').style.display = 'block';
+                                }, 30000); // 30 second timeout
+                                
+                                // Store timeout ID for potential cleanup
+                                this._paymentTimeout = timeoutId;
+                                
+                            } catch (error) {
+                                console.error('Error submitting payment:', error);
+                                this.disabled = false;
+                                this.innerHTML = '<i class="fas fa-credit-card me-2"></i>Complete Payment';
+                                document.getElementById('payment-pending').style.display = 'none';
+                                
+                                // Show error message
+                                document.getElementById('payment-error').textContent = 'Failed to submit payment. Please try again.';
+                                document.getElementById('payment-error').style.display = 'block';
+                            }
+                        } else {
+                            console.error('flowguard.submit is not a function');
                             this.disabled = false;
                             this.innerHTML = '<i class="fas fa-credit-card me-2"></i>Complete Payment';
+                            
+                            document.getElementById('payment-error').textContent = 'Payment form is not ready. Please refresh the page.';
+                            document.getElementById('payment-error').style.display = 'block';
                         }
-                    } else {
-                        console.error('flowguard.submit is not a function');
+                        
+                    } catch (error) {
+                        console.error('Error during form validation:', error);
+                        this.disabled = false;
+                        this.innerHTML = '<i class="fas fa-credit-card me-2"></i>Complete Payment';
+                        
+                        document.getElementById('payment-error').textContent = 'Error validating form. Please try again.';
+                        document.getElementById('payment-error').style.display = 'block';
                     }
                 });
             }
@@ -733,7 +592,12 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Payment form methods:', Object.getOwnPropertyNames(flowguard));
             console.log('Payment form prototype methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(flowguard)));
             
-            setupEventHandlers(flowguard);
+            // Debug: Check if validation methods exist
+            console.log('flowguard.validate exists:', typeof flowguard.validate === 'function');
+            console.log('flowguard.getValidationErrors exists:', typeof flowguard.getValidationErrors === 'function');
+            console.log('flowguard.submit exists:', typeof flowguard.submit === 'function');
+            
+            setupEventHandlers(flowguard, validationSystem);
             
             // Hide loading message
             document.getElementById('payment-pending').style.display = 'none';
@@ -748,15 +612,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Setup event handlers for payment form
-    function setupEventHandlers(paymentForm) {
+    function setupEventHandlers(paymentForm, validationSystem) {
         // Check if the payment form has event handling methods
         if (typeof paymentForm.on === 'function') {
             // Setup event handlers using .on() method
             paymentForm.on('payment.success', (event) => {
                 console.log('Payment successful:', event);
-                document.getElementById('payment-pending').style.display = 'none';
-                document.getElementById('payment-success').textContent = 'Payment successful! Redirecting...';
-                document.getElementById('payment-success').style.display = 'block';
+                
+                // Clear any pending timeout
+                const submitButton = document.getElementById('submit-payment');
+                if (submitButton && submitButton._paymentTimeout) {
+                    clearTimeout(submitButton._paymentTimeout);
+                    submitButton._paymentTimeout = null;
+                }
+                
+                // Handle through validation system if available
+                if (validationSystem) {
+                    validationSystem.handlePaymentSuccess(event);
+                } else {
+                    // Fallback to direct handling
+                    document.getElementById('payment-pending').style.display = 'none';
+                    document.getElementById('payment-success').textContent = 'Payment successful! Redirecting...';
+                    document.getElementById('payment-success').style.display = 'block';
+                }
                 
                 // Redirect to success page
                 setTimeout(() => {
@@ -773,22 +651,106 @@ document.addEventListener('DOMContentLoaded', function() {
             
             paymentForm.on('payment.error', (event) => {
                 console.error('Payment error:', event);
-                document.getElementById('payment-pending').style.display = 'none';
-                document.getElementById('payment-error').textContent = event.message || 'Payment failed. Please try again.';
-                document.getElementById('payment-error').style.display = 'block';
+                
+                // Clear any pending timeout
+                const submitButton = document.getElementById('submit-payment');
+                if (submitButton) {
+                    if (submitButton._paymentTimeout) {
+                        clearTimeout(submitButton._paymentTimeout);
+                        submitButton._paymentTimeout = null;
+                    }
+                    
+                    // Reset submit button state
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-credit-card me-2"></i>Complete Payment';
+                }
+                
+                // Handle specific Flowguard errors
+                let errorMessage = 'Payment failed. Please try again.';
+                let showRefreshButton = false;
+                
+                if (event.code === 422 || event.status === 422) {
+                    errorMessage = 'Payment session expired.';
+                    showRefreshButton = true;
+                } else if (event.message && event.message.includes('sessionId')) {
+                    errorMessage = 'Invalid payment session.';
+                    showRefreshButton = true;
+                } else if (event.message && event.message.includes('order-data')) {
+                    errorMessage = 'Unable to load payment information.';
+                    showRefreshButton = true;
+                } else if (event.message) {
+                    errorMessage = event.message;
+                }
+                
+                // Handle through validation system if available
+                if (validationSystem) {
+                    validationSystem.handlePaymentError({
+                        ...event,
+                        message: errorMessage
+                    });
+                } else {
+                    // Fallback to direct handling
+                    document.getElementById('payment-pending').style.display = 'none';
+                    document.getElementById('error-message').textContent = errorMessage;
+                    document.getElementById('payment-error').style.display = 'block';
+                    
+                    // Show refresh button for session-related errors
+                    const refreshButton = document.getElementById('refresh-session');
+                    if (showRefreshButton && refreshButton) {
+                        refreshButton.style.display = 'block';
+                    }
+                }
             });
             
             paymentForm.on('payment.pending', (event) => {
                 console.log('Payment pending:', event);
-                document.getElementById('payment-pending').textContent = event.message || 'Payment is being processed...';
+                
+                // Handle through validation system if available
+                if (validationSystem) {
+                    validationSystem.handlePaymentPending(event);
+                } else {
+                    // Fallback to direct handling
+                    document.getElementById('payment-pending').textContent = event.message || 'Payment is being processed...';
+                }
             });
+            
+            // Add validation-specific events
+            paymentForm.on('field.change', (event) => {
+                if (validationSystem) {
+                    validationSystem.handleFieldChange(event);
+                }
+            });
+            
+            paymentForm.on('field.blur', (event) => {
+                if (validationSystem) {
+                    validationSystem.handleFieldBlur(event);
+                }
+            });
+            
+            paymentForm.on('field.focus', (event) => {
+                if (validationSystem) {
+                    validationSystem.handleFieldFocus(event);
+                }
+            });
+            
+            paymentForm.on('form.validate', (event) => {
+                if (validationSystem) {
+                    validationSystem.handleFormValidation(event);
+                }
+            });
+            
         } else if (typeof paymentForm.addEventListener === 'function') {
             // Try addEventListener if available
             paymentForm.addEventListener('payment.success', (event) => {
                 console.log('Payment successful:', event);
-                document.getElementById('payment-pending').style.display = 'none';
-                document.getElementById('payment-success').textContent = 'Payment successful! Redirecting...';
-                document.getElementById('payment-success').style.display = 'block';
+                
+                if (validationSystem) {
+                    validationSystem.handlePaymentSuccess(event);
+                } else {
+                    document.getElementById('payment-pending').style.display = 'none';
+                    document.getElementById('payment-success').textContent = 'Payment successful! Redirecting...';
+                    document.getElementById('payment-success').style.display = 'block';
+                }
                 
                 setTimeout(() => {
                     const successUrl = new URL(window.location.origin + '/payment-success');
@@ -804,15 +766,52 @@ document.addEventListener('DOMContentLoaded', function() {
             
             paymentForm.addEventListener('payment.error', (event) => {
                 console.error('Payment error:', event);
-                document.getElementById('payment-pending').style.display = 'none';
-                document.getElementById('payment-error').textContent = event.message || 'Payment failed. Please try again.';
-                document.getElementById('payment-error').style.display = 'block';
+                
+                if (validationSystem) {
+                    validationSystem.handlePaymentError(event);
+                } else {
+                    document.getElementById('payment-pending').style.display = 'none';
+                    document.getElementById('payment-error').textContent = event.message || 'Payment failed. Please try again.';
+                    document.getElementById('payment-error').style.display = 'block';
+                }
             });
         } else {
             console.log('No event handling methods found on payment form');
             console.log('Payment form will handle events internally');
         }
     }
+    
+    // Add refresh button functionality
+    document.getElementById('refresh-session').addEventListener('click', function() {
+        console.log('Refreshing payment session...');
+        window.location.reload();
+    });
+    
+    // Add global error handler for Flowguard API errors
+    window.addEventListener('error', function(event) {
+        if (event.message && event.message.includes('flowguard.yoursafe.com')) {
+            console.error('Flowguard API error detected:', event);
+            
+            // Check if it's a 422 error (session expired)
+            if (event.message.includes('422') || event.message.includes('Unprocessable Content')) {
+                const submitButton = document.getElementById('submit-payment');
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-credit-card me-2"></i>Complete Payment';
+                }
+                
+                document.getElementById('payment-pending').style.display = 'none';
+                document.getElementById('error-message').textContent = 'Payment session expired.';
+                document.getElementById('payment-error').style.display = 'block';
+                
+                // Show refresh button
+                const refreshButton = document.getElementById('refresh-session');
+                if (refreshButton) {
+                    refreshButton.style.display = 'block';
+                }
+            }
+        }
+    });
     
     // Add keyboard shortcuts
     document.addEventListener('keydown', function(e) {

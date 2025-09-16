@@ -12,6 +12,8 @@ FlexPress is designed specifically for content websites (primarily adult content
 
 ### 💳 Payment Processing
 - **Flowguard Integration**: Modern payment processing with embedded forms
+- **Comprehensive Validation System**: Real-time field validation with user-friendly error messages
+- **Error Handling & Recovery**: Automatic retry mechanisms and graceful error recovery
 - **Verotel FlexPay Integration**: Legacy payment processing system (being phased out)
 - **Subscription Management**: Recurring billing and membership tiers
 - **Pay-Per-View (PPV)**: Individual episode purchases with unlock buttons
@@ -1717,3 +1719,76 @@ The theme is designed to be deployed as a standalone package. Only the contents 
 - Core functionality
 - Screenshot
 - Documentation
+
+## 🛡️ Payment Form Validation System
+
+### Comprehensive Error Handling
+The FlexPress theme includes a sophisticated validation system for Flowguard payment forms that provides:
+
+#### Real-Time Field Validation
+- **Card Number**: Luhn algorithm validation, card type detection, length verification
+- **Expiry Date**: Format validation (MM/YY), expiration checking, month validation
+- **CVV**: Length validation (3-4 digits), numeric format checking
+- **Cardholder Name**: Character validation, length limits, special character handling
+
+#### Error Recovery Mechanisms
+- **Automatic Retry**: Configurable retry attempts for network errors
+- **Graceful Degradation**: Fallback error handling when validation system fails
+- **User-Friendly Messages**: Clear, actionable error messages
+- **Visual Feedback**: Color-coded field states (error, warning, success)
+
+#### Validation Features
+- **Cross-Origin Handling**: Works with Flowguard's iframe-based fields
+- **Network Status Monitoring**: Detects online/offline states
+- **Form State Management**: Tracks validation state across form interactions
+- **Help System**: Contextual help messages for each field
+- **Accessibility**: Screen reader friendly error announcements
+
+#### Error Types Handled
+- **Field Validation Errors**: Invalid card numbers, expired dates, etc.
+- **Network Errors**: Connection issues, timeouts
+- **Payment Errors**: Declined cards, insufficient funds, fraud detection
+- **System Errors**: Server errors, session expiration
+- **3D Secure Errors**: Authentication failures, cancellations
+
+#### Testing & Debugging
+- **Test Page**: `/test-validation.php` for comprehensive validation testing
+- **Mock System**: Simulated validation for development and testing
+- **Error Simulation**: Test various error scenarios
+- **Status Monitoring**: Real-time validation state display
+
+### Key Validation Files
+- `assets/js/flowguard-validation.js` - Core validation system
+- `assets/css/flowguard-validation.css` - Validation styling
+- `assets/css/validation-test.css` - Test page styling
+- `page-templates/payment.php` - Payment form with integrated validation
+- `test-validation.php` - Validation testing and debugging page
+
+### Validation Configuration
+```javascript
+// Initialize validation system
+const validationSystem = new FlowguardValidation(paymentForm, {
+    showFieldErrors: true,      // Display field-level errors
+    showGlobalErrors: true,     // Display global error messages
+    autoRetry: true,           // Enable automatic retry for recoverable errors
+    maxRetries: 3,            // Maximum retry attempts
+    retryDelay: 2000,          // Delay between retry attempts (ms)
+    enableHelp: true           // Show contextual help messages
+});
+```
+
+### Error Message Customization
+The validation system includes comprehensive error messages for all common scenarios:
+- Card validation errors (invalid format, expired, unsupported)
+- Network errors (connection issues, timeouts)
+- Payment processing errors (declined, insufficient funds, fraud)
+- 3D Secure authentication errors
+- System errors (session expiration, server issues)
+
+### Integration with Flowguard SDK
+The validation system seamlessly integrates with Flowguard's embedded payment forms:
+- Monitors iframe-based field changes
+- Handles cross-origin restrictions gracefully
+- Provides visual feedback for field states
+- Manages form submission validation
+- Implements comprehensive error recovery

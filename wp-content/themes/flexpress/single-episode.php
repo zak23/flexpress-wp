@@ -376,7 +376,7 @@ while (have_posts()):
                             <h6 class="mb-2">
                                 <?php esc_html_e('Or get unlimited access', 'flexpress'); ?>
                             </h6>
-                            <a href="<?php echo esc_url(home_url('/membership')); ?>" class="btn btn-outline-primary w-100">
+                            <a href="<?php echo esc_url(home_url('/join')); ?>" class="btn btn-outline-primary w-100">
                                 <i class="fas fa-crown me-2"></i>
                                 <?php esc_html_e('Premium Membership', 'flexpress'); ?>
                             </a>

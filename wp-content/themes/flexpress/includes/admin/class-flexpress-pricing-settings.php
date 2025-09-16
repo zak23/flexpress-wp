@@ -24,6 +24,8 @@ class FlexPress_Pricing_Settings {
         add_action('wp_ajax_delete_pricing_plan', array($this, 'delete_pricing_plan'));
         add_action('wp_ajax_toggle_plan_status', array($this, 'toggle_plan_status'));
         add_action('wp_ajax_get_pricing_plan', array($this, 'get_pricing_plan'));
+        add_action('wp_ajax_test_flowguard_connection', array($this, 'test_flowguard_connection'));
+        add_action('wp_ajax_validate_pricing_plans', array($this, 'validate_pricing_plans'));
     }
 
     /**
@@ -75,8 +77,8 @@ class FlexPress_Pricing_Settings {
                 'active' => (isset($plan['active']) && $plan['active'] !== 0 && $plan['active'] !== '0') ? 1 : 0,
                 'promo_only' => (isset($plan['promo_only']) && $plan['promo_only'] !== 0 && $plan['promo_only'] !== '0') ? 1 : 0,
                 'promo_codes' => sanitize_textarea_field($plan['promo_codes'] ?? ''),
-                'verotel_site_id' => sanitize_text_field($plan['verotel_site_id'] ?? ''),
-                'verotel_product_id' => sanitize_text_field($plan['verotel_product_id'] ?? ''),
+                'flowguard_shop_id' => sanitize_text_field($plan['flowguard_shop_id'] ?? ''),
+                'flowguard_product_id' => sanitize_text_field($plan['flowguard_product_id'] ?? ''),
                 'sort_order' => intval($plan['sort_order'] ?? 0),
             );
         }
@@ -95,12 +97,19 @@ class FlexPress_Pricing_Settings {
             
             <div class="notice notice-info">
                 <p><?php esc_html_e('Manage your subscription pricing plans. Changes will be reflected on the join page and throughout the site.', 'flexpress'); ?></p>
+                <p><strong><?php esc_html_e('Flowguard Integration:', 'flexpress'); ?></strong> <?php esc_html_e('Plans are now integrated with Flowguard payment processing. Make sure your Flowguard settings are configured.', 'flexpress'); ?></p>
             </div>
 
             <div class="pricing-plans-container">
                 <div class="pricing-plans-header">
                     <button type="button" class="button button-primary" id="add-new-plan">
                         <?php esc_html_e('Add New Plan', 'flexpress'); ?>
+                    </button>
+                    <button type="button" class="button button-secondary" id="test-flowguard-connection">
+                        <?php esc_html_e('Test Flowguard Connection', 'flexpress'); ?>
+                    </button>
+                    <button type="button" class="button button-secondary" id="validate-pricing-plans">
+                        <?php esc_html_e('Validate Plans', 'flexpress'); ?>
                     </button>
                 </div>
 
@@ -224,6 +233,18 @@ class FlexPress_Pricing_Settings {
         }
         .plan-badge.inactive {
             background: #666;
+        }
+        .form-row input.error,
+        .form-row select.error,
+        .form-row textarea.error {
+            border-color: #dc3232;
+            box-shadow: 0 0 2px rgba(220, 50, 50, 0.8);
+        }
+        .error-message {
+            color: #dc3232;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
         }
         .pricing-modal {
             position: fixed;
@@ -479,16 +500,18 @@ class FlexPress_Pricing_Settings {
                 </div>
                 
                 <div class="form-section">
-                    <h3><?php esc_html_e('Verotel Integration', 'flexpress'); ?></h3>
+                    <h3><?php esc_html_e('Flowguard Integration', 'flexpress'); ?></h3>
                     
                     <div class="form-row">
-                        <label for="verotel-site-id"><?php esc_html_e('Verotel Site ID', 'flexpress'); ?></label>
-                        <input type="text" id="verotel-site-id" name="verotel_site_id">
+                        <label for="flowguard-shop-id"><?php esc_html_e('Flowguard Shop ID', 'flexpress'); ?></label>
+                        <input type="text" id="flowguard-shop-id" name="flowguard_shop_id" placeholder="134837">
+                        <p class="description"><?php esc_html_e('Optional: Override global Shop ID for this plan', 'flexpress'); ?></p>
                     </div>
                     
                     <div class="form-row">
-                        <label for="verotel-product-id"><?php esc_html_e('Verotel Product ID', 'flexpress'); ?></label>
-                        <input type="text" id="verotel-product-id" name="verotel_product_id">
+                        <label for="flowguard-product-id"><?php esc_html_e('Flowguard Product ID', 'flexpress'); ?></label>
+                        <input type="text" id="flowguard-product-id" name="flowguard_product_id" placeholder="plan_monthly_995">
+                        <p class="description"><?php esc_html_e('Optional: Custom product identifier for this plan', 'flexpress'); ?></p>
                     </div>
                 </div>
                 
@@ -546,7 +569,7 @@ class FlexPress_Pricing_Settings {
             'flexpress-pricing-admin',
             get_template_directory_uri() . '/assets/js/pricing-admin.js',
             array('jquery'),
-            '1.4.0', // Updated version to force cache refresh
+            '1.6.0', // Updated version to force cache refresh
             true
         );
 
@@ -564,6 +587,10 @@ class FlexPress_Pricing_Settings {
      * AJAX handler to save pricing plan
      */
     public function save_pricing_plan() {
+        // Debug: Log the incoming request
+        error_log('FlexPress Pricing: Save plan request received');
+        error_log('FlexPress Pricing: POST data: ' . print_r($_POST, true));
+        
         check_ajax_referer('flexpress_pricing_nonce', 'nonce');
 
         if (!current_user_can('manage_options')) {
@@ -587,8 +614,8 @@ class FlexPress_Pricing_Settings {
             'active' => (isset($_POST['active']) && $_POST['active'] !== '0') ? 1 : 0,
             'promo_only' => (isset($_POST['promo_only']) && $_POST['promo_only'] !== '0') ? 1 : 0,
             'promo_codes' => sanitize_textarea_field($_POST['promo_codes'] ?? ''),
-            'verotel_site_id' => sanitize_text_field($_POST['verotel_site_id'] ?? ''),
-            'verotel_product_id' => sanitize_text_field($_POST['verotel_product_id'] ?? ''),
+            'flowguard_shop_id' => sanitize_text_field($_POST['flowguard_shop_id'] ?? ''),
+            'flowguard_product_id' => sanitize_text_field($_POST['flowguard_product_id'] ?? ''),
             'sort_order' => intval($_POST['sort_order'] ?? 0),
         );
 
@@ -601,11 +628,30 @@ class FlexPress_Pricing_Settings {
         }
 
         $pricing_plans[$plan_id] = $plan_data;
-        update_option('flexpress_pricing_plans', $pricing_plans);
+        $update_result = update_option('flexpress_pricing_plans', $pricing_plans);
+        
+        // Debug: Log the save result
+        error_log('FlexPress Pricing: Plan data prepared: ' . print_r($plan_data, true));
+        error_log('FlexPress Pricing: Update result: ' . ($update_result ? 'SUCCESS' : 'FAILED'));
+        error_log('FlexPress Pricing: Plan ID: ' . $plan_id);
+        
+        // Debug: Verify the data was actually saved
+        $saved_plans = get_option('flexpress_pricing_plans', array());
+        error_log('FlexPress Pricing: Saved plans count: ' . count($saved_plans));
+        if (isset($saved_plans[$plan_id])) {
+            error_log('FlexPress Pricing: Plan found in saved data: ' . print_r($saved_plans[$plan_id], true));
+        } else {
+            error_log('FlexPress Pricing: ERROR - Plan not found in saved data!');
+        }
 
         wp_send_json_success(array(
             'plan_id' => $plan_id,
-            'message' => __('Pricing plan saved successfully.', 'flexpress')
+            'message' => __('Pricing plan saved successfully.', 'flexpress'),
+            'debug' => array(
+                'plan_data' => $plan_data,
+                'update_result' => $update_result,
+                'plan_id' => $plan_id
+            )
         ));
     }
 
@@ -675,6 +721,160 @@ class FlexPress_Pricing_Settings {
             wp_send_json_success($pricing_plans[$plan_id]);
         } else {
             wp_send_json_error(__('Pricing plan not found.', 'flexpress'));
+        }
+    }
+
+    /**
+     * AJAX handler to test Flowguard connection
+     */
+    public function test_flowguard_connection() {
+        check_ajax_referer('flexpress_pricing_nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Insufficient permissions');
+            return;
+        }
+
+        // Check if Flowguard API is available
+        if (!function_exists('flexpress_get_flowguard_api')) {
+            wp_send_json_error('Flowguard API not available. Please ensure Flowguard integration is properly installed.');
+            return;
+        }
+
+        $api = flexpress_get_flowguard_api();
+        if (!$api) {
+            wp_send_json_error('Flowguard API not configured. Please check your Flowguard settings.');
+            return;
+        }
+
+        // Test both subscription and purchase endpoints
+        $test_subscription_data = [
+            'priceAmount' => '2.95',
+            'priceCurrency' => 'USD',
+            'successUrl' => home_url('/payment-success'),
+            'declineUrl' => home_url('/payment-declined'),
+            'postbackUrl' => home_url('/wp-admin/admin-ajax.php?action=flowguard_webhook'),
+            'email' => 'test@example.com',
+            'subscriptionType' => 'one-time',
+            'period' => 'P2D',
+            'referenceId' => 'test_subscription_' . time()
+        ];
+
+        $test_purchase_data = [
+            'priceAmount' => '2.95',
+            'priceCurrency' => 'USD',
+            'successUrl' => home_url('/payment-success'),
+            'declineUrl' => home_url('/payment-declined'),
+            'postbackUrl' => home_url('/wp-admin/admin-ajax.php?action=flowguard_webhook'),
+            'email' => 'test@example.com',
+            'referenceId' => 'test_purchase_' . time()
+        ];
+
+        // Test subscription endpoint
+        $subscription_result = $api->start_subscription($test_subscription_data);
+        $purchase_result = $api->start_purchase($test_purchase_data);
+
+        $results = [];
+        if ($subscription_result['success']) {
+            $results[] = 'Subscription API: ✓ Working (Session: ' . substr($subscription_result['session_id'], 0, 8) . '...)';
+        } else {
+            $results[] = 'Subscription API: ✗ Failed - ' . $subscription_result['error'];
+        }
+
+        if ($purchase_result['success']) {
+            $results[] = 'Purchase API: ✓ Working (Session: ' . substr($purchase_result['session_id'], 0, 8) . '...)';
+        } else {
+            $results[] = 'Purchase API: ✗ Failed - ' . $purchase_result['error'];
+        }
+
+        if ($subscription_result['success'] && $purchase_result['success']) {
+            wp_send_json_success('Flowguard API connection successful!<br>' . implode('<br>', $results));
+        } else {
+            wp_send_json_error('Flowguard API connection issues:<br>' . implode('<br>', $results));
+        }
+    }
+
+    /**
+     * AJAX handler to validate pricing plans
+     */
+    public function validate_pricing_plans() {
+        check_ajax_referer('flexpress_pricing_nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Insufficient permissions');
+            return;
+        }
+
+        $pricing_plans = get_option('flexpress_pricing_plans', array());
+        $validation_results = array();
+        $errors = array();
+        $warnings = array();
+
+        foreach ($pricing_plans as $plan_id => $plan) {
+            $plan_errors = array();
+            $plan_warnings = array();
+
+            // Validate required fields
+            if (empty($plan['name'])) {
+                $plan_errors[] = 'Plan name is required';
+            }
+
+            if (empty($plan['price']) || $plan['price'] <= 0) {
+                $plan_errors[] = 'Valid price is required';
+            }
+
+            if (empty($plan['currency'])) {
+                $plan_errors[] = 'Currency is required';
+            }
+
+            // Use comprehensive Flowguard validation
+            $flowguard_validation = flexpress_validate_plan_for_flowguard($plan);
+            $plan_errors = array_merge($plan_errors, $flowguard_validation['errors']);
+            $plan_warnings = array_merge($plan_warnings, $flowguard_validation['warnings']);
+
+            // Validate trial settings
+            if (!empty($plan['trial_enabled'])) {
+                if (empty($plan['trial_price']) || $plan['trial_price'] < 0) {
+                    $plan_errors[] = 'Valid trial price required when trial is enabled';
+                }
+                if (empty($plan['trial_duration']) || $plan['trial_duration'] < 1) {
+                    $plan_errors[] = 'Valid trial duration required when trial is enabled';
+                }
+            }
+
+            $validation_results[$plan_id] = array(
+                'name' => $plan['name'],
+                'errors' => $plan_errors,
+                'warnings' => $plan_warnings
+            );
+
+            if (!empty($plan_errors)) {
+                $errors = array_merge($errors, $plan_errors);
+            }
+            if (!empty($plan_warnings)) {
+                $warnings = array_merge($warnings, $plan_warnings);
+            }
+        }
+
+        $response = array(
+            'validation_results' => $validation_results,
+            'total_errors' => count($errors),
+            'total_warnings' => count($warnings),
+            'summary' => array(
+                'total_plans' => count($pricing_plans),
+                'plans_with_errors' => count(array_filter($validation_results, function($result) {
+                    return !empty($result['errors']);
+                })),
+                'plans_with_warnings' => count(array_filter($validation_results, function($result) {
+                    return !empty($result['warnings']);
+                }))
+            )
+        );
+
+        if (empty($errors)) {
+            wp_send_json_success($response);
+        } else {
+            wp_send_json_error($response);
         }
     }
 }

@@ -600,6 +600,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 price: {
                     target: '#price-element'
+                },
+                styles: {
+                    price: {
+                        base: {
+                            color: "#ffffff"
+                        },
+                        title: {},
+                        value: {}
+                    }
                 }
             });
             

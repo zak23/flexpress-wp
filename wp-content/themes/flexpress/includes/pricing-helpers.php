@@ -220,9 +220,8 @@ function flexpress_get_default_pricing_plans() {
             'featured' => 0,
             'active' => 1,
             'sort_order' => 10,
-            'verotel_site_id' => '133772',
-            'verotel_product_id' => '5day995',
-            'verotel_pricepoint_id' => '995'
+            'flowguard_shop_id' => '',
+            'flowguard_product_id' => 'plan_onetime_995_5d'
         ),
         'thirty_day_access' => array(
             'name' => __('30 Day Access', 'flexpress'),
@@ -239,9 +238,8 @@ function flexpress_get_default_pricing_plans() {
             'featured' => 0,
             'active' => 1,
             'sort_order' => 15,
-            'verotel_site_id' => '133772',
-            'verotel_product_id' => '30day1995',
-            'verotel_pricepoint_id' => '1995'
+            'flowguard_shop_id' => '',
+            'flowguard_product_id' => 'plan_onetime_1995_30d'
         ),
         'lifetime_access' => array(
             'name' => __('Lifetime Access', 'flexpress'),
@@ -258,9 +256,8 @@ function flexpress_get_default_pricing_plans() {
             'featured' => 1,
             'active' => 1,
             'sort_order' => 25,
-            'verotel_site_id' => '133772',
-            'verotel_product_id' => 'lifetime9995',
-            'verotel_pricepoint_id' => '9995'
+            'flowguard_shop_id' => '',
+            'flowguard_product_id' => 'plan_onetime_9995_lifetime'
         ),
         'monthly' => array(
             'name' => __('Monthly Access', 'flexpress'),
@@ -277,9 +274,8 @@ function flexpress_get_default_pricing_plans() {
             'featured' => 0,
             'active' => 1,
             'sort_order' => 20,
-            'verotel_site_id' => '133772',
-            'verotel_product_id' => 'monthly995',
-            'verotel_pricepoint_id' => '995'
+            'flowguard_shop_id' => '',
+            'flowguard_product_id' => 'plan_recurring_995_30d'
         ),
         'yearly' => array(
             'name' => __('Yearly Access', 'flexpress'),
@@ -296,9 +292,8 @@ function flexpress_get_default_pricing_plans() {
             'featured' => 1,
             'active' => 1,
             'sort_order' => 30,
-            'verotel_site_id' => '133772',
-            'verotel_product_id' => 'yearly9595',
-            'verotel_pricepoint_id' => '9595'
+            'flowguard_shop_id' => '',
+            'flowguard_product_id' => 'plan_recurring_9595_365d'
         ),
         'weekly_trial' => array(
             'name' => __('7 Day Trial', 'flexpress'),
@@ -315,9 +310,8 @@ function flexpress_get_default_pricing_plans() {
             'featured' => 0,
             'active' => 1,
             'sort_order' => 5,
-            'verotel_site_id' => '133772',
-            'verotel_product_id' => '7day295',
-            'verotel_pricepoint_id' => '295'
+            'flowguard_shop_id' => '',
+            'flowguard_product_id' => 'plan_onetime_295_7d'
         ),
         'three_month_access' => array(
             'name' => __('3 Month Access', 'flexpress'),
@@ -334,9 +328,8 @@ function flexpress_get_default_pricing_plans() {
             'featured' => 0,
             'active' => 1,
             'sort_order' => 18,
-            'verotel_site_id' => '133772',
-            'verotel_product_id' => '3month4995',
-            'verotel_pricepoint_id' => '4995'
+            'flowguard_shop_id' => '',
+            'flowguard_product_id' => 'plan_onetime_4995_90d'
         )
     );
 }
@@ -384,9 +377,8 @@ function flexpress_add_test_pricing_plans() {
             'featured' => 0,
             'active' => 1,
             'sort_order' => 100,
-            'verotel_site_id' => '133772',
-            'verotel_product_id' => 'test_monthly295',
-            'verotel_pricepoint_id' => '295'
+            'flowguard_shop_id' => '',
+            'flowguard_product_id' => 'test_plan_recurring_295_30d'
         ),
         'test_onetime_week' => array(
             'name' => __('Test 7 Day One-Time', 'flexpress'),
@@ -403,9 +395,8 @@ function flexpress_add_test_pricing_plans() {
             'featured' => 0,
             'active' => 1,
             'sort_order' => 101,
-            'verotel_site_id' => '133772',
-            'verotel_product_id' => 'test_7day295',
-            'verotel_pricepoint_id' => '295'
+            'flowguard_shop_id' => '',
+            'flowguard_product_id' => 'test_plan_onetime_295_7d'
         )
     );
     
@@ -439,8 +430,8 @@ function flexpress_render_pricing_plan_card($plan_id, $plan, $is_featured = fals
         'trial_duration_unit' => 'days',
         'featured' => 0,
         'active' => 1,
-        'verotel_site_id' => '',
-        'verotel_product_id' => '',
+        'flowguard_shop_id' => '',
+        'flowguard_product_id' => '',
         'sort_order' => 0,
         'promo_only' => 0,
         'promo_codes' => ''
@@ -688,4 +679,268 @@ function flexpress_ajax_get_plan_card() {
     wp_send_json_success(['html' => $html]);
 }
 add_action('wp_ajax_nopriv_flexpress_get_plan_card', 'flexpress_ajax_get_plan_card');
-add_action('wp_ajax_flexpress_get_plan_card', 'flexpress_ajax_get_plan_card'); 
+add_action('wp_ajax_flexpress_get_plan_card', 'flexpress_ajax_get_plan_card');
+
+/**
+ * Convert currency symbol to Flowguard currency code
+ * Note: This function is already defined in flowguard-integration.php
+ * This is a wrapper to maintain compatibility
+ *
+ * @param string $currency_symbol The currency symbol ($, €, £, etc.)
+ * @return string Flowguard currency code (USD, EUR, GBP, etc.)
+ */
+function flexpress_convert_currency_symbol_to_code($currency_symbol) {
+    // Use the existing function from flowguard-integration.php
+    return flexpress_flowguard_convert_currency_symbol_to_code($currency_symbol);
+}
+
+/**
+ * Convert Flowguard currency code to symbol
+ *
+ * @param string $currency_code The Flowguard currency code (USD, EUR, GBP, etc.)
+ * @return string Currency symbol ($, €, £, etc.)
+ */
+function flexpress_convert_currency_code_to_symbol($currency_code) {
+    $symbol_map = array(
+        'USD' => '$',
+        'EUR' => '€',
+        'GBP' => '£',
+        'AUD' => 'A$',
+        'CAD' => 'C$',
+        'CHF' => 'CHF',
+        'DKK' => 'DKK',
+        'NOK' => 'NOK',
+        'SEK' => 'SEK'
+    );
+    
+    return $symbol_map[$currency_code] ?? '$';
+}
+
+/**
+ * Format plan duration for Flowguard API (ISO 8601 format)
+ * Note: This function is already defined in flowguard-integration.php
+ * This is a wrapper to maintain compatibility
+ *
+ * @param int $duration The duration value
+ * @param string $duration_unit The duration unit (days, months, years)
+ * @return string ISO 8601 formatted duration (P2D, P1M, P1Y, etc.)
+ */
+function flexpress_format_plan_duration_for_flowguard_wrapper($duration, $duration_unit) {
+    // Use the existing function from flowguard-integration.php
+    return flexpress_format_plan_duration_for_flowguard($duration, $duration_unit);
+}
+
+/**
+ * Get Flowguard shop ID for a plan (plan-specific or global)
+ *
+ * @param array $plan The plan data
+ * @return string Shop ID
+ */
+function flexpress_get_flowguard_shop_id_for_plan($plan) {
+    // Use plan-specific shop ID if set, otherwise use global setting
+    if (!empty($plan['flowguard_shop_id'])) {
+        return $plan['flowguard_shop_id'];
+    }
+    
+    $flowguard_settings = get_option('flexpress_flowguard_settings', array());
+    return $flowguard_settings['shop_id'] ?? '';
+}
+
+/**
+ * Get Flowguard product ID for a plan
+ *
+ * @param string $plan_id The plan ID
+ * @param array $plan The plan data
+ * @return string Product ID
+ */
+function flexpress_get_flowguard_product_id_for_plan($plan_id, $plan) {
+    // Use plan-specific product ID if set, otherwise generate from plan data
+    if (!empty($plan['flowguard_product_id'])) {
+        return $plan['flowguard_product_id'];
+    }
+    
+    // Generate product ID from plan data
+    $plan_type = $plan['plan_type'] ?? 'recurring';
+    $price = number_format($plan['price'] ?? 0, 2, '', '');
+    $duration = $plan['duration'] ?? 30;
+    $duration_unit = $plan['duration_unit'] ?? 'days';
+    
+    return sprintf('plan_%s_%s_%s%s', 
+        $plan_type, 
+        $price, 
+        $duration, 
+        substr($duration_unit, 0, 1)
+    );
+}
+
+/**
+ * Validate plan for Flowguard compatibility
+ *
+ * @param array $plan The plan data
+ * @return array Validation result with success status and messages
+ */
+function flexpress_validate_plan_for_flowguard($plan) {
+    $errors = array();
+    $warnings = array();
+    $plan_type = $plan['plan_type'] ?? 'recurring';
+    
+    // Check minimum price requirement
+    if (($plan['price'] ?? 0) < 2.95) {
+        $warnings[] = 'Price below Flowguard minimum ($2.95 USD)';
+    }
+    
+    // Check duration requirements based on plan type
+    if ($plan_type === 'recurring') {
+        // Recurring subscriptions: minimum 7 days
+        if (($plan['duration'] ?? 0) < 7) {
+            $warnings[] = 'Recurring subscription duration below Flowguard minimum (7 days)';
+        }
+        // Maximum 180 days (or 730 days if long subscriptions enabled)
+        if (($plan['duration'] ?? 0) > 180) {
+            $warnings[] = 'Recurring subscription duration exceeds standard limit (180 days)';
+        }
+    } elseif ($plan_type === 'one_time') {
+        // One-time purchases: minimum 2 days
+        if (($plan['duration'] ?? 0) < 2) {
+            $warnings[] = 'One-time purchase duration below Flowguard minimum (2 days)';
+        }
+        // Maximum 180 days
+        if (($plan['duration'] ?? 0) > 180) {
+            $warnings[] = 'One-time purchase duration exceeds limit (180 days)';
+        }
+    }
+    
+    // Check trial settings (only for recurring plans)
+    if (!empty($plan['trial_enabled'])) {
+        if ($plan_type === 'one_time') {
+            $errors[] = 'Trial periods are not allowed for one-time purchases';
+        } else {
+            if (($plan['trial_price'] ?? 0) < 0) {
+                $errors[] = 'Trial price cannot be negative';
+            }
+            if (($plan['trial_duration'] ?? 0) < 2) {
+                $errors[] = 'Trial duration below Flowguard minimum (2 days)';
+            }
+            if (($plan['trial_duration'] ?? 0) > 180) {
+                $warnings[] = 'Trial duration exceeds standard limit (180 days)';
+            }
+        }
+    }
+    
+    // Check currency support
+    $currency_code = flexpress_convert_currency_symbol_to_code($plan['currency'] ?? '$');
+    $supported_currencies = array('USD', 'EUR', 'GBP', 'AUD', 'CAD', 'CHF', 'DKK', 'NOK', 'SEK');
+    if (!in_array($currency_code, $supported_currencies)) {
+        $warnings[] = 'Currency ' . $currency_code . ' may not be fully supported by Flowguard';
+    }
+    
+    // Check URL length requirements
+    $success_url = home_url('/payment-success');
+    $decline_url = home_url('/payment-declined');
+    $postback_url = home_url('/wp-admin/admin-ajax.php?action=flowguard_webhook');
+    
+    if (strlen($success_url) > 255) {
+        $errors[] = 'Success URL exceeds maximum length (255 characters)';
+    }
+    if (strlen($decline_url) > 255) {
+        $errors[] = 'Decline URL exceeds maximum length (255 characters)';
+    }
+    if (strlen($postback_url) > 255) {
+        $errors[] = 'Postback URL exceeds maximum length (255 characters)';
+    }
+    
+    return array(
+        'success' => empty($errors),
+        'errors' => $errors,
+        'warnings' => $warnings,
+        'plan_type' => $plan_type
+    );
+}
+
+/**
+ * Create Flowguard subscription data from plan
+ *
+ * @param string $plan_id The plan ID
+ * @param array $plan The plan data
+ * @param int $user_id The user ID
+ * @return array Flowguard subscription data
+ */
+function flexpress_create_flowguard_subscription_data($plan_id, $plan, $user_id) {
+    $user = get_userdata($user_id);
+    if (!$user) {
+        return array('success' => false, 'error' => 'Invalid user');
+    }
+    
+    $subscription_data = array(
+        'shopId' => flexpress_get_flowguard_shop_id_for_plan($plan),
+        'priceAmount' => number_format($plan['price'] ?? 0, 2, '.', ''),
+        'priceCurrency' => flexpress_convert_currency_symbol_to_code($plan['currency'] ?? '$'),
+        'successUrl' => home_url('/payment-success'),
+        'declineUrl' => home_url('/payment-declined'),
+        'postbackUrl' => home_url('/wp-admin/admin-ajax.php?action=flowguard_webhook'),
+        'email' => $user->user_email,
+        'subscriptionType' => ($plan['plan_type'] ?? 'recurring') === 'one_time' ? 'one-time' : 'recurring',
+        'period' => flexpress_format_plan_duration_for_flowguard(
+            $plan['duration'] ?? 30, 
+            $plan['duration_unit'] ?? 'days'
+        ),
+        'referenceId' => 'user_' . $user_id . '_plan_' . $plan_id
+    );
+    
+    // Add trial information if enabled
+    if (!empty($plan['trial_enabled'])) {
+        $subscription_data['trialAmount'] = number_format($plan['trial_price'] ?? 0, 2, '.', '');
+        $subscription_data['trialPeriod'] = flexpress_format_plan_duration_for_flowguard(
+            $plan['trial_duration'] ?? 0, 
+            $plan['trial_duration_unit'] ?? 'days'
+        );
+    }
+    
+    return array('success' => true, 'data' => $subscription_data);
+}
+
+/**
+ * Create Flowguard purchase data from plan (for one-time payments)
+ *
+ * @param string $plan_id The plan ID
+ * @param array $plan The plan data
+ * @param int $user_id The user ID
+ * @return array Flowguard purchase data
+ */
+function flexpress_create_flowguard_purchase_data($plan_id, $plan, $user_id) {
+    $user = get_userdata($user_id);
+    if (!$user) {
+        return array('success' => false, 'error' => 'Invalid user');
+    }
+    
+    $purchase_data = array(
+        'shopId' => flexpress_get_flowguard_shop_id_for_plan($plan),
+        'priceAmount' => number_format($plan['price'] ?? 0, 2, '.', ''),
+        'priceCurrency' => flexpress_convert_currency_symbol_to_code($plan['currency'] ?? '$'),
+        'successUrl' => home_url('/payment-success'),
+        'declineUrl' => home_url('/payment-declined'),
+        'postbackUrl' => home_url('/wp-admin/admin-ajax.php?action=flowguard_webhook'),
+        'email' => $user->user_email,
+        'referenceId' => 'user_' . $user_id . '_plan_' . $plan_id
+    );
+    
+    return array('success' => true, 'data' => $purchase_data);
+}
+
+/**
+ * Create Flowguard payment data (automatically chooses subscription or purchase)
+ *
+ * @param string $plan_id The plan ID
+ * @param array $plan The plan data
+ * @param int $user_id The user ID
+ * @return array Flowguard payment data
+ */
+function flexpress_create_flowguard_payment_data($plan_id, $plan, $user_id) {
+    $plan_type = $plan['plan_type'] ?? 'recurring';
+    
+    if ($plan_type === 'one_time') {
+        return flexpress_create_flowguard_purchase_data($plan_id, $plan, $user_id);
+    } else {
+        return flexpress_create_flowguard_subscription_data($plan_id, $plan, $user_id);
+    }
+} 

@@ -29,9 +29,10 @@ if ($is_logged_in) {
         exit;
     }
     
-    // Enable renewal flow for expired/cancelled members
-    if (in_array($membership_status, ['expired', 'cancelled'])) {
-        $is_renewal_flow = true;
+    // Redirect logged-in users (non-active members) to membership page
+    if (in_array($membership_status, ['expired', 'cancelled', 'none'])) {
+        wp_redirect(home_url('/membership/'));
+        exit;
     }
 }
 

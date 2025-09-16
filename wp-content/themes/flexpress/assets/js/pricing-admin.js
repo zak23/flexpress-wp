@@ -3,6 +3,86 @@ jQuery(document).ready(function($) {
 
     console.log('Pricing admin script loaded');
 
+    // Utility functions
+    function showError($field, message) {
+        // Remove existing error
+        $field.removeClass('error').next('.error-message').remove();
+        
+        // Add error class and message
+        $field.addClass('error');
+        $field.after('<div class="error-message" style="color: red; font-size: 12px; margin-top: 5px;">' + message + '</div>');
+    }
+
+    function clearError($field) {
+        $field.removeClass('error').next('.error-message').remove();
+    }
+
+    function validateField($field) {
+        const value = $field.val();
+        const fieldName = $field.attr('name');
+        
+        // Clear previous error
+        clearError($field);
+        
+        // Required field validation
+        if ($field.prop('required') && (!value || value.trim() === '')) {
+            showError($field, 'This field is required');
+            return false;
+        }
+        
+        // Specific field validations
+        if (fieldName === 'price' && value) {
+            const price = parseFloat(value);
+            if (isNaN(price) || price < 0) {
+                showError($field, 'Please enter a valid price');
+                return false;
+            }
+        }
+        
+        if (fieldName === 'duration' && value) {
+            const duration = parseInt(value);
+            if (isNaN(duration) || duration < 1) {
+                showError($field, 'Please enter a valid duration');
+                return false;
+            }
+        }
+        
+        if (fieldName === 'trial_price' && value) {
+            const trialPrice = parseFloat(value);
+            if (isNaN(trialPrice) || trialPrice < 0) {
+                showError($field, 'Please enter a valid trial price');
+                return false;
+            }
+        }
+        
+        if (fieldName === 'trial_duration' && value) {
+            const trialDuration = parseInt(value);
+            if (isNaN(trialDuration) || trialDuration < 1) {
+                showError($field, 'Please enter a valid trial duration');
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    function showNotice(type, message) {
+        // Remove existing notices
+        $('.notice').remove();
+        
+        // Create new notice
+        const noticeClass = type === 'success' ? 'notice-success' : 'notice-error';
+        const notice = $('<div class="notice ' + noticeClass + ' is-dismissible"><p>' + message + '</p></div>');
+        
+        // Insert after the page title
+        $('.wrap h1').after(notice);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(function() {
+            notice.fadeOut();
+        }, 5000);
+    }
+
     // Cache DOM elements
     const $modal = $('#plan-edit-modal');
     const $modalTitle = $('#modal-title');
@@ -145,8 +225,13 @@ jQuery(document).ready(function($) {
             }
         }
         
+        console.log('Form validation result:', isValid);
         if (isValid) {
+            console.log('Validation passed, calling savePlan()');
             savePlan();
+        } else {
+            console.log('Validation failed, not saving plan');
+            showNotice('error', 'Please fix the validation errors before saving.');
         }
     });
 
@@ -164,6 +249,18 @@ jQuery(document).ready(function($) {
         const planId = $(this).data('plan-id');
         console.log('Toggle plan status clicked for plan ID:', planId);
         togglePlanStatus(planId);
+    });
+
+    // Test Flowguard connection
+    $(document).on('click', '#test-flowguard-connection', function() {
+        console.log('Test Flowguard connection clicked');
+        testFlowguardConnection();
+    });
+
+    // Validate pricing plans
+    $(document).on('click', '#validate-pricing-plans', function() {
+        console.log('Validate pricing plans clicked');
+        validatePricingPlans();
     });
 
     /**
@@ -295,9 +392,9 @@ jQuery(document).ready(function($) {
                         $trialSettings.find('input').prop('required', false);
                     }
                     
-                    // Populate Verotel settings
-                    $('#verotel-site-id').val(plan.verotel_site_id || '');
-                    $('#verotel-product-id').val(plan.verotel_product_id || '');
+                    // Populate Flowguard settings
+                    $('#flowguard-shop-id').val(plan.flowguard_shop_id || '');
+                    $('#flowguard-product-id').val(plan.flowguard_product_id || '');
                     
                     // Populate display options
                     $('#plan-featured').prop('checked', plan.featured == 1);
@@ -348,8 +445,19 @@ jQuery(document).ready(function($) {
     function savePlan() {
         console.log('savePlan called');
         
+        // Debug: Check if flexpressPricing object exists
+        if (typeof flexpressPricing === 'undefined') {
+            console.error('flexpressPricing object not found!');
+            showNotice('error', 'Configuration error: AJAX settings not found. Please refresh the page.');
+            return;
+        }
+        
+        console.log('AJAX URL:', flexpressPricing.ajaxurl);
+        console.log('Nonce:', flexpressPricing.nonce);
+        
         // Build form data and explicitly handle unchecked checkboxes
         const formData = $form.serialize();
+        console.log('Serialized form data:', formData);
         
         // Add unchecked checkbox values explicitly
         const checkboxes = ['trial_enabled', 'featured', 'active', 'promo_only'];
@@ -362,7 +470,7 @@ jQuery(document).ready(function($) {
         });
         
         const finalData = formData + additionalData + '&action=save_pricing_plan&nonce=' + flexpressPricing.nonce;
-        console.log('Form data being sent:', finalData);
+        console.log('Final data being sent:', finalData);
         
         $.ajax({
             url: flexpressPricing.ajaxurl,
@@ -585,4 +693,90 @@ jQuery(document).ready(function($) {
             $('#promo-codes-container').slideUp();
         }
     });
+
+    /**
+     * Test Flowguard connection
+     */
+    function testFlowguardConnection() {
+        const $button = $('#test-flowguard-connection');
+        
+        $button.prop('disabled', true).text('Testing...');
+        
+        $.ajax({
+            url: flexpressPricing.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'test_flowguard_connection',
+                nonce: flexpressPricing.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    showNotice('success', 'Flowguard connection successful! ' + response.data);
+                } else {
+                    showNotice('error', 'Flowguard connection failed: ' + response.data);
+                }
+            },
+            error: function() {
+                showNotice('error', 'Failed to test Flowguard connection. Please try again.');
+            },
+            complete: function() {
+                $button.prop('disabled', false).text('Test Flowguard Connection');
+            }
+        });
+    }
+
+    /**
+     * Validate pricing plans
+     */
+    function validatePricingPlans() {
+        const $button = $('#validate-pricing-plans');
+        
+        $button.prop('disabled', true).text('Validating...');
+        
+        $.ajax({
+            url: flexpressPricing.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'validate_pricing_plans',
+                nonce: flexpressPricing.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    const data = response.data;
+                    let message = `Validation completed successfully! `;
+                    message += `Total plans: ${data.summary.total_plans}, `;
+                    message += `Plans with warnings: ${data.summary.plans_with_warnings}`;
+                    
+                    if (data.total_warnings > 0) {
+                        message += `\n\nWarnings found: ${data.total_warnings}`;
+                    }
+                    
+                    showNotice('success', message);
+                } else {
+                    const data = response.data;
+                    let message = `Validation found issues:\n`;
+                    message += `Total errors: ${data.total_errors}, `;
+                    message += `Total warnings: ${data.total_warnings}\n\n`;
+                    
+                    // Show first few errors
+                    let errorCount = 0;
+                    for (const planId in data.validation_results) {
+                        const result = data.validation_results[planId];
+                        if (result.errors.length > 0 && errorCount < 3) {
+                            message += `${result.name}: ${result.errors.join(', ')}\n`;
+                            errorCount++;
+                        }
+                    }
+                    
+                    showNotice('error', message);
+                }
+            },
+            error: function() {
+                showNotice('error', 'Failed to validate pricing plans. Please try again.');
+            },
+            complete: function() {
+                $button.prop('disabled', false).text('Validate Plans');
+            }
+        });
+    }
 });

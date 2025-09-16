@@ -6162,3 +6162,91 @@ function flexpress_create_default_pages() {
 
 // Register theme activation hook
 add_action('after_switch_theme', 'flexpress_theme_activation');
+
+/**
+ * Get user membership status
+ *
+ * @param int $user_id User ID (optional, defaults to current user)
+ * @return string Membership status: 'active', 'expired', 'cancelled', 'none'
+ */
+function flexpress_get_membership_status($user_id = null) {
+    if (!$user_id) {
+        $user_id = get_current_user_id();
+    }
+    
+    if (!$user_id) {
+        return 'none';
+    }
+    
+    $membership_status = get_user_meta($user_id, 'membership_status', true);
+    
+    // Return 'none' if no status is set
+    if (empty($membership_status)) {
+        return 'none';
+    }
+    
+    return $membership_status;
+}
+
+/**
+ * Update user membership status
+ *
+ * @param int $user_id User ID
+ * @param string $status New membership status
+ * @return bool True on success, false on failure
+ */
+function flexpress_update_membership_status($user_id, $status) {
+    if (!$user_id || empty($status)) {
+        return false;
+    }
+    
+    $old_status = get_user_meta($user_id, 'membership_status', true);
+    
+    // Update the membership status
+    $result = update_user_meta($user_id, 'membership_status', $status);
+    
+    // Log the status change if it's different
+    if ($result && $old_status !== $status) {
+        // Log activity if the activity logger exists
+        if (class_exists('FlexPress_Activity_Logger')) {
+            FlexPress_Activity_Logger::log_membership_change($user_id, $old_status, $status);
+        }
+    }
+    
+    return $result;
+}
+
+/**
+ * AJAX handler for creating Flowguard payment sessions
+ */
+function flexpress_ajax_create_flowguard_payment() {
+    // Verify nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'flexpress_payment_nonce')) {
+        wp_send_json_error(['message' => 'Invalid nonce']);
+    }
+    
+    // Check if user is logged in
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'User must be logged in']);
+    }
+    
+    $user_id = get_current_user_id();
+    $plan_id = sanitize_text_field($_POST['plan_id']);
+    
+    if (empty($plan_id)) {
+        wp_send_json_error(['message' => 'Plan ID is required']);
+    }
+    
+    // Create Flowguard subscription
+    $result = flexpress_flowguard_create_subscription($user_id, $plan_id);
+    
+    if ($result['success']) {
+        wp_send_json_success([
+            'payment_url' => $result['payment_url'],
+            'session_id' => $result['session_id']
+        ]);
+    } else {
+        wp_send_json_error(['message' => $result['error']]);
+    }
+}
+add_action('wp_ajax_flexpress_create_flowguard_payment', 'flexpress_ajax_create_flowguard_payment');

@@ -19,48 +19,9 @@ if (is_user_logged_in() && function_exists('flexpress_get_membership_status')) {
     $subscription_type = get_user_meta($current_user_id, 'subscription_type', true);
 }
 
-// Define membership plans
-$plans = array(
-    'monthly' => array(
-        'name' => __('Monthly Premium', 'flexpress'),
-        'price' => 19.99,
-        'description' => __('Full access to all premium content, updated monthly.', 'flexpress'),
-        'features' => array(
-            __('Unlimited streaming of all videos', 'flexpress'),
-            __('HD and 4K quality', 'flexpress'),
-            __('New releases every week', 'flexpress'),
-            __('Cancel anytime', 'flexpress'),
-        ),
-        'period' => __('month', 'flexpress'),
-        'highlight' => false,
-    ),
-    'quarterly' => array(
-        'name' => __('Quarterly Premium', 'flexpress'),
-        'price' => 49.99,
-        'description' => __('Save 15% with our quarterly plan.', 'flexpress'),
-        'features' => array(
-            __('All monthly benefits', 'flexpress'),
-            __('Priority customer support', 'flexpress'),
-            __('Save 15% compared to monthly', 'flexpress'),
-            __('Download up to 10 videos per month', 'flexpress'),
-        ),
-        'period' => __('quarter', 'flexpress'),
-        'highlight' => true,
-    ),
-    'annual' => array(
-        'name' => __('Annual Premium', 'flexpress'),
-        'price' => 179.99,
-        'description' => __('Best value! Save 25% with our annual plan.', 'flexpress'),
-        'features' => array(
-            __('All quarterly benefits', 'flexpress'),
-            __('Save 25% compared to monthly', 'flexpress'),
-            __('Download up to 30 videos per month', 'flexpress'),
-            __('Early access to new releases', 'flexpress'),
-        ),
-        'period' => __('year', 'flexpress'),
-        'highlight' => false,
-    ),
-);
+// Get pricing plans from FlexPress settings
+$pricing_plans = flexpress_get_pricing_plans();
+$featured_plan = flexpress_get_featured_pricing_plan();
 ?>
 
 <div class="membership-page">
@@ -125,62 +86,75 @@ $plans = array(
         </div>
 
         <div class="row justify-content-center">
-            <?php foreach ($plans as $plan_id => $plan): ?>
-                <div class="col-md-4 mb-4">
-                    <div class="card membership-card h-100 <?php echo $plan['highlight'] ? 'border-primary' : ''; ?>">
-                        <?php if ($plan['highlight']): ?>
-                            <div class="card-header bg-primary text-white text-center py-3">
-                                <span class="badge bg-white text-primary"><?php esc_html_e('Most Popular', 'flexpress'); ?></span>
-                            </div>
-                        <?php endif; ?>
-                        <div class="card-body d-flex flex-column">
-                            <h2 class="card-title text-center mb-4"><?php echo esc_html($plan['name']); ?></h2>
-                            <div class="price-container text-center mb-4">
-                                <span class="currency">$</span>
-                                <span class="price display-4"><?php echo esc_html(number_format($plan['price'], 2)); ?></span>
-                                <span class="period">/ <?php echo esc_html($plan['period']); ?></span>
-                            </div>
-                            <p class="card-text text-center mb-4"><?php echo esc_html($plan['description']); ?></p>
-                            
-                            <ul class="list-group list-group-flush mb-4">
-                                <?php foreach ($plan['features'] as $feature): ?>
-                                    <li class="list-group-item bg-transparent">
-                                        <i class="fas fa-check text-success me-2"></i>
-                                        <?php echo esc_html($feature); ?>
-                                    </li>
-                                <?php endforeach; ?>
-                            </ul>
-                            
-                            <div class="mt-auto">
-                                <?php if (!is_user_logged_in()): ?>
-                                    <a href="<?php echo esc_url(home_url('/register')); ?>" class="btn btn-primary btn-lg w-100">
-                                        <?php esc_html_e('Sign Up Now', 'flexpress'); ?>
-                                    </a>
-                                <?php elseif ($membership_status !== 'active' && $membership_status !== 'banned'): ?>
-                                    <form method="post" action="<?php echo esc_url(home_url('/process-membership')); ?>">
-                                        <input type="hidden" name="plan_id" value="<?php echo esc_attr($plan_id); ?>">
-                                        <input type="hidden" name="price" value="<?php echo esc_attr($plan['price']); ?>">
-                                        <input type="hidden" name="name" value="<?php echo esc_attr($plan['name']); ?>">
-                                        <button type="submit" class="btn btn-primary btn-lg w-100">
+            <?php if (!empty($pricing_plans)): ?>
+                <?php foreach ($pricing_plans as $plan_id => $plan): ?>
+                    <?php 
+                        $is_featured = $featured_plan && $featured_plan['id'] === $plan_id;
+                        $plan_features = isset($plan['features']) ? $plan['features'] : array();
+                    ?>
+                    <div class="col-md-4 mb-4">
+                        <div class="card membership-card h-100 <?php echo $is_featured ? 'border-primary' : ''; ?>">
+                            <?php if ($is_featured): ?>
+                                <div class="card-header bg-primary text-white text-center py-3">
+                                    <span class="badge bg-white text-primary"><?php esc_html_e('Most Popular', 'flexpress'); ?></span>
+                                </div>
+                            <?php endif; ?>
+                            <div class="card-body d-flex flex-column">
+                                <h2 class="card-title text-center mb-4"><?php echo esc_html($plan['name']); ?></h2>
+                                <div class="price-container text-center mb-4">
+                                    <span class="currency"><?php echo esc_html($plan['currency']); ?></span>
+                                    <span class="price display-4"><?php echo esc_html(number_format($plan['price'], 2)); ?></span>
+                                    <span class="period">/ <?php echo esc_html(flexpress_format_plan_duration($plan)); ?></span>
+                                </div>
+                                <p class="card-text text-center mb-4"><?php echo esc_html($plan['description']); ?></p>
+                                
+                                <?php if (!empty($plan_features)): ?>
+                                    <ul class="list-group list-group-flush mb-4">
+                                        <?php foreach ($plan_features as $feature): ?>
+                                            <li class="list-group-item bg-transparent">
+                                                <i class="fas fa-check text-success me-2"></i>
+                                                <?php echo esc_html($feature); ?>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                <?php endif; ?>
+                                
+                                <div class="mt-auto">
+                                    <?php if (!is_user_logged_in()): ?>
+                                        <a href="<?php echo esc_url(home_url('/join')); ?>" class="btn btn-primary btn-lg w-100">
+                                            <?php esc_html_e('Sign Up Now', 'flexpress'); ?>
+                                        </a>
+                                    <?php elseif ($membership_status !== 'active' && $membership_status !== 'banned'): ?>
+                                        <button type="button" class="btn btn-primary btn-lg w-100 flexpress-select-plan" 
+                                                data-plan-id="<?php echo esc_attr($plan_id); ?>"
+                                                data-plan-name="<?php echo esc_attr($plan['name']); ?>"
+                                                data-plan-price="<?php echo esc_attr($plan['price']); ?>"
+                                                data-plan-currency="<?php echo esc_attr($plan['currency']); ?>">
                                             <?php esc_html_e('Subscribe Now', 'flexpress'); ?>
                                         </button>
-                                    </form>
-                                <?php else: ?>
-                                    <button class="btn btn-secondary btn-lg w-100" disabled>
-                                        <?php 
-                                        if ($membership_status === 'active') {
-                                            esc_html_e('Already Subscribed', 'flexpress');
-                                        } else {
-                                            esc_html_e('Account Suspended', 'flexpress');
-                                        }
-                                        ?>
-                                    </button>
-                                <?php endif; ?>
+                                    <?php else: ?>
+                                        <button class="btn btn-secondary btn-lg w-100" disabled>
+                                            <?php 
+                                            if ($membership_status === 'active') {
+                                                esc_html_e('Already Subscribed', 'flexpress');
+                                            } else {
+                                                esc_html_e('Account Suspended', 'flexpress');
+                                            }
+                                            ?>
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
                     </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="col-12 text-center">
+                    <div class="alert alert-warning">
+                        <p class="mb-0"><?php esc_html_e('No pricing plans are currently available. Please contact support.', 'flexpress'); ?></p>
+                    </div>
                 </div>
-            <?php endforeach; ?>
+            <?php endif; ?>
         </div>
 
         <div class="row mt-5 justify-content-center">
@@ -285,5 +259,49 @@ $plans = array(
         </div>
     </div>
 </div>
+
+<script>
+jQuery(document).ready(function($) {
+    $('.flexpress-select-plan').on('click', function() {
+        const $button = $(this);
+        const planId = $button.data('plan-id');
+        const planName = $button.data('plan-name');
+        const planPrice = $button.data('plan-price');
+        const planCurrency = $button.data('plan-currency');
+        
+        // Disable button and show loading state
+        $button.prop('disabled', true);
+        const originalText = $button.text();
+        $button.html('<span class="spinner-border spinner-border-sm me-2" role="status"></span>Processing...');
+        
+        // Create Flowguard payment session
+        $.ajax({
+            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+            type: 'POST',
+            data: {
+                action: 'flexpress_create_flowguard_payment',
+                plan_id: planId,
+                nonce: '<?php echo wp_create_nonce('flexpress_payment_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success && response.data.payment_url) {
+                    // Redirect to payment page
+                    window.location.href = response.data.payment_url;
+                } else {
+                    // Show error message
+                    alert('Error creating payment session: ' + (response.data.message || 'Unknown error'));
+                    $button.prop('disabled', false);
+                    $button.text(originalText);
+                }
+            },
+            error: function() {
+                alert('Network error. Please try again.');
+                $button.prop('disabled', false);
+                $button.text(originalText);
+            }
+        });
+    });
+});
+</script>
 
 <?php get_footer(); ?> 

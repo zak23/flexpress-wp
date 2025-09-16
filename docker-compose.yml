@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  wordpress:
+    build: .
+    container_name: flexpress_wordpress
+    restart: unless-stopped
+    ports:
+      - "8085:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: ${MYSQL_USER}
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+      WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
+      WORDPRESS_DEBUG: 1
+    volumes:
+      - wordpress_data:/var/www/html
+      - ./wp-content:/var/www/html/wp-content
+    depends_on:
+      - db
+    networks:
+      - flexpress_network
+
+  db:
+    image: mysql:8.0
+    container_name: flexpress_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - flexpress_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: flexpress_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8086:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: ${MYSQL_USER}
+      PMA_PASSWORD: ${MYSQL_PASSWORD}
+    depends_on:
+      - db
+    networks:
+      - flexpress_network
+
+volumes:
+  wordpress_data:
+  db_data:
+
+networks:
+  flexpress_network:
+    driver: bridge

@@ -1,0 +1,44 @@
+# FlexPress WordPress Project Rules
+
+## Project Overview
+This is a WordPress website project running in Docker containers with the following setup:
+- WordPress: Port 8085 (http://localhost:8085)
+- phpMyAdmin: Port 8086 (http://localhost:8086)
+- MySQL Database: Internal container network
+
+## Docker Configuration
+- Main service: `wordpress` (custom build)
+- Database: `mysql:8.0`
+- Admin: `phpmyadmin/phpmyadmin`
+- Network: `flexpress_network`
+
+## Development Guidelines
+- Always use IP addresses instead of localhost when configuring servers
+- Avoid port 3000 (reserved for MCP tools)
+- Use port 8085 for WordPress (8083 was occupied)
+- All WordPress customizations go in `wp-content/` directory
+- Database credentials are in `.env` file
+
+## File Structure
+```
+flexpress/
+├── docker-compose.yml    # Main Docker configuration
+├── Dockerfile           # Custom WordPress image
+├── apache-config.conf   # Apache configuration
+├── .env                 # Environment variables
+├── .env.example         # Environment template
+├── wp-content/          # WordPress customizations
+└── README.md            # Project documentation
+```
+
+## Commands
+- Start: `docker-compose up -d`
+- Stop: `docker-compose down`
+- Logs: `docker-compose logs -f`
+- Rebuild: `docker-compose up --build -d`
+
+## Security Notes
+- Change default passwords in production
+- Use environment variables for sensitive data
+- Enable SSL in production
+- Regular security updates required

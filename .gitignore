@@ -1,0 +1,252 @@
+# FlexPress WordPress Project .gitignore
+# Only track the FlexPress theme and essential project files
+
+# ==============================================
+# WORDPRESS CORE & ADMIN FILES
+# ==============================================
+# WordPress core files (we don't need these in version control)
+wp-admin/
+wp-includes/
+wp-*.php
+xmlrpc.php
+index.php
+license.txt
+readme.html
+
+# ==============================================
+# WORDPRESS CONTENT (EXCEPT FLEXPRESS THEME)
+# ==============================================
+# Exclude all themes except FlexPress
+wp-content/themes/
+!wp-content/themes/flexpress/
+!wp-content/themes/index.php
+
+# Exclude all plugins (they should be managed via composer or separately)
+wp-content/plugins/
+!wp-content/plugins/index.php
+
+# Exclude uploads and user-generated content
+wp-content/uploads/
+wp-content/upgrade/
+wp-content/upgrade-temp-backup/
+wp-content/ai1wm-backups/
+wp-content/debug.log
+
+# Exclude language files (can be regenerated)
+wp-content/languages/
+
+# ==============================================
+# DOCKER & ENVIRONMENT
+# ==============================================
+# Environment files (contain sensitive data)
+.env
+.env.local
+.env.production
+.env.staging
+
+# Docker volumes and data
+docker-data/
+mysql-data/
+wordpress-data/
+
+# ==============================================
+# DEVELOPMENT & BUILD TOOLS
+# ==============================================
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Composer dependencies (for theme development)
+wp-content/themes/flexpress/vendor/
+wp-content/themes/flexpress/composer.lock
+
+# Build artifacts
+wp-content/themes/flexpress/assets/dist/
+wp-content/themes/flexpress/assets/build/
+
+# ==============================================
+# IDE & EDITOR FILES
+# ==============================================
+# VS Code
+.vscode/
+*.code-workspace
+
+# PhpStorm/IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ==============================================
+# OPERATING SYSTEM FILES
+# ==============================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ==============================================
+# LOGS & DEBUGGING
+# ==============================================
+# PHP error logs
+*.log
+error_log
+debug.log
+wp-content/debug.log
+
+# Apache/Nginx logs
+access.log
+error.log
+
+# ==============================================
+# BACKUP & TEMPORARY FILES
+# ==============================================
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+*.tmp
+*.temp
+
+# Archive files
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# ==============================================
+# SECURITY & SENSITIVE DATA
+# ==============================================
+# Configuration files with sensitive data
+wp-config.php
+wp-config-local.php
+wp-config-production.php
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.csr
+
+# ==============================================
+# TESTING & COVERAGE
+# ==============================================
+# PHPUnit
+phpunit.xml
+.phpunit.result.cache
+coverage/
+tests/_output/
+
+# Code coverage
+clover.xml
+coverage.xml
+*.coverage
+.nyc_output
+
+# ==============================================
+# CACHE & TEMPORARY DIRECTORIES
+# ==============================================
+# WordPress cache
+wp-content/cache/
+wp-content/w3tc-config/
+
+# Browser cache
+.sass-cache/
+.cache/
+
+# ==============================================
+# DOCUMENTATION BUILD
+# ==============================================
+# Generated documentation
+docs/_build/
+docs/build/
+
+# ==============================================
+# KEEP ESSENTIAL FILES
+# ==============================================
+# Keep these important files
+!.gitkeep
+!.htaccess
+!wp-content/themes/flexpress/.gitkeep
+!wp-content/plugins/.gitkeep
+!wp-content/uploads/.gitkeep
+
+# Keep project documentation
+!README.md
+!docs/
+!docs/TOKEN_GENERATION_GUIDE.md
+
+# Keep Docker configuration
+!docker-compose.yml
+!Dockerfile
+!apache-config.conf
+
+# Keep environment template
+!.env.example
+
+# Keep project configuration files
+!.cursorrules
+!.wakatime-project
+!phpcs.xml
+!phpstan.neon

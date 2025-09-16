@@ -114,7 +114,7 @@ class FlexPress_Discord_Notifications {
                 ],
                 [
                     'name' => 'Subscription Type',
-                    'value' => ucfirst($payload['subscriptionType']),
+                    'value' => ucfirst($payload['subscriptionType'] ?? 'unknown'),
                     'inline' => true
                 ],
                 [
@@ -136,7 +136,7 @@ class FlexPress_Discord_Notifications {
         ];
         
         // Add next charge date for recurring subscriptions
-        if ($payload['subscriptionType'] === 'recurring' && !empty($payload['nextChargeOn'])) {
+        if ($payload['subscriptionType'] ?? 'unknown' === 'recurring' && !empty($payload['nextChargeOn'])) {
             $embed['fields'][] = [
                 'name' => 'Next Charge',
                 'value' => date('M j, Y', strtotime($payload['nextChargeOn'])),
@@ -145,7 +145,7 @@ class FlexPress_Discord_Notifications {
         }
         
         // Add expiration date for one-time subscriptions
-        if ($payload['subscriptionType'] === 'one-time' && !empty($payload['expiresOn'])) {
+        if ($payload['subscriptionType'] ?? 'unknown' === 'one-time' && !empty($payload['expiresOn'])) {
             $embed['fields'][] = [
                 'name' => 'Expires',
                 'value' => date('M j, Y', strtotime($payload['expiresOn'])),
@@ -276,7 +276,7 @@ class FlexPress_Discord_Notifications {
                 ],
                 [
                     'name' => 'Subscription Type',
-                    'value' => ucfirst($payload['subscriptionType']),
+                    'value' => ucfirst($payload['subscriptionType'] ?? 'unknown'),
                     'inline' => true
                 ]
             ],

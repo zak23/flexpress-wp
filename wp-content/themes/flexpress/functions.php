@@ -6006,3 +6006,180 @@ function flexpress_handle_talent_application() {
     
     wp_send_json_success('Application submitted successfully!');
 }
+
+/**
+ * Theme Activation Hook
+ * 
+ * Creates all necessary database tables when the theme is activated.
+ * This ensures all functionality works properly from the start.
+ */
+function flexpress_theme_activation() {
+    // Create Flowguard database tables
+    flexpress_flowguard_create_tables();
+    
+    // Initialize activity logger to create activity table
+    if (class_exists('FlexPress_Activity_Logger')) {
+        FlexPress_Activity_Logger::init();
+    }
+    
+    // Create talent applications table
+    flexpress_create_talent_applications_table();
+    
+    // Set default theme options
+    flexpress_set_default_theme_options();
+    
+    // Create default pages if they don't exist
+    flexpress_create_default_pages();
+    
+    // Log activation
+    error_log('FlexPress theme activated - Database tables created');
+}
+
+/**
+ * Create talent applications table
+ */
+function flexpress_create_talent_applications_table() {
+    global $wpdb;
+    
+    $table_name = $wpdb->prefix . 'flexpress_talent_applications';
+    
+    // Check if table already exists
+    $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table_name'");
+    if ($table_exists) {
+        return; // Table already exists
+    }
+    
+    $charset_collate = $wpdb->get_charset_collate();
+    
+    $sql = "CREATE TABLE $table_name (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        name varchar(100) NOT NULL,
+        email varchar(100) NOT NULL,
+        phone varchar(20),
+        age int(3) NOT NULL,
+        location varchar(100) NOT NULL,
+        experience varchar(50) NOT NULL,
+        bio text NOT NULL,
+        social_media varchar(255),
+        portfolio varchar(255),
+        submitted_at datetime NOT NULL,
+        ip_address varchar(45),
+        user_agent text,
+        status varchar(20) DEFAULT 'pending',
+        created_at datetime DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY email (email),
+        KEY status (status),
+        KEY created_at (created_at)
+    ) $charset_collate;";
+    
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+}
+
+/**
+ * Set default theme options
+ */
+function flexpress_set_default_theme_options() {
+    // Set default pricing plans if not already set
+    $pricing_plans = get_option('flexpress_pricing_plans', array());
+    if (empty($pricing_plans)) {
+        flexpress_force_create_default_pricing_plans();
+    }
+    
+    // Set default Flowguard settings if not already set
+    $flowguard_settings = get_option('flexpress_flowguard_settings', array());
+    if (empty($flowguard_settings)) {
+        $default_flowguard_settings = array(
+            'shop_id' => '134837',
+            'signature_key' => 'QdqSpfTHzKKQChBB26xDcEAh3wkQtZ',
+            'environment' => 'sandbox',
+            'webhook_url' => home_url('/wp-admin/admin-ajax.php?action=flowguard_webhook'),
+            'enabled' => true
+        );
+        update_option('flexpress_flowguard_settings', $default_flowguard_settings);
+    }
+    
+    // Set default Discord settings if not already set
+    $discord_settings = get_option('flexpress_discord_settings', array());
+    if (empty($discord_settings)) {
+        $default_discord_settings = array(
+            'webhook_url' => '',
+            'notify_subscriptions' => true,
+            'notify_rebills' => true,
+            'notify_cancellations' => true,
+            'notify_expirations' => true,
+            'notify_ppv' => true,
+            'notify_refunds' => true,
+            'notify_talent_applications' => true,
+            'enabled' => false
+        );
+        update_option('flexpress_discord_settings', $default_discord_settings);
+    }
+}
+
+/**
+ * Create default pages if they don't exist
+ */
+function flexpress_create_default_pages() {
+    $default_pages = array(
+        'dashboard' => array(
+            'title' => 'Dashboard',
+            'content' => '[flexpress_dashboard]',
+            'template' => 'page-templates/dashboard.php'
+        ),
+        'join' => array(
+            'title' => 'Join',
+            'content' => '[flexpress_join_form]',
+            'template' => 'page-templates/join.php'
+        ),
+        'join-flowguard' => array(
+            'title' => 'Join Flowguard',
+            'content' => '[flexpress_flowguard_join]',
+            'template' => 'page-templates/join-flowguard.php'
+        ),
+        'flowguard-payment' => array(
+            'title' => 'Flowguard Payment',
+            'content' => '[flexpress_flowguard_payment]',
+            'template' => 'page-templates/flowguard-payment.php'
+        ),
+        'payment-success' => array(
+            'title' => 'Payment Success',
+            'content' => 'Thank you for your payment! Your subscription is now active.',
+            'template' => 'page-templates/payment-success.php'
+        ),
+        'payment-declined' => array(
+            'title' => 'Payment Declined',
+            'content' => 'Your payment was declined. Please try again or contact support.',
+            'template' => 'page-templates/payment-declined.php'
+        ),
+        'talent-application' => array(
+            'title' => 'Talent Application',
+            'content' => '[flexpress_talent_application_form]',
+            'template' => 'page-templates/talent-application.php'
+        )
+    );
+    
+    foreach ($default_pages as $slug => $page_data) {
+        // Check if page already exists
+        $existing_page = get_page_by_path($slug);
+        if (!$existing_page) {
+            $page_id = wp_insert_post(array(
+                'post_title' => $page_data['title'],
+                'post_content' => $page_data['content'],
+                'post_name' => $slug,
+                'post_status' => 'publish',
+                'post_type' => 'page',
+                'page_template' => $page_data['template']
+            ));
+            
+            if ($page_id && !is_wp_error($page_id)) {
+                // Set the page template
+                update_post_meta($page_id, '_wp_page_template', $page_data['template']);
+            }
+        }
+    }
+}
+
+// Register theme activation hook
+add_action('after_switch_theme', 'flexpress_theme_activation');

@@ -12,6 +12,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 
 ### 💳 Payment Processing
 - **Flowguard Integration**: Modern payment processing with embedded forms
+- **Remember Card Feature**: Secure card storage for faster future payments
 - **Comprehensive Validation System**: Real-time field validation with user-friendly error messages
 - **Error Handling & Recovery**: Automatic retry mechanisms and graceful error recovery
 - **Verotel FlexPay Integration**: Legacy payment processing system (being phased out)
@@ -58,6 +59,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 
 ### Flowguard Payment System
 - **Modern Payment Processing**: Embedded payment forms with no redirects
+- **Remember Card Feature**: Secure card storage for faster future payments
 - **JWT Authentication**: Secure API communication with signature validation
 - **Subscription Management**: Recurring and one-time subscription support
 - **PPV Purchases**: Individual episode unlock with member discounts
@@ -1792,3 +1794,37 @@ The validation system seamlessly integrates with Flowguard's embedded payment fo
 - Provides visual feedback for field states
 - Manages form submission validation
 - Implements comprehensive error recovery
+
+## 💳 Remember Card Feature
+
+### Overview
+The Remember Card feature allows users to securely save their payment card information for faster future transactions. This enhances user experience by eliminating the need to re-enter card details for each purchase.
+
+### Key Features
+- **🔒 Secure Storage**: Card details stored in browser local storage in masked format
+- **🎨 Theme Integration**: Styled to match FlexPress dark theme aesthetic
+- **⚡ Fast Checkout**: Automatic card prefilling for returning users
+- **👤 User Control**: Users can remove saved cards anytime
+- **📱 Responsive**: Works seamlessly across all device sizes
+
+### Security
+- **Browser Local Storage**: No server-side storage of sensitive card data
+- **Masked Format**: Sensitive data is masked and never exposed
+- **PCI DSS Compliant**: Follows industry security standards
+- **User Consent**: Explicit user permission required for card storage
+
+### Implementation
+- **Frontend**: Integrated into payment form with custom styling
+- **Validation**: Optional field validation (always valid)
+- **User Experience**: Clear information about card storage benefits
+- **Customization**: Fully customizable styling and messaging
+
+### Files Modified
+- `page-templates/payment.php` - Payment form integration
+- `assets/css/flowguard-validation.css` - Remember card styling
+- `assets/js/flowguard-validation.js` - Validation system updates
+- `FLOWGUARD_REMEMBER_CARD_IMPLEMENTATION.md` - Complete documentation
+
+### Browser Compatibility
+- Chrome 60+, Firefox 55+, Safari 12+, Edge 79+
+- Requires modern JavaScript and Local Storage API support

@@ -2492,7 +2492,13 @@ function flexpress_create_ppv_purchase() {
     }
     
     $episode_price = get_field('episode_price', $episode_id);
-    if (!$episode_price || floatval($episode_price) !== $base_price) {
+    if (!$episode_price) {
+        wp_send_json_error(array('message' => __('Episode not available for purchase', 'flexpress')));
+        return;
+    }
+    
+    // Validate that the base price matches the episode price (before any discounts)
+    if (floatval($episode_price) !== $base_price) {
         wp_send_json_error(array('message' => __('Price mismatch. Please refresh and try again.', 'flexpress')));
         return;
     }

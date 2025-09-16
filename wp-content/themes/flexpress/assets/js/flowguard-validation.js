@@ -33,7 +33,8 @@ class FlowguardValidation {
             cardNumber: this.validateCardNumber.bind(this),
             expDate: this.validateExpDate.bind(this),
             cvv: this.validateCVV.bind(this),
-            cardholder: this.validateCardholder.bind(this)
+            cardholder: this.validateCardholder.bind(this),
+            remember: this.validateRemember.bind(this)
         };
         
         this.errorMessages = {
@@ -89,7 +90,8 @@ class FlowguardValidation {
             cardNumber: 'Enter your 13-19 digit card number without spaces or dashes',
             expDate: 'Enter expiry date in MM/YY format (e.g., 12/25)',
             cvv: 'Enter the 3-4 digit security code on the back of your card',
-            cardholder: 'Enter the name exactly as it appears on your card'
+            cardholder: 'Enter the name exactly as it appears on your card',
+            remember: 'Check this box to securely save your card for faster future payments'
         };
         
         this.init();
@@ -722,6 +724,15 @@ class FlowguardValidation {
     }
     
     /**
+     * Validate remember card option
+     * This field doesn't require validation as it's optional
+     */
+    validateRemember(value, isBlur = false) {
+        // Remember card is always valid - it's an optional feature
+        return { isValid: true, message: null };
+    }
+    
+    /**
      * Validate Luhn algorithm
      */
     validateLuhn(cardNumber) {
@@ -775,7 +786,8 @@ class FlowguardValidation {
             'card-number-element': 'cardNumber',
             'exp-date-element': 'expDate',
             'cvv-element': 'cvv',
-            'cardholder-element': 'cardholder'
+            'cardholder-element': 'cardholder',
+            'remember-element': 'remember'
         };
         
         return mapping[fieldId] || fieldId;

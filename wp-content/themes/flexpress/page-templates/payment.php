@@ -261,6 +261,18 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         </div>
                     </div>
+                    <div class="field-group remember-card-group">
+                        <div id="remember-element" class="flowguard-field-container">
+                            <div class="field-loading">
+                                <div class="loading-spinner"></div>
+                                <span>Loading remember card option...</span>
+                            </div>
+                        </div>
+                        <div class="remember-card-info" id="remember-card-info">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Your card details will be securely stored in your browser for faster future payments. You can remove saved cards anytime.</span>
+                        </div>
+                    </div>
                     <div class="price-display-group">
                         <div id="price-element" class="price-display-container">
                             <div class="price-loading">
@@ -294,6 +306,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 price: {
                     target: '#price-element'
                 },
+                remember: {
+                    target: '#remember-element'
+                },
                 styles: {
                     price: {
                         base: {
@@ -301,6 +316,35 @@ document.addEventListener('DOMContentLoaded', function() {
                         },
                         title: {},
                         value: {}
+                    },
+                    remember: {
+                        checkbox: {
+                            base: {
+                                size: "16px"
+                            }
+                        },
+                        label: {
+                            base: {
+                                color: "#ffffff",
+                                "font-size": "14px",
+                                "font-weight": "400"
+                            },
+                            hover: {
+                                color: "#ff6b6b",
+                                "text-decoration": "underline"
+                            }
+                        },
+                        link: {
+                            base: {
+                                color: "#ff6b6b",
+                                "font-size": "12px",
+                                "text-decoration": "underline"
+                            },
+                            hover: {
+                                color: "#ffffff",
+                                "font-weight": "600"
+                            }
+                        }
                     }
                 }
             });
@@ -330,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Track which elements have loaded
                 const loadedElements = new Set();
-                const allElements = ['cardNumber', 'expDate', 'cardholder', 'cvv', 'price'];
+                const allElements = ['cardNumber', 'expDate', 'cardholder', 'cvv', 'price', 'remember'];
                 
                 // Check if elements are ready periodically
                 const checkElementsReady = setInterval(() => {
@@ -346,7 +390,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 const elementId = elementName === 'cardNumber' ? 'card-number-element' :
                                                 elementName === 'expDate' ? 'exp-date-element' :
                                                 elementName === 'cardholder' ? 'cardholder-element' :
-                                                elementName === 'cvv' ? 'cvv-element' : 'price-element';
+                                                elementName === 'cvv' ? 'cvv-element' :
+                                                elementName === 'remember' ? 'remember-element' : 'price-element';
                                 
                                 const fieldContainer = document.getElementById(elementId);
                                 if (fieldContainer) {
@@ -371,6 +416,17 @@ document.addEventListener('DOMContentLoaded', function() {
                                         }, 100);
                                     } else {
                                         fieldContainer.classList.add('loaded');
+                                        
+                                        // Special handling for remember element
+                                        if (elementName === 'remember') {
+                                            // Show remember card info after a short delay
+                                            setTimeout(() => {
+                                                const rememberInfo = document.getElementById('remember-card-info');
+                                                if (rememberInfo) {
+                                                    rememberInfo.classList.add('show');
+                                                }
+                                            }, 500);
+                                        }
                                     }
                                     console.log('Field loaded:', elementName);
                                 }

@@ -1179,10 +1179,26 @@ class FlexPress_Membership_Settings {
     public function render_purchased_episodes_section($user) {
         try {
             $user_id = $user->ID;
+            
+            // Get all types of episode access
             $purchased_episodes = get_user_meta($user_id, 'purchased_episodes', true);
             if (!is_array($purchased_episodes)) {
                 $purchased_episodes = array();
             }
+            
+            // Get PPV purchases
+            $ppv_purchases = get_user_meta($user_id, 'ppv_purchases', true);
+            if (!is_array($ppv_purchases)) {
+                $ppv_purchases = array();
+            }
+            
+            // Get membership status
+            $membership_status = get_user_meta($user_id, 'membership_status', true);
+            $subscription_type = get_user_meta($user_id, 'subscription_type', true);
+            
+            // Combine all specific episode unlocks (not membership-based access)
+            $all_episode_unlocks = array_unique(array_merge($purchased_episodes, $ppv_purchases));
+            $total_episode_unlocks = count($all_episode_unlocks);
             
             // Get all episodes for the add dropdown
             $all_episodes = get_posts(array(
@@ -1208,7 +1224,11 @@ class FlexPress_Membership_Settings {
                         <select id="episode-select" style="width: 100%; margin-top: 5px;">
                             <option value=""><?php esc_html_e('Choose an episode...', 'flexpress'); ?></option>
                             <?php foreach ($all_episodes as $episode): ?>
-                                <?php if (!in_array($episode->ID, $purchased_episodes)): ?>
+                                <?php 
+                                // Skip episodes user already has specific unlocks for
+                                $has_unlock = in_array($episode->ID, $all_episode_unlocks);
+                                if (!$has_unlock): 
+                                ?>
                                     <option value="<?php echo esc_attr($episode->ID); ?>">
                                         #<?php echo $episode->ID; ?> - <?php echo esc_html($episode->post_title); ?>
                                         <?php 
@@ -1234,19 +1254,36 @@ class FlexPress_Membership_Settings {
                 </div>
             </div>
 
-            <!-- Current Purchased Episodes -->
+            <!-- Membership Status -->
+            <?php if ($membership_status === 'active' || $subscription_type): ?>
+                <div class="card" style="margin-bottom: 20px;">
+                    <h3 style="margin: 0 0 15px 0;">
+                        <?php esc_html_e('Membership Status', 'flexpress'); ?>
+                        <span class="count" style="color: #28a745;">(<?php esc_html_e('Active', 'flexpress'); ?>)</span>
+                    </h3>
+                    <div class="membership-access-info" style="background: #e7f3ff; border: 1px solid #b3d9ff; border-radius: 4px; padding: 10px;">
+                        <strong><?php esc_html_e('Active Membership:', 'flexpress'); ?></strong>
+                        <?php esc_html_e('This user has access to all episodes through their active membership.', 'flexpress'); ?>
+                        <?php if ($subscription_type): ?>
+                            <br><small><?php printf(__('Subscription Type: %s', 'flexpress'), esc_html($subscription_type)); ?></small>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <!-- Individual Episode Unlocks -->
             <div class="card">
                 <h3 style="margin: 0 0 15px 0;">
-                    <?php esc_html_e('Current Episode Access', 'flexpress'); ?>
-                    <span class="count">(<?php echo count($purchased_episodes); ?>)</span>
+                    <?php esc_html_e('Individual Episode Unlocks', 'flexpress'); ?>
+                    <span class="count">(<?php echo $total_episode_unlocks; ?>)</span>
                 </h3>
                 
                 <div id="purchased-episodes-list">
-                    <?php if (empty($purchased_episodes)): ?>
-                        <p class="no-episodes"><?php esc_html_e('No episodes purchased yet.', 'flexpress'); ?></p>
+                    <?php if ($total_episode_unlocks === 0): ?>
+                        <p class="no-episodes"><?php esc_html_e('No individual episode unlocks granted yet.', 'flexpress'); ?></p>
                     <?php else: ?>
                         <div class="episodes-grid" style="display: grid; gap: 10px;">
-                            <?php foreach ($purchased_episodes as $episode_id): ?>
+                            <?php foreach ($all_episode_unlocks as $episode_id): ?>
                                 <?php 
                                 try {
                                     $episode = get_post($episode_id);
@@ -1256,19 +1293,30 @@ class FlexPress_Membership_Settings {
                                     $price = function_exists('get_field') ? get_field('episode_price', $episode_id) : null;
                                     $access_type = function_exists('get_field') ? get_field('access_type', $episode_id) : null;
                                     $episode_permalink = function_exists('get_permalink') ? get_permalink($episode_id) : '#';
+                                    
+                                    // Determine unlock type for this episode
+                                    $unlock_type = '';
+                                    if (in_array($episode_id, $ppv_purchases)) {
+                                        $unlock_type = 'PPV Purchase';
+                                    } elseif (in_array($episode_id, $purchased_episodes)) {
+                                        $unlock_type = 'Direct Purchase';
+                                    } else {
+                                        $unlock_type = 'Manual Grant';
+                                    }
                                 ?>
                                 <div class="episode-item" data-episode-id="<?php echo esc_attr($episode_id); ?>" style="display: flex; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9;">
                                     <div style="flex: 1;">
                                         <strong>#<?php echo $episode_id; ?> - <?php echo esc_html($episode->post_title); ?></strong>
                                         <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                            <span style="color: #0073aa; font-weight: bold;"><?php echo esc_html($unlock_type); ?></span>
                                             <?php if ($price): ?>
-                                                <span>Price: $<?php echo number_format($price, 2); ?></span> • 
+                                                • <span>Price: $<?php echo number_format($price, 2); ?></span>
                                             <?php endif; ?>
                                             <?php if ($access_type): ?>
-                                                <span>Type: <?php echo esc_html(ucfirst(str_replace('_', ' ', $access_type))); ?></span> • 
+                                                • <span>Type: <?php echo esc_html(ucfirst(str_replace('_', ' ', $access_type))); ?></span>
                                             <?php endif; ?>
                                             <?php if ($purchase_date): ?>
-                                                <span>Purchased: <?php echo date('M j, Y', strtotime($purchase_date)); ?></span>
+                                                • <span>Unlocked: <?php echo date('M j, Y', strtotime($purchase_date)); ?></span>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -1279,7 +1327,7 @@ class FlexPress_Membership_Settings {
                                         <button type="button" class="button button-small button-link-delete remove-episode-btn" 
                                                 data-episode-id="<?php echo esc_attr($episode_id); ?>" 
                                                 data-user-id="<?php echo esc_attr($user_id); ?>"
-                                                title="<?php esc_attr_e('Remove access to this episode', 'flexpress'); ?>">
+                                                title="<?php esc_attr_e('Remove this episode unlock', 'flexpress'); ?>">
                                             <?php esc_html_e('Remove', 'flexpress'); ?>
                                         </button>
                                     </div>
@@ -1373,7 +1421,7 @@ class FlexPress_Membership_Settings {
                                 
                                 // Show "no episodes" message if empty
                                 if (newCount === 0) {
-                                    $('#purchased-episodes-list .episodes-grid').replaceWith('<p class="no-episodes">No episodes purchased yet.</p>');
+                                    $('#purchased-episodes-list .episodes-grid').replaceWith('<p class="no-episodes">No individual episode unlocks granted yet.</p>');
                                 }
                                 
                                 // Add episode back to dropdown
@@ -1538,6 +1586,13 @@ class FlexPress_Membership_Settings {
         if (is_array($purchased_episodes)) {
             $purchased_episodes = array_diff($purchased_episodes, array($episode_id));
             update_user_meta($user_id, 'purchased_episodes', $purchased_episodes);
+        }
+
+        // Remove from PPV purchases list
+        $ppv_purchases = get_user_meta($user_id, 'ppv_purchases', true);
+        if (is_array($ppv_purchases)) {
+            $ppv_purchases = array_diff($ppv_purchases, array($episode_id));
+            update_user_meta($user_id, 'ppv_purchases', $ppv_purchases);
         }
 
         // Remove transaction details if they exist

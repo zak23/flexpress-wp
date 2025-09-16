@@ -90,7 +90,8 @@
             
             const $button = $(e.currentTarget);
             const episodeId = $button.data('episode-id');
-            const basePrice = parseFloat($button.data('price'));
+            const basePrice = parseFloat($button.data('original-price')); // Use original price for validation
+            const finalPrice = parseFloat($button.data('price')); // This is the discounted price
             const memberDiscount = parseFloat($button.data('discount')) || 0;
             const isActiveMember = $button.data('is-active-member') === 'true';
             
@@ -111,13 +112,10 @@
                 return;
             }
             
-            // Calculate final price
-            let finalPrice = basePrice;
+            // Use the pre-calculated final price from the template
+            // The template already applies member discounts correctly
             let discountText = '';
-            
-            // Apply member discount only if user is an active member (active or cancelled status)
             if (memberDiscount > 0 && isActiveMember) {
-                finalPrice = basePrice * (1 - (memberDiscount / 100));
                 discountText = ` (${memberDiscount}% member discount applied)`;
             }
             

@@ -17,6 +17,7 @@ services:
     volumes:
       - wordpress_data:/var/www/html
       - ./wp-content:/var/www/html/wp-content
+    user: "33:33"
     depends_on:
       - db
     networks:

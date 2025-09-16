@@ -39,8 +39,8 @@ if ($is_logged_in) {
 $pricing_plans = flexpress_get_pricing_plans(true, $promo_code);
 $featured_plan = flexpress_get_featured_pricing_plan();
 
-// Initialize Verotel client
-$verotel = new FlexPress_Verotel();
+// Initialize Flowguard API
+$flowguard_api = flexpress_get_flowguard_api();
 
 // After initializing variables and before the main markup
 $payment_status = isset($_GET['payment']) ? sanitize_text_field($_GET['payment']) : '';
@@ -319,9 +319,9 @@ $payment_status = isset($_GET['payment']) ? sanitize_text_field($_GET['payment']
                         <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold py-3 mt-2" id="join-submit-btn">
                             <span class="submit-text">
                                 <?php if ($is_renewal_flow): ?>
-                                    RENEW MEMBERSHIP & PAY WITH VEROTEL
+                                    RENEW MEMBERSHIP & PAY WITH FLOWGUARD
                                 <?php else: ?>
-                                    JOIN NOW & PAY WITH VEROTEL
+                                    JOIN NOW & PAY WITH FLOWGUARD
                                 <?php endif; ?>
                             </span>
                             <span class="loading-text d-none">

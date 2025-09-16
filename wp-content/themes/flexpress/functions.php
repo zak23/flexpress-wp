@@ -22,9 +22,7 @@ require_once FLEXPRESS_PATH . '/includes/flowguard-database.php';
 // Discord Notifications
 require_once FLEXPRESS_PATH . '/includes/discord-notifications.php';
 
-// Legacy Verotel files (to be removed after migration)
-require_once FLEXPRESS_PATH . '/includes/verotel-integration.php';
-require_once FLEXPRESS_PATH . '/includes/class-flexpress-verotel.php';
+// Verotel files removed - Flowguard is now the primary payment system
 
 // Debug postback functionality removed - file no longer exists
 
@@ -32,9 +30,7 @@ require_once FLEXPRESS_PATH . '/includes/class-flexpress-verotel.php';
 if (is_admin()) {
     require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-flowguard-settings.php';
     
-    // Legacy Verotel admin tools (to be removed after migration)
-    require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-verotel-orphaned-webhooks.php';
-    require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-verotel-diagnostics.php';
+    // Verotel admin tools removed - Flowguard admin is now primary
 }
 require_once FLEXPRESS_PATH . '/includes/class-wp-bootstrap-navwalker.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-registration.php';
@@ -60,8 +56,7 @@ require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-general-settings.
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-video-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-membership-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-flowguard-settings.php';
-// Legacy Verotel settings (to be removed after migration)
-require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-verotel-settings.php';
+// Verotel settings removed - Flowguard settings are now primary
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-pricing-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-affiliate-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-contact-settings.php';
@@ -212,13 +207,13 @@ function flexpress_enqueue_scripts_and_styles() {
         ));
     }
     
-    // Legacy Verotel script (to be removed after migration)
+    // Flowguard script for payment processing
     if (is_page_template('page-templates/membership.php') || is_page_template('page-templates/dashboard.php')) {
-        wp_enqueue_script('flexpress-verotel', get_template_directory_uri() . '/assets/js/verotel.js', array('jquery'), wp_get_theme()->get('Version'), true);
+        wp_enqueue_script('flexpress-flowguard', get_template_directory_uri() . '/assets/js/flowguard.js', array('jquery'), wp_get_theme()->get('Version'), true);
         
-        wp_localize_script('flexpress-verotel', 'flexpress_verotel', array(
+        wp_localize_script('flexpress-flowguard', 'flexpress_flowguard', array(
             'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('flexpress_verotel_nonce')
+            'nonce' => wp_create_nonce('flexpress_flowguard_nonce')
         ));
     }
     
@@ -2018,14 +2013,14 @@ add_action('wp_ajax_flexpress_process_registration_and_payment', 'flexpress_proc
 add_action('wp_ajax_flexpress_process_renewal_and_payment', 'flexpress_process_renewal_and_payment');
 
 /**
- * Handle Verotel payment return
+ * Handle Flowguard payment return
  */
-add_action('wp_ajax_nopriv_verotel_payment_return', 'flexpress_handle_verotel_payment_return');
-add_action('wp_ajax_verotel_payment_return', 'flexpress_handle_verotel_payment_return');
+add_action('wp_ajax_nopriv_flowguard_payment_return', 'flexpress_handle_flowguard_payment_return');
+add_action('wp_ajax_flowguard_payment_return', 'flexpress_handle_flowguard_payment_return');
 
-function flexpress_handle_verotel_payment_return() {
+function flexpress_handle_flowguard_payment_return() {
     // Log all parameters for debugging
-    error_log('FlexPress: Verotel payment return handler called with parameters: ' . json_encode($_GET));
+    error_log('FlexPress: Flowguard payment return handler called with parameters: ' . json_encode($_GET));
     
     // Get parameters from URL
     $user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
@@ -2051,9 +2046,9 @@ function flexpress_handle_verotel_payment_return() {
     update_user_meta($user_id, 'subscription_start_date', current_time('mysql'));
     update_user_meta($user_id, 'payment_pending', false);
     
-    // Placeholder Verotel data will be updated by webhook when payment is processed
-    if (!get_user_meta($user_id, 'verotel_transaction_id', true)) {
-        update_user_meta($user_id, 'verotel_transaction_id', 'tx_' . $user_id . '_' . time());
+    // Placeholder Flowguard data will be updated by webhook when payment is processed
+    if (!get_user_meta($user_id, 'flowguard_transaction_id', true)) {
+        update_user_meta($user_id, 'flowguard_transaction_id', 'tx_' . $user_id . '_' . time());
     }
     
     // Calculate next rebill date based on plan
@@ -2083,7 +2078,7 @@ function flexpress_handle_verotel_payment_return() {
     
     // Log successful payment return
     error_log(sprintf(
-        'FlexPress: User %d returned from successful Verotel payment for plan %s',
+        'FlexPress: User %d returned from successful Flowguard payment for plan %s',
         $user_id,
         $plan
     ));
@@ -2165,13 +2160,12 @@ function flexpress_process_registration_and_payment() {
     $user = new WP_User($user_id);
     $user->set_role('subscriber');
     
-    // Check if Verotel is configured
-    $verotel_settings = get_option('flexpress_verotel_settings', array());
-    $verotel_configured = !empty($verotel_settings['verotel_shop_id']) && 
-                         !empty($verotel_settings['verotel_signature_key']) &&
-                         !empty($verotel_settings['verotel_merchant_id']);
+    // Check if Flowguard is configured
+    $flowguard_settings = get_option('flexpress_flowguard_settings', array());
+    $flowguard_configured = !empty($flowguard_settings['shop_id']) && 
+                           !empty($flowguard_settings['signature_key']);
     
-    if (!$verotel_configured) {
+    if (!$flowguard_configured) {
         // For testing: simulate successful payment and log the user in
         update_user_meta($user_id, 'membership_status', 'active');
         update_user_meta($user_id, 'subscription_plan', $selected_plan);
@@ -2182,7 +2176,7 @@ function flexpress_process_registration_and_payment() {
         wp_set_auth_cookie($user_id);
         
         wp_send_json_success(array(
-            'message' => 'Registration successful! (Verotel not configured - test mode)',
+            'message' => 'Registration successful! (Flowguard not configured - test mode)',
             'payment_url' => home_url('/my-account?payment=test_success&plan=' . $selected_plan),
             'user_id' => $user_id,
             'plan_name' => $plan['name'],
@@ -2192,56 +2186,30 @@ function flexpress_process_registration_and_payment() {
         return;
     }
     
-    // Initialize Verotel
+    // Initialize Flowguard
     try {
-        $verotel = new FlexPress_Verotel();
+        $flowguard_api = flexpress_get_flowguard_api();
         
         // Prepare payment arguments
-        $payment_args = array(
-            'successURL' => home_url('/wp-admin/admin-ajax.php?action=verotel_payment_return&user_id=' . $user_id . '&plan=' . $selected_plan),
-            'declineURL' => home_url('/join?payment=cancelled'),
-            'ipnUrl' => home_url('/wp-admin/admin-ajax.php?action=verotel_webhook'),
-            'email' => $email, // Pre-fill email in Verotel checkout
-            'custom1' => $user_id, // Pass User ID for webhook identification
-            'custom2' => $selected_plan, // Pass plan ID
-            'custom3' => $first_name . ' ' . $last_name, // Pass full name
-            'saleID' => $user_id, // Use user ID as saleID for easier mapping
-            'productDescription' => $plan['name'] . ' - ' . $plan['description']
-        );
+        // Create Flowguard subscription
+        $result = flexpress_flowguard_create_subscription($user_id, $selected_plan);
         
-        // Add trial information if applicable
-        if (!empty($plan['trial_enabled'])) {
-            $payment_args['trial_amount'] = $plan['trial_price'];
-            $payment_args['trial_period'] = 'P' . $plan['trial_duration'] . 'D'; // ISO 8601 duration format
+        if (!$result['success']) {
+            error_log('FlexPress: Failed to create Flowguard subscription: ' . $result['error']);
+            throw new Exception('Failed to create Flowguard subscription: ' . $result['error']);
         }
         
-        // Log payment arguments for debugging
-        error_log('FlexPress: Creating Verotel payment URL with args: ' . json_encode($payment_args));
+        $payment_url = $result['payment_url'];
         
-        // Debug: Check if Verotel client is initialized
-        $reflection = new ReflectionObject($verotel);
-        $client_property = $reflection->getProperty('client');
-        $client_property->setAccessible(true);
-        $client = $client_property->getValue($verotel);
-        error_log('FlexPress: Verotel client initialized: ' . ($client ? 'YES' : 'NO'));
-        
-        // Get Verotel subscription URL for recurring membership
-        $payment_url = $verotel->get_subscription_url(
-            $plan['price'],
-            'USD', // Assuming USD for now, could be made dynamic
-            $plan['name'],
-            $payment_args
-        );
-        
-        // Log the generated URL for debugging (without sensitive data)
+        // Log the generated URL for debugging
         if ($payment_url) {
-            error_log('FlexPress: Generated Verotel payment URL successfully');
+            error_log('FlexPress: Generated Flowguard payment URL successfully');
         } else {
-            error_log('FlexPress: Failed to generate Verotel payment URL - checking client status and recent errors');
+            error_log('FlexPress: Failed to generate Flowguard payment URL');
         }
         
         if (empty($payment_url)) {
-            // If Verotel URL generation fails, fall back to test mode
+            // If Flowguard URL generation fails, fall back to test mode
             update_user_meta($user_id, 'membership_status', 'active');
             update_user_meta($user_id, 'subscription_plan', $selected_plan);
             update_user_meta($user_id, 'subscription_start', current_time('mysql'));
@@ -2251,8 +2219,8 @@ function flexpress_process_registration_and_payment() {
             wp_set_auth_cookie($user_id);
             
             wp_send_json_success(array(
-                'message' => 'Registration successful! (Verotel URL generation failed - test mode)',
-                'payment_url' => home_url('/my-account?payment=verotel_fallback&plan=' . $selected_plan),
+                'message' => 'Registration successful! (Flowguard URL generation failed - test mode)',
+                'payment_url' => home_url('/my-account?payment=flowguard_fallback&plan=' . $selected_plan),
                 'user_id' => $user_id,
                 'plan_name' => $plan['name'],
                 'amount' => $plan['price'],
@@ -2278,7 +2246,7 @@ function flexpress_process_registration_and_payment() {
         
     } catch (Exception $e) {
         // Log the error
-        error_log('Verotel Error: ' . $e->getMessage());
+        error_log('Flowguard Error: ' . $e->getMessage());
         
         // Fall back to test mode
         update_user_meta($user_id, 'membership_status', 'active');
@@ -2359,20 +2327,19 @@ function flexpress_process_renewal_and_payment() {
         flexpress_track_promo_usage($applied_promo_code, $user_id, $selected_plan, 'renewal_' . $user_id);
     }
     
-    // Check if Verotel is configured
-    $verotel_settings = get_option('flexpress_verotel_settings', array());
-    $verotel_configured = !empty($verotel_settings['verotel_shop_id']) && 
-                         !empty($verotel_settings['verotel_signature_key']) &&
-                         !empty($verotel_settings['verotel_merchant_id']);
+    // Check if Flowguard is configured
+    $flowguard_settings = get_option('flexpress_flowguard_settings', array());
+    $flowguard_configured = !empty($flowguard_settings['shop_id']) && 
+                           !empty($flowguard_settings['signature_key']);
     
-    if (!$verotel_configured) {
+    if (!$flowguard_configured) {
         // For testing: simulate successful payment 
         update_user_meta($user_id, 'membership_status', 'active');
         update_user_meta($user_id, 'subscription_plan', $selected_plan);
         update_user_meta($user_id, 'subscription_start', current_time('mysql'));
         
         wp_send_json_success(array(
-            'message' => 'Renewal successful! (Verotel not configured - test mode)',
+            'message' => 'Renewal successful! (Flowguard not configured - test mode)',
             'payment_url' => home_url('/dashboard?payment=renewal_success&plan=' . $selected_plan),
             'user_id' => $user_id,
             'plan_name' => $plan['name'],
@@ -2533,9 +2500,9 @@ function flexpress_create_ppv_purchase() {
     // Create unique transaction reference
     $transaction_ref = 'ppv_' . $episode_id . '_' . ($user_id ?: 'guest') . '_' . time();
     
-    // Initialize Verotel for one-time payment
+    // Initialize Flowguard for one-time payment
     try {
-        $verotel = new FlexPress_Verotel();
+        $flowguard_api = flexpress_get_flowguard_api();
         
         // Prepare payment arguments for one-time purchase
         $payment_args = array(
@@ -2560,13 +2527,15 @@ function flexpress_create_ppv_purchase() {
         // Log payment creation for debugging
         error_log('FlexPress PPV: Creating payment for episode ' . $episode_id . ', user ' . $user_id . ', price $' . $final_price);
         
-        // Get Verotel payment URL for one-time purchase
-        $payment_url = $verotel->get_purchase_url(
-            $final_price,
-            'USD', // Currency - could be made configurable
-            'Episode: ' . get_the_title($episode_id),
-            $payment_args
-        );
+        // Create Flowguard PPV purchase
+        $result = flexpress_flowguard_create_ppv_purchase($user_id, $episode_id);
+        
+        if (!$result['success']) {
+            error_log('FlexPress PPV: Failed to create Flowguard purchase: ' . $result['error']);
+            throw new Exception('Failed to create Flowguard purchase: ' . $result['error']);
+        }
+        
+        $payment_url = $result['payment_url'];
         
         if (!$payment_url) {
             wp_send_json_error(array('message' => __('Unable to create payment. Please try again.', 'flexpress')));
@@ -2605,7 +2574,7 @@ function flexpress_create_ppv_purchase() {
 }
 
 /**
- * Handle PPV payment return from Verotel
+ * Handle PPV payment return from Flowguard
  */
 add_action('wp_ajax_nopriv_flexpress_ppv_payment_return', 'flexpress_handle_ppv_payment_return');
 add_action('wp_ajax_flexpress_ppv_payment_return', 'flexpress_handle_ppv_payment_return');
@@ -2693,7 +2662,7 @@ function flexpress_handle_ppv_payment_return() {
 }
 
 /**
- * Handle PPV webhook from Verotel
+ * Handle PPV webhook from Flowguard
  */
 add_action('wp_ajax_nopriv_flexpress_ppv_webhook', 'flexpress_handle_ppv_webhook');
 add_action('wp_ajax_flexpress_ppv_webhook', 'flexpress_handle_ppv_webhook');
@@ -3017,7 +2986,7 @@ add_action('wp_ajax_nopriv_cancel_subscription', 'flexpress_ajax_cancel_subscrip
 
 function flexpress_ajax_cancel_subscription() {
     // Verify nonce
-    if (!wp_verify_nonce($_POST['nonce'], 'flexpress_verotel_nonce')) {
+    if (!wp_verify_nonce($_POST['nonce'], 'flexpress_flowguard_nonce')) {
         wp_send_json_error('Invalid security token. Please refresh the page and try again.');
         return;
     }
@@ -3030,7 +2999,7 @@ function flexpress_ajax_cancel_subscription() {
     }
     
     // Call the cancellation function
-    $result = flexpress_cancel_verotel_subscription($user_id);
+    $result = flexpress_flowguard_cancel_subscription($user_id);
     
     if (is_wp_error($result)) {
         wp_send_json_error($result->get_error_message());
@@ -3060,7 +3029,7 @@ function flexpress_debug_create_activity_table() {
     // Create some test activity entries
     FlexPress_Activity_Logger::log_activity(
         $user_id,
-        'verotel_initial',
+        'flowguard_initial',
         'Test initial subscription payment',
         array(
             'priceAmount' => '29.95',
@@ -3772,7 +3741,7 @@ function flexpress_show_auto_setup_notice() {
             </ul>
             <p><strong>Next Steps:</strong></p>
             <ul style="margin-left: 20px;">
-                <li>📋 Configure Verotel settings in <a href="<?php echo admin_url('admin.php?page=flexpress-verotel-settings'); ?>">FlexPress → Verotel</a></li>
+                <li>📋 Configure Flowguard settings in <a href="<?php echo admin_url('admin.php?page=flexpress-flowguard-settings'); ?>">FlexPress → Flowguard</a></li>
                 <li>🎥 Configure BunnyCDN settings in <a href="<?php echo admin_url('admin.php?page=flexpress-video-settings'); ?>">FlexPress → BunnyCDN</a></li>
                 <li>💰 Set up pricing plans in <a href="<?php echo admin_url('admin.php?page=flexpress-pricing-settings'); ?>">FlexPress → Pricing</a></li>
                 <li>🎨 Upload your logo in <a href="<?php echo admin_url('admin.php?page=flexpress-settings'); ?>">FlexPress → General</a></li>
@@ -3991,7 +3960,7 @@ When you purchase a membership, access content, or interact with our services, w
 <ul>
 <li>Name</li>
 <li>Email address</li>
-<li>Payment information (processed by our billing provider, Verotel)</li>
+<li>Payment information (processed by our billing provider, Flowguard)</li>
 <li>Billing address</li>
 <li>IP address</li>
 </ul>
@@ -4031,7 +4000,7 @@ We use cookies, web beacons, and similar technologies to enhance your user exper
 <p>We do not sell or rent your personal information. However, we may share your information in the following circumstances:</p>
 
 <p><strong>a. Billing Providers:</strong><br>
-Your payment information is securely processed by Verotel. We do not store your credit card details on our servers.</p>";
+Your payment information is securely processed by Flowguard. We do not store your credit card details on our servers.</p>";
 
     // Add parent company information if available
     if (!empty($parent_company)) {
@@ -4473,11 +4442,11 @@ function flexpress_generate_customer_terms_content() {
 </ul>
 
 <p><strong>DESCRIPTION OF SERVICES</strong></p>
-<p>{$parent_company}, using Verotel as a billing provider, grants access to the site and its materials upon purchase of a membership.</p>
+<p>{$parent_company}, using Flowguard as a billing provider, grants access to the site and its materials upon purchase of a membership.</p>
 
 <p><strong>BILLING</strong></p>
 <ul>
-<li>Billing is processed by Verotel. Subscribers will be notified of the billing descriptor that will appear on their credit card or bank statement.</li>
+<li>Billing is processed by Flowguard. Subscribers will be notified of the billing descriptor that will appear on their credit card or bank statement.</li>
 <li>If additional services are purchased, the statement will reflect those charges.</li>
 </ul>
 
@@ -4490,7 +4459,7 @@ function flexpress_generate_customer_terms_content() {
 <p><strong>AUTOMATIC RECURRING BILLING (If Selected)</strong></p>
 <ul>
 <li>Subscriptions may automatically renew at the end of the initial term unless canceled by the Subscriber.</li>
-<li>By subscribing, you authorize Verotel to charge your payment method for ongoing subscription fees and additional purchases.</li>
+<li>By subscribing, you authorize Flowguard to charge your payment method for ongoing subscription fees and additional purchases.</li>
 <li>In case of failed payment, retries will occur for up to one month, with an administration fee of up to \$3.00 applied.</li>
 </ul>
 
@@ -4504,7 +4473,7 @@ function flexpress_generate_customer_terms_content() {
 <ul>
 <li>Either the site or the Subscriber may cancel the subscription at any time.</li>
 <li>Subscribers remain liable for any charges incurred up to the date of cancellation.</li>
-<li>For cancellations or billing inquiries, contact Verotel.</li>
+<li>For cancellations or billing inquiries, contact Flowguard.</li>
 </ul>
 
 <p><strong>REFUNDS</strong></p>
@@ -5351,8 +5320,7 @@ function flexpress_create_default_promo_plans() {
             'active' => 1,
             'promo_only' => 1,
             'promo_codes' => 'model1,model2,model3', // Example codes
-            'verotel_site_id' => '',
-            'verotel_product_id' => 'promo_monthly',
+            'flowguard_product_id' => 'promo_monthly',
             'sort_order' => 10,
         ),
         'promo_model_annual' => array(
@@ -5371,8 +5339,7 @@ function flexpress_create_default_promo_plans() {
             'active' => 1,
             'promo_only' => 1,
             'promo_codes' => 'model1,model2,model3,annual50', // Example codes
-            'verotel_site_id' => '',
-            'verotel_product_id' => 'promo_annual',
+            'flowguard_product_id' => 'promo_annual',
             'sort_order' => 11,
         ),
     );

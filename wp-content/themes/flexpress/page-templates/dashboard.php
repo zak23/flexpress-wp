@@ -263,8 +263,8 @@ add_filter('body_class', function($classes) {
                                 $subscription_type = get_user_meta($user_id, 'subscription_type', true);
                                 $subscription_start = get_user_meta($user_id, 'subscription_start_date', true);
                                 $next_rebill = get_user_meta($user_id, 'next_rebill_date', true);
-                                $verotel_transaction_id = get_user_meta($user_id, 'verotel_transaction_id', true);
-                                $verotel_transaction_id = get_user_meta($user_id, 'verotel_transaction_id', true);
+                                $flowguard_transaction_id = get_user_meta($user_id, 'flowguard_transaction_id', true);
+                                $flowguard_transaction_id = get_user_meta($user_id, 'flowguard_transaction_id', true);
                                 ?>
                                 
                                 <div class="subscription-info mb-4">
@@ -325,10 +325,10 @@ add_filter('body_class', function($classes) {
                                                     ?>
                                                 </p>
                                             <?php endif; ?>
-                                            <?php if ($verotel_transaction_id): ?>
+                                            <?php if ($flowguard_transaction_id): ?>
                                                 <p class="mb-0">
                                                     <strong><?php esc_html_e('Transaction ID:', 'flexpress'); ?></strong>
-                                                    <?php echo esc_html($verotel_transaction_id); ?>
+                                                    <?php echo esc_html($flowguard_transaction_id); ?>
                                                 </p>
                                             <?php endif; ?>
                                         </div>

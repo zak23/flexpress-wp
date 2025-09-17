@@ -282,6 +282,15 @@ docker exec -it flexpress_wordpress wp [command]
 
 ## 🔧 Recent Updates
 
+### January 2025
+- **Fixed One-Time Payment Pricing Logic**: Resolved critical bug where "One-Time Payment" plans were incorrectly configured as lifetime access
+  - Separated 'one_time' and 'lifetime' plan types properly in admin interface
+  - One-time payments now allow configurable durations (30 days, 90 days, etc.) instead of forcing 999 years
+  - Updated JavaScript logic in pricing admin to handle plan types correctly
+  - Fixed default pricing plans to use correct plan types ('lifetime' for actual lifetime access)
+  - Updated admin form behavior to enable duration fields for one-time payments
+  - Clarified admin interface descriptions to distinguish between plan types
+
 ### September 2025
 - **Fixed Daily Pricing Calculations**: Corrected membership page to show accurate daily rates instead of full plan prices
   - Added `flexpress_calculate_daily_rate()` function to properly convert plan prices to daily rates

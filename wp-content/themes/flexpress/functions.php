@@ -5069,7 +5069,7 @@ function flexpress_model_message_callback($comment, $args, $depth) {
                 <?php comment_reply_link(array_merge($args, array(
                     'add_below' => $add_below,
                     'depth'     => $depth,
-                    'max_depth' => $args['max_depth'],
+                    'max_depth' => $args['max_depth'] ?? 5,
                     'reply_text' => 'Reply'
                 ))); ?>
             </div>

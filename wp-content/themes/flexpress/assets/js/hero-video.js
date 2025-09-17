@@ -76,12 +76,12 @@ function initializeHeroVideo(containerId, isUpcoming = false) {
     if (playButton && link) {
         link.addEventListener('mouseenter', () => {
             playButton.style.opacity = '1';
-            playButton.style.transform = 'scale(1)';
+            playButton.style.transform = 'translate(-50%, -50%) scale(1)';
         });
 
         link.addEventListener('mouseleave', () => {
             playButton.style.opacity = '0';
-            playButton.style.transform = 'scale(0.8)';
+            playButton.style.transform = 'translate(-50%, -50%) scale(0.8)';
         });
     }
 }

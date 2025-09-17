@@ -117,57 +117,70 @@ if (empty($session_id)) {
 $flowguard_settings = get_option('flexpress_flowguard_settings', []);
 ?>
 
-<main id="primary" class="site-main payment-page py-5">
-    <div class="container">
+<div class="payment-page">
+    <div class="container py-5">
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-10 text-center">
+                <h1 class="display-4 mb-4"><?php esc_html_e('Complete Your Payment', 'flexpress'); ?></h1>
+                <p class="lead mb-4"><?php esc_html_e('Secure payment processing powered by Flowguard', 'flexpress'); ?></p>
+            </div>
+        </div>
+        
         <div class="row justify-content-center">
-            <div class="col-lg-8">
+            <div class="col-lg-8 col-xl-6">
                 <div class="payment-container">
-                    <div class="payment-header text-center mb-4">
-                        <h1 class="payment-title">COMPLETE YOUR PAYMENT</h1>
-                        <p class="payment-subtitle">Secure payment processing powered by Flowguard</p>
-                    </div>
                     
                     <!-- Payment Status Messages -->
-                    <div id="payment-success" class="alert alert-success" style="display: none;"></div>
-                    <div id="payment-error" class="alert alert-danger" style="display: none;">
+                    <div id="payment-success" class="alert alert-success" style="display: none;" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span id="success-message"></span>
+                    </div>
+                    <div id="payment-error" class="alert alert-danger" style="display: none;" role="alert">
                         <div class="d-flex justify-content-between align-items-center">
-                            <span id="error-message"></span>
+                            <span><i class="fas fa-exclamation-circle me-2"></i><span id="error-message"></span></span>
                             <button id="refresh-session" class="btn btn-outline-light btn-sm" style="display: none;">
                                 <i class="fas fa-refresh me-1"></i>Refresh
                             </button>
                         </div>
                     </div>
-                    <div id="payment-pending" class="alert alert-warning" style="display: none;"></div>
+                    <div id="payment-pending" class="alert alert-warning" style="display: none;" role="alert">
+                        <i class="fas fa-spinner fa-spin me-2"></i>
+                        <span id="pending-message"></span>
+                    </div>
                     
                     
                     <!-- Payment Form Container -->
-                    <div id="flowguard-payment-form" class="payment-form-container">
-                        <div class="payment-loading">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading payment form...</span>
+                    <div class="payment-form-section">
+                        <h3 class="text-center mb-4"><?php esc_html_e('Payment Information', 'flexpress'); ?></h3>
+                        
+                        <div id="flowguard-payment-form" class="payment-form-container">
+                            <div class="payment-loading">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden"><?php esc_html_e('Loading payment form...', 'flexpress'); ?></span>
+                                </div>
+                                <p class="mt-3"><?php esc_html_e('Loading secure payment form...', 'flexpress'); ?></p>
                             </div>
-                            <p class="mt-3">Loading secure payment form...</p>
                         </div>
                     </div>
                     
                     <!-- Payment Security Info -->
                     <div class="payment-security-info text-center mt-4">
                         <div class="security-badges">
-                            <span class="badge bg-success me-2">
+                            <span class="badge bg-success">
                                 <i class="fas fa-shield-alt me-1"></i>
-                                256-bit SSL Encryption
+                                <?php esc_html_e('256-bit SSL Encryption', 'flexpress'); ?>
                             </span>
-                            <span class="badge bg-info me-2">
+                            <span class="badge bg-info">
                                 <i class="fas fa-lock me-1"></i>
-                                PCI DSS Compliant
+                                <?php esc_html_e('PCI DSS Compliant', 'flexpress'); ?>
                             </span>
                             <span class="badge bg-warning">
                                 <i class="fas fa-credit-card me-1"></i>
-                                3D Secure Enabled
+                                <?php esc_html_e('3D Secure Enabled', 'flexpress'); ?>
                             </span>
                         </div>
                         <small class="text-muted d-block mt-2">
-                            Your payment information is processed securely and never stored on our servers.
+                            <?php esc_html_e('Your payment information is processed securely and never stored on our servers.', 'flexpress'); ?>
                         </small>
                     </div>
                     
@@ -178,24 +191,23 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
                                 <h2 class="accordion-header" id="helpHeading">
                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#helpCollapse" aria-expanded="false" aria-controls="helpCollapse">
                                         <i class="fas fa-question-circle me-2"></i>
-                                        Need Help?
+                                        <?php esc_html_e('Need Help?', 'flexpress'); ?>
                                     </button>
                                 </h2>
                                 <div id="helpCollapse" class="accordion-collapse collapse" aria-labelledby="helpHeading" data-bs-parent="#paymentHelpAccordion">
                                     <div class="accordion-body">
-                                                                              
-                                        <h6 class="mt-3">Security Features:</h6>
+                                        <h6 class="mt-3"><?php esc_html_e('Security Features:', 'flexpress'); ?></h6>
                                         <ul class="list-unstyled">
-                                            <li><i class="fas fa-shield-alt me-2"></i>256-bit SSL encryption</li>
-                                            <li><i class="fas fa-lock me-2"></i>PCI DSS compliance</li>
-                                            <li><i class="fas fa-user-shield me-2"></i>3D Secure authentication</li>
-                                            <li><i class="fas fa-eye-slash me-2"></i>No card data storage</li>
+                                            <li><i class="fas fa-shield-alt me-2"></i><?php esc_html_e('256-bit SSL encryption', 'flexpress'); ?></li>
+                                            <li><i class="fas fa-lock me-2"></i><?php esc_html_e('PCI DSS compliance', 'flexpress'); ?></li>
+                                            <li><i class="fas fa-user-shield me-2"></i><?php esc_html_e('3D Secure authentication', 'flexpress'); ?></li>
+                                            <li><i class="fas fa-eye-slash me-2"></i><?php esc_html_e('No card data storage', 'flexpress'); ?></li>
                                         </ul>
                                         
                                         <div class="mt-3">
                                             <a href="<?php echo home_url('/contact'); ?>" class="btn btn-outline-primary btn-sm">
                                                 <i class="fas fa-envelope me-1"></i>
-                                                Contact Support
+                                                <?php esc_html_e('Contact Support', 'flexpress'); ?>
                                             </a>
                                         </div>
                                     </div>
@@ -207,7 +219,7 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
             </div>
         </div>
     </div>
-</main>
+</div>
 
 <!-- Load validation styles -->
 <link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/assets/css/flowguard-validation.css">
@@ -226,7 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check if session ID is valid
     if (!sessionId || sessionId === '') {
         console.error('No session ID provided');
-        document.getElementById('payment-error').textContent = 'Invalid payment session. Please try again.';
+        document.getElementById('error-message').textContent = '<?php esc_html_e('Invalid payment session. Please try again.', 'flexpress'); ?>';
         document.getElementById('payment-error').style.display = 'block';
         return;
     }
@@ -234,13 +246,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Validate session ID format (basic check)
     if (!sessionId.match(/^[a-f0-9-]{36}$/i)) {
         console.error('Invalid session ID format:', sessionId);
-        document.getElementById('payment-error').textContent = 'Invalid payment session format. Please try again.';
+        document.getElementById('error-message').textContent = '<?php esc_html_e('Invalid payment session format. Please try again.', 'flexpress'); ?>';
         document.getElementById('payment-error').style.display = 'block';
         return;
     }
     
     // Show loading message
-    document.getElementById('payment-pending').textContent = 'Loading secure payment form...';
+    document.getElementById('pending-message').textContent = '<?php esc_html_e('Loading secure payment form...', 'flexpress'); ?>';
     document.getElementById('payment-pending').style.display = 'block';
     
     // Load Flowguard SDK and validation system
@@ -251,7 +263,7 @@ document.addEventListener('DOMContentLoaded', function() {
         initializePaymentForm(sessionId);
     }).catch(error => {
         console.error('Failed to load payment system:', error);
-        document.getElementById('payment-error').textContent = 'Error loading payment form. Please try again.';
+        document.getElementById('error-message').textContent = '<?php esc_html_e('Error loading payment form. Please try again.', 'flexpress'); ?>';
         document.getElementById('payment-error').style.display = 'block';
         document.getElementById('payment-pending').style.display = 'none';
     });
@@ -584,7 +596,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('payment-error').style.display = 'none';
                         
                         // Show pending message
-                        document.getElementById('payment-pending').textContent = 'Processing your payment...';
+                        document.getElementById('pending-message').textContent = '<?php esc_html_e('Processing your payment...', 'flexpress'); ?>';
                         document.getElementById('payment-pending').style.display = 'block';
                         
                         try {
@@ -597,7 +609,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 this.innerHTML = '<i class="fas fa-credit-card me-2"></i>Complete Payment';
                                 document.getElementById('payment-pending').style.display = 'none';
                                 
-                                document.getElementById('payment-error').textContent = 'Payment submission timed out. Please try again.';
+                                document.getElementById('error-message').textContent = '<?php esc_html_e('Payment submission timed out. Please try again.', 'flexpress'); ?>';
                                 document.getElementById('payment-error').style.display = 'block';
                             }, 30000); // 30 second timeout
                             
@@ -611,7 +623,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             document.getElementById('payment-pending').style.display = 'none';
                             
                             // Show error message
-                            document.getElementById('payment-error').textContent = 'Failed to submit payment. Please try again.';
+                            document.getElementById('error-message').textContent = '<?php esc_html_e('Failed to submit payment. Please try again.', 'flexpress'); ?>';
                             document.getElementById('payment-error').style.display = 'block';
                         }
                     } else {
@@ -619,7 +631,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         this.disabled = false;
                         this.innerHTML = '<i class="fas fa-credit-card me-2"></i>Complete Payment';
                         
-                        document.getElementById('payment-error').textContent = 'Payment form is not ready. Please refresh the page.';
+                        document.getElementById('error-message').textContent = '<?php esc_html_e('Payment form is not ready. Please refresh the page.', 'flexpress'); ?>';
                         document.getElementById('payment-error').style.display = 'block';
                     }
                 });
@@ -642,7 +654,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
         } catch (error) {
             console.error('Error initializing payment form:', error);
-            document.getElementById('payment-error').textContent = 'Error initializing payment form. Please try again.';
+            document.getElementById('error-message').textContent = '<?php esc_html_e('Error initializing payment form. Please try again.', 'flexpress'); ?>';
             document.getElementById('payment-error').style.display = 'block';
             document.getElementById('payment-pending').style.display = 'none';
         }
@@ -669,7 +681,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     // Fallback to direct handling
                     document.getElementById('payment-pending').style.display = 'none';
-                    document.getElementById('payment-success').textContent = 'Payment successful! Redirecting...';
+                    document.getElementById('success-message').textContent = '<?php esc_html_e('Payment successful! Redirecting...', 'flexpress'); ?>';
                     document.getElementById('payment-success').style.display = 'block';
                 }
                 
@@ -785,7 +797,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     validationSystem.handlePaymentSuccess(event);
                 } else {
                     document.getElementById('payment-pending').style.display = 'none';
-                    document.getElementById('payment-success').textContent = 'Payment successful! Redirecting...';
+                    document.getElementById('success-message').textContent = '<?php esc_html_e('Payment successful! Redirecting...', 'flexpress'); ?>';
                     document.getElementById('payment-success').style.display = 'block';
                 }
                 
@@ -808,7 +820,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     validationSystem.handlePaymentError(event);
                 } else {
                     document.getElementById('payment-pending').style.display = 'none';
-                    document.getElementById('payment-error').textContent = event.message || 'Payment failed. Please try again.';
+                    document.getElementById('error-message').textContent = event.message || '<?php esc_html_e('Payment failed. Please try again.', 'flexpress'); ?>';
                     document.getElementById('payment-error').style.display = 'block';
                 }
             });
@@ -838,7 +850,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 document.getElementById('payment-pending').style.display = 'none';
-                document.getElementById('error-message').textContent = 'Payment session expired.';
+                document.getElementById('error-message').textContent = '<?php esc_html_e('Payment session expired.', 'flexpress'); ?>';
                 document.getElementById('payment-error').style.display = 'block';
                 
                 // Show refresh button

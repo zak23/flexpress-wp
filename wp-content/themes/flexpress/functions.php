@@ -334,6 +334,7 @@ function flexpress_add_accent_color_styles() {
     $accent_hover = flexpress_darken_color($accent_color, 15);
     $accent_light = sprintf('rgba(%d, %d, %d, 0.2)', $accent_rgb['r'], $accent_rgb['g'], $accent_rgb['b']);
     $accent_dark = flexpress_darken_color($accent_color, 25);
+    $accent_featured_bg = sprintf('rgba(%d, %d, %d, 0.15)', $accent_rgb['r'], $accent_rgb['g'], $accent_rgb['b']);
     
     $custom_css = "
         /* FlexPress Dynamic Accent Colors - Override all instances */
@@ -342,6 +343,7 @@ function flexpress_add_accent_color_styles() {
             --color-accent-hover: {$accent_hover} !important;
             --color-accent-light: {$accent_light} !important;
             --color-accent-dark: {$accent_dark} !important;
+            --color-accent-featured-bg: {$accent_featured_bg} !important;
         }
         
         /* Additional specific overrides to ensure consistency */
@@ -350,6 +352,10 @@ function flexpress_add_accent_color_styles() {
         .navbar-nav .nav-link:hover { color: {$accent_color} !important; }
         .navbar-nav .nav-link.active { color: {$accent_color} !important; }
         .section-title:after { background-color: {$accent_color} !important; }
+        
+        /* Featured plan background override */
+        .membership-plan-item.popular-plan { background: {$accent_featured_bg} !important; }
+        .membership-plan-item.selected { background: {$accent_featured_bg} !important; }
     ";
     
     wp_add_inline_style('flexpress-main', $custom_css);

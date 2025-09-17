@@ -12,10 +12,10 @@
   --color-border: #222222;
   
   /* Accent Color System - Dynamically set via PHP */
-  --color-accent: #ff6b35; /* Fallback - overridden by theme settings */
-  --color-accent-hover: #e55a2b; /* Fallback - overridden by theme settings */
-  --color-accent-light: rgba(255, 107, 53, 0.2); /* Fallback - overridden by theme settings */
-  --color-accent-dark: #d4481f; /* Fallback - overridden by theme settings */
+  --color-accent: #ff69b4; /* Fallback - overridden by theme settings */
+  --color-accent-hover: #e55aa0; /* Fallback - overridden by theme settings */
+  --color-accent-light: rgba(255, 105, 180, 0.2); /* Fallback - overridden by theme settings */
+  --color-accent-dark: #d4488a; /* Fallback - overridden by theme settings */
   
   /* Typography */
   --font-primary: 'Helvetica Neue', Helvetica, Arial, sans-serif;

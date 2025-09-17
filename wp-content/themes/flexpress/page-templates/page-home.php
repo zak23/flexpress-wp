@@ -175,7 +175,7 @@ $hero_episode = new WP_Query($hero_args);
 
         <!-- The Models -->
         <div class="all-models-section mb-5">
-            <h2 class="section-title"><?php esc_html_e('The Models', 'flexpress'); ?></h2>
+            <h2 class="section-title"><?php esc_html_e('Models', 'flexpress'); ?></h2>
             <?php
             $all_models_args = array(
                 'post_type' => 'model',

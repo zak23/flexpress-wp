@@ -2035,7 +2035,7 @@ if ($featured_models && !empty($featured_models)) {
 
 ### Color System
 - **Primary Color**: `var(--color-primary)` for white elements
-- **Accent Color**: `var(--color-accent)` for buttons, links, and interactive elements (default: #ff6b35)
+- **Accent Color**: `var(--color-accent)` for buttons, links, and interactive elements (default: #ff69b4)
 - **Accent Hover**: `var(--color-accent-hover)` for hover states
 - **Accent Light**: `var(--color-accent-light)` for backgrounds and shadows
 - **Accent Dark**: `var(--color-accent-dark)` for gradients and borders

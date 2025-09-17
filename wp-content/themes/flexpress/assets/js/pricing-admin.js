@@ -159,12 +159,18 @@ jQuery(document).ready(function($) {
             $('#plan-duration').prop('disabled', false);
             $('#plan-duration-unit').prop('disabled', false);
             
-            // Set default values if empty (but don't override existing values)
-            if (!$('#plan-duration').val()) {
+            // Fix duration if it was incorrectly set to 999 years (from previous buggy behavior)
+            if ($('#plan-duration').val() == '999' && $('#plan-duration-unit').val() == 'years') {
                 $('#plan-duration').val('30');
-            }
-            if (!$('#plan-duration-unit').val()) {
                 $('#plan-duration-unit').val('days');
+            } else {
+                // Set default values if empty (but don't override existing values)
+                if (!$('#plan-duration').val()) {
+                    $('#plan-duration').val('30');
+                }
+                if (!$('#plan-duration-unit').val()) {
+                    $('#plan-duration-unit').val('days');
+                }
             }
             
             // Update labels for clarity
@@ -412,6 +418,11 @@ jQuery(document).ready(function($) {
                     $('#plan-currency').val(plan.currency || '$');
                     $('#plan-type').val(plan.plan_type || 'recurring');
                     
+                    // Populate duration settings BEFORE plan type logic
+                    $('#plan-duration').val(plan.duration || '');
+                    $('#plan-duration-unit').val(plan.duration_unit || 'days');
+                    $('#plan-sort-order').val(plan.sort_order || 0);
+                    
                     // Handle plan type specific settings
                     if (plan.plan_type === 'one_time') {
                         $trialEnabled.prop('checked', false).prop('disabled', true);
@@ -421,6 +432,12 @@ jQuery(document).ready(function($) {
                         // Enable duration fields for one-time payments
                         $('#plan-duration').prop('disabled', false);
                         $('#plan-duration-unit').prop('disabled', false);
+                        
+                        // Fix duration if it was incorrectly set to 999 years
+                        if ($('#plan-duration').val() == '999' && $('#plan-duration-unit').val() == 'years') {
+                            $('#plan-duration').val('30');
+                            $('#plan-duration-unit').val('days');
+                        }
                     } else if (plan.plan_type === 'lifetime') {
                         $trialEnabled.prop('checked', false).prop('disabled', true);
                         $trialSettings.hide();
@@ -429,6 +446,10 @@ jQuery(document).ready(function($) {
                         // Disable duration fields for lifetime access
                         $('#plan-duration').prop('disabled', true);
                         $('#plan-duration-unit').prop('disabled', true);
+                        
+                        // Ensure lifetime access has 999 years
+                        $('#plan-duration').val('999');
+                        $('#plan-duration-unit').val('years');
                     } else {
                         $trialEnabled.prop('disabled', false);
                         handleTrialSettings();
@@ -437,11 +458,6 @@ jQuery(document).ready(function($) {
                         $('#plan-duration').prop('disabled', false);
                         $('#plan-duration-unit').prop('disabled', false);
                     }
-                    
-                    // Populate duration settings
-                    $('#plan-duration').val(plan.duration || '');
-                    $('#plan-duration-unit').val(plan.duration_unit || 'days');
-                    $('#plan-sort-order').val(plan.sort_order || 0);
                     
                     // Populate trial settings
                     const trialEnabled = plan.trial_enabled == 1;

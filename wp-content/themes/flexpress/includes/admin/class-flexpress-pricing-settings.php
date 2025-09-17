@@ -467,7 +467,7 @@ class FlexPress_Pricing_Settings {
                             <option value="years"><?php esc_html_e('Years', 'flexpress'); ?></option>
                         </select>
                         <p class="description duration-note" style="display: none;">
-                            <?php esc_html_e('For one-time payments, duration is automatically set to lifetime access.', 'flexpress'); ?>
+                            <?php esc_html_e('For lifetime access plans, duration is automatically set to 999 years.', 'flexpress'); ?>
                         </p>
                     </div>
                     

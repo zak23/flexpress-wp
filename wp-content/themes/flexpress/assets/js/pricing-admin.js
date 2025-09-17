@@ -148,26 +148,35 @@ jQuery(document).ready(function($) {
         const $durationNote = $('.duration-note');
         
         if (planType === 'one_time') {
-            // Disable trial settings
+            // Disable trial settings for one-time payments
             $trialEnabled.prop('checked', false).prop('disabled', true);
             $trialSettings.slideUp();
             $trialSettings.find('input').prop('required', false);
             
-            // Set duration to 'lifetime'
-            $('#plan-duration').val('999').prop('disabled', true);
-            $('#plan-duration-unit').val('years').prop('disabled', true);
+            // Enable duration settings - one-time payments should have configurable duration
+            $('#plan-duration').prop('disabled', false);
+            $('#plan-duration-unit').prop('disabled', false);
             
-            // Update duration label and show note
+            // Set default values if empty (but don't override existing values)
+            if (!$('#plan-duration').val()) {
+                $('#plan-duration').val('30');
+            }
+            if (!$('#plan-duration-unit').val()) {
+                $('#plan-duration-unit').val('days');
+            }
+            
+            // Update labels for clarity
             $durationSection.find('h3').text('Access Duration');
-            $('#plan-duration-label').text('Lifetime Access');
-            $durationNote.slideDown();
+            $('#plan-duration-label').text('Access Duration');
+            $durationNote.slideUp(); // Hide the incorrect lifetime note
+            
         } else if (planType === 'lifetime') {
             // Disable trial settings for lifetime access
             $trialEnabled.prop('checked', false).prop('disabled', true);
             $trialSettings.slideUp();
             $trialSettings.find('input').prop('required', false);
             
-            // Set duration to 'lifetime' (999 years)
+            // Set duration to 'lifetime' (999 years) and disable fields
             $('#plan-duration').val('999').prop('disabled', true);
             $('#plan-duration-unit').val('years').prop('disabled', true);
             
@@ -175,14 +184,23 @@ jQuery(document).ready(function($) {
             $durationSection.find('h3').text('Access Duration');
             $('#plan-duration-label').text('Lifetime Access');
             $durationNote.slideDown();
+            
         } else {
-            // Enable trial settings
+            // Recurring subscription - enable trial settings
             $trialEnabled.prop('disabled', false);
             handleTrialSettings();
             
             // Enable duration settings
-            $('#plan-duration').prop('disabled', false).val('1');
-            $('#plan-duration-unit').prop('disabled', false).val('months');
+            $('#plan-duration').prop('disabled', false);
+            $('#plan-duration-unit').prop('disabled', false);
+            
+            // Set default values if empty
+            if (!$('#plan-duration').val()) {
+                $('#plan-duration').val('1');
+            }
+            if (!$('#plan-duration-unit').val()) {
+                $('#plan-duration-unit').val('months');
+            }
             
             // Restore duration label and hide note
             $durationSection.find('h3').text('Duration Settings');
@@ -383,9 +401,25 @@ jQuery(document).ready(function($) {
                         $trialEnabled.prop('checked', false).prop('disabled', true);
                         $trialSettings.hide();
                         $trialSettings.find('input').prop('required', false);
+                        
+                        // Enable duration fields for one-time payments
+                        $('#plan-duration').prop('disabled', false);
+                        $('#plan-duration-unit').prop('disabled', false);
+                    } else if (plan.plan_type === 'lifetime') {
+                        $trialEnabled.prop('checked', false).prop('disabled', true);
+                        $trialSettings.hide();
+                        $trialSettings.find('input').prop('required', false);
+                        
+                        // Disable duration fields for lifetime access
+                        $('#plan-duration').prop('disabled', true);
+                        $('#plan-duration-unit').prop('disabled', true);
                     } else {
                         $trialEnabled.prop('disabled', false);
                         handleTrialSettings();
+                        
+                        // Enable duration fields for recurring plans
+                        $('#plan-duration').prop('disabled', false);
+                        $('#plan-duration-unit').prop('disabled', false);
                     }
                     
                     // Populate duration settings

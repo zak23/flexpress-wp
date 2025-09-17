@@ -230,6 +230,12 @@ class FlexPress_Affiliate_Manager {
             wp_send_json_error(['message' => __('Please provide payout details for your selected method.', 'flexpress')]);
         }
         
+        // Validate specific payout method requirements
+        $validation_result = $this->validate_payout_details($data['payout_method'], $data['payout_details']);
+        if (!$validation_result['valid']) {
+            wp_send_json_error(['message' => $validation_result['message']]);
+        }
+        
         // Check for existing application
         $existing = $this->get_affiliate_by_email($data['affiliate_email']);
         if ($existing) {
@@ -491,6 +497,78 @@ class FlexPress_Affiliate_Manager {
         $message .= sprintf(__("Best regards,\n%s Team", 'flexpress'), $site_name);
         
         wp_mail($affiliate->email, $subject, $message);
+    }
+    
+    /**
+     * Validate payout details based on method
+     */
+    private function validate_payout_details($method, $details_json) {
+        try {
+            $details = json_decode($details_json, true);
+            if (!$details) {
+                return ['valid' => false, 'message' => __('Invalid payout details format.', 'flexpress')];
+            }
+        } catch (Exception $e) {
+            return ['valid' => false, 'message' => __('Invalid payout details format.', 'flexpress')];
+        }
+        
+        switch ($method) {
+            case 'paypal':
+                if (empty($details['paypal_email']) || !is_email($details['paypal_email'])) {
+                    return ['valid' => false, 'message' => __('Please provide a valid PayPal email address.', 'flexpress')];
+                }
+                break;
+                
+            case 'crypto':
+                if (empty($details['crypto_type']) || empty($details['crypto_address'])) {
+                    return ['valid' => false, 'message' => __('Please provide cryptocurrency type and wallet address.', 'flexpress')];
+                }
+                if ($details['crypto_type'] === 'other' && empty($details['crypto_other'])) {
+                    return ['valid' => false, 'message' => __('Please specify the cryptocurrency type.', 'flexpress')];
+                }
+                break;
+                
+            case 'aus_bank_transfer':
+                $required_fields = ['aus_bank_name', 'aus_bsb', 'aus_account_number', 'aus_account_holder'];
+                foreach ($required_fields as $field) {
+                    if (empty($details[$field])) {
+                        return ['valid' => false, 'message' => __('Please provide all required Australian bank transfer details.', 'flexpress')];
+                    }
+                }
+                if (!preg_match('/^[0-9]{6}$/', $details['aus_bsb'])) {
+                    return ['valid' => false, 'message' => __('BSB must be exactly 6 digits.', 'flexpress')];
+                }
+                break;
+                
+            case 'yoursafe':
+                if (empty($details['yoursafe_iban'])) {
+                    return ['valid' => false, 'message' => __('Please provide your Yoursafe IBAN.', 'flexpress')];
+                }
+                break;
+                
+            case 'ach':
+                $required_fields = ['ach_account_number', 'ach_aba', 'ach_account_holder', 'ach_bank_name'];
+                foreach ($required_fields as $field) {
+                    if (empty($details[$field])) {
+                        return ['valid' => false, 'message' => __('Please provide all required ACH details.', 'flexpress')];
+                    }
+                }
+                if (!preg_match('/^[0-9]{9}$/', $details['ach_aba'])) {
+                    return ['valid' => false, 'message' => __('ABA routing number must be exactly 9 digits.', 'flexpress')];
+                }
+                break;
+                
+            case 'swift':
+                $required_fields = ['swift_bank_name', 'swift_code', 'swift_iban_account', 'swift_account_holder', 'swift_bank_address', 'swift_beneficiary_address'];
+                foreach ($required_fields as $field) {
+                    if (empty($details[$field])) {
+                        return ['valid' => false, 'message' => __('Please provide all required Swift transfer details.', 'flexpress')];
+                    }
+                }
+                break;
+        }
+        
+        return ['valid' => true, 'message' => 'Valid'];
     }
 }
 

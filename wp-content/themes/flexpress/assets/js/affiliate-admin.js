@@ -535,6 +535,12 @@ jQuery(document).ready(function($) {
         const $modal = $(modalHtml).appendTo('body');
         $modal.fadeIn(300);
         
+        // Populate dynamic payout fields
+        const $editContainer = $modal.find('.payout-details-container');
+        if ($editContainer.length) {
+            populatePayoutFields($editContainer, data.payout_details, data.payout_method);
+        }
+        
         // Bind close events
         $modal.find('.modal-close').on('click', function(e) {
             e.preventDefault();
@@ -1497,6 +1503,209 @@ jQuery(document).ready(function($) {
             }
         });
     });
+
+    // Dynamic Payout Fields Management
+    function initPayoutFields() {
+        // Handle payout method changes
+        $(document).on('change', 'select[name="payout_method"]', function() {
+            const selectedMethod = $(this).val();
+            const $container = $(this).closest('form').find('.payout-details-container');
+            
+            // Hide all payout fields
+            $container.find('.payout-fields').removeClass('active').hide();
+            
+            // Show selected method fields
+            if (selectedMethod) {
+                $container.find('.' + selectedMethod + '-fields').addClass('active').show();
+                
+                // Handle crypto type selection
+                if (selectedMethod === 'crypto') {
+                    $container.find('select[name="crypto_type"]').on('change', function() {
+                        const cryptoType = $(this).val();
+                        const $otherField = $container.find('input[name="crypto_other"]');
+                        
+                        if (cryptoType === 'other') {
+                            $otherField.show().attr('required', true);
+                        } else {
+                            $otherField.hide().removeAttr('required');
+                        }
+                    });
+                }
+            }
+            
+            // Update consolidated payout details
+            updateConsolidatedPayoutDetails($container);
+        });
+        
+        // Handle field changes to update consolidated details
+        $(document).on('input change', '.payout-detail-field', function() {
+            const $container = $(this).closest('.payout-details-container');
+            updateConsolidatedPayoutDetails($container);
+        });
+    }
+    
+    function updateConsolidatedPayoutDetails($container) {
+        const $activeFields = $container.find('.payout-fields.active');
+        const $hiddenField = $container.find('input[name="payout_details"], textarea[name="payout_details"]');
+        
+        if ($activeFields.length === 0) {
+            $hiddenField.val('');
+            return;
+        }
+        
+        const payoutData = {};
+        
+        $activeFields.find('.payout-detail-field').each(function() {
+            const $field = $(this);
+            const fieldName = $field.attr('name');
+            const fieldValue = $field.val().trim();
+            
+            if (fieldValue) {
+                payoutData[fieldName] = fieldValue;
+            }
+        });
+        
+        // Convert to JSON for storage
+        $hiddenField.val(JSON.stringify(payoutData));
+    }
+    
+    function parsePayoutDetails(payoutDetails, payoutMethod) {
+        if (!payoutDetails) return {};
+        
+        try {
+            return JSON.parse(payoutDetails);
+        } catch (e) {
+            // Handle legacy string format
+            const data = {};
+            if (payoutMethod === 'paypal') {
+                data.paypal_email = payoutDetails;
+            } else {
+                data.legacy_details = payoutDetails;
+            }
+            return data;
+        }
+    }
+    
+    function populatePayoutFields($container, payoutDetails, payoutMethod) {
+        const data = parsePayoutDetails(payoutDetails, payoutMethod);
+        
+        // Show appropriate fields
+        $container.find('.payout-fields').removeClass('active').hide();
+        if (payoutMethod) {
+            $container.find('.' + payoutMethod + '-fields').addClass('active').show();
+        }
+        
+        // Populate fields with data
+        Object.keys(data).forEach(function(key) {
+            const $field = $container.find('[name="' + key + '"]');
+            if ($field.length) {
+                $field.val(data[key]);
+                
+                // Trigger change events for dependent fields
+                if (key === 'crypto_type') {
+                    $field.trigger('change');
+                }
+            }
+        });
+        
+        // Handle legacy data
+        if (data.legacy_details) {
+            $container.find('.payout-detail-field').first().val(data.legacy_details);
+        }
+    }
+    
+    // Initialize payout fields when document is ready
+    initPayoutFields();
+
+    // Format payout method name with fees
+    function formatPayoutMethodName(method) {
+        const methods = {
+            'paypal': 'PayPal (Free)',
+            'crypto': 'Cryptocurrency (Free)',
+            'aus_bank_transfer': 'Australian Bank Transfer (Free)',
+            'yoursafe': 'Yoursafe (Free)',
+            'ach': 'ACH - US Only ($10 USD Fee)',
+            'swift': 'Swift International ($30 USD Fee)'
+        };
+        
+        return methods[method] || method.charAt(0).toUpperCase() + method.slice(1).replace('_', ' ');
+    }
+    
+    // Format payout details for display
+    function formatPayoutDetails(method, detailsJson) {
+        if (!detailsJson) {
+            return '<em>No details provided</em>';
+        }
+        
+        let details;
+        try {
+            details = JSON.parse(detailsJson);
+        } catch (e) {
+            return '<div class="payout-detail-legacy">' + escapeHtml(detailsJson) + '</div>';
+        }
+        
+        if (!details) {
+            return '<em>No details provided</em>';
+        }
+        
+        let output = '<div class="payout-details-formatted">';
+        
+        switch (method) {
+            case 'paypal':
+                output += '<strong>PayPal Email:</strong> ' + escapeHtml(details.paypal_email || '');
+                break;
+                
+            case 'crypto':
+                const cryptoType = details.crypto_type === 'other' ? (details.crypto_other || 'Unknown') : details.crypto_type;
+                output += '<strong>Cryptocurrency:</strong> ' + escapeHtml(cryptoType) + '<br>';
+                output += '<strong>Wallet Address:</strong> <code>' + escapeHtml(details.crypto_address || '') + '</code>';
+                break;
+                
+            case 'aus_bank_transfer':
+                output += '<strong>Bank:</strong> ' + escapeHtml(details.aus_bank_name || '') + '<br>';
+                output += '<strong>BSB:</strong> ' + escapeHtml(details.aus_bsb || '') + '<br>';
+                output += '<strong>Account:</strong> ' + escapeHtml(details.aus_account_number || '') + '<br>';
+                output += '<strong>Account Holder:</strong> ' + escapeHtml(details.aus_account_holder || '');
+                break;
+                
+            case 'yoursafe':
+                output += '<strong>Yoursafe IBAN:</strong> ' + escapeHtml(details.yoursafe_iban || '');
+                break;
+                
+            case 'ach':
+                output += '<strong>Bank:</strong> ' + escapeHtml(details.ach_bank_name || '') + '<br>';
+                output += '<strong>Account:</strong> ' + escapeHtml(details.ach_account_number || '') + '<br>';
+                output += '<strong>ABA Routing:</strong> ' + escapeHtml(details.ach_aba || '') + '<br>';
+                output += '<strong>Account Holder:</strong> ' + escapeHtml(details.ach_account_holder || '');
+                break;
+                
+            case 'swift':
+                output += '<strong>Bank:</strong> ' + escapeHtml(details.swift_bank_name || '') + '<br>';
+                output += '<strong>SWIFT/BIC:</strong> ' + escapeHtml(details.swift_code || '') + '<br>';
+                output += '<strong>IBAN/Account:</strong> ' + escapeHtml(details.swift_iban_account || '') + '<br>';
+                output += '<strong>Account Holder:</strong> ' + escapeHtml(details.swift_account_holder || '') + '<br>';
+                output += '<strong>Bank Address:</strong> ' + escapeHtml(details.swift_bank_address || '') + '<br>';
+                output += '<strong>Beneficiary Address:</strong> ' + escapeHtml(details.swift_beneficiary_address || '');
+                
+                if (details.swift_intermediary_swift || details.swift_intermediary_iban) {
+                    output += '<br><em>Intermediary Details:</em><br>';
+                    if (details.swift_intermediary_swift) {
+                        output += '<strong>Intermediary SWIFT:</strong> ' + escapeHtml(details.swift_intermediary_swift) + '<br>';
+                    }
+                    if (details.swift_intermediary_iban) {
+                        output += '<strong>Intermediary IBAN:</strong> ' + escapeHtml(details.swift_intermediary_iban);
+                    }
+                }
+                break;
+                
+            default:
+                output += '<em>Unknown payout method</em>';
+                break;
+        }
+        
+        output += '</div>';
+        return output;
+    }
 
     // Helper function to escape HTML
     function escapeHtml(text) {

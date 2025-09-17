@@ -21,6 +21,10 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Member Discounts**: Flexible pricing for subscribers
 - **Webhook Processing**: Real-time payment confirmations
 - **Affiliate System**: Complete commission tracking and management system
+- **Affiliate Application Management**: Comprehensive admin interface for managing affiliate applications and accounts
+- **Bulk Operations**: Approve, reject, suspend, or reactivate multiple affiliates at once
+- **Status Notifications**: Automatic email notifications to affiliates when status changes
+- **Performance Tracking**: Real-time statistics and revenue tracking for affiliate accounts
 
 ### 🎥 Video Management
 - **BunnyCDN Stream Integration**: Secure video hosting and streaming
@@ -342,6 +346,12 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 - **Cookie Tracking**: 30-day attribution window with secure cookie management
 - **User Management**: WordPress user system integration
 - **Admin Interface**: Complete management dashboard in FlexPress Settings
+- **Application Management Page**: Dedicated page template for managing affiliate applications (`page-templates/affiliate-applications.php`)
+- **Bulk Operations**: Approve, reject, suspend, or reactivate multiple affiliates simultaneously
+- **Status Management**: Individual and bulk status updates with automatic email notifications
+- **Search & Filtering**: Advanced search by name, email, affiliate code, or status
+- **Real-time Statistics**: Live dashboard with pending applications, active affiliates, and revenue tracking
+- **Export Functionality**: Data export capabilities for reporting and analysis
 
 ### Frontend Components
 - **Application Form**: `[affiliate_application_form]` shortcode

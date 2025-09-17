@@ -695,9 +695,63 @@ class FlexPress_Affiliate_Settings {
                                         <option value="swift"><?php esc_html_e('Swift International ($30 USD Fee)', 'flexpress'); ?></option>
                                     </select>
                                 </div>
-                                <div class="form-field">
-                                    <label for="add-affiliate-payout-details"><?php esc_html_e('Payout Details', 'flexpress'); ?> *</label>
-                                    <textarea id="add-affiliate-payout-details" name="payout_details" rows="3" required placeholder="<?php esc_attr_e('PayPal email, bank account details, etc.', 'flexpress'); ?>"></textarea>
+                                <!-- Dynamic Payout Details Fields -->
+                                <div class="form-field payout-details-container">
+                                    <label><?php esc_html_e('Payout Details', 'flexpress'); ?> *</label>
+                                    
+                                    <!-- PayPal Fields -->
+                                    <div class="payout-fields paypal-fields" style="display: none;">
+                                        <input type="email" name="paypal_email" placeholder="<?php esc_attr_e('PayPal Email Address', 'flexpress'); ?>" class="payout-detail-field">
+                                    </div>
+                                    
+                                    <!-- Cryptocurrency Fields -->
+                                    <div class="payout-fields crypto-fields" style="display: none;">
+                                        <select name="crypto_type" class="payout-detail-field">
+                                            <option value=""><?php esc_html_e('Select Cryptocurrency', 'flexpress'); ?></option>
+                                            <option value="bitcoin">Bitcoin (BTC)</option>
+                                            <option value="ethereum">Ethereum (ETH)</option>
+                                            <option value="litecoin">Litecoin (LTC)</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                        <input type="text" name="crypto_address" placeholder="<?php esc_attr_e('Wallet Address', 'flexpress'); ?>" class="payout-detail-field">
+                                        <input type="text" name="crypto_other" placeholder="<?php esc_attr_e('Specify other cryptocurrency', 'flexpress'); ?>" class="payout-detail-field" style="display: none;">
+                                    </div>
+                                    
+                                    <!-- Australian Bank Transfer Fields -->
+                                    <div class="payout-fields aus_bank_transfer-fields" style="display: none;">
+                                        <input type="text" name="aus_bank_name" placeholder="<?php esc_attr_e('Bank Name', 'flexpress'); ?>" class="payout-detail-field">
+                                        <input type="text" name="aus_bsb" placeholder="<?php esc_attr_e('BSB Number (6 digits)', 'flexpress'); ?>" pattern="[0-9]{6}" class="payout-detail-field">
+                                        <input type="text" name="aus_account_number" placeholder="<?php esc_attr_e('Account Number', 'flexpress'); ?>" class="payout-detail-field">
+                                        <input type="text" name="aus_account_holder" placeholder="<?php esc_attr_e('Account Holder Name', 'flexpress'); ?>" class="payout-detail-field">
+                                    </div>
+                                    
+                                    <!-- Yoursafe Fields -->
+                                    <div class="payout-fields yoursafe-fields" style="display: none;">
+                                        <input type="text" name="yoursafe_iban" placeholder="<?php esc_attr_e('Yoursafe IBAN', 'flexpress'); ?>" class="payout-detail-field">
+                                    </div>
+                                    
+                                    <!-- ACH Fields -->
+                                    <div class="payout-fields ach-fields" style="display: none;">
+                                        <input type="text" name="ach_account_number" placeholder="<?php esc_attr_e('Account Number', 'flexpress'); ?>" class="payout-detail-field">
+                                        <input type="text" name="ach_aba" placeholder="<?php esc_attr_e('ABA Routing Number (9 digits)', 'flexpress'); ?>" pattern="[0-9]{9}" class="payout-detail-field">
+                                        <input type="text" name="ach_account_holder" placeholder="<?php esc_attr_e('Account Holder Name', 'flexpress'); ?>" class="payout-detail-field">
+                                        <input type="text" name="ach_bank_name" placeholder="<?php esc_attr_e('Bank Name', 'flexpress'); ?>" class="payout-detail-field">
+                                    </div>
+                                    
+                                    <!-- Swift Fields -->
+                                    <div class="payout-fields swift-fields" style="display: none;">
+                                        <input type="text" name="swift_bank_name" placeholder="<?php esc_attr_e('Bank Name', 'flexpress'); ?>" class="payout-detail-field">
+                                        <input type="text" name="swift_code" placeholder="<?php esc_attr_e('SWIFT/BIC Code', 'flexpress'); ?>" class="payout-detail-field">
+                                        <input type="text" name="swift_iban_account" placeholder="<?php esc_attr_e('IBAN or Account Number', 'flexpress'); ?>" class="payout-detail-field">
+                                        <input type="text" name="swift_account_holder" placeholder="<?php esc_attr_e('Account Holder Name', 'flexpress'); ?>" class="payout-detail-field">
+                                        <textarea name="swift_bank_address" placeholder="<?php esc_attr_e('Bank Address', 'flexpress'); ?>" rows="2" class="payout-detail-field"></textarea>
+                                        <textarea name="swift_beneficiary_address" placeholder="<?php esc_attr_e('Beneficiary Address', 'flexpress'); ?>" rows="2" class="payout-detail-field"></textarea>
+                                        <input type="text" name="swift_intermediary_swift" placeholder="<?php esc_attr_e('Secondary/Intermediary SWIFT Code (if required)', 'flexpress'); ?>" class="payout-detail-field">
+                                        <input type="text" name="swift_intermediary_iban" placeholder="<?php esc_attr_e('Intermediary IBAN or Account (if required)', 'flexpress'); ?>" class="payout-detail-field">
+                                    </div>
+                                    
+                                    <!-- Hidden field to store consolidated payout details -->
+                                    <textarea id="add-affiliate-payout-details" name="payout_details" style="display: none;" required></textarea>
                                 </div>
                                 <div class="form-field">
                                     <label for="add-affiliate-tax-info"><?php esc_html_e('Tax Information', 'flexpress'); ?></label>
@@ -785,9 +839,63 @@ class FlexPress_Affiliate_Settings {
                                         <option value="swift"><?php esc_html_e('Swift International ($30 USD Fee)', 'flexpress'); ?></option>
                                     </select>
                                 </div>
-                                <div class="form-field">
-                                    <label for="edit-affiliate-payout-details"><?php esc_html_e('Payout Details', 'flexpress'); ?> *</label>
-                                    <textarea id="edit-affiliate-payout-details" name="payout_details" rows="3" required placeholder="<?php esc_attr_e('PayPal email, bank account details, etc.', 'flexpress'); ?>"></textarea>
+                                <!-- Dynamic Payout Details Fields -->
+                                <div class="form-field payout-details-container">
+                                    <label><?php esc_html_e('Payout Details', 'flexpress'); ?> *</label>
+                                    
+                                    <!-- PayPal Fields -->
+                                    <div class="payout-fields paypal-fields" style="display: none;">
+                                        <input type="email" name="paypal_email" placeholder="<?php esc_attr_e('PayPal Email Address', 'flexpress'); ?>" class="payout-detail-field">
+                                    </div>
+                                    
+                                    <!-- Cryptocurrency Fields -->
+                                    <div class="payout-fields crypto-fields" style="display: none;">
+                                        <select name="crypto_type" class="payout-detail-field">
+                                            <option value=""><?php esc_html_e('Select Cryptocurrency', 'flexpress'); ?></option>
+                                            <option value="bitcoin">Bitcoin (BTC)</option>
+                                            <option value="ethereum">Ethereum (ETH)</option>
+                                            <option value="litecoin">Litecoin (LTC)</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                        <input type="text" name="crypto_address" placeholder="<?php esc_attr_e('Wallet Address', 'flexpress'); ?>" class="payout-detail-field">
+                                        <input type="text" name="crypto_other" placeholder="<?php esc_attr_e('Specify other cryptocurrency', 'flexpress'); ?>" class="payout-detail-field" style="display: none;">
+                                    </div>
+                                    
+                                    <!-- Australian Bank Transfer Fields -->
+                                    <div class="payout-fields aus_bank_transfer-fields" style="display: none;">
+                                        <input type="text" name="aus_bank_name" placeholder="<?php esc_attr_e('Bank Name', 'flexpress'); ?>" class="payout-detail-field">
+                                        <input type="text" name="aus_bsb" placeholder="<?php esc_attr_e('BSB Number (6 digits)', 'flexpress'); ?>" pattern="[0-9]{6}" class="payout-detail-field">
+                                        <input type="text" name="aus_account_number" placeholder="<?php esc_attr_e('Account Number', 'flexpress'); ?>" class="payout-detail-field">
+                                        <input type="text" name="aus_account_holder" placeholder="<?php esc_attr_e('Account Holder Name', 'flexpress'); ?>" class="payout-detail-field">
+                                    </div>
+                                    
+                                    <!-- Yoursafe Fields -->
+                                    <div class="payout-fields yoursafe-fields" style="display: none;">
+                                        <input type="text" name="yoursafe_iban" placeholder="<?php esc_attr_e('Yoursafe IBAN', 'flexpress'); ?>" class="payout-detail-field">
+                                    </div>
+                                    
+                                    <!-- ACH Fields -->
+                                    <div class="payout-fields ach-fields" style="display: none;">
+                                        <input type="text" name="ach_account_number" placeholder="<?php esc_attr_e('Account Number', 'flexpress'); ?>" class="payout-detail-field">
+                                        <input type="text" name="ach_aba" placeholder="<?php esc_attr_e('ABA Routing Number (9 digits)', 'flexpress'); ?>" pattern="[0-9]{9}" class="payout-detail-field">
+                                        <input type="text" name="ach_account_holder" placeholder="<?php esc_attr_e('Account Holder Name', 'flexpress'); ?>" class="payout-detail-field">
+                                        <input type="text" name="ach_bank_name" placeholder="<?php esc_attr_e('Bank Name', 'flexpress'); ?>" class="payout-detail-field">
+                                    </div>
+                                    
+                                    <!-- Swift Fields -->
+                                    <div class="payout-fields swift-fields" style="display: none;">
+                                        <input type="text" name="swift_bank_name" placeholder="<?php esc_attr_e('Bank Name', 'flexpress'); ?>" class="payout-detail-field">
+                                        <input type="text" name="swift_code" placeholder="<?php esc_attr_e('SWIFT/BIC Code', 'flexpress'); ?>" class="payout-detail-field">
+                                        <input type="text" name="swift_iban_account" placeholder="<?php esc_attr_e('IBAN or Account Number', 'flexpress'); ?>" class="payout-detail-field">
+                                        <input type="text" name="swift_account_holder" placeholder="<?php esc_attr_e('Account Holder Name', 'flexpress'); ?>" class="payout-detail-field">
+                                        <textarea name="swift_bank_address" placeholder="<?php esc_attr_e('Bank Address', 'flexpress'); ?>" rows="2" class="payout-detail-field"></textarea>
+                                        <textarea name="swift_beneficiary_address" placeholder="<?php esc_attr_e('Beneficiary Address', 'flexpress'); ?>" rows="2" class="payout-detail-field"></textarea>
+                                        <input type="text" name="swift_intermediary_swift" placeholder="<?php esc_attr_e('Secondary/Intermediary SWIFT Code (if required)', 'flexpress'); ?>" class="payout-detail-field">
+                                        <input type="text" name="swift_intermediary_iban" placeholder="<?php esc_attr_e('Intermediary IBAN or Account (if required)', 'flexpress'); ?>" class="payout-detail-field">
+                                    </div>
+                                    
+                                    <!-- Hidden field to store consolidated payout details -->
+                                    <textarea id="edit-affiliate-payout-details" name="payout_details" style="display: none;" required></textarea>
                                 </div>
                                 <div class="form-field">
                                     <label for="edit-affiliate-tax-info"><?php esc_html_e('Tax Information', 'flexpress'); ?></label>
@@ -1508,9 +1616,6 @@ class FlexPress_Affiliate_Settings {
         // Implementation needed
     }
 
-    public function get_affiliate_details() {
-        // Implementation needed
-    }
 
     public function update_affiliate() {
         // Implementation needed

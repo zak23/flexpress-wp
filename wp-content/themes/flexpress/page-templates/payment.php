@@ -43,6 +43,21 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
                     </div>
                     <div id="payment-pending" class="alert alert-warning" style="display: none;"></div>
                     
+                    <!-- Promo Code Section -->
+                    <div class="promo-code-section mb-4">
+                        <div class="promo-code-input">
+                            <label for="promo-code"><?php esc_html_e('Promo Code', 'flexpress'); ?></label>
+                            <div class="promo-code-field">
+                                <input type="text" id="promo-code" name="promo_code" 
+                                       placeholder="<?php esc_attr_e('Enter promo code', 'flexpress'); ?>">
+                                <button type="button" id="apply-promo-code" class="btn btn-outline-primary">
+                                    <?php esc_html_e('Apply', 'flexpress'); ?>
+                                </button>
+                            </div>
+                            <div id="promo-code-message" class="promo-code-message"></div>
+                        </div>
+                    </div>
+                    
                     <!-- Payment Form Container -->
                     <div id="flowguard-payment-form" class="payment-form-container">
                         <div class="payment-loading">
@@ -114,10 +129,135 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
 
 <!-- Load validation styles -->
 <link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/assets/css/flowguard-validation.css">
+<link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/assets/css/promo-codes.css">
 
 <script>
+// Promo code functionality
+let appliedPromo = null;
+let originalAmount = 0;
+
+// Apply promo code
+function applyPromoCode() {
+    const code = document.getElementById('promo-code').value.trim();
+    
+    if (!code) {
+        showPromoMessage('Please enter a promo code', 'error');
+        return;
+    }
+    
+    // Get current amount from session or form
+    const amount = originalAmount || 0;
+    
+    fetch(ajaxurl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            action: 'apply_promo_code',
+            code: code,
+            amount: amount
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            appliedPromo = data.data;
+            showAppliedPromo(data.data);
+            updatePaymentAmount(data.data.final_amount);
+            showPromoMessage(data.data.message, 'success');
+        } else {
+            showPromoMessage(data.data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error applying promo code:', error);
+        showPromoMessage('An error occurred. Please try again.', 'error');
+    });
+}
+
+// Remove promo code
+function removePromoCode() {
+    fetch(ajaxurl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            action: 'remove_promo_code'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            appliedPromo = null;
+            hideAppliedPromo();
+            resetPaymentAmount();
+            showPromoMessage('Promo code removed', 'success');
+        }
+    });
+}
+
+function showPromoMessage(message, type) {
+    const messageDiv = document.getElementById('promo-code-message');
+    messageDiv.className = 'promo-code-message ' + type;
+    messageDiv.textContent = message;
+    messageDiv.style.display = 'block';
+    
+    setTimeout(() => {
+        messageDiv.style.display = 'none';
+    }, 5000);
+}
+
+function showAppliedPromo(data) {
+    const promoSection = document.querySelector('.promo-code-section');
+    const existingPromo = document.querySelector('.applied-promo');
+    
+    if (existingPromo) {
+        existingPromo.remove();
+    }
+    
+    const promoHtml = `
+        <div class="applied-promo">
+            <strong>Promo Code Applied:</strong> ${data.code}<br>
+            Discount: $${data.discount_amount.toFixed(2)}<br>
+            <span class="remove-promo" onclick="removePromoCode()">Remove</span>
+        </div>
+    `;
+    
+    promoSection.insertAdjacentHTML('beforeend', promoHtml);
+    document.getElementById('promo-code').value = '';
+}
+
+function hideAppliedPromo() {
+    const appliedPromo = document.querySelector('.applied-promo');
+    if (appliedPromo) {
+        appliedPromo.remove();
+    }
+}
+
+function updatePaymentAmount(finalAmount) {
+    // Update any amount displays on the page
+    const amountElements = document.querySelectorAll('.payment-amount, .amount-display');
+    amountElements.forEach(element => {
+        element.textContent = '$' + finalAmount.toFixed(2);
+    });
+    
+    // Store the final amount for payment processing
+    window.finalPaymentAmount = finalAmount;
+}
+
+function resetPaymentAmount() {
+    if (originalAmount > 0) {
+        updatePaymentAmount(originalAmount);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const sessionId = '<?php echo esc_js($session_id); ?>';
+    
+    // Setup promo code button
+    document.getElementById('apply-promo-code').addEventListener('click', applyPromoCode);
     
     // Initialize Flowguard configuration
     window.flowguardConfig = {

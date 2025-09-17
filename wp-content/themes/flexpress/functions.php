@@ -37,6 +37,7 @@ require_once FLEXPRESS_PATH . '/includes/class-flexpress-registration.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-activity-logger.php';
 require_once FLEXPRESS_PATH . '/includes/pricing-helpers.php';
 require_once FLEXPRESS_PATH . '/includes/affiliate-helpers.php';
+require_once FLEXPRESS_PATH . '/includes/payout-display-helpers.php';
 require_once FLEXPRESS_PATH . '/includes/contact-helpers.php';
 
 // Affiliate System Integration
@@ -46,6 +47,11 @@ require_once FLEXPRESS_PATH . '/includes/class-flexpress-affiliate-tracker.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-affiliate-dashboard.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-affiliate-payouts.php';
 require_once FLEXPRESS_PATH . '/includes/affiliate-shortcodes.php';
+
+// Promo Codes System Integration
+require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-promo-codes.php';
+require_once FLEXPRESS_PATH . '/includes/promo-codes-integration.php';
+require_once FLEXPRESS_PATH . '/includes/promo-codes-shortcodes.php';
 
 // Load ACF fields after init to prevent translation issues
 function flexpress_load_acf_fields() {

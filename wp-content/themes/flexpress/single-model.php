@@ -8,55 +8,65 @@
 get_header();
 ?>
 
+<main class="site-main">
 <?php while (have_posts()) : the_post(); ?>
     <article id="post-<?php the_ID(); ?>" <?php post_class('model-profile'); ?>>
         
-        <!-- Hero Landscape Image Section -->
+        <!-- Hero Section -->
         <?php 
         $hero_image = get_field('model_hero_image');
         if ($hero_image) : ?>
-            <section class="model-hero-section">
-                <div class="model-hero-image" style="background-image: url('<?php echo esc_url($hero_image['sizes']['large']); ?>');">
-                    <div class="model-hero-overlay">
-                        <div class="container">
-                            <div class="model-hero-content">
-                                <h1 class="model-hero-title"><?php the_title(); ?></h1>
+            <div class="hero-section-wrapper">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="hero-section">
+                                <div class="hero-video-container">
+                                    <div class="hero-thumbnail" style="background-image: url('<?php echo esc_url($hero_image['sizes']['large']); ?>');"></div>
+                                    <div class="hero-content-overlay">
+                                        <h1 class="hero-episode-title"><?php the_title(); ?></h1>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
         <?php else : ?>
             <!-- Fallback header if no hero image -->
-            <section class="model-header-fallback">
-                <div class="container py-5">
-                    <h1 class="display-4 text-center text-uppercase"><?php the_title(); ?></h1>
+            <div class="container py-5">
+                <div class="text-center">
+                    <h1 class="display-4 mb-4"><?php the_title(); ?></h1>
                 </div>
-            </section>
+            </div>
         <?php endif; ?>
 
-        <!-- Half-Half Image and Text Section -->
-        <section class="model-profile-section py-5">
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-lg-6">
-                        <?php 
-                        $profile_image = get_field('model_profile_image');
-                        if ($profile_image) : ?>
-                            <div class="model-profile-image mb-4">
-                                <img src="<?php echo esc_url($profile_image['sizes']['large']); ?>" 
-                                     alt="<?php echo esc_attr(get_the_title()); ?>" 
-                                     class="img-fluid rounded">
-                            </div>
-                        <?php elseif (has_post_thumbnail()) : ?>
-                            <div class="model-profile-image mb-4">
-                                <?php the_post_thumbnail('large', array('class' => 'img-fluid rounded')); ?>
-                            </div>
-                        <?php endif; ?>
+        <!-- Model Profile Section -->
+        <div class="container py-5">
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-body p-4">
+                            <?php 
+                            $profile_image = get_field('model_profile_image');
+                            if ($profile_image) : ?>
+                                <div class="text-center mb-4">
+                                    <img src="<?php echo esc_url($profile_image['sizes']['large']); ?>" 
+                                         alt="<?php echo esc_attr(get_the_title()); ?>" 
+                                         class="img-fluid rounded">
+                                </div>
+                            <?php elseif (has_post_thumbnail()) : ?>
+                                <div class="text-center mb-4">
+                                    <?php the_post_thumbnail('large', array('class' => 'img-fluid rounded')); ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
-                    
-                    <div class="col-lg-6">
-                        <div class="model-content">
+                </div>
+                
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-body p-4">
                             <h2 class="h3 mb-4"><?php the_title(); ?></h2>
                             
                             <?php if (get_field('model_about')) : ?>
@@ -154,7 +164,7 @@ get_header();
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
 
         <?php
         // Get latest episode featuring this model
@@ -198,7 +208,7 @@ get_header();
             }
         ?>
             <!-- Latest Scene Hero Section -->
-            <section class="model-latest-scene-hero">
+            <div class="hero-section-wrapper">
                 <div class="container">
                     <div class="row">
                         <div class="col-12 text-left mb-4">
@@ -255,7 +265,7 @@ get_header();
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
         <?php 
         endif;
         wp_reset_postdata();
@@ -285,33 +295,31 @@ get_header();
         ));
         
         if ($all_episodes_query->have_posts()) : ?>
-            <section class="model-episodes py-5">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-12 text-left mb-5">
-                            <h2 class="section-title">All <?php echo get_the_title(get_queried_object_id()); ?> Episodes</h2>
-                        </div>
+            <div class="container py-5">
+                <div class="row">
+                    <div class="col-12 text-left mb-5">
+                        <h2 class="section-title">All <?php echo get_the_title(get_queried_object_id()); ?> Episodes</h2>
                     </div>
-                    
-                    <!-- Episode Grid - Same style as episodes page -->
-                    <div class="episode-grid">
-                        <div class="row g-4">
-                            <?php while ($all_episodes_query->have_posts()) : $all_episodes_query->the_post(); ?>
-                                <div class="col-lg-6 col-md-6 col-sm-6">
-                                    <?php get_template_part('template-parts/content', 'episode-card'); ?>
-                                </div>
-                            <?php endwhile; ?>
-                        </div>
-                    </div>
-                    
-                    <?php if ($all_episodes_query->found_posts > 12) : ?>
-                        <div class="text-center mt-5">
-                            <p class="text-muted">Showing 12 of <?php echo $all_episodes_query->found_posts; ?> episodes</p>
-                            <!-- You could add pagination or "Load More" here if needed -->
-                        </div>
-                    <?php endif; ?>
                 </div>
-            </section>
+                
+                <!-- Episode Grid - Same style as episodes page -->
+                <div class="video-grid">
+                    <div class="row g-4">
+                        <?php while ($all_episodes_query->have_posts()) : $all_episodes_query->the_post(); ?>
+                            <div class="col-lg-6 col-md-6 col-sm-6">
+                                <?php get_template_part('template-parts/content', 'episode-card'); ?>
+                            </div>
+                        <?php endwhile; ?>
+                    </div>
+                </div>
+                
+                <?php if ($all_episodes_query->found_posts > 12) : ?>
+                    <div class="text-center mt-5">
+                        <p class="text-muted">Showing 12 of <?php echo $all_episodes_query->found_posts; ?> episodes</p>
+                        <!-- You could add pagination or "Load More" here if needed -->
+                    </div>
+                <?php endif; ?>
+            </div>
         <?php 
         endif;
         wp_reset_postdata();
@@ -324,11 +332,11 @@ get_header();
         $main_post = $post;
         
         if (comments_open($main_post->ID) || get_comments_number($main_post->ID)) : ?>
-            <section class="model-messages py-5">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-lg-12 mx-auto">
-                            <div class="model-messages-wrapper">
+            <div class="container py-5">
+                <div class="row">
+                    <div class="col-lg-12 mx-auto">
+                        <div class="card shadow-sm">
+                            <div class="card-body p-4">
                                 <h2 class="section-title text-left mb-5">
                                     Leave <?php echo get_the_title($main_post->ID); ?> a Message
                                 </h2>
@@ -432,11 +440,12 @@ get_header();
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
         <?php endif; ?>
 
     </article>
 <?php endwhile; ?>
+</main>
 
 <?php
 get_footer();

@@ -408,6 +408,68 @@ function flexpress_add_test_pricing_plans() {
 }
 
 /**
+ * Calculate daily rate for a pricing plan
+ *
+ * @param array $plan The plan data
+ * @return float The daily rate
+ */
+function flexpress_calculate_daily_rate($plan) {
+    $price = floatval($plan['price'] ?? 0);
+    $duration = intval($plan['duration'] ?? 30);
+    $duration_unit = $plan['duration_unit'] ?? 'days';
+    
+    // Convert duration to days if needed
+    $days = $duration;
+    switch ($duration_unit) {
+        case 'weeks':
+            $days = $duration * 7;
+            break;
+        case 'months':
+            $days = $duration * 30; // Approximate
+            break;
+        case 'years':
+            $days = $duration * 365; // Approximate
+            break;
+        case 'days':
+        default:
+            $days = $duration;
+            break;
+    }
+    
+    // Avoid division by zero
+    if ($days <= 0) {
+        return $price;
+    }
+    
+    return $price / $days;
+}
+
+/**
+ * Get formatted daily rate display
+ *
+ * @param array $plan The plan data
+ * @param bool $show_trial_rate Whether to show trial rate if available
+ * @return string Formatted daily rate
+ */
+function flexpress_get_daily_rate_display($plan, $show_trial_rate = false) {
+    $currency = $plan['currency'] ?? '$';
+    
+    // Check if we should show trial rate
+    if ($show_trial_rate && !empty($plan['trial_enabled']) && isset($plan['trial_price']) && isset($plan['trial_duration'])) {
+        $trial_plan = array(
+            'price' => $plan['trial_price'],
+            'duration' => $plan['trial_duration'],
+            'duration_unit' => $plan['trial_duration_unit'] ?? 'days'
+        );
+        $daily_rate = flexpress_calculate_daily_rate($trial_plan);
+    } else {
+        $daily_rate = flexpress_calculate_daily_rate($plan);
+    }
+    
+    return $currency . number_format($daily_rate, 2);
+}
+
+/**
  * Render a pricing plan card
  *
  * @param string $plan_id The ID of the plan

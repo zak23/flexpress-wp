@@ -37,7 +37,7 @@ class FlexPress_Affiliate_Settings {
         
         $sql = "CREATE TABLE IF NOT EXISTS $table_name (
             id bigint(20) NOT NULL AUTO_INCREMENT,
-            code varchar(50) NOT NULL UNIQUE,
+            code varchar(50) NOT NULL,
             name varchar(100) NOT NULL,
             description text,
             discount_type enum('percentage', 'fixed', 'free_trial') NOT NULL DEFAULT 'percentage',
@@ -195,6 +195,181 @@ class FlexPress_Affiliate_Settings {
         // Also create the promo codes tables if they don't exist
         self::create_promo_codes_table();
         self::create_promo_usage_table();
+        
+        // Update existing tables to add missing columns
+        self::update_existing_tables();
+    }
+
+    /**
+     * Ensure tables exist (called on admin_init)
+     */
+    public static function ensure_tables_exist() {
+        // Only run on admin pages to avoid unnecessary database calls
+        if (!is_admin()) {
+            return;
+        }
+        
+        // Check if we're on the affiliate settings page or any admin page
+        $screen = get_current_screen();
+        if (!$screen || strpos($screen->id, 'flexpress') === false) {
+            return;
+        }
+        
+        // Create tables if they don't exist
+        self::create_affiliate_tables();
+    }
+
+    /**
+     * Manually create tables (for debugging/initial setup)
+     */
+    public static function create_tables_manually() {
+        self::create_affiliate_tables();
+        self::update_existing_tables();
+        self::verify_table_structure();
+        return 'Tables created and verified successfully!';
+    }
+
+    /**
+     * Update existing tables to add missing columns
+     */
+    public static function update_existing_tables() {
+        global $wpdb;
+        
+        $promo_usage_table = $wpdb->prefix . 'flexpress_promo_usage';
+        
+        // Check if table exists first
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$promo_usage_table'") == $promo_usage_table;
+        
+        if (!$table_exists) {
+            // Table doesn't exist, create it with full structure
+            self::create_promo_usage_table();
+            return;
+        }
+        
+        // Get current table structure
+        $columns = $wpdb->get_results("DESCRIBE {$promo_usage_table}");
+        $existing_columns = array();
+        foreach ($columns as $column) {
+            $existing_columns[] = $column->Field;
+        }
+        
+        // Check if original_amount column exists
+        $original_amount_exists = in_array('original_amount', $existing_columns);
+        
+        // Check if discount_amount column exists
+        if (!in_array('discount_amount', $existing_columns)) {
+            if ($original_amount_exists) {
+                // Add after original_amount if it exists
+                $wpdb->query("ALTER TABLE {$promo_usage_table} ADD COLUMN discount_amount decimal(10,2) NOT NULL DEFAULT 0.00 AFTER original_amount");
+            } else {
+                // Add at the end if original_amount doesn't exist
+                $wpdb->query("ALTER TABLE {$promo_usage_table} ADD COLUMN discount_amount decimal(10,2) NOT NULL DEFAULT 0.00");
+            }
+        }
+        
+        // Check if final_amount column exists
+        if (!in_array('final_amount', $existing_columns)) {
+            if (in_array('discount_amount', $existing_columns)) {
+                // Add after discount_amount if it exists
+                $wpdb->query("ALTER TABLE {$promo_usage_table} ADD COLUMN final_amount decimal(10,2) NOT NULL DEFAULT 0.00 AFTER discount_amount");
+            } else {
+                // Add at the end if discount_amount doesn't exist
+                $wpdb->query("ALTER TABLE {$promo_usage_table} ADD COLUMN final_amount decimal(10,2) NOT NULL DEFAULT 0.00");
+            }
+        }
+        
+        // Check if user_agent column exists
+        if (!in_array('user_agent', $existing_columns)) {
+            if (in_array('ip_address', $existing_columns)) {
+                // Add after ip_address if it exists
+                $wpdb->query("ALTER TABLE {$promo_usage_table} ADD COLUMN user_agent text AFTER ip_address");
+            } else {
+                // Add at the end if ip_address doesn't exist
+                $wpdb->query("ALTER TABLE {$promo_usage_table} ADD COLUMN user_agent text");
+            }
+        }
+        
+        // Check if original_amount column exists and add it if missing
+        if (!$original_amount_exists) {
+            // Add original_amount column - try to add after plan_id if it exists, otherwise at the end
+            if (in_array('plan_id', $existing_columns)) {
+                $wpdb->query("ALTER TABLE {$promo_usage_table} ADD COLUMN original_amount decimal(10,2) NOT NULL DEFAULT 0.00 AFTER plan_id");
+            } else {
+                $wpdb->query("ALTER TABLE {$promo_usage_table} ADD COLUMN original_amount decimal(10,2) NOT NULL DEFAULT 0.00");
+            }
+        }
+    }
+
+    /**
+     * Verify table structure is correct
+     */
+    public static function verify_table_structure() {
+        global $wpdb;
+        
+        $promo_usage_table = $wpdb->prefix . 'flexpress_promo_usage';
+        
+        // Check if table exists
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$promo_usage_table'") == $promo_usage_table;
+        
+        if (!$table_exists) {
+            // Table doesn't exist, create it
+            self::create_promo_usage_table();
+            return;
+        }
+        
+        // Get current table structure
+        $columns = $wpdb->get_results("DESCRIBE {$promo_usage_table}");
+        $existing_columns = array();
+        foreach ($columns as $column) {
+            $existing_columns[] = $column->Field;
+        }
+        
+        // Required columns for the promo usage table
+        $required_columns = array(
+            'id', 'promo_code_id', 'promo_code', 'user_id', 'order_id', 
+            'plan_id', 'original_amount', 'discount_amount', 'final_amount', 
+            'used_at', 'ip_address', 'user_agent'
+        );
+        
+        $missing_columns = array_diff($required_columns, $existing_columns);
+        
+        if (!empty($missing_columns)) {
+            // Some columns are missing, try to add them
+            error_log('FlexPress: Missing columns in promo_usage table: ' . implode(', ', $missing_columns));
+            self::update_existing_tables();
+        }
+    }
+
+    /**
+     * Force recreate promo usage table if structure is broken
+     */
+    public static function force_recreate_promo_usage_table() {
+        global $wpdb;
+        
+        $promo_usage_table = $wpdb->prefix . 'flexpress_promo_usage';
+        
+        // Drop the table if it exists
+        $wpdb->query("DROP TABLE IF EXISTS {$promo_usage_table}");
+        
+        // Create it fresh
+        self::create_promo_usage_table();
+        
+        return 'Promo usage table recreated successfully!';
+    }
+
+    /**
+     * Check if promo codes tables exist
+     */
+    public function tables_exist() {
+        global $wpdb;
+        
+        $promo_codes_table = $wpdb->prefix . 'flexpress_promo_codes';
+        $promo_usage_table = $wpdb->prefix . 'flexpress_promo_usage';
+        
+        $promo_codes_exists = $wpdb->get_var("SHOW TABLES LIKE '$promo_codes_table'") == $promo_codes_table;
+        $promo_usage_exists = $wpdb->get_var("SHOW TABLES LIKE '$promo_usage_table'") == $promo_usage_table;
+        
+        return $promo_codes_exists && $promo_usage_exists;
     }
 
     /**
@@ -227,9 +402,15 @@ class FlexPress_Affiliate_Settings {
         add_action('wp_ajax_toggle_promo_status', array($this, 'toggle_promo_status'));
         add_action('wp_ajax_get_promo_details', array($this, 'get_promo_details'));
         add_action('wp_ajax_get_promo_codes_list', array($this, 'get_promo_codes_list'));
+        add_action('wp_ajax_create_tables_manually', array($this, 'create_tables_manually_ajax'));
+        add_action('wp_ajax_update_tables_manually', array($this, 'update_tables_manually_ajax'));
+        add_action('wp_ajax_force_recreate_promo_table', array($this, 'force_recreate_promo_table_ajax'));
         
         // Create table on theme activation
         add_action('after_switch_theme', array(__CLASS__, 'create_affiliate_tables'));
+        
+        // Also create tables on admin init to ensure they exist
+        add_action('admin_init', array(__CLASS__, 'ensure_tables_exist'));
     }
 
     /**
@@ -244,6 +425,22 @@ class FlexPress_Affiliate_Settings {
             'flexpress-affiliate-settings',
             array($this, 'render_affiliate_settings_page')
         );
+    }
+
+    /**
+     * Ensure tables exist before rendering the page
+     */
+    public function render_affiliate_settings_page() {
+        // Ensure tables exist
+        try {
+            self::create_affiliate_tables();
+        } catch (Exception $e) {
+            // Log error but continue rendering
+            error_log('FlexPress: Error creating tables: ' . $e->getMessage());
+        }
+        
+        // Continue with the original rendering
+        $this->render_affiliate_settings_page_content();
     }
 
     /**
@@ -516,9 +713,9 @@ class FlexPress_Affiliate_Settings {
     }
 
     /**
-     * Render the affiliate settings page
+     * Render the affiliate settings page content
      */
-    public function render_affiliate_settings_page() {
+    public function render_affiliate_settings_page_content() {
         $affiliate_settings = get_option('flexpress_affiliate_settings', array());
         $is_enabled = !empty($affiliate_settings['module_enabled']);
         ?>
@@ -620,11 +817,26 @@ class FlexPress_Affiliate_Settings {
                 <div id="promo-codes" class="tab-content">
                     <div class="promo-codes-header">
                         <h2><?php esc_html_e('Promo Codes', 'flexpress'); ?></h2>
-                        <button type="button" class="button button-primary" id="add-new-promo">
-                            <?php esc_html_e('Add New Promo Code', 'flexpress'); ?>
-                        </button>
+                        <div class="header-buttons">
+                            <button type="button" class="button button-primary" id="add-new-promo">
+                                <?php esc_html_e('Add New Promo Code', 'flexpress'); ?>
+                            </button>
+                            <button type="button" class="button button-secondary" id="create-tables">
+                                <?php esc_html_e('Create Tables', 'flexpress'); ?>
+                            </button>
+                            <button type="button" class="button button-secondary" id="update-tables">
+                                <?php esc_html_e('Update Tables', 'flexpress'); ?>
+                            </button>
+                        </div>
                     </div>
                     <p><?php esc_html_e('Manage promotional codes and their usage.', 'flexpress'); ?></p>
+                    
+                    <?php if (!$this->tables_exist()): ?>
+                        <div class="notice notice-error">
+                            <p><strong><?php esc_html_e('Database tables not found!', 'flexpress'); ?></strong></p>
+                            <p><?php esc_html_e('The promo codes database tables have not been created yet. Click the "Create Tables" button above to set up the database.', 'flexpress'); ?></p>
+                        </div>
+                    <?php endif; ?>
                     
                     <!-- Promo Codes Stats -->
                     <div class="promo-stats-cards">
@@ -1235,6 +1447,18 @@ class FlexPress_Affiliate_Settings {
             .affiliate-dashboard {
                 margin-top: 20px;
             }
+            
+            .promo-codes-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            
+            .header-buttons {
+                display: flex;
+                gap: 10px;
+            }
             .stats-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1416,6 +1640,16 @@ class FlexPress_Affiliate_Settings {
                 // Add new promo button
                 $('#add-new-promo').on('click', function() {
                     openPromoModal();
+                });
+                
+                // Create tables button
+                $('#create-tables').on('click', function() {
+                    createTables();
+                });
+                
+                // Update tables button
+                $('#update-tables').on('click', function() {
+                    updateTables();
                 });
                 
                 // Discount type change handler
@@ -1687,6 +1921,58 @@ class FlexPress_Affiliate_Settings {
                         "'": '&#039;'
                     };
                     return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+                }
+                
+                function createTables() {
+                    if (!confirm('<?php esc_html_e('This will create the database tables for promo codes. Continue?', 'flexpress'); ?>')) {
+                        return;
+                    }
+                    
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'create_tables_manually',
+                            nonce: flexpressAffiliate.nonce
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                alert(response.data.message);
+                                location.reload();
+                            } else {
+                                alert('Error: ' + response.data.message);
+                            }
+                        },
+                        error: function() {
+                            alert('<?php esc_html_e('An error occurred while creating tables.', 'flexpress'); ?>');
+                        }
+                    });
+                }
+                
+                function updateTables() {
+                    if (!confirm('<?php esc_html_e('This will update the database tables to add missing columns. Continue?', 'flexpress'); ?>')) {
+                        return;
+                    }
+                    
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'update_tables_manually',
+                            nonce: flexpressAffiliate.nonce
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                alert(response.data.message);
+                                location.reload();
+                            } else {
+                                alert('Error: ' + response.data.message);
+                            }
+                        },
+                        error: function() {
+                            alert('<?php esc_html_e('An error occurred while updating tables.', 'flexpress'); ?>');
+                        }
+                    });
                 }
             });
             </script>
@@ -2121,6 +2407,10 @@ class FlexPress_Affiliate_Settings {
      * Get active promo count
      */
     public function get_active_promo_count() {
+        if (!$this->tables_exist()) {
+            return 0;
+        }
+        
         global $wpdb;
         $table_name = $wpdb->prefix . 'flexpress_promo_codes';
         
@@ -2132,6 +2422,10 @@ class FlexPress_Affiliate_Settings {
      * Get total usage count
      */
     public function get_total_usage_count() {
+        if (!$this->tables_exist()) {
+            return 0;
+        }
+        
         global $wpdb;
         $table_name = $wpdb->prefix . 'flexpress_promo_usage';
         
@@ -2143,6 +2437,10 @@ class FlexPress_Affiliate_Settings {
      * Get total discounts given
      */
     public function get_total_discounts() {
+        if (!$this->tables_exist()) {
+            return 0;
+        }
+        
         global $wpdb;
         $table_name = $wpdb->prefix . 'flexpress_promo_usage';
         
@@ -2154,6 +2452,10 @@ class FlexPress_Affiliate_Settings {
      * Get expired promo count
      */
     public function get_expired_promo_count() {
+        if (!$this->tables_exist()) {
+            return 0;
+        }
+        
         global $wpdb;
         $table_name = $wpdb->prefix . 'flexpress_promo_codes';
         
@@ -2165,6 +2467,11 @@ class FlexPress_Affiliate_Settings {
      * Render promo codes table
      */
     public function render_promo_codes_table() {
+        if (!$this->tables_exist()) {
+            echo '<tr><td colspan="8">' . esc_html__('Database tables not found. Please click "Create Tables" to set up the database.', 'flexpress') . '</td></tr>';
+            return;
+        }
+        
         global $wpdb;
         $table_name = $wpdb->prefix . 'flexpress_promo_codes';
         
@@ -2444,6 +2751,62 @@ class FlexPress_Affiliate_Settings {
         );
         
         wp_send_json_success($promo_codes);
+    }
+
+    /**
+     * Create tables manually via AJAX
+     */
+    public function create_tables_manually_ajax() {
+        check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_die('Insufficient permissions');
+        }
+        
+        try {
+            self::create_affiliate_tables();
+            self::update_existing_tables();
+            self::verify_table_structure();
+            wp_send_json_success(array('message' => 'Tables created, updated, and verified successfully!'));
+        } catch (Exception $e) {
+            wp_send_json_error(array('message' => 'Error creating tables: ' . $e->getMessage()));
+        }
+    }
+
+    /**
+     * Update tables manually via AJAX
+     */
+    public function update_tables_manually_ajax() {
+        check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_die('Insufficient permissions');
+        }
+        
+        try {
+            self::update_existing_tables();
+            wp_send_json_success(array('message' => 'Tables updated successfully!'));
+        } catch (Exception $e) {
+            wp_send_json_error(array('message' => 'Error updating tables: ' . $e->getMessage()));
+        }
+    }
+
+    /**
+     * Force recreate promo usage table via AJAX
+     */
+    public function force_recreate_promo_table_ajax() {
+        check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_die('Insufficient permissions');
+        }
+        
+        try {
+            $result = self::force_recreate_promo_usage_table();
+            wp_send_json_success(array('message' => $result));
+        } catch (Exception $e) {
+            wp_send_json_error(array('message' => 'Error recreating table: ' . $e->getMessage()));
+        }
     }
 }
 

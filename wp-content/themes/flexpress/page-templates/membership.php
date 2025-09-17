@@ -8,20 +8,45 @@
 get_header();
 
 // Get current user membership status
+$is_logged_in = is_user_logged_in();
 $membership_status = 'none';
 $next_rebill_date = '';
 $subscription_type = '';
 
-if (is_user_logged_in() && function_exists('flexpress_get_membership_status')) {
+if ($is_logged_in && function_exists('flexpress_get_membership_status')) {
     $current_user_id = get_current_user_id();
     $membership_status = flexpress_get_membership_status($current_user_id);
     $next_rebill_date = get_user_meta($current_user_id, 'next_rebill_date', true);
     $subscription_type = get_user_meta($current_user_id, 'subscription_type', true);
 }
 
-// Get pricing plans from FlexPress settings
-$pricing_plans = flexpress_get_pricing_plans();
+// Check for promo code in URL
+$promo_code = isset($_GET['promo']) ? sanitize_text_field($_GET['promo']) : '';
+
+// Get pricing plans from FlexPress settings (include promo code to unlock promo-only plans)
+$pricing_plans = flexpress_get_pricing_plans(true, $promo_code);
 $featured_plan = flexpress_get_featured_pricing_plan();
+
+// Check for error messages
+$error_message = '';
+if (isset($_GET['error'])) {
+    switch ($_GET['error']) {
+        case 'payment_session_needed':
+            $error_message = __('Payment session creation is required. Please try again.', 'flexpress');
+            break;
+        case 'invalid_plan':
+            $error_message = __('The selected plan is not valid. Please choose a different plan.', 'flexpress');
+            break;
+        case 'session_creation_failed':
+            $error_message = __('Failed to create payment session. Please try again.', 'flexpress');
+            break;
+        case 'flowguard_not_available':
+            $error_message = __('Payment system is temporarily unavailable. Please try again later.', 'flexpress');
+            break;
+        default:
+            $error_message = __('An error occurred. Please try again.', 'flexpress');
+    }
+}
 ?>
 
 <div class="membership-page">
@@ -30,6 +55,13 @@ $featured_plan = flexpress_get_featured_pricing_plan();
             <div class="col-md-10 text-center">
                 <h1 class="display-4 mb-4"><?php esc_html_e('Premium Membership', 'flexpress'); ?></h1>
                 <p class="lead mb-4"><?php esc_html_e('Unlock unlimited access to our exclusive content with a premium membership.', 'flexpress'); ?></p>
+                
+                <?php if (!empty($error_message)): ?>
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <?php echo esc_html($error_message); ?>
+                    </div>
+                <?php endif; ?>
                 
                 <?php if ($membership_status === 'active'): ?>
                     <div class="alert alert-success" role="alert">
@@ -85,125 +117,267 @@ $featured_plan = flexpress_get_featured_pricing_plan();
             </div>
         </div>
 
-        <div class="row justify-content-center">
-            <?php if (!empty($pricing_plans)): ?>
-                <?php foreach ($pricing_plans as $plan_id => $plan): ?>
-                    <?php 
-                        $is_featured = $featured_plan && $featured_plan['id'] === $plan_id;
-                        $plan_features = isset($plan['features']) ? $plan['features'] : array();
-                    ?>
-                    <div class="col-md-4 mb-4">
-                        <div class="card membership-card h-100 <?php echo $is_featured ? 'border-primary' : ''; ?>">
-                            <?php if ($is_featured): ?>
-                                <div class="card-header bg-primary text-white text-center py-3">
-                                    <span class="badge bg-white text-primary"><?php esc_html_e('Most Popular', 'flexpress'); ?></span>
+        <!-- Promo Code Section -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-8 col-xl-6">
+                <div class="promo-code-section">
+                    <p class="promo-code-label">
+                        <?php esc_html_e('Have a coupon? Use it here', 'flexpress'); ?>
+                        <i class="fas fa-chevron-down ms-2"></i>
+                    </p>
+                    <div class="promo-code-input">
+                        <div class="input-group">
+                            <input type="text" id="membership-promo-code" class="form-control" 
+                                   placeholder="<?php esc_attr_e('Enter your promo code', 'flexpress'); ?>"
+                                   value="<?php echo esc_attr($promo_code); ?>">
+                            <button type="button" id="apply-membership-promo" class="btn btn-primary">
+                                <?php esc_html_e('Apply', 'flexpress'); ?>
+                            </button>
+                        </div>
+                        <div id="membership-promo-message" class="promo-code-message mt-2">
+                            <?php if (!empty($promo_code)): ?>
+                                <div class="promo-applied-message text-success">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    <?php echo sprintf(esc_html__('Promo code "%s" applied!', 'flexpress'), esc_html($promo_code)); ?>
                                 </div>
                             <?php endif; ?>
-                            <div class="card-body d-flex flex-column">
-                                <h2 class="card-title text-center mb-4"><?php echo esc_html($plan['name']); ?></h2>
-                                <div class="price-container text-center mb-4">
-                                    <span class="currency"><?php echo esc_html($plan['currency']); ?></span>
-                                    <span class="price display-4"><?php echo esc_html(number_format($plan['price'], 2)); ?></span>
-                                    <span class="period">/ <?php echo esc_html(flexpress_format_plan_duration($plan)); ?></span>
-                                </div>
-                                <p class="card-text text-center mb-4"><?php echo esc_html($plan['description']); ?></p>
-                                
-                                <?php if (!empty($plan_features)): ?>
-                                    <ul class="list-group list-group-flush mb-4">
-                                        <?php foreach ($plan_features as $feature): ?>
-                                            <li class="list-group-item bg-transparent">
-                                                <i class="fas fa-check text-success me-2"></i>
-                                                <?php echo esc_html($feature); ?>
-                                            </li>
-                                        <?php endforeach; ?>
-                                    </ul>
-                                <?php endif; ?>
-                                
-                                <div class="mt-auto">
-                                    <?php if (!is_user_logged_in()): ?>
-                                        <a href="<?php echo esc_url(home_url('/join')); ?>" class="btn btn-primary btn-lg w-100">
-                                            <?php esc_html_e('Sign Up Now', 'flexpress'); ?>
-                                        </a>
-                                    <?php elseif ($membership_status !== 'active' && $membership_status !== 'banned'): ?>
-                                        <button type="button" class="btn btn-primary btn-lg w-100 flexpress-select-plan" 
-                                                data-plan-id="<?php echo esc_attr($plan_id); ?>"
-                                                data-plan-name="<?php echo esc_attr($plan['name']); ?>"
-                                                data-plan-price="<?php echo esc_attr($plan['price']); ?>"
-                                                data-plan-currency="<?php echo esc_attr($plan['currency']); ?>">
-                                            <?php esc_html_e('Subscribe Now', 'flexpress'); ?>
-                                        </button>
-                                    <?php else: ?>
-                                        <button class="btn btn-secondary btn-lg w-100" disabled>
-                                            <?php 
-                                            if ($membership_status === 'active') {
-                                                esc_html_e('Already Subscribed', 'flexpress');
-                                            } else {
-                                                esc_html_e('Account Suspended', 'flexpress');
-                                            }
-                                            ?>
-                                        </button>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
                         </div>
                     </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="col-12 text-center">
-                    <div class="alert alert-warning">
-                        <p class="mb-0"><?php esc_html_e('No pricing plans are currently available. Please contact support.', 'flexpress'); ?></p>
-                    </div>
                 </div>
-            <?php endif; ?>
+            </div>
         </div>
 
+        <!-- Membership Selection Section -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-8 col-xl-6">
+                <div class="membership-selection-header">
+                    <h2 class="text-center mb-4"><?php esc_html_e('2. Select Deal', 'flexpress'); ?></h2>
+                    
+                    <!-- Plan Type Toggle -->
+                    <div class="plan-type-toggle mb-4">
+                        <div class="toggle-buttons">
+                            <button type="button" class="toggle-btn active" data-plan-type="recurring">
+                                <?php esc_html_e('Recurring', 'flexpress'); ?>
+                            </button>
+                            <button type="button" class="toggle-btn" data-plan-type="one_time">
+                                <?php esc_html_e('One Time', 'flexpress'); ?>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-center mb-4"><?php esc_html_e('Choose Join Option', 'flexpress'); ?></h3>
+                </div>
+                
+                <div class="membership-plans-list">
+                    <?php if (!empty($pricing_plans)): ?>
+                        <?php 
+                        // Sort plans by price (cheapest to most expensive)
+                        $sorted_plans = $pricing_plans;
+                        uasort($sorted_plans, function($a, $b) {
+                            return $a['price'] <=> $b['price'];
+                        });
+                        ?>
+                        <?php foreach ($sorted_plans as $plan_id => $plan): ?>
+                            <?php 
+                                $is_featured = $featured_plan && $featured_plan['id'] === $plan_id;
+                                $plan_features = isset($plan['features']) ? $plan['features'] : array();
+                                $plan_type_class = 'plan-type-' . $plan['plan_type'];
+                            ?>
+                            <div class="membership-plan-item <?php echo $is_featured ? 'popular-plan' : ''; ?> <?php echo esc_attr($plan_type_class); ?>" 
+                                 data-plan-type="<?php echo esc_attr($plan['plan_type']); ?>"
+                                 data-plan-id="<?php echo esc_attr($plan_id); ?>">
+                                <div class="plan-content">
+                                    <div class="plan-info">
+                                        <div class="plan-header">
+                                            <h5 class="plan-name"><?php echo esc_html($plan['name']); ?></h5>
+                                            <?php if ($is_featured): ?>
+                                            <span class="popular-badge"><?php esc_html_e('MOST POPULAR', 'flexpress'); ?></span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php if (!empty($plan['description'])): ?>
+                                        <p class="plan-description"><?php echo esc_html($plan['description']); ?></p>
+                                        <?php endif; ?>
+                                        <?php if ($plan['plan_type'] === 'recurring'): ?>
+                                        <p class="plan-billing"><?php esc_html_e('Recurring Charge / Billed As', 'flexpress'); ?> <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['price'], 2)); ?></p>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="plan-pricing">
+                                        <div class="price">
+                                            <span class="price-amount"><?php echo esc_html(flexpress_get_daily_rate_display($plan)); ?></span>
+                                            <small class="price-period">/Per Day</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="col-12 text-center">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <p class="mb-0"><?php esc_html_e('No pricing plans are currently available. Please contact support.', 'flexpress'); ?></p>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <?php if (!$is_logged_in): ?>
+        <!-- Registration/Login Section for Non-Logged In Users -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-8 col-xl-6">
+                <div class="registration-section">
+                    <h3 class="text-center mb-4"><?php esc_html_e('3. Create Your Account', 'flexpress'); ?></h3>
+                    
+                    <div class="auth-toggle mb-4">
+                        <div class="toggle-buttons">
+                            <button type="button" class="toggle-btn active" data-auth-type="register">
+                                <?php esc_html_e('Register', 'flexpress'); ?>
+                            </button>
+                            <button type="button" class="toggle-btn" data-auth-type="login">
+                                <?php esc_html_e('Login', 'flexpress'); ?>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Registration Form -->
+                    <div id="register-form" class="auth-form">
+                        <form id="membership-register-form" method="post">
+                            <div class="mb-3">
+                                <label for="reg-email" class="form-label"><?php esc_html_e('Email Address', 'flexpress'); ?></label>
+                                <input type="email" class="form-control" id="reg-email" name="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="reg-password" class="form-label"><?php esc_html_e('Password', 'flexpress'); ?></label>
+                                <input type="password" class="form-control" id="reg-password" name="password" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="reg-confirm-password" class="form-label"><?php esc_html_e('Confirm Password', 'flexpress'); ?></label>
+                                <input type="password" class="form-control" id="reg-confirm-password" name="confirm_password" required>
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="reg-terms" name="terms" required>
+                                <label class="form-check-label" for="reg-terms">
+                                    <?php esc_html_e('I agree to the', 'flexpress'); ?>
+                                    <a href="<?php echo esc_url(home_url('/terms')); ?>" target="_blank" class="legal-link"><?php esc_html_e('Terms of Service', 'flexpress'); ?></a>
+                                    <?php esc_html_e('and', 'flexpress'); ?>
+                                    <a href="<?php echo esc_url(home_url('/privacy-policy')); ?>" target="_blank" class="legal-link"><?php esc_html_e('Privacy Policy', 'flexpress'); ?></a>
+                                </label>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Login Form -->
+                    <div id="login-form" class="auth-form" style="display: none;">
+                        <form id="membership-login-form" method="post">
+                            <div class="mb-3">
+                                <label for="login-email" class="form-label"><?php esc_html_e('Email Address', 'flexpress'); ?></label>
+                                <input type="email" class="form-control" id="login-email" name="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="login-password" class="form-label"><?php esc_html_e('Password', 'flexpress'); ?></label>
+                                <input type="password" class="form-control" id="login-password" name="password" required>
+                            </div>
+                            <div class="mb-3">
+                                <a href="<?php echo esc_url(home_url('/lost-password')); ?>" class="legal-link"><?php esc_html_e('Forgot your password?', 'flexpress'); ?></a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Legal Text and Continue Button -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-8 col-xl-6">
+                <div class="legal-continue-section">
+                    <div class="legal-text mb-4">
+                        <p class="legal-disclaimer">
+                            <?php esc_html_e('By clicking CONTINUE, you confirm that you are at least 18 years old and agree to our', 'flexpress'); ?>
+                            <a href="<?php echo esc_url(home_url('/terms')); ?>" class="legal-link"><?php esc_html_e('Terms of Service', 'flexpress'); ?></a>.
+                            <?php esc_html_e('Your subscription will automatically renew at $29.95 every 30 days unless cancelled. You may cancel at any time', 'flexpress'); ?>
+                            <a href="<?php echo esc_url(home_url('/dashboard')); ?>" class="legal-link"><?php esc_html_e('here', 'flexpress'); ?></a>.
+                        </p>
+                    </div>
+                    
+                    <div class="continue-button-section text-center">
+                        <button type="button" id="membership-continue-btn" class="btn btn-primary btn-lg continue-btn">
+                            <?php esc_html_e('CONTINUE >', 'flexpress'); ?>
+                        </button>
+                    </div>
+                    
+                    <div class="trial-disclaimer mt-3">
+                        <p class="trial-text">
+                            <em><?php esc_html_e('* Limited Access 2 day trial automatically rebilling at $34.95 every 30 days until cancelled', 'flexpress'); ?></em>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Benefits Section -->
         <div class="row mt-5 justify-content-center">
+            <div class="col-12 text-center mb-5">
+                <h2 class="mb-3"><?php esc_html_e('Premium Membership Benefits', 'flexpress'); ?></h2>
+                <p class="lead text-muted"><?php esc_html_e('Everything you need for the ultimate viewing experience', 'flexpress'); ?></p>
+            </div>
+        </div>
+        
+        <div class="row justify-content-center">
             <div class="col-md-10">
-                <div class="card bg-dark text-white">
-                    <div class="card-body">
-                        <h3 class="card-title mb-4"><?php esc_html_e('Premium Membership Benefits', 'flexpress'); ?></h3>
-                        <div class="row">
-                            <div class="col-md-6 mb-4">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0">
-                                        <i class="fas fa-film fa-2x text-primary"></i>
+                <div class="card bg-dark">
+                    <div class="card-body p-5">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="benefit-item d-flex align-items-start">
+                                    <div class="benefit-icon flex-shrink-0 me-4">
+                                        <div class="icon-wrapper">
+                                            <i class="fas fa-film fa-2x"></i>
+                                        </div>
                                     </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <h4><?php esc_html_e('Unlimited Streaming', 'flexpress'); ?></h4>
-                                        <p><?php esc_html_e('Watch as much as you want, whenever you want. No limits, no restrictions.', 'flexpress'); ?></p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-4">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0">
-                                        <i class="fas fa-calendar-alt fa-2x text-primary"></i>
-                                    </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <h4><?php esc_html_e('New Content Weekly', 'flexpress'); ?></h4>
-                                        <p><?php esc_html_e('We add new premium videos every week, so you\'ll always have something fresh to watch.', 'flexpress'); ?></p>
+                                    <div class="benefit-content">
+                                        <h4 class="benefit-title mb-3"><?php esc_html_e('Unlimited Streaming', 'flexpress'); ?></h4>
+                                        <p class="benefit-description mb-0"><?php esc_html_e('Watch as much as you want, whenever you want. No limits, no restrictions.', 'flexpress'); ?></p>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6 mb-4">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0">
-                                        <i class="fas fa-download fa-2x text-primary"></i>
+                            <div class="col-md-6">
+                                <div class="benefit-item d-flex align-items-start">
+                                    <div class="benefit-icon flex-shrink-0 me-4">
+                                        <div class="icon-wrapper">
+                                            <i class="fas fa-calendar-alt fa-2x"></i>
+                                        </div>
                                     </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <h4><?php esc_html_e('Download Videos', 'flexpress'); ?></h4>
-                                        <p><?php esc_html_e('Download videos to watch offline on your devices when you\'re on the go.', 'flexpress'); ?></p>
+                                    <div class="benefit-content">
+                                        <h4 class="benefit-title mb-3"><?php esc_html_e('New Content Weekly', 'flexpress'); ?></h4>
+                                        <p class="benefit-description mb-0"><?php esc_html_e('We add new premium videos every week, so you\'ll always have something fresh to watch.', 'flexpress'); ?></p>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6 mb-4">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0">
-                                        <i class="fas fa-mobile-alt fa-2x text-primary"></i>
+                            <div class="col-md-6">
+                                <div class="benefit-item d-flex align-items-start">
+                                    <div class="benefit-icon flex-shrink-0 me-4">
+                                        <div class="icon-wrapper">
+                                            <i class="fas fa-download fa-2x"></i>
+                                        </div>
                                     </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <h4><?php esc_html_e('Watch Anywhere', 'flexpress'); ?></h4>
-                                        <p><?php esc_html_e('Stream on your TV, computer, tablet, or mobile device with our responsive player.', 'flexpress'); ?></p>
+                                    <div class="benefit-content">
+                                        <h4 class="benefit-title mb-3"><?php esc_html_e('Download Videos', 'flexpress'); ?></h4>
+                                        <p class="benefit-description mb-0"><?php esc_html_e('Download videos to watch offline on your devices when you\'re on the go.', 'flexpress'); ?></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="benefit-item d-flex align-items-start">
+                                    <div class="benefit-icon flex-shrink-0 me-4">
+                                        <div class="icon-wrapper">
+                                            <i class="fas fa-mobile-alt fa-2x"></i>
+                                        </div>
+                                    </div>
+                                    <div class="benefit-content">
+                                        <h4 class="benefit-title mb-3"><?php esc_html_e('Watch Anywhere', 'flexpress'); ?></h4>
+                                        <p class="benefit-description mb-0"><?php esc_html_e('Stream on your TV, computer, tablet, or mobile device with our responsive player.', 'flexpress'); ?></p>
                                     </div>
                                 </div>
                             </div>
@@ -213,44 +387,53 @@ $featured_plan = flexpress_get_featured_pricing_plan();
             </div>
         </div>
 
+        <!-- FAQ Section -->
         <div class="row mt-5 justify-content-center">
-            <div class="col-md-8 text-center">
-                <h2 class="mb-4"><?php esc_html_e('Frequently Asked Questions', 'flexpress'); ?></h2>
-                
+            <div class="col-12 text-center mb-5">
+                <h2 class="mb-3"><?php esc_html_e('Frequently Asked Questions', 'flexpress'); ?></h2>
+                <p class="lead text-muted"><?php esc_html_e('Got questions? We\'ve got answers', 'flexpress'); ?></p>
+            </div>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-md-8">
                 <div class="accordion" id="membershipFAQ">
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="faqOne">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                <i class="fas fa-question-circle me-3"></i>
                                 <?php esc_html_e('How do I cancel my subscription?', 'flexpress'); ?>
                             </button>
                         </h2>
                         <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="faqOne" data-bs-parent="#membershipFAQ">
                             <div class="accordion-body">
-                                <?php esc_html_e('You can cancel your subscription at any time from your my account page. Your membership will remain active until the end of your current billing period.', 'flexpress'); ?>
+                                <p class="mb-0"><?php esc_html_e('You can cancel your subscription at any time from your my account page. Your membership will remain active until the end of your current billing period.', 'flexpress'); ?></p>
                             </div>
                         </div>
                     </div>
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="faqTwo">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                <i class="fas fa-exchange-alt me-3"></i>
                                 <?php esc_html_e('Can I switch between plans?', 'flexpress'); ?>
                             </button>
                         </h2>
                         <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="faqTwo" data-bs-parent="#membershipFAQ">
                             <div class="accordion-body">
-                                <?php esc_html_e('Yes, you can upgrade or downgrade your plan at any time. If you upgrade, the new rate will be charged immediately. If you downgrade, the new rate will apply at your next billing cycle.', 'flexpress'); ?>
+                                <p class="mb-0"><?php esc_html_e('Yes, you can upgrade or downgrade your plan at any time. If you upgrade, the new rate will be charged immediately. If you downgrade, the new rate will apply at your next billing cycle.', 'flexpress'); ?></p>
                             </div>
                         </div>
                     </div>
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="faqThree">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                <i class="fas fa-gift me-3"></i>
                                 <?php esc_html_e('Is there a free trial?', 'flexpress'); ?>
                             </button>
                         </h2>
                         <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="faqThree" data-bs-parent="#membershipFAQ">
                             <div class="accordion-body">
-                                <?php esc_html_e('We occasionally offer free trial promotions for new members. Check our homepage or subscribe to our newsletter to stay informed about upcoming offers.', 'flexpress'); ?>
+                                <p class="mb-0"><?php esc_html_e('We occasionally offer free trial promotions for new members. Check our homepage or subscribe to our newsletter to stay informed about upcoming offers.', 'flexpress'); ?></p>
                             </div>
                         </div>
                     </div>
@@ -260,10 +443,314 @@ $featured_plan = flexpress_get_featured_pricing_plan();
     </div>
 </div>
 
+<?php
+// Enqueue and localize promo code script data
+wp_localize_script('jquery', 'flexpressPromo', array(
+    'ajaxurl' => admin_url('admin-ajax.php'),
+    'nonce' => wp_create_nonce('flexpress_promo_nonce')
+));
+?>
+
 <script>
-jQuery(document).ready(function($) {
-    $('.flexpress-select-plan').on('click', function() {
-        const $button = $(this);
+jQuery(document).ready(function() {
+    // Check if promo code is already applied from URL
+    let appliedPromo = null;
+    const urlPromoCode = '<?php echo esc_js($promo_code); ?>';
+    if (urlPromoCode) {
+        appliedPromo = {
+            code: urlPromoCode
+        };
+    }
+    
+    let selectedPlan = null;
+    let currentPlanType = 'recurring';
+    
+    // Plan type toggle functionality
+    jQuery('.toggle-btn[data-plan-type]').on('click', function() {
+        const planType = jQuery(this).data('plan-type');
+        currentPlanType = planType;
+        
+        // Update toggle buttons
+        jQuery('.toggle-btn[data-plan-type]').removeClass('active');
+        jQuery(this).addClass('active');
+        
+        // Show/hide plans based on type
+        jQuery('.membership-plan-item').hide();
+        jQuery('.membership-plan-item[data-plan-type="' + planType + '"]').show();
+        
+        // Reset selection
+        jQuery('.membership-plan-item').removeClass('selected');
+        jQuery('.membership-plan-item.popular-plan').removeClass('no-highlight');
+        selectedPlan = null;
+    });
+    
+    // Auth type toggle functionality (for non-logged in users)
+    jQuery('.toggle-btn[data-auth-type]').on('click', function() {
+        const authType = jQuery(this).data('auth-type');
+        
+        // Update toggle buttons
+        jQuery('.toggle-btn[data-auth-type]').removeClass('active');
+        jQuery(this).addClass('active');
+        
+        // Show/hide forms
+        if (authType === 'register') {
+            jQuery('#register-form').show();
+            jQuery('#login-form').hide();
+        } else {
+            jQuery('#register-form').hide();
+            jQuery('#login-form').show();
+        }
+    });
+    
+    // Plan selection functionality
+    jQuery('.membership-plan-item').on('click', function() {
+        jQuery('.membership-plan-item').removeClass('selected');
+        jQuery('.membership-plan-item.popular-plan').removeClass('no-highlight');
+        jQuery(this).addClass('selected');
+        
+        // Add no-highlight class to popular plans that are not selected
+        jQuery('.membership-plan-item.popular-plan:not(.selected)').addClass('no-highlight');
+        
+        selectedPlan = jQuery(this);
+    });
+    
+    // Continue button functionality - attach after DOM is ready
+    jQuery(document).ready(function() {
+        jQuery('#membership-continue-btn').on('click', function(e) {
+            e.preventDefault();
+            console.log('Continue button clicked!');
+            console.log('Selected plan:', selectedPlan);
+            
+            if (!selectedPlan) {
+                alert('Please select a membership plan first.');
+                return;
+            }
+            
+            const planId = selectedPlan.data('plan-id');
+            const planName = selectedPlan.find('.plan-name').text();
+            
+            // Get the price - check for discounted price first, then original price
+            let planPrice;
+            const discountedPriceElement = selectedPlan.find('.discounted-price');
+            if (discountedPriceElement.length > 0) {
+                planPrice = discountedPriceElement.text().replace(/[^0-9.]/g, '');
+            } else {
+                planPrice = selectedPlan.find('.price-amount').text().replace(/[^0-9.]/g, '');
+            }
+            
+            console.log('Plan ID:', planId);
+            console.log('Plan Name:', planName);
+            console.log('Plan Price:', planPrice);
+            
+            // Check if user is logged in
+            const isLoggedIn = <?php echo $is_logged_in ? 'true' : 'false'; ?>;
+            
+            if (isLoggedIn) {
+                // Logged in user - proceed to payment
+                let paymentUrl = '<?php echo esc_url(home_url('/payment')); ?>?plan=' + encodeURIComponent(planId);
+                
+                // Add promo code if applied
+                if (appliedPromo && appliedPromo.code) {
+                    paymentUrl += '&promo=' + encodeURIComponent(appliedPromo.code);
+                }
+                
+                console.log('Redirecting logged in user to:', paymentUrl);
+                window.location.href = paymentUrl;
+            } else {
+                // Non-logged in user - validate form and then register/login
+                const activeForm = jQuery('.auth-form:visible');
+                const isRegisterForm = activeForm.attr('id') === 'register-form';
+                
+                if (isRegisterForm) {
+                    // Validate registration form
+                    const email = jQuery('#reg-email').val();
+                    const password = jQuery('#reg-password').val();
+                    const confirmPassword = jQuery('#reg-confirm-password').val();
+                    const termsAccepted = jQuery('#reg-terms').is(':checked');
+                    
+                    if (!email || !password || !confirmPassword) {
+                        alert('Please fill in all fields.');
+                        return;
+                    }
+                    
+                    if (password !== confirmPassword) {
+                        alert('Passwords do not match.');
+                        return;
+                    }
+                    
+                    if (!termsAccepted) {
+                        alert('Please accept the terms and conditions.');
+                        return;
+                    }
+                    
+                    // TODO: Submit registration and then redirect to payment
+                    alert('Registration functionality will be implemented next.');
+                } else {
+                    // Validate login form
+                    const email = jQuery('#login-email').val();
+                    const password = jQuery('#login-password').val();
+                    
+                    if (!email || !password) {
+                        alert('Please fill in all fields.');
+                        return;
+                    }
+                    
+                    // TODO: Submit login and then redirect to payment
+                    alert('Login functionality will be implemented next.');
+                }
+            }
+        });
+    });
+    
+    // Initialize: show recurring plans by default
+    jQuery('.membership-plan-item').hide();
+    jQuery('.membership-plan-item[data-plan-type="recurring"]').show();
+    
+    // Auto-select the most popular plan on page load
+    const popularPlan = jQuery('.membership-plan-item.popular-plan:visible').first();
+    if (popularPlan.length > 0) {
+        // Apply the same logic as clicking a plan
+        jQuery('.membership-plan-item').removeClass('selected');
+        jQuery('.membership-plan-item.popular-plan').removeClass('no-highlight');
+        popularPlan.addClass('selected');
+        
+        // Add no-highlight class to other popular plans that are not selected
+        jQuery('.membership-plan-item.popular-plan:not(.selected)').addClass('no-highlight');
+        
+        selectedPlan = popularPlan;
+        console.log('Auto-selected popular plan:', selectedPlan);
+    }
+    
+    // Debug: Check if continue button exists
+    const continueBtn = jQuery('#membership-continue-btn');
+    console.log('Continue button found:', continueBtn.length > 0);
+    
+    // Prevent Enter key from submitting promo code
+    jQuery('#membership-promo-code').on('keypress', function(e) {
+        if (e.which === 13) { // Enter key
+            e.preventDefault();
+            jQuery('#apply-membership-promo').click();
+        }
+    });
+    
+    // Promo code functionality
+    jQuery('#apply-membership-promo').on('click', function() {
+        const code = jQuery('#membership-promo-code').val().trim();
+        
+        if (!code) {
+            showPromoMessage('Please enter a promo code', 'error');
+            return;
+        }
+        
+        // Apply promo code
+        jQuery.ajax({
+            url: flexpressPromo.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'apply_promo_code',
+                code: code,
+                nonce: flexpressPromo.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    appliedPromo = response.data;
+                    showPromoMessage('Promo code "' + response.data.code + '" applied! You saved ' + response.data.discount_value + '% on your subscription.', 'success');
+                    jQuery('#membership-promo-code').val('');
+                    
+                    // Reload the page to show promo-only plans and updated pricing
+                    const currentUrl = new URL(window.location.href);
+                    currentUrl.searchParams.set('promo', response.data.code);
+                    window.location.href = currentUrl.toString();
+                } else {
+                    showPromoMessage(response.data.message || 'Invalid promo code', 'error');
+                }
+            },
+            error: function() {
+                showPromoMessage('An error occurred. Please try again.', 'error');
+            }
+        });
+    });
+    
+    // Remove promo code
+    function removePromoCode() {
+        jQuery.ajax({
+            url: flexpressPromo.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'remove_promo_code',
+                nonce: flexpressPromo.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    appliedPromo = null;
+                    showPromoMessage('Promo code removed', 'info');
+                    updatePlanPrices();
+                }
+            }
+        });
+    }
+    
+    function showPromoMessage(message, type) {
+        const messageDiv = jQuery('#membership-promo-message');
+        messageDiv.removeClass('success error info').addClass(type);
+        messageDiv.text(message).show();
+        
+        setTimeout(() => {
+            messageDiv.hide();
+        }, 5000);
+    }
+    
+    function updatePlanPrices() {
+        console.log('updatePlanPrices called, appliedPromo:', appliedPromo);
+        jQuery('.membership-card').each(function() {
+            const $card = jQuery(this);
+            const $price = $card.find('.price');
+            const originalPrice = parseFloat($price.data('original-price') || $price.text().replace(/[^0-9.]/g, ''));
+            console.log('Processing card, original price:', originalPrice);
+            
+            if (appliedPromo && appliedPromo.discount_type && appliedPromo.discount_value) {
+                // Calculate discount based on promo code settings
+                let discountAmount = 0;
+                if (appliedPromo.discount_type === 'percentage') {
+                    discountAmount = (originalPrice * appliedPromo.discount_value) / 100;
+                } else {
+                    discountAmount = appliedPromo.discount_value;
+                }
+                
+                // Apply maximum discount limit if set
+                if (appliedPromo.maximum_discount > 0 && discountAmount > appliedPromo.maximum_discount) {
+                    discountAmount = appliedPromo.maximum_discount;
+                }
+                
+                const discountedPrice = Math.max(0, originalPrice - discountAmount);
+                
+                // Update price display
+                $price.html('<span class="original-price text-decoration-line-through text-muted me-2">$' + originalPrice.toFixed(2) + '</span><span class="discounted-price text-success fw-bold">$' + discountedPrice.toFixed(2) + '</span>');
+                
+                // Add discount indicator
+                if (!$card.find('.discount-indicator').length) {
+                    const discountText = appliedPromo.discount_type === 'percentage' 
+                        ? appliedPromo.discount_value + '% OFF' 
+                        : 'Save $' + discountAmount.toFixed(2);
+                    $price.after('<small class="discount-indicator text-success d-block fw-bold">' + discountText + '</small>');
+                }
+            } else {
+                $price.text('$' + originalPrice.toFixed(2));
+                $price.removeClass('text-success');
+                $card.find('.discount-indicator').remove();
+            }
+        });
+    }
+    
+    // Store original prices
+    jQuery('.membership-plan-item .price-amount').each(function() {
+        const originalPrice = parseFloat(jQuery(this).text().replace(/[^0-9.]/g, ''));
+        jQuery(this).data('original-price', originalPrice);
+    });
+    
+    // Plan selection with promo code
+    jQuery('.flexpress-select-plan').on('click', function() {
+        const $button = jQuery(this);
         const planId = $button.data('plan-id');
         const planName = $button.data('plan-name');
         const planPrice = $button.data('plan-price');
@@ -274,13 +761,14 @@ jQuery(document).ready(function($) {
         const originalText = $button.text();
         $button.html('<span class="spinner-border spinner-border-sm me-2" role="status"></span>Processing...');
         
-        // Create Flowguard payment session
+        // Create Flowguard payment session with promo code
         $.ajax({
             url: '<?php echo admin_url('admin-ajax.php'); ?>',
             type: 'POST',
             data: {
                 action: 'flexpress_create_flowguard_payment',
                 plan_id: planId,
+                promo_code: appliedPromo ? appliedPromo.code : '',
                 nonce: '<?php echo wp_create_nonce('flexpress_payment_nonce'); ?>'
             },
             success: function(response) {
@@ -304,4 +792,5 @@ jQuery(document).ready(function($) {
 });
 </script>
 
+<?php get_footer(); ?> 
 <?php get_footer(); ?> 

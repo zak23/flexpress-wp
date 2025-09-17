@@ -11,9 +11,105 @@
 get_header();
 
 $session_id = isset($_GET['session_id']) ? sanitize_text_field($_GET['session_id']) : '';
+$plan_id = isset($_GET['plan']) ? sanitize_text_field($_GET['plan']) : '';
+$promo_code = isset($_GET['promo']) ? sanitize_text_field($_GET['promo']) : '';
 
+// If no session_id but we have a plan, handle based on login status
+if (empty($session_id) && !empty($plan_id)) {
+    if (is_user_logged_in()) {
+        // Logged in user with plan - create Flowguard session
+        $user_id = get_current_user_id();
+        
+        // Get the pricing plan details (include promo code for pricing)
+        $pricing_plans = flexpress_get_pricing_plans(true, $promo_code);
+        if (!isset($pricing_plans[$plan_id])) {
+            wp_redirect(home_url('/membership?error=invalid_plan'));
+            exit;
+        }
+        
+        $plan = $pricing_plans[$plan_id];
+        
+        // Create Flowguard payment session using API
+        if (function_exists('flexpress_get_flowguard_api')) {
+            $api = flexpress_get_flowguard_api();
+            
+            if (!$api) {
+                wp_redirect(home_url('/membership?error=flowguard_not_available'));
+                exit;
+            }
+            
+        // Get payment data
+        $payment_data_result = flexpress_create_flowguard_payment_data($plan_id, $plan, $user_id);
+        
+        if (!$payment_data_result['success']) {
+            wp_redirect(home_url('/membership?error=session_creation_failed'));
+            exit;
+        }
+        
+        $payment_data = $payment_data_result['data'];
+        
+        // Apply promo code discount if provided
+        if (!empty($promo_code)) {
+            // Validate and apply promo code
+            if (class_exists('FlexPress_Promo_Codes')) {
+                $promo_codes = new FlexPress_Promo_Codes();
+                $original_amount = $plan['price'];
+                $validation = $promo_codes->validate_promo_code_logic($promo_code, $user_id, $plan_id, $original_amount);
+                
+                if ($validation['valid']) {
+                    // Use the calculated discount and final amount from validation
+                    $final_amount = $validation['final_amount'];
+                    
+                    // Update payment data with discounted amount
+                    $payment_data['priceAmount'] = number_format($final_amount, 2, '.', '');
+                    
+                    // Apply discount to trial amount if plan has trial enabled
+                    if (!empty($plan['trial_enabled']) && isset($payment_data['trialAmount'])) {
+                        $original_trial_amount = $plan['trial_price'];
+                        
+                        // Validate promo code for trial amount
+                        $trial_validation = $promo_codes->validate_promo_code_logic($promo_code, $user_id, $plan_id, $original_trial_amount);
+                        
+                        if ($trial_validation['valid']) {
+                            $discounted_trial_amount = $trial_validation['final_amount'];
+                            $payment_data['trialAmount'] = number_format($discounted_trial_amount, 2, '.', '');
+                        }
+                    }
+                }
+            }
+        }
+            
+            // Create session using API
+            if ($plan['plan_type'] === 'one_time' || $plan['plan_type'] === 'lifetime') {
+                $result = $api->start_purchase($payment_data);
+            } else {
+                $result = $api->start_subscription($payment_data);
+            }
+            
+            if ($result['success'] && !empty($result['session_id'])) {
+                // Redirect to payment page with session ID
+                wp_redirect(home_url('/payment?session_id=' . urlencode($result['session_id'])));
+                exit;
+            } else {
+                // Failed to create session
+                wp_redirect(home_url('/membership?error=session_creation_failed'));
+                exit;
+            }
+        } else {
+            // Fallback - redirect with error
+            wp_redirect(home_url('/membership?error=flowguard_not_available'));
+            exit;
+        }
+    } else {
+        // Not logged in - redirect to membership page to register/login
+        wp_redirect(home_url('/membership?plan=' . urlencode($plan_id)));
+        exit;
+    }
+}
+
+// If no session_id and no plan, redirect to membership page
 if (empty($session_id)) {
-    wp_redirect(home_url('/join'));
+    wp_redirect(home_url('/membership'));
     exit;
 }
 
@@ -43,20 +139,6 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
                     </div>
                     <div id="payment-pending" class="alert alert-warning" style="display: none;"></div>
                     
-                    <!-- Promo Code Section -->
-                    <div class="promo-code-section mb-4">
-                        <div class="promo-code-input">
-                            <label for="promo-code"><?php esc_html_e('Promo Code', 'flexpress'); ?></label>
-                            <div class="promo-code-field">
-                                <input type="text" id="promo-code" name="promo_code" 
-                                       placeholder="<?php esc_attr_e('Enter promo code', 'flexpress'); ?>">
-                                <button type="button" id="apply-promo-code" class="btn btn-outline-primary">
-                                    <?php esc_html_e('Apply', 'flexpress'); ?>
-                                </button>
-                            </div>
-                            <div id="promo-code-message" class="promo-code-message"></div>
-                        </div>
-                    </div>
                     
                     <!-- Payment Form Container -->
                     <div id="flowguard-payment-form" class="payment-form-container">
@@ -129,135 +211,10 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
 
 <!-- Load validation styles -->
 <link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/assets/css/flowguard-validation.css">
-<link rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/assets/css/promo-codes.css">
 
 <script>
-// Promo code functionality
-let appliedPromo = null;
-let originalAmount = 0;
-
-// Apply promo code
-function applyPromoCode() {
-    const code = document.getElementById('promo-code').value.trim();
-    
-    if (!code) {
-        showPromoMessage('Please enter a promo code', 'error');
-        return;
-    }
-    
-    // Get current amount from session or form
-    const amount = originalAmount || 0;
-    
-    fetch(ajaxurl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-            action: 'apply_promo_code',
-            code: code,
-            amount: amount
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            appliedPromo = data.data;
-            showAppliedPromo(data.data);
-            updatePaymentAmount(data.data.final_amount);
-            showPromoMessage(data.data.message, 'success');
-        } else {
-            showPromoMessage(data.data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error applying promo code:', error);
-        showPromoMessage('An error occurred. Please try again.', 'error');
-    });
-}
-
-// Remove promo code
-function removePromoCode() {
-    fetch(ajaxurl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-            action: 'remove_promo_code'
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            appliedPromo = null;
-            hideAppliedPromo();
-            resetPaymentAmount();
-            showPromoMessage('Promo code removed', 'success');
-        }
-    });
-}
-
-function showPromoMessage(message, type) {
-    const messageDiv = document.getElementById('promo-code-message');
-    messageDiv.className = 'promo-code-message ' + type;
-    messageDiv.textContent = message;
-    messageDiv.style.display = 'block';
-    
-    setTimeout(() => {
-        messageDiv.style.display = 'none';
-    }, 5000);
-}
-
-function showAppliedPromo(data) {
-    const promoSection = document.querySelector('.promo-code-section');
-    const existingPromo = document.querySelector('.applied-promo');
-    
-    if (existingPromo) {
-        existingPromo.remove();
-    }
-    
-    const promoHtml = `
-        <div class="applied-promo">
-            <strong>Promo Code Applied:</strong> ${data.code}<br>
-            Discount: $${data.discount_amount.toFixed(2)}<br>
-            <span class="remove-promo" onclick="removePromoCode()">Remove</span>
-        </div>
-    `;
-    
-    promoSection.insertAdjacentHTML('beforeend', promoHtml);
-    document.getElementById('promo-code').value = '';
-}
-
-function hideAppliedPromo() {
-    const appliedPromo = document.querySelector('.applied-promo');
-    if (appliedPromo) {
-        appliedPromo.remove();
-    }
-}
-
-function updatePaymentAmount(finalAmount) {
-    // Update any amount displays on the page
-    const amountElements = document.querySelectorAll('.payment-amount, .amount-display');
-    amountElements.forEach(element => {
-        element.textContent = '$' + finalAmount.toFixed(2);
-    });
-    
-    // Store the final amount for payment processing
-    window.finalPaymentAmount = finalAmount;
-}
-
-function resetPaymentAmount() {
-    if (originalAmount > 0) {
-        updatePaymentAmount(originalAmount);
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function() {
     const sessionId = '<?php echo esc_js($session_id); ?>';
-    
-    // Setup promo code button
-    document.getElementById('apply-promo-code').addEventListener('click', applyPromoCode);
     
     // Initialize Flowguard configuration
     window.flowguardConfig = {

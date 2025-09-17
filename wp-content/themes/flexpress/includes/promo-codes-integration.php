@@ -47,24 +47,104 @@ class FlexPress_Promo_Codes_Integration {
             wp_send_json_error(array('message' => 'Please enter a promo code'));
         }
         
-        $promo_codes = new FlexPress_Promo_Codes();
-        $validation = $promo_codes->validate_promo_code_logic($code, get_current_user_id(), $plan_id, $amount);
-        
-        if ($validation['valid']) {
-            // Store promo code in session for payment processing
+        // For membership page, we'll do basic validation and store the code
+        // Full validation will happen when user selects a plan
+        if (empty($plan_id) && $amount == 0) {
+            // Hardcoded promo codes for testing (until database is properly set up)
+            $hardcoded_promos = array(
+                'shotbycraig' => array(
+                    'id' => 1,
+                    'code' => 'shotbycraig',
+                    'name' => 'Craig\'s 10% Off',
+                    'discount_type' => 'percentage',
+                    'discount_value' => 10,
+                    'maximum_discount' => 0,
+                    'status' => 'active'
+                ),
+                'testcode' => array(
+                    'id' => 2,
+                    'code' => 'testcode',
+                    'name' => 'Test Code',
+                    'discount_type' => 'fixed',
+                    'discount_value' => 5,
+                    'maximum_discount' => 0,
+                    'status' => 'active'
+                )
+            );
+            
+            // Check hardcoded promos first
+            if (isset($hardcoded_promos[$code])) {
+                $promo = $hardcoded_promos[$code];
+            } else {
+                // Try database lookup
+                global $wpdb;
+                $promo_table = $wpdb->prefix . 'flexpress_promo_codes';
+                
+                // Check if table exists
+                $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$promo_table}'") == $promo_table;
+                
+                if ($table_exists) {
+                    $promo = $wpdb->get_row($wpdb->prepare(
+                        "SELECT * FROM {$promo_table} WHERE code = %s AND status = 'active'",
+                        $code
+                    ));
+                    
+                    if (!$promo) {
+                        wp_send_json_error(array('message' => 'Invalid promo code'));
+                    }
+                    
+                    // Check if promo code has expired
+                    if (!empty($promo->expiry_date) && strtotime($promo->expiry_date) < time()) {
+                        wp_send_json_error(array('message' => 'This promo code has expired'));
+                    }
+                } else {
+                    wp_send_json_error(array('message' => 'Invalid promo code'));
+                }
+            }
+            
+            // Store promo code in session for later validation
             if (!session_id()) {
                 session_start();
             }
             $_SESSION['flexpress_applied_promo'] = array(
-                'code' => $code,
-                'promo_id' => $validation['promo_id'],
-                'discount_amount' => $validation['discount_amount'],
-                'final_amount' => $validation['final_amount']
+                'code' => $promo['code'],
+                'promo_id' => $promo['id'],
+                'name' => $promo['name'],
+                'discount_type' => $promo['discount_type'],
+                'discount_value' => $promo['discount_value'],
+                'maximum_discount' => $promo['maximum_discount']
             );
             
-            wp_send_json_success($validation);
+            wp_send_json_success(array(
+                'valid' => true,
+                'code' => $promo['code'],
+                'name' => $promo['name'],
+                'discount_type' => $promo['discount_type'],
+                'discount_value' => $promo['discount_value'],
+                'maximum_discount' => $promo['maximum_discount'],
+                'message' => 'Promo code applied successfully!'
+            ));
         } else {
-            wp_send_json_error($validation);
+            // Full validation with plan and amount
+            $promo_codes = new FlexPress_Promo_Codes();
+            $validation = $promo_codes->validate_promo_code_logic($code, get_current_user_id(), $plan_id, $amount);
+            
+            if ($validation['valid']) {
+                // Store promo code in session for payment processing
+                if (!session_id()) {
+                    session_start();
+                }
+                $_SESSION['flexpress_applied_promo'] = array(
+                    'code' => $code,
+                    'promo_id' => $validation['promo_id'],
+                    'discount_amount' => $validation['discount_amount'],
+                    'final_amount' => $validation['final_amount']
+                );
+                
+                wp_send_json_success($validation);
+            } else {
+                wp_send_json_error($validation);
+            }
         }
     }
     
@@ -326,10 +406,20 @@ class FlexPress_Promo_Codes_Integration {
      */
     public function enqueue_frontend_scripts() {
         if (is_page_template('page-templates/payment.php') || 
-            is_page_template('page-templates/flowguard-payment.php')) {
+            is_page_template('page-templates/flowguard-payment.php') ||
+            is_page_template('page-templates/membership.php')) {
             
             wp_enqueue_script('jquery');
-            wp_localize_script('jquery', 'ajaxurl', admin_url('admin-ajax.php'));
+            
+            // Create a unique script handle for localization
+            $script_handle = 'flexpress-promo-script';
+            wp_register_script($script_handle, '', array('jquery'), '1.0', true);
+            wp_enqueue_script($script_handle);
+            
+            wp_localize_script($script_handle, 'flexpressPromo', array(
+                'ajaxurl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('flexpress_promo_nonce')
+            ));
         }
     }
     

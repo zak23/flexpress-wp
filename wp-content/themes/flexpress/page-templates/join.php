@@ -13,6 +13,9 @@ if (empty($promo_code)) {
 }
 $promo_code = sanitize_text_field($promo_code);
 
+// Check for plan parameter
+$selected_plan = isset($_GET['plan']) ? sanitize_text_field($_GET['plan']) : '';
+
 // Check user login and membership status
 $is_logged_in = is_user_logged_in();
 $current_user = null;
@@ -29,8 +32,8 @@ if ($is_logged_in) {
         exit;
     }
     
-    // Redirect logged-in users (non-active members) to membership page
-    if (in_array($membership_status, ['expired', 'cancelled', 'none'])) {
+    // Redirect logged-in users (non-active members) to membership page, unless they have a plan selected
+    if (in_array($membership_status, ['expired', 'cancelled', 'none']) && empty($selected_plan)) {
         wp_redirect(home_url('/membership/'));
         exit;
     }

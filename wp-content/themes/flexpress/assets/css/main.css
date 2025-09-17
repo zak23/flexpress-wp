@@ -5009,6 +5009,20 @@ select:focus {
   color: var(--color-background);
 }
 
+/* Model Social Media Links Hover */
+.model-social .btn-outline-light:hover {
+  background-color: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+  color: var(--color-background) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px var(--color-accent-light);
+  transition: all 0.3s ease;
+}
+
+.model-social .btn-outline-light:hover i {
+  color: var(--color-background) !important;
+}
+
 /* ==========================================================================
    End Single Model Page Styles
    ========================================================================== */

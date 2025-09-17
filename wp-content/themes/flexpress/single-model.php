@@ -45,120 +45,116 @@ get_header();
         <div class="container py-5">
             <div class="row">
                 <div class="col-lg-6 mb-4">
-                    <div class="card shadow-sm">
-                        <div class="card-body p-4">
-                            <?php 
-                            $profile_image = get_field('model_profile_image');
-                            if ($profile_image) : ?>
-                                <div class="text-center mb-4">
-                                    <img src="<?php echo esc_url($profile_image['sizes']['large']); ?>" 
-                                         alt="<?php echo esc_attr(get_the_title()); ?>" 
-                                         class="img-fluid rounded">
-                                </div>
-                            <?php elseif (has_post_thumbnail()) : ?>
-                                <div class="text-center mb-4">
-                                    <?php the_post_thumbnail('large', array('class' => 'img-fluid rounded')); ?>
-                                </div>
-                            <?php endif; ?>
-                        </div>
+                    <div class="text-center mb-4">
+                        <?php 
+                        $profile_image = get_field('model_profile_image');
+                        if ($profile_image) : ?>
+                            <img src="<?php echo esc_url($profile_image['sizes']['large']); ?>" 
+                                 alt="<?php echo esc_attr(get_the_title()); ?>" 
+                                 class="img-fluid rounded">
+                        <?php elseif (has_post_thumbnail()) : ?>
+                            <?php the_post_thumbnail('large', array('class' => 'img-fluid rounded')); ?>
+                        <?php endif; ?>
                     </div>
                 </div>
                 
                 <div class="col-lg-6 mb-4">
-                    <div class="card shadow-sm">
-                        <div class="card-body p-4">
-                            <h2 class="h3 mb-4"><?php the_title(); ?></h2>
-                            
-                            <?php if (get_field('model_about')) : ?>
-                                <div class="model-bio mb-4">
-                                    <?php echo wpautop(esc_html(get_field('model_about'))); ?>
-                                </div>
-                            <?php endif; ?>
+                    <div class="text-white">
+                        <h2 class="h3 mb-4 text-white"><?php the_title(); ?></h2>
+                        
+                        <?php if (get_field('model_about')) : ?>
+                            <div class="model-bio mb-4 text-white">
+                                <?php echo wpautop(esc_html(get_field('model_about'))); ?>
+                            </div>
+                        <?php endif; ?>
 
-                            <?php if (get_the_content()) : ?>
-                                <div class="model-additional-content mb-4">
-                                    <?php the_content(); ?>
-                                </div>
-                            <?php endif; ?>
+                        <?php if (get_the_content()) : ?>
+                            <div class="model-additional-content mb-4 text-white">
+                                <?php the_content(); ?>
+                            </div>
+                        <?php endif; ?>
 
-                            <!-- Model Details -->
-                            <div class="model-details mb-4">
-                                <h4>Details</h4>
-                                <div class="row">
-                                    <?php if (get_field('model_gender')) : ?>
-                                        <div class="col-sm-6 mb-2">
-                                            <strong>Gender:</strong><br>
+                        <!-- Model Details -->
+                        <div class="model-details mb-4 text-white">
+                            <h4 class="text-white">Details</h4>
+                            <div class="row">
+                                <?php if (get_field('model_gender')) : ?>
+                                    <div class="col-sm-6 mb-2">
+                                        <strong class="text-white">Gender:</strong><br>
+                                        <span class="text-white">
                                             <?php 
                                             $gender = get_field('model_gender');
                                             echo esc_html(ucwords(str_replace('-', ' ', $gender)));
                                             ?>
-                                        </div>
-                                    <?php endif; ?>
-                                    
-                                    <?php if (get_field('model_birthdate')) : ?>
-                                        <div class="col-sm-6 mb-2">
-                                            <strong>Date of Birth:</strong><br>
+                                        </span>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <?php if (get_field('model_birthdate')) : ?>
+                                    <div class="col-sm-6 mb-2">
+                                        <strong class="text-white">Date of Birth:</strong><br>
+                                        <span class="text-white">
                                             <?php 
                                             $date = DateTime::createFromFormat('Y-m-d', get_field('model_birthdate'));
                                             echo $date ? $date->format('F j, Y') : '';
                                             ?>
-                                        </div>
-                                    <?php endif; ?>
-                                    
-                                    <?php if (get_field('model_height')) : ?>
-                                        <div class="col-sm-6 mb-2">
-                                            <strong>Height:</strong><br>
-                                            <?php echo esc_html(get_field('model_height')); ?>
-                                        </div>
-                                    <?php endif; ?>
-                                    
-                                    <?php if (get_field('model_measurements')) : ?>
-                                        <div class="col-sm-6 mb-2">
-                                            <strong>Measurements:</strong><br>
-                                            <?php echo esc_html(get_field('model_measurements')); ?>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
+                                        </span>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <?php if (get_field('model_height')) : ?>
+                                    <div class="col-sm-6 mb-2">
+                                        <strong class="text-white">Height:</strong><br>
+                                        <span class="text-white"><?php echo esc_html(get_field('model_height')); ?></span>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <?php if (get_field('model_measurements')) : ?>
+                                    <div class="col-sm-6 mb-2">
+                                        <strong class="text-white">Measurements:</strong><br>
+                                        <span class="text-white"><?php echo esc_html(get_field('model_measurements')); ?></span>
+                                    </div>
+                                <?php endif; ?>
                             </div>
+                        </div>
 
-                            <!-- Social Media Links -->
-                            <div class="model-social">
-                                <h4>Follow <?php the_title(); ?></h4>
-                                <div class="d-flex flex-wrap">
-                                    <?php if (get_field('model_instagram')) : ?>
-                                        <a href="<?php echo esc_url(get_field('model_instagram')); ?>" target="_blank" class="btn btn-outline-light me-2 mb-2">
-                                            <i class="fab fa-instagram"></i> Instagram
-                                        </a>
-                                    <?php endif; ?>
-                                    
-                                    <?php if (get_field('model_twitter')) : ?>
-                                        <a href="<?php echo esc_url(get_field('model_twitter')); ?>" target="_blank" class="btn btn-outline-light me-2 mb-2">
-                                            <i class="fab fa-x-twitter"></i> Twitter/X
-                                        </a>
-                                    <?php endif; ?>
-                                    
-                                    <?php if (get_field('model_tiktok')) : ?>
-                                        <a href="<?php echo esc_url(get_field('model_tiktok')); ?>" target="_blank" class="btn btn-outline-light me-2 mb-2">
-                                            <i class="fab fa-tiktok"></i> TikTok
-                                        </a>
-                                    <?php endif; ?>
-                                    
-                                    <?php if (get_field('model_onlyfans')) : ?>
-                                        <a href="<?php echo esc_url(get_field('model_onlyfans')); ?>" target="_blank" class="btn btn-outline-light me-2 mb-2">
-                                            <i class="fas fa-heart"></i> OnlyFans
-                                        </a>
-                                    <?php endif; ?>
-                                    
-                                    <?php if (get_field('model_website')) : ?>
-                                        <a href="<?php echo esc_url(get_field('model_website')); ?>" target="_blank" class="btn btn-outline-light me-2 mb-2">
-                                            <i class="fas fa-globe"></i> 
-                                            <?php 
-                                            $website_title = get_field('model_website_title');
-                                            echo esc_html($website_title ? $website_title : 'Website');
-                                            ?>
-                                        </a>
-                                    <?php endif; ?>
-                                </div>
+                        <!-- Social Media Links -->
+                        <div class="model-social text-white">
+                            <h4 class="text-white">Follow <?php the_title(); ?></h4>
+                            <div class="d-flex flex-wrap">
+                                <?php if (get_field('model_instagram')) : ?>
+                                    <a href="<?php echo esc_url(get_field('model_instagram')); ?>" target="_blank" class="btn btn-outline-light me-2 mb-2">
+                                        <i class="fab fa-instagram"></i> Instagram
+                                    </a>
+                                <?php endif; ?>
+                                
+                                <?php if (get_field('model_twitter')) : ?>
+                                    <a href="<?php echo esc_url(get_field('model_twitter')); ?>" target="_blank" class="btn btn-outline-light me-2 mb-2">
+                                        <i class="fab fa-x-twitter"></i> Twitter/X
+                                    </a>
+                                <?php endif; ?>
+                                
+                                <?php if (get_field('model_tiktok')) : ?>
+                                    <a href="<?php echo esc_url(get_field('model_tiktok')); ?>" target="_blank" class="btn btn-outline-light me-2 mb-2">
+                                        <i class="fab fa-tiktok"></i> TikTok
+                                    </a>
+                                <?php endif; ?>
+                                
+                                <?php if (get_field('model_onlyfans')) : ?>
+                                    <a href="<?php echo esc_url(get_field('model_onlyfans')); ?>" target="_blank" class="btn btn-outline-light me-2 mb-2">
+                                        <i class="fas fa-heart"></i> OnlyFans
+                                    </a>
+                                <?php endif; ?>
+                                
+                                <?php if (get_field('model_website')) : ?>
+                                    <a href="<?php echo esc_url(get_field('model_website')); ?>" target="_blank" class="btn btn-outline-light me-2 mb-2">
+                                        <i class="fas fa-globe"></i> 
+                                        <?php 
+                                        $website_title = get_field('model_website_title');
+                                        echo esc_html($website_title ? $website_title : 'Website');
+                                        ?>
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -335,11 +331,10 @@ get_header();
             <div class="container py-5">
                 <div class="row">
                     <div class="col-lg-12 mx-auto">
-                        <div class="card shadow-sm">
-                            <div class="card-body p-4">
-                                <h2 class="section-title text-left mb-5">
-                                    Leave <?php echo get_the_title($main_post->ID); ?> a Message
-                                </h2>
+                        <div class="text-white">
+                            <h2 class="section-title text-left mb-5 text-white">
+                                Leave <?php echo get_the_title($main_post->ID); ?> a Message
+                            </h2>
                                 
                                 
                                 <?php

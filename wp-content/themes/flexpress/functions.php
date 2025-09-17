@@ -48,8 +48,7 @@ require_once FLEXPRESS_PATH . '/includes/class-flexpress-affiliate-dashboard.php
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-affiliate-payouts.php';
 require_once FLEXPRESS_PATH . '/includes/affiliate-shortcodes.php';
 
-// Promo Codes System Integration
-require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-promo-codes.php';
+// Promo Codes System Integration (integrated into affiliate settings)
 require_once FLEXPRESS_PATH . '/includes/promo-codes-integration.php';
 require_once FLEXPRESS_PATH . '/includes/promo-codes-shortcodes.php';
 

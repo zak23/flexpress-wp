@@ -27,6 +27,47 @@ if (!function_exists('get_option')) {
  */
 class FlexPress_Affiliate_Settings {
     /**
+     * Create promo codes table
+     */
+    public static function create_promo_codes_table() {
+        global $wpdb;
+        
+        $table_name = $wpdb->prefix . 'flexpress_promo_codes';
+        $charset_collate = $wpdb->get_charset_collate();
+        
+        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            code varchar(50) NOT NULL UNIQUE,
+            name varchar(100) NOT NULL,
+            description text,
+            discount_type enum('percentage', 'fixed', 'free_trial') NOT NULL DEFAULT 'percentage',
+            discount_value decimal(10,2) NOT NULL DEFAULT 0.00,
+            minimum_amount decimal(10,2) NOT NULL DEFAULT 0.00,
+            maximum_discount decimal(10,2) NOT NULL DEFAULT 0.00,
+            usage_limit int(11) NOT NULL DEFAULT 0,
+            usage_count int(11) NOT NULL DEFAULT 0,
+            user_limit int(11) NOT NULL DEFAULT 0,
+            valid_from datetime NULL,
+            valid_until datetime NULL,
+            applicable_plans text,
+            applicable_products text,
+            status enum('active', 'inactive', 'expired') NOT NULL DEFAULT 'active',
+            created_by bigint(20) NOT NULL,
+            created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY code (code),
+            KEY status (status),
+            KEY valid_from (valid_from),
+            KEY valid_until (valid_until),
+            KEY created_by (created_by)
+        ) $charset_collate;";
+        
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql);
+    }
+
+    /**
      * Create promo code usage tracking table
      */
     public static function create_promo_usage_table() {
@@ -37,17 +78,23 @@ class FlexPress_Affiliate_Settings {
         
         $sql = "CREATE TABLE IF NOT EXISTS $table_name (
             id bigint(20) NOT NULL AUTO_INCREMENT,
+            promo_code_id bigint(20) NOT NULL,
             promo_code varchar(50) NOT NULL,
             user_id bigint(20) NOT NULL,
+            order_id varchar(100) NOT NULL,
             plan_id varchar(50) NOT NULL,
-            amount decimal(10,2) NOT NULL DEFAULT 0.00,
-            transaction_id varchar(100) NOT NULL,
-            used_at datetime NOT NULL,
+            original_amount decimal(10,2) NOT NULL,
+            discount_amount decimal(10,2) NOT NULL,
+            final_amount decimal(10,2) NOT NULL,
+            used_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             ip_address varchar(45) NOT NULL,
+            user_agent text,
             PRIMARY KEY (id),
+            KEY promo_code_id (promo_code_id),
             KEY promo_code (promo_code),
             KEY user_id (user_id),
-            KEY used_at (used_at)
+            KEY used_at (used_at),
+            FOREIGN KEY (promo_code_id) REFERENCES {$wpdb->prefix}flexpress_promo_codes(id) ON DELETE CASCADE
         ) $charset_collate;";
         
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -145,7 +192,8 @@ class FlexPress_Affiliate_Settings {
         dbDelta($sql_commissions);
         dbDelta($sql_payouts);
         
-        // Also create the promo usage table if it doesn't exist
+        // Also create the promo codes tables if they don't exist
+        self::create_promo_codes_table();
         self::create_promo_usage_table();
     }
 
@@ -171,6 +219,14 @@ class FlexPress_Affiliate_Settings {
         add_action('wp_ajax_get_payout_details', array($this, 'get_payout_details'));
         add_action('wp_ajax_process_payout', array($this, 'process_payout'));
         add_action('wp_ajax_get_eligible_affiliates', array($this, 'get_eligible_affiliates'));
+        
+        // Promo codes AJAX handlers
+        add_action('wp_ajax_create_promo_code', array($this, 'create_promo_code'));
+        add_action('wp_ajax_update_promo_code', array($this, 'update_promo_code'));
+        add_action('wp_ajax_delete_promo_code', array($this, 'delete_promo_code'));
+        add_action('wp_ajax_toggle_promo_status', array($this, 'toggle_promo_status'));
+        add_action('wp_ajax_get_promo_details', array($this, 'get_promo_details'));
+        add_action('wp_ajax_get_promo_codes_list', array($this, 'get_promo_codes_list'));
         
         // Create table on theme activation
         add_action('after_switch_theme', array(__CLASS__, 'create_affiliate_tables'));
@@ -562,23 +618,53 @@ class FlexPress_Affiliate_Settings {
 
                 <!-- Promo Codes Tab -->
                 <div id="promo-codes" class="tab-content">
-                    <h2><?php esc_html_e('Promo Codes', 'flexpress'); ?></h2>
+                    <div class="promo-codes-header">
+                        <h2><?php esc_html_e('Promo Codes', 'flexpress'); ?></h2>
+                        <button type="button" class="button button-primary" id="add-new-promo">
+                            <?php esc_html_e('Add New Promo Code', 'flexpress'); ?>
+                        </button>
+                    </div>
                     <p><?php esc_html_e('Manage promotional codes and their usage.', 'flexpress'); ?></p>
+                    
+                    <!-- Promo Codes Stats -->
+                    <div class="promo-stats-cards">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <h3><?php esc_html_e('Active Codes', 'flexpress'); ?></h3>
+                                <div class="stat-number"><?php echo $this->get_active_promo_count(); ?></div>
+                            </div>
+                            <div class="stat-card">
+                                <h3><?php esc_html_e('Total Usage', 'flexpress'); ?></h3>
+                                <div class="stat-number"><?php echo $this->get_total_usage_count(); ?></div>
+                            </div>
+                            <div class="stat-card">
+                                <h3><?php esc_html_e('Total Discounts', 'flexpress'); ?></h3>
+                                <div class="stat-number">$<?php echo number_format($this->get_total_discounts(), 2); ?></div>
+                            </div>
+                            <div class="stat-card">
+                                <h3><?php esc_html_e('Expired Codes', 'flexpress'); ?></h3>
+                                <div class="stat-number"><?php echo $this->get_expired_promo_count(); ?></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Promo Codes Table -->
                     <div class="promo-codes-table">
                         <table class="wp-list-table widefat fixed striped">
                             <thead>
                                 <tr>
+                                    <th><input type="checkbox" id="select-all-promos"></th>
                                     <th><?php esc_html_e('Code', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Affiliate', 'flexpress'); ?></th>
+                                    <th><?php esc_html_e('Name', 'flexpress'); ?></th>
+                                    <th><?php esc_html_e('Discount', 'flexpress'); ?></th>
+                                    <th><?php esc_html_e('Usage', 'flexpress'); ?></th>
                                     <th><?php esc_html_e('Status', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Usage Count', 'flexpress'); ?></th>
+                                    <th><?php esc_html_e('Valid Until', 'flexpress'); ?></th>
                                     <th><?php esc_html_e('Actions', 'flexpress'); ?></th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr>
-                                    <td colspan="5"><?php esc_html_e('No promo codes found.', 'flexpress'); ?></td>
-                                </tr>
+                            <tbody id="promo-codes-list">
+                                <?php $this->render_promo_codes_table(); ?>
                             </tbody>
                         </table>
                     </div>
@@ -1012,6 +1098,137 @@ class FlexPress_Affiliate_Settings {
                         </div>
                     </div>
                 </div>
+
+                <!-- Add/Edit Promo Code Modal -->
+                <div id="promo-modal" class="affiliate-modal" style="display: none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 id="modal-title"><?php esc_html_e('Add New Promo Code', 'flexpress'); ?></h2>
+                            <span class="modal-close">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <form id="promo-form">
+                                <input type="hidden" id="promo-id" name="promo_id">
+                                
+                                <div class="form-row">
+                                    <div class="form-field">
+                                        <label for="promo-code"><?php esc_html_e('Promo Code', 'flexpress'); ?> *</label>
+                                        <input type="text" id="promo-code" name="code" required 
+                                               placeholder="<?php esc_attr_e('e.g., SAVE20, WELCOME10', 'flexpress'); ?>">
+                                        <p class="description"><?php esc_html_e('Unique code that customers will enter', 'flexpress'); ?></p>
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="promo-name"><?php esc_html_e('Name', 'flexpress'); ?> *</label>
+                                        <input type="text" id="promo-name" name="name" required 
+                                               placeholder="<?php esc_attr_e('e.g., Summer Sale 20% Off', 'flexpress'); ?>">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-field">
+                                    <label for="promo-description"><?php esc_html_e('Description', 'flexpress'); ?></label>
+                                    <textarea id="promo-description" name="description" rows="3" 
+                                              placeholder="<?php esc_attr_e('Describe this promo code...', 'flexpress'); ?>"></textarea>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-field">
+                                        <label for="discount-type"><?php esc_html_e('Discount Type', 'flexpress'); ?> *</label>
+                                        <select id="discount-type" name="discount_type" required>
+                                            <option value="percentage"><?php esc_html_e('Percentage', 'flexpress'); ?></option>
+                                            <option value="fixed"><?php esc_html_e('Fixed Amount', 'flexpress'); ?></option>
+                                            <option value="free_trial"><?php esc_html_e('Free Trial', 'flexpress'); ?></option>
+                                        </select>
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="discount-value"><?php esc_html_e('Discount Value', 'flexpress'); ?> *</label>
+                                        <input type="number" id="discount-value" name="discount_value" required 
+                                               step="0.01" min="0" placeholder="0.00">
+                                        <p class="description" id="discount-description"><?php esc_html_e('Percentage or fixed amount', 'flexpress'); ?></p>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-field">
+                                        <label for="minimum-amount"><?php esc_html_e('Minimum Order Amount', 'flexpress'); ?></label>
+                                        <input type="number" id="minimum-amount" name="minimum_amount" 
+                                               step="0.01" min="0" placeholder="0.00">
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="maximum-discount"><?php esc_html_e('Maximum Discount', 'flexpress'); ?></label>
+                                        <input type="number" id="maximum-discount" name="maximum_discount" 
+                                               step="0.01" min="0" placeholder="0.00">
+                                        <p class="description"><?php esc_html_e('Maximum discount amount (for percentage discounts)', 'flexpress'); ?></p>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-field">
+                                        <label for="usage-limit"><?php esc_html_e('Usage Limit', 'flexpress'); ?></label>
+                                        <input type="number" id="usage-limit" name="usage_limit" 
+                                               min="0" placeholder="0">
+                                        <p class="description"><?php esc_html_e('Total number of times this code can be used (0 = unlimited)', 'flexpress'); ?></p>
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="user-limit"><?php esc_html_e('Per User Limit', 'flexpress'); ?></label>
+                                        <input type="number" id="user-limit" name="user_limit" 
+                                               min="0" placeholder="0">
+                                        <p class="description"><?php esc_html_e('How many times each user can use this code (0 = unlimited)', 'flexpress'); ?></p>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-field">
+                                        <label for="valid-from"><?php esc_html_e('Valid From', 'flexpress'); ?></label>
+                                        <input type="datetime-local" id="valid-from" name="valid_from">
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="valid-until"><?php esc_html_e('Valid Until', 'flexpress'); ?></label>
+                                        <input type="datetime-local" id="valid-until" name="valid_until">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-field">
+                                    <label for="applicable-plans"><?php esc_html_e('Applicable Plans', 'flexpress'); ?></label>
+                                    <select id="applicable-plans" name="applicable_plans[]" multiple>
+                                        <option value="all"><?php esc_html_e('All Plans', 'flexpress'); ?></option>
+                                        <option value="monthly"><?php esc_html_e('Monthly Plans', 'flexpress'); ?></option>
+                                        <option value="yearly"><?php esc_html_e('Yearly Plans', 'flexpress'); ?></option>
+                                        <option value="ppv"><?php esc_html_e('PPV Content', 'flexpress'); ?></option>
+                                    </select>
+                                    <p class="description"><?php esc_html_e('Hold Ctrl/Cmd to select multiple options', 'flexpress'); ?></p>
+                                </div>
+                                
+                                <div class="form-field">
+                                    <label for="promo-status"><?php esc_html_e('Status', 'flexpress'); ?> *</label>
+                                    <select id="promo-status" name="status" required>
+                                        <option value="active"><?php esc_html_e('Active', 'flexpress'); ?></option>
+                                        <option value="inactive"><?php esc_html_e('Inactive', 'flexpress'); ?></option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-actions">
+                                    <button type="submit" class="button button-primary"><?php esc_html_e('Save Promo Code', 'flexpress'); ?></button>
+                                    <button type="button" class="button modal-close"><?php esc_html_e('Cancel', 'flexpress'); ?></button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View Promo Details Modal -->
+                <div id="view-promo-modal" class="affiliate-modal" style="display: none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2><?php esc_html_e('Promo Code Details', 'flexpress'); ?></h2>
+                            <span class="modal-close">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <div id="promo-details-content">
+                                <!-- Content will be loaded dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <style>
@@ -1192,6 +1409,285 @@ class FlexPress_Affiliate_Settings {
                         $('#payouts-list').html('<tr><td colspan="7">No payouts found.</td></tr>');
                     }, 1000);
                 });
+                
+                // Promo codes functionality
+                var currentPromoId = null;
+                
+                // Add new promo button
+                $('#add-new-promo').on('click', function() {
+                    openPromoModal();
+                });
+                
+                // Discount type change handler
+                $('#discount-type').on('change', function() {
+                    updateDiscountDescription();
+                });
+                
+                // Form submission
+                $('#promo-form').on('submit', function(e) {
+                    e.preventDefault();
+                    savePromoCode();
+                });
+                
+                // View promo button
+                $(document).on('click', '.view-promo', function() {
+                    var promoId = $(this).data('id');
+                    viewPromoDetails(promoId);
+                });
+                
+                // Edit promo button
+                $(document).on('click', '.edit-promo', function() {
+                    var promoId = $(this).data('id');
+                    editPromoCode(promoId);
+                });
+                
+                // Delete promo button
+                $(document).on('click', '.delete-promo', function() {
+                    var promoId = $(this).data('id');
+                    deletePromoCode(promoId);
+                });
+                
+                // Toggle status button
+                $(document).on('click', '.toggle-status', function() {
+                    var promoId = $(this).data('id');
+                    var newStatus = $(this).data('status');
+                    togglePromoStatus(promoId, newStatus);
+                });
+                
+                function openPromoModal(promoId) {
+                    currentPromoId = promoId || null;
+                    
+                    if (promoId) {
+                        $('#modal-title').text('<?php esc_html_e('Edit Promo Code', 'flexpress'); ?>');
+                        loadPromoData(promoId);
+                    } else {
+                        $('#modal-title').text('<?php esc_html_e('Add New Promo Code', 'flexpress'); ?>');
+                        $('#promo-form')[0].reset();
+                        $('#promo-id').val('');
+                    }
+                    
+                    $('#promo-modal').fadeIn(300);
+                }
+                
+                function loadPromoData(promoId) {
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'get_promo_details',
+                            promo_id: promoId,
+                            nonce: flexpressAffiliate.nonce
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                populatePromoForm(response.data);
+                            } else {
+                                alert('Error loading promo code: ' + response.data.message);
+                            }
+                        },
+                        error: function() {
+                            alert('<?php esc_html_e('An error occurred while loading promo code.', 'flexpress'); ?>');
+                        }
+                    });
+                }
+                
+                function populatePromoForm(promo) {
+                    $('#promo-id').val(promo.id);
+                    $('#promo-code').val(promo.code);
+                    $('#promo-name').val(promo.name);
+                    $('#promo-description').val(promo.description);
+                    $('#discount-type').val(promo.discount_type);
+                    $('#discount-value').val(promo.discount_value);
+                    $('#minimum-amount').val(promo.minimum_amount);
+                    $('#maximum-discount').val(promo.maximum_discount);
+                    $('#usage-limit').val(promo.usage_limit);
+                    $('#user-limit').val(promo.user_limit);
+                    $('#valid-from').val(promo.valid_from ? formatDateTimeLocal(promo.valid_from) : '');
+                    $('#valid-until').val(promo.valid_until ? formatDateTimeLocal(promo.valid_until) : '');
+                    $('#promo-status').val(promo.status);
+                    
+                    updateDiscountDescription();
+                }
+                
+                function savePromoCode() {
+                    var formData = new FormData($('#promo-form')[0]);
+                    formData.append('action', currentPromoId ? 'update_promo_code' : 'create_promo_code');
+                    formData.append('nonce', flexpressAffiliate.nonce);
+                    
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(response) {
+                            if (response.success) {
+                                alert(response.data.message);
+                                $('#promo-modal').fadeOut();
+                                location.reload();
+                            } else {
+                                alert('Error: ' + response.data.message);
+                            }
+                        },
+                        error: function() {
+                            alert('<?php esc_html_e('An error occurred. Please try again.', 'flexpress'); ?>');
+                        }
+                    });
+                }
+                
+                function viewPromoDetails(promoId) {
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'get_promo_details',
+                            promo_id: promoId,
+                            nonce: flexpressAffiliate.nonce
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                displayPromoDetails(response.data);
+                            } else {
+                                alert('Error loading promo details: ' + response.data.message);
+                            }
+                        },
+                        error: function() {
+                            alert('<?php esc_html_e('An error occurred while loading promo details.', 'flexpress'); ?>');
+                        }
+                    });
+                }
+                
+                function displayPromoDetails(promo) {
+                    var content = '<div class="promo-details">';
+                    content += '<h3>' + escapeHtml(promo.name) + '</h3>';
+                    content += '<p><strong>Code:</strong> ' + escapeHtml(promo.code) + '</p>';
+                    content += '<p><strong>Description:</strong> ' + escapeHtml(promo.description || 'None') + '</p>';
+                    content += '<p><strong>Discount:</strong> ' + formatDiscount(promo) + '</p>';
+                    content += '<p><strong>Status:</strong> <span class="status status-' + promo.status + '">' + promo.status.charAt(0).toUpperCase() + promo.status.slice(1) + '</span></p>';
+                    content += '<p><strong>Usage:</strong> ' + promo.usage_count + (promo.usage_limit > 0 ? ' / ' + promo.usage_limit : '') + '</p>';
+                    content += '<p><strong>User Limit:</strong> ' + (promo.user_limit > 0 ? promo.user_limit : 'Unlimited') + '</p>';
+                    content += '<p><strong>Minimum Amount:</strong> $' + parseFloat(promo.minimum_amount).toFixed(2) + '</p>';
+                    if (promo.maximum_discount > 0) {
+                        content += '<p><strong>Maximum Discount:</strong> $' + parseFloat(promo.maximum_discount).toFixed(2) + '</p>';
+                    }
+                    if (promo.valid_from) {
+                        content += '<p><strong>Valid From:</strong> ' + formatDate(promo.valid_from) + '</p>';
+                    }
+                    if (promo.valid_until) {
+                        content += '<p><strong>Valid Until:</strong> ' + formatDate(promo.valid_until) + '</p>';
+                    }
+                    content += '<p><strong>Created:</strong> ' + formatDate(promo.created_at) + '</p>';
+                    content += '</div>';
+                    
+                    $('#promo-details-content').html(content);
+                    $('#view-promo-modal').fadeIn(300);
+                }
+                
+                function editPromoCode(promoId) {
+                    openPromoModal(promoId);
+                }
+                
+                function deletePromoCode(promoId) {
+                    if (!confirm('<?php esc_html_e('Are you sure you want to delete this promo code? This action cannot be undone.', 'flexpress'); ?>')) {
+                        return;
+                    }
+                    
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'delete_promo_code',
+                            promo_id: promoId,
+                            nonce: flexpressAffiliate.nonce
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                alert(response.data.message);
+                                location.reload();
+                            } else {
+                                alert('Error: ' + response.data.message);
+                            }
+                        },
+                        error: function() {
+                            alert('<?php esc_html_e('An error occurred. Please try again.', 'flexpress'); ?>');
+                        }
+                    });
+                }
+                
+                function togglePromoStatus(promoId, newStatus) {
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'toggle_promo_status',
+                            promo_id: promoId,
+                            status: newStatus,
+                            nonce: flexpressAffiliate.nonce
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                alert(response.data.message);
+                                location.reload();
+                            } else {
+                                alert('Error: ' + response.data.message);
+                            }
+                        },
+                        error: function() {
+                            alert('<?php esc_html_e('An error occurred. Please try again.', 'flexpress'); ?>');
+                        }
+                    });
+                }
+                
+                function updateDiscountDescription() {
+                    var type = $('#discount-type').val();
+                    var description = $('#discount-description');
+                    
+                    switch(type) {
+                        case 'percentage':
+                            description.text('<?php esc_html_e('Percentage discount (e.g., 20 for 20%)', 'flexpress'); ?>');
+                            break;
+                        case 'fixed':
+                            description.text('<?php esc_html_e('Fixed amount discount (e.g., 10.00)', 'flexpress'); ?>');
+                            break;
+                        case 'free_trial':
+                            description.text('<?php esc_html_e('Number of free trial days', 'flexpress'); ?>');
+                            break;
+                    }
+                }
+                
+                function formatDiscount(promo) {
+                    switch(promo.discount_type) {
+                        case 'percentage':
+                            return promo.discount_value + '% off';
+                        case 'fixed':
+                            return '$' + parseFloat(promo.discount_value).toFixed(2) + ' off';
+                        case 'free_trial':
+                            return promo.discount_value + ' days free';
+                        default:
+                            return '';
+                    }
+                }
+                
+                function formatDate(dateString) {
+                    var date = new Date(dateString);
+                    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                }
+                
+                function formatDateTimeLocal(dateString) {
+                    var date = new Date(dateString);
+                    return date.toISOString().slice(0, 16);
+                }
+                
+                function escapeHtml(text) {
+                    var map = {
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;',
+                        "'": '&#039;'
+                    };
+                    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+                }
             });
             </script>
         </div>
@@ -1619,6 +2115,335 @@ class FlexPress_Affiliate_Settings {
 
     public function update_affiliate() {
         // Implementation needed
+    }
+
+    /**
+     * Get active promo count
+     */
+    public function get_active_promo_count() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'flexpress_promo_codes';
+        
+        $count = $wpdb->get_var("SELECT COUNT(*) FROM {$table_name} WHERE status = 'active'");
+        return intval($count ?: 0);
+    }
+    
+    /**
+     * Get total usage count
+     */
+    public function get_total_usage_count() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'flexpress_promo_usage';
+        
+        $count = $wpdb->get_var("SELECT COUNT(*) FROM {$table_name}");
+        return intval($count ?: 0);
+    }
+    
+    /**
+     * Get total discounts given
+     */
+    public function get_total_discounts() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'flexpress_promo_usage';
+        
+        $total = $wpdb->get_var("SELECT SUM(discount_amount) FROM {$table_name}");
+        return floatval($total ?: 0);
+    }
+    
+    /**
+     * Get expired promo count
+     */
+    public function get_expired_promo_count() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'flexpress_promo_codes';
+        
+        $count = $wpdb->get_var("SELECT COUNT(*) FROM {$table_name} WHERE status = 'expired' OR (valid_until IS NOT NULL AND valid_until < NOW())");
+        return intval($count ?: 0);
+    }
+    
+    /**
+     * Render promo codes table
+     */
+    public function render_promo_codes_table() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'flexpress_promo_codes';
+        
+        $promo_codes = $wpdb->get_results(
+            "SELECT * FROM $table_name ORDER BY created_at DESC LIMIT 50"
+        );
+        
+        if (empty($promo_codes)) {
+            echo '<tr><td colspan="8">' . esc_html__('No promo codes found.', 'flexpress') . '</td></tr>';
+            return;
+        }
+        
+        foreach ($promo_codes as $promo) {
+            $status_class = 'status-' . $promo->status;
+            $status_label = ucfirst($promo->status);
+            
+            // Format discount
+            $discount_display = '';
+            if ($promo->discount_type === 'percentage') {
+                $discount_display = $promo->discount_value . '%';
+            } elseif ($promo->discount_type === 'fixed') {
+                $discount_display = '$' . number_format($promo->discount_value, 2);
+            } elseif ($promo->discount_type === 'free_trial') {
+                $discount_display = $promo->discount_value . ' days free';
+            }
+            
+            // Format usage
+            $usage_display = $promo->usage_count;
+            if ($promo->usage_limit > 0) {
+                $usage_display .= ' / ' . $promo->usage_limit;
+            }
+            
+            // Format valid until
+            $valid_until_display = 'Never';
+            if ($promo->valid_until) {
+                $valid_until_display = date('M j, Y', strtotime($promo->valid_until));
+            }
+            
+            echo '<tr>';
+            echo '<td><input type="checkbox" class="promo-checkbox" value="' . esc_attr($promo->id) . '"></td>';
+            echo '<td><strong>' . esc_html($promo->code) . '</strong></td>';
+            echo '<td>' . esc_html($promo->name) . '</td>';
+            echo '<td>' . esc_html($discount_display) . '</td>';
+            echo '<td>' . esc_html($usage_display) . '</td>';
+            echo '<td><span class="status ' . esc_attr($status_class) . '">' . esc_html($status_label) . '</span></td>';
+            echo '<td>' . esc_html($valid_until_display) . '</td>';
+            echo '<td>';
+            echo '<button type="button" class="button button-small view-promo" data-id="' . esc_attr($promo->id) . '">' . esc_html__('View', 'flexpress') . '</button> ';
+            echo '<button type="button" class="button button-small edit-promo" data-id="' . esc_attr($promo->id) . '">' . esc_html__('Edit', 'flexpress') . '</button> ';
+            echo '<button type="button" class="button button-small delete-promo" data-id="' . esc_attr($promo->id) . '">' . esc_html__('Delete', 'flexpress') . '</button>';
+            
+            // Status toggle buttons
+            if ($promo->status === 'active') {
+                echo ' <button type="button" class="button button-secondary button-small toggle-status" data-id="' . esc_attr($promo->id) . '" data-status="inactive">' . esc_html__('Deactivate', 'flexpress') . '</button>';
+            } elseif ($promo->status === 'inactive') {
+                echo ' <button type="button" class="button button-primary button-small toggle-status" data-id="' . esc_attr($promo->id) . '" data-status="active">' . esc_html__('Activate', 'flexpress') . '</button>';
+            }
+            
+            echo '</td>';
+            echo '</tr>';
+        }
+    }
+    
+    /**
+     * Create promo code via AJAX
+     */
+    public function create_promo_code() {
+        check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_die('Insufficient permissions');
+        }
+        
+        $code = sanitize_text_field($_POST['code']);
+        $name = sanitize_text_field($_POST['name']);
+        $description = sanitize_textarea_field($_POST['description'] ?? '');
+        $discount_type = sanitize_text_field($_POST['discount_type']);
+        $discount_value = floatval($_POST['discount_value']);
+        $minimum_amount = floatval($_POST['minimum_amount'] ?? 0);
+        $maximum_discount = floatval($_POST['maximum_discount'] ?? 0);
+        $usage_limit = intval($_POST['usage_limit'] ?? 0);
+        $user_limit = intval($_POST['user_limit'] ?? 0);
+        $valid_from = sanitize_text_field($_POST['valid_from'] ?? '');
+        $valid_until = sanitize_text_field($_POST['valid_until'] ?? '');
+        $applicable_plans = sanitize_text_field($_POST['applicable_plans'] ?? '');
+        $status = sanitize_text_field($_POST['status']);
+        
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'flexpress_promo_codes';
+        
+        $result = $wpdb->insert(
+            $table_name,
+            array(
+                'code' => $code,
+                'name' => $name,
+                'description' => $description,
+                'discount_type' => $discount_type,
+                'discount_value' => $discount_value,
+                'minimum_amount' => $minimum_amount,
+                'maximum_discount' => $maximum_discount,
+                'usage_limit' => $usage_limit,
+                'user_limit' => $user_limit,
+                'valid_from' => $valid_from ?: null,
+                'valid_until' => $valid_until ?: null,
+                'applicable_plans' => $applicable_plans,
+                'status' => $status,
+                'created_by' => get_current_user_id()
+            ),
+            array('%s', '%s', '%s', '%s', '%f', '%f', '%f', '%d', '%d', '%s', '%s', '%s', '%s', '%d')
+        );
+        
+        if ($result) {
+            wp_send_json_success(array('message' => 'Promo code created successfully'));
+        } else {
+            wp_send_json_error(array('message' => 'Failed to create promo code: ' . $wpdb->last_error));
+        }
+    }
+    
+    /**
+     * Update promo code via AJAX
+     */
+    public function update_promo_code() {
+        check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_die('Insufficient permissions');
+        }
+        
+        $promo_id = intval($_POST['promo_id']);
+        $code = sanitize_text_field($_POST['code']);
+        $name = sanitize_text_field($_POST['name']);
+        $description = sanitize_textarea_field($_POST['description'] ?? '');
+        $discount_type = sanitize_text_field($_POST['discount_type']);
+        $discount_value = floatval($_POST['discount_value']);
+        $minimum_amount = floatval($_POST['minimum_amount'] ?? 0);
+        $maximum_discount = floatval($_POST['maximum_discount'] ?? 0);
+        $usage_limit = intval($_POST['usage_limit'] ?? 0);
+        $user_limit = intval($_POST['user_limit'] ?? 0);
+        $valid_from = sanitize_text_field($_POST['valid_from'] ?? '');
+        $valid_until = sanitize_text_field($_POST['valid_until'] ?? '');
+        $applicable_plans = sanitize_text_field($_POST['applicable_plans'] ?? '');
+        $status = sanitize_text_field($_POST['status']);
+        
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'flexpress_promo_codes';
+        
+        $result = $wpdb->update(
+            $table_name,
+            array(
+                'code' => $code,
+                'name' => $name,
+                'description' => $description,
+                'discount_type' => $discount_type,
+                'discount_value' => $discount_value,
+                'minimum_amount' => $minimum_amount,
+                'maximum_discount' => $maximum_discount,
+                'usage_limit' => $usage_limit,
+                'user_limit' => $user_limit,
+                'valid_from' => $valid_from ?: null,
+                'valid_until' => $valid_until ?: null,
+                'applicable_plans' => $applicable_plans,
+                'status' => $status
+            ),
+            array('id' => $promo_id),
+            array('%s', '%s', '%s', '%s', '%f', '%f', '%f', '%d', '%d', '%s', '%s', '%s', '%s'),
+            array('%d')
+        );
+        
+        if ($result !== false) {
+            wp_send_json_success(array('message' => 'Promo code updated successfully'));
+        } else {
+            wp_send_json_error(array('message' => 'Failed to update promo code: ' . $wpdb->last_error));
+        }
+    }
+    
+    /**
+     * Delete promo code via AJAX
+     */
+    public function delete_promo_code() {
+        check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_die('Insufficient permissions');
+        }
+        
+        $promo_id = intval($_POST['promo_id']);
+        
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'flexpress_promo_codes';
+        
+        $result = $wpdb->delete($table_name, array('id' => $promo_id), array('%d'));
+        
+        if ($result) {
+            wp_send_json_success(array('message' => 'Promo code deleted successfully'));
+        } else {
+            wp_send_json_error(array('message' => 'Failed to delete promo code'));
+        }
+    }
+    
+    /**
+     * Toggle promo status via AJAX
+     */
+    public function toggle_promo_status() {
+        check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_die('Insufficient permissions');
+        }
+        
+        $promo_id = intval($_POST['promo_id']);
+        $new_status = sanitize_text_field($_POST['status']);
+        
+        if (!in_array($new_status, ['active', 'inactive'])) {
+            wp_send_json_error(array('message' => 'Invalid status'));
+        }
+        
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'flexpress_promo_codes';
+        
+        $result = $wpdb->update(
+            $table_name,
+            array('status' => $new_status),
+            array('id' => $promo_id),
+            array('%s'),
+            array('%d')
+        );
+        
+        if ($result !== false) {
+            wp_send_json_success(array('message' => 'Promo code status updated successfully'));
+        } else {
+            wp_send_json_error(array('message' => 'Failed to update promo code status'));
+        }
+    }
+    
+    /**
+     * Get promo details via AJAX
+     */
+    public function get_promo_details() {
+        check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_die('Insufficient permissions');
+        }
+        
+        $promo_id = intval($_POST['promo_id']);
+        
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'flexpress_promo_codes';
+        
+        $promo = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table_name WHERE id = %d",
+            $promo_id
+        ));
+        
+        if (!$promo) {
+            wp_send_json_error(array('message' => 'Promo code not found'));
+        }
+        
+        wp_send_json_success($promo);
+    }
+    
+    /**
+     * Get promo codes list via AJAX
+     */
+    public function get_promo_codes_list() {
+        check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_die('Insufficient permissions');
+        }
+        
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'flexpress_promo_codes';
+        
+        $promo_codes = $wpdb->get_results(
+            "SELECT * FROM $table_name ORDER BY created_at DESC LIMIT 50"
+        );
+        
+        wp_send_json_success($promo_codes);
     }
 }
 

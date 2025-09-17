@@ -25,6 +25,10 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Bulk Operations**: Approve, reject, suspend, or reactivate multiple affiliates at once
 - **Status Notifications**: Automatic email notifications to affiliates when status changes
 - **Performance Tracking**: Real-time statistics and revenue tracking for affiliate accounts
+- **Promo Codes System**: Dedicated promotional code management separate from affiliate codes
+- **Flexible Discount Types**: Percentage, fixed amount, and free trial discounts
+- **Usage Tracking**: Comprehensive analytics and usage limits
+- **Payment Integration**: Seamless integration with Flowguard payment processing
 
 ### 🎥 Video Management
 - **BunnyCDN Stream Integration**: Secure video hosting and streaming
@@ -85,6 +89,18 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Token Authentication**: Secure content delivery
 - **CDN Optimization**: Global content distribution
 
+### Promo Codes System
+- **Dedicated Management**: Separate from affiliate codes with its own admin interface
+- **Multiple Discount Types**: Percentage discounts, fixed amount discounts, and free trial periods
+- **Usage Controls**: Total usage limits and per-user usage limits
+- **Time-based Validity**: Start and end date controls for promotional campaigns
+- **Plan Restrictions**: Apply codes to specific subscription plans or PPV content
+- **Real-time Validation**: Instant promo code validation with detailed error messages
+- **Usage Analytics**: Comprehensive tracking of promo code usage and effectiveness
+- **Payment Integration**: Seamless integration with Flowguard payment processing
+- **Frontend Shortcodes**: Display active promo codes and application forms
+- **Admin Dashboard**: Complete management interface with bulk operations
+
 ### WordPress Integration
 - **Custom Post Types**: Episodes and Models
 - **Advanced Custom Fields (ACF)**: Content management
@@ -111,6 +127,8 @@ wp-content/themes/flexpress/
 │   ├── gallery-system.php    # Image gallery management
 │   ├── pricing-helpers.php   # Episode pricing logic
 │   ├── affiliate-helpers.php # Commission tracking
+│   ├── promo-codes-integration.php # Promo codes system
+│   ├── promo-codes-shortcodes.php # Frontend promo code display
 │   └── contact-helpers.php   # Contact form integration
 ├── page-templates/           # Custom page templates
 ├── template-parts/           # Reusable template components
@@ -152,6 +170,102 @@ wp-content/themes/flexpress/
 - [ ] **Menu Structure**: Configure navigation menus
 - [ ] **Legal Pages**: Create compliance pages
 - [ ] **Payment Testing**: Verify webhook processing
+- [ ] **Promo Codes**: Create and configure promotional campaigns
+
+---
+
+## 🎟️ Promo Codes System
+
+### Admin Management
+Access the promo codes management interface at **FlexPress Settings → Promo Codes** in the WordPress admin.
+
+#### Creating Promo Codes
+1. **Code**: Unique identifier (e.g., "SAVE20", "WELCOME10")
+2. **Name**: Display name for the promotion
+3. **Description**: Detailed description of the offer
+4. **Discount Type**: 
+   - **Percentage**: Percentage discount (e.g., 20% off)
+   - **Fixed**: Fixed amount discount (e.g., $10 off)
+   - **Free Trial**: Free trial period (e.g., 7 days free)
+5. **Usage Limits**: Total usage limit and per-user limit
+6. **Validity Period**: Start and end dates
+7. **Plan Restrictions**: Apply to specific subscription plans
+
+#### Usage Tracking
+- Real-time usage statistics
+- User-specific usage tracking
+- Revenue impact analysis
+- Expiration monitoring
+
+### Frontend Integration
+
+#### Payment Form Integration
+Promo codes are automatically integrated into payment forms with:
+- Real-time validation
+- Instant discount calculation
+- Error handling and user feedback
+- Session-based storage
+
+#### Shortcodes
+
+**Display Active Promo Codes**
+```
+[flexpress_promo_codes limit="5" show_expiry="true" style="cards"]
+```
+- `limit`: Number of codes to display
+- `show_expiry`: Show expiration dates
+- `show_usage`: Show usage statistics
+- `style`: Display style (cards, list, table)
+
+**Promo Code Application Form**
+```
+[flexpress_promo_form plan_id="monthly" amount="29.99" button_text="Apply Code"]
+```
+- `plan_id`: Target subscription plan
+- `amount`: Order amount for validation
+- `button_text`: Custom button text
+- `placeholder`: Input placeholder text
+
+**Promo Banner**
+```
+[flexpress_promo_banner code="WELCOME20" title="Welcome Offer" description="Get 20% off your first month"]
+```
+- `code`: Promo code to display
+- `title`: Banner title
+- `description`: Offer description
+- `background_color`: Custom background color
+- `text_color`: Custom text color
+- `show_code`: Display the promo code
+- `expiry_date`: Expiration date
+
+### API Integration
+
+#### Validation Endpoint
+```javascript
+// Apply promo code
+fetch(ajaxurl, {
+    method: 'POST',
+    body: new URLSearchParams({
+        action: 'apply_promo_code',
+        code: 'SAVE20',
+        plan_id: 'monthly',
+        amount: 29.99
+    })
+})
+.then(response => response.json())
+.then(data => {
+    if (data.success) {
+        console.log('Discount:', data.data.discount_amount);
+        console.log('Final Amount:', data.data.final_amount);
+    }
+});
+```
+
+#### Usage Recording
+Promo code usage is automatically recorded when:
+- Payment is successfully processed
+- User applies a valid promo code
+- Transaction is completed
 
 ---
 
@@ -324,7 +438,7 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 - **Commission Tracking**: Automatic commission calculation and tracking
 - **Promo Code Management**: Create and manage promotional codes with custom pricing
 - **Click Tracking**: 30-day cookie-based attribution system
-- **Payout Management**: Threshold-based payout processing with 6 payment methods (PayPal, Crypto, Australian Bank Transfer, Yoursafe, ACH, Swift)
+- **Advanced Payout Management**: Dynamic form system with method-specific field validation and comprehensive payout processing
 - **Real-time Analytics**: Live statistics and performance tracking
 
 ### Commission Structure
@@ -352,6 +466,9 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 - **Search & Filtering**: Advanced search by name, email, affiliate code, or status
 - **Real-time Statistics**: Live dashboard with pending applications, active affiliates, and revenue tracking
 - **Export Functionality**: Data export capabilities for reporting and analysis
+- **Dynamic Payout Forms**: Method-specific field collection with real-time validation
+- **Comprehensive Payout Support**: 6 payout methods including international transfers
+- **Fee Management**: Transparent fee structure with automatic deduction
 
 ### Frontend Components
 - **Application Form**: `[affiliate_application_form]` shortcode
@@ -660,6 +777,69 @@ if (!$affiliate || $affiliate->status !== 'active') {
 }
 ```
 
+5. **Dynamic Payout System Implementation:**
+
+**File Structure:**
+```
+includes/
+├── payout-display-helpers.php          # Payout formatting functions
+├── class-flexpress-affiliate-manager.php # Validation and processing
+└── admin/
+    └── class-flexpress-affiliate-settings.php # Admin interface
+
+assets/
+├── css/affiliate-system.css            # Dynamic form styling
+└── js/affiliate-admin.js               # Real-time field management
+```
+
+**Key Functions:**
+```php
+// Format payout details for display
+function flexpress_format_payout_details($payout_method, $payout_details) {
+    $details = json_decode($payout_details, true);
+    // Method-specific formatting logic
+}
+
+// Validate payout details per method
+private function validate_payout_details($method, $details_json) {
+    switch ($method) {
+        case 'aus_bank_transfer':
+            if (!preg_match('/^[0-9]{6}$/', $details['aus_bsb'])) {
+                return ['valid' => false, 'message' => 'BSB must be exactly 6 digits'];
+            }
+            break;
+        case 'ach':
+            if (!preg_match('/^[0-9]{9}$/', $details['ach_aba'])) {
+                return ['valid' => false, 'message' => 'ABA routing must be exactly 9 digits'];
+            }
+            break;
+    }
+}
+```
+
+**JavaScript Dynamic Fields:**
+```javascript
+function initPayoutFields() {
+    $(document).on('change', 'select[name="payout_method"]', function() {
+        const selectedMethod = $(this).val();
+        const $container = $(this).closest('form').find('.payout-details-container');
+        
+        // Hide all fields, show selected method fields
+        $container.find('.payout-fields').removeClass('active').hide();
+        $container.find('.' + selectedMethod + '-fields').addClass('active').show();
+        
+        // Update consolidated JSON data
+        updateConsolidatedPayoutDetails($container);
+    });
+}
+```
+
+**Data Flow:**
+1. **Selection** → User selects payout method → Dynamic fields appear
+2. **Collection** → Form data collected → JSON consolidation → Server validation  
+3. **Storage** → Database storage → Admin display formatting → Payout processing
+4. **Display** → Structured formatting in admin interface with edit capabilities
+
 **🚀 Performance Considerations:**
 - **Caching Strategy:** WordPress transients for dashboard data (15-minute cache)
 - **Database Optimization:** Indexed queries for commission lookups
@@ -718,19 +898,98 @@ $commission_tiers = [
 
 1. **Multiple Payout Methods:**
 ```php
+// Dynamic Payout System with Method-Specific Fields
 $payout_methods = [
-    'paypal' => 'PayPal (Free)',
-    'crypto' => 'Cryptocurrency (Free)', 
-    'aus_bank_transfer' => 'Australian Bank Transfer (Free)',
-    'yoursafe' => 'Yoursafe (Free)',
-    'ach' => 'ACH - US Only ($10 USD Fee)',
-    'swift' => 'Swift International ($30 USD Fee)'
+    'paypal' => [
+        'name' => 'PayPal (Free)',
+        'fee' => 0,
+        'fields' => ['paypal_email'],
+        'validation' => 'Email format validation'
+    ],
+    'crypto' => [
+        'name' => 'Cryptocurrency (Free)',
+        'fee' => 0,
+        'fields' => ['crypto_type', 'crypto_address', 'crypto_other'],
+        'validation' => 'Cryptocurrency type and wallet address required'
+    ],
+    'aus_bank_transfer' => [
+        'name' => 'Australian Bank Transfer (Free)',
+        'fee' => 0,
+        'fields' => ['aus_bank_name', 'aus_bsb', 'aus_account_number', 'aus_account_holder'],
+        'validation' => 'BSB must be exactly 6 digits'
+    ],
+    'yoursafe' => [
+        'name' => 'Yoursafe (Free)',
+        'fee' => 0,
+        'fields' => ['yoursafe_iban'],
+        'validation' => 'IBAN format validation'
+    ],
+    'ach' => [
+        'name' => 'ACH - US Only ($10 USD Fee)',
+        'fee' => 10,
+        'fields' => ['ach_account_number', 'ach_aba', 'ach_account_holder', 'ach_bank_name'],
+        'validation' => 'ABA routing number must be exactly 9 digits'
+    ],
+    'swift' => [
+        'name' => 'Swift International ($30 USD Fee)',
+        'fee' => 30,
+        'fields' => [
+            'swift_bank_name', 'swift_code', 'swift_iban_account', 
+            'swift_account_holder', 'swift_bank_address', 'swift_beneficiary_address',
+            'swift_intermediary_swift', 'swift_intermediary_iban' // Optional
+        ],
+        'validation' => 'All required fields must be provided'
+    ]
 ];
 ```
 
-2. **Automated Payout Scheduling:**
+2. **Dynamic Payout Form System:**
+   - **Method-Specific Fields**: Forms dynamically show/hide fields based on selected payout method
+   - **Real-time Validation**: Client-side and server-side validation for each method
+   - **JSON Data Storage**: Structured storage with legacy compatibility
+   - **Professional UI**: Clean interface with focus states and error handling
+   - **Admin Integration**: Formatted display in admin interface with edit capabilities
+
+3. **Payout Method Details:**
+
+   **🇦🇺 Australian Bank Transfer (Free)**
+   - Bank Name, BSB Number (6 digits), Account Number, Account Holder Name
+   - Pattern validation ensures BSB is exactly 6 digits
+
+   **💳 Yoursafe (Free)**
+   - Yoursafe IBAN field with format validation
+
+   **🏦 ACH - US Only ($10 USD Fee)**
+   - Account Number, ABA Routing (9 digits), Account Holder, Bank Name
+   - Pattern validation ensures ABA is exactly 9 digits
+
+   **🌍 Swift International ($30 USD Fee)**
+   - Bank Name, SWIFT/BIC Code, IBAN/Account, Account Holder
+   - Bank Address, Beneficiary Address
+   - Optional: Secondary/Intermediary SWIFT Code, Intermediary IBAN
+   - Most comprehensive method with full international transfer support
+
+   **💸 PayPal (Free)**
+   - Email address with format validation
+
+   **₿ Cryptocurrency (Free)**
+   - Cryptocurrency type selection (Bitcoin, Ethereum, Litecoin, Other)
+   - Wallet address field with custom type specification
+
+4. **Technical Implementation:**
+   ```javascript
+   // Dynamic field management
+   function initPayoutFields() {
+       // Show/hide fields based on selection
+       // Update consolidated JSON data
+       // Handle validation and dependencies
+   }
+   ```
+
+5. **Automated Payout Scheduling:**
    - Weekly, bi-weekly, monthly payout cycles
    - Minimum payout thresholds per method
+   - Fee deduction from payout amounts for paid methods
    - Automatic payout processing with approval workflows
    - Tax document generation (1099, international forms)
 

@@ -287,23 +287,23 @@ while (have_posts()):
                 <div class="episode-actions">
                     <?php if ($access_info['show_purchase_button']): ?>
                         <div class="mb-3">
-                            <h5 class="text-primary mb-3">
+                            <h5 class="text-white mb-3">
                                 <i class="fas fa-unlock me-2"></i>
                                 <?php esc_html_e('Unlock Episode', 'flexpress'); ?>
                             </h5>
                             
                             <!-- Access Type Badge -->
                             <div class="access-type-badge mb-3 text-center">
-                                <span class="badge bg-secondary fs-6 px-3 py-2">
+                                <span class="badge bg-dark text-white fs-6 px-3 py-2 border border-secondary">
                                     <?php echo wp_kses(flexpress_get_episode_access_summary(get_the_ID()), array('br' => array())); ?>
                                 </span>
                             </div>
                             
                             <!-- Purchase Reason -->
                             <?php if (!empty($access_info['purchase_reason'])): ?>
-                                <div class="purchase-reason mb-3 p-3 border rounded">
-                                    <small>
-                                        <i class="fas fa-info-circle me-2"></i>
+                                <div class="purchase-reason mb-3 p-3 bg-dark border border-secondary rounded">
+                                    <small class="text-white">
+                                        <i class="fas fa-info-circle me-2 text-secondary"></i>
                                         <?php echo esc_html($access_info['purchase_reason']); ?>
                                     </small>
                                 </div>
@@ -321,19 +321,19 @@ while (have_posts()):
                             
                             <!-- Price Display -->
                             <?php if ($access_info['price'] > 0): ?>
-                                <div class="price-display mb-3 text-center p-3 border rounded">
+                                <div class="price-display mb-3 text-center p-3 bg-dark border border-secondary rounded">
                                     <?php if ($access_info['discount'] > 0): ?>
-                                        <div class="original-price text-muted text-decoration-line-through mb-1">
+                                        <div class="original-price text-secondary text-decoration-line-through mb-1">
                                             $<?php echo number_format($access_info['price'], 2); ?>
                                         </div>
-                                        <div class="discounted-price fs-4 text-success fw-bold">
+                                        <div class="discounted-price fs-4 text-white fw-bold">
                                             $<?php echo number_format($access_info['final_price'], 2); ?>
-                                            <span class="fs-6">
+                                            <span class="fs-6 text-secondary">
                                                 (<?php echo $access_info['discount']; ?>% member discount)
                                             </span>
                                         </div>
                                     <?php else: ?>
-                                        <div class="current-price fs-4 text-primary fw-bold">
+                                        <div class="current-price fs-4 text-white fw-bold">
                                             $<?php echo number_format($access_info['final_price'], 2); ?>
                                         </div>
                                     <?php endif; ?>
@@ -342,7 +342,7 @@ while (have_posts()):
                             
                             <!-- Purchase Button -->
                             <?php if (is_user_logged_in()): ?>
-                                <button class="btn btn-primary w-100 purchase-btn mb-3" 
+                                <button class="btn btn-dark w-100 purchase-btn mb-3 border border-secondary" 
                                         data-episode-id="<?php echo get_the_ID(); ?>"
                                         data-price="<?php echo esc_attr($access_info['final_price']); ?>"
                                         data-original-price="<?php echo esc_attr($access_info['price']); ?>"
@@ -354,14 +354,14 @@ while (have_posts()):
                                 </button>
                             <?php else: ?>
                                 <a href="<?php echo esc_url(home_url('/login?redirect_to=' . urlencode(get_permalink()))); ?>" 
-                                   class="btn btn-primary w-100 mb-3">
+                                   class="btn btn-dark w-100 mb-3 border border-secondary">
                                     <i class="fas fa-sign-in-alt me-2"></i>
                                     <?php esc_html_e('Login to Purchase', 'flexpress'); ?>
                                 </a>
                                 <div class="text-center mb-3">
-                                    <small class="text-muted">
+                                    <small class="text-secondary">
                                         <?php esc_html_e('New here?', 'flexpress'); ?>
-                                        <a href="<?php echo esc_url(home_url('/register?redirect_to=' . urlencode(get_permalink()))); ?>" class="text-primary">
+                                        <a href="<?php echo esc_url(home_url('/register?redirect_to=' . urlencode(get_permalink()))); ?>" class="text-white">
                                             <?php esc_html_e('Create Account', 'flexpress'); ?>
                                         </a>
                                     </small>
@@ -371,12 +371,12 @@ while (have_posts()):
                     <?php endif; ?>
 
                     <?php if (!is_user_logged_in() || (is_user_logged_in() && !function_exists('flexpress_has_active_membership') || !flexpress_has_active_membership())): ?>
-                        <hr class="my-3">
+                        <hr class="my-3 border-secondary">
                         <div class="text-center">
-                            <h6 class="mb-2">
+                            <h6 class="mb-2 text-white">
                                 <?php esc_html_e('Or get unlimited access', 'flexpress'); ?>
                             </h6>
-                            <a href="<?php echo esc_url(home_url('/join')); ?>" class="btn btn-outline-primary w-100">
+                            <a href="<?php echo esc_url(home_url('/join')); ?>" class="btn btn-outline-light w-100 border border-secondary">
                                 <i class="fas fa-crown me-2"></i>
                                 <?php esc_html_e('Premium Membership', 'flexpress'); ?>
                             </a>

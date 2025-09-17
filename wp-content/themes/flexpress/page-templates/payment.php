@@ -772,7 +772,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Watch for iframe addition and adjust height
     const priceContainer = document.getElementById('price-element');
-    if (priceContainer) {
+    if (priceContainer && priceContainer.nodeType === Node.ELEMENT_NODE) {
         const observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
                 if (mutation.type === 'childList') {
@@ -790,8 +790,14 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
         
-        observer.observe(priceContainer, { childList: true, subtree: true });
-        console.log('Started watching for iframe changes');
+        try {
+            observer.observe(priceContainer, { childList: true, subtree: true });
+            console.log('Started watching for iframe changes');
+        } catch (error) {
+            console.error('Failed to observe price container:', error, priceContainer);
+        }
+    } else {
+        console.warn('Price container element not found or invalid:', priceContainer);
     }
 });
 </script>

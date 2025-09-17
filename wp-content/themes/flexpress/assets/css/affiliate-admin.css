@@ -117,6 +117,21 @@
     padding: 20px;
 }
 
+.modal-actions {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+    text-align: right;
+}
+
+.modal-actions .button {
+    margin-left: 10px;
+}
+
+.modal-actions .button:first-child {
+    margin-left: 0;
+}
+
 /* Form Fields */
 .form-field {
     margin-bottom: 20px;

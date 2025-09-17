@@ -127,7 +127,7 @@ class FlexPress_Affiliate_Settings {
             period_end date NOT NULL,
             total_commissions decimal(10,2) NOT NULL,
             payout_amount decimal(10,2) NOT NULL,
-            payout_method enum('paypal', 'crypto', 'aus_bank_transfer', 'yoursafe', 'ach', 'swift') NOT NULL DEFAULT 'paypal',
+            payout_method enum('paypal', 'bank_transfer', 'check', 'crypto') NOT NULL DEFAULT 'paypal',
             payout_details text,
             status enum('pending', 'processing', 'completed', 'failed') NOT NULL DEFAULT 'pending',
             notes text,
@@ -687,12 +687,10 @@ class FlexPress_Affiliate_Settings {
                                 <div class="form-field">
                                     <label for="add-affiliate-payout-method"><?php esc_html_e('Preferred Payout Method', 'flexpress'); ?> *</label>
                                     <select id="add-affiliate-payout-method" name="payout_method" required>
-                                        <option value="paypal"><?php esc_html_e('PayPal (Free)', 'flexpress'); ?></option>
-                                        <option value="crypto"><?php esc_html_e('Cryptocurrency (Free)', 'flexpress'); ?></option>
-                                        <option value="aus_bank_transfer"><?php esc_html_e('Australian Bank Transfer (Free)', 'flexpress'); ?></option>
-                                        <option value="yoursafe"><?php esc_html_e('Yoursafe (Free)', 'flexpress'); ?></option>
-                                        <option value="ach"><?php esc_html_e('ACH - US Only ($10 USD Fee)', 'flexpress'); ?></option>
-                                        <option value="swift"><?php esc_html_e('Swift International ($30 USD Fee)', 'flexpress'); ?></option>
+                                        <option value="paypal"><?php esc_html_e('PayPal', 'flexpress'); ?></option>
+                                        <option value="bank_transfer"><?php esc_html_e('Bank Transfer', 'flexpress'); ?></option>
+                                        <option value="check"><?php esc_html_e('Check', 'flexpress'); ?></option>
+                                        <option value="crypto"><?php esc_html_e('Cryptocurrency', 'flexpress'); ?></option>
                                     </select>
                                 </div>
                                 <div class="form-field">
@@ -777,12 +775,10 @@ class FlexPress_Affiliate_Settings {
                                 <div class="form-field">
                                     <label for="edit-affiliate-payout-method"><?php esc_html_e('Preferred Payout Method', 'flexpress'); ?> *</label>
                                     <select id="edit-affiliate-payout-method" name="payout_method" required>
-                                        <option value="paypal"><?php esc_html_e('PayPal (Free)', 'flexpress'); ?></option>
-                                        <option value="crypto"><?php esc_html_e('Cryptocurrency (Free)', 'flexpress'); ?></option>
-                                        <option value="aus_bank_transfer"><?php esc_html_e('Australian Bank Transfer (Free)', 'flexpress'); ?></option>
-                                        <option value="yoursafe"><?php esc_html_e('Yoursafe (Free)', 'flexpress'); ?></option>
-                                        <option value="ach"><?php esc_html_e('ACH - US Only ($10 USD Fee)', 'flexpress'); ?></option>
-                                        <option value="swift"><?php esc_html_e('Swift International ($30 USD Fee)', 'flexpress'); ?></option>
+                                        <option value="paypal"><?php esc_html_e('PayPal', 'flexpress'); ?></option>
+                                        <option value="bank_transfer"><?php esc_html_e('Bank Transfer', 'flexpress'); ?></option>
+                                        <option value="check"><?php esc_html_e('Check', 'flexpress'); ?></option>
+                                        <option value="crypto"><?php esc_html_e('Cryptocurrency', 'flexpress'); ?></option>
                                     </select>
                                 </div>
                                 <div class="form-field">
@@ -1070,20 +1066,6 @@ class FlexPress_Affiliate_Settings {
                         $(this).fadeOut();
                     }
                 });
-                
-                // Create Payout button functionality
-                $('#create-payout').on('click', function() {
-                    $('#create-payout-modal').fadeIn(300);
-                });
-                
-                // Refresh payouts functionality
-                $('#refresh-payouts').on('click', function() {
-                    $('#payouts-list').html('<tr><td colspan="7">Loading payouts...</td></tr>');
-                    // In a real implementation, this would make an AJAX call
-                    setTimeout(function() {
-                        $('#payouts-list').html('<tr><td colspan="7">No payouts found.</td></tr>');
-                    }, 1000);
-                });
             });
             </script>
         </div>
@@ -1094,7 +1076,7 @@ class FlexPress_Affiliate_Settings {
      * Enqueue admin scripts
      */
     public function enqueue_admin_scripts($hook) {
-        if ($hook !== 'flexpress_page_flexpress-affiliate-settings') {
+        if ($hook !== 'flexpress-settings_page_flexpress-affiliate-settings') {
             return;
         }
 
@@ -1184,7 +1166,7 @@ class FlexPress_Affiliate_Settings {
             $status_label = ucfirst($affiliate->status);
             
             // Format commission rates
-            $commission_display = $affiliate->commission_initial . '% / ' . $affiliate->commission_rebill . '% / ' . $affiliate->commission_unlock . '%';
+            $commission_display = $affiliate->commission_signup . '% / ' . $affiliate->commission_rebill . '% / ' . $affiliate->commission_unlock . '%';
             
             // Format revenue
             $revenue_display = '$' . number_format($affiliate->total_revenue, 2);
@@ -1198,17 +1180,6 @@ class FlexPress_Affiliate_Settings {
             echo '<td>';
             echo '<button type="button" class="button button-small view-affiliate" data-id="' . esc_attr($affiliate->id) . '">' . esc_html__('View', 'flexpress') . '</button> ';
             echo '<button type="button" class="button button-small edit-affiliate" data-id="' . esc_attr($affiliate->id) . '">' . esc_html__('Edit', 'flexpress') . '</button>';
-            
-            // Status management buttons
-            if ($affiliate->status === 'pending') {
-                echo ' <button type="button" class="button button-primary button-small approve-affiliate" data-id="' . esc_attr($affiliate->id) . '">' . esc_html__('Approve', 'flexpress') . '</button>';
-                echo ' <button type="button" class="button button-secondary button-small reject-affiliate" data-id="' . esc_attr($affiliate->id) . '">' . esc_html__('Reject', 'flexpress') . '</button>';
-            } elseif ($affiliate->status === 'active') {
-                echo ' <button type="button" class="button button-secondary button-small suspend-affiliate" data-id="' . esc_attr($affiliate->id) . '">' . esc_html__('Suspend', 'flexpress') . '</button>';
-            } elseif ($affiliate->status === 'suspended') {
-                echo ' <button type="button" class="button button-primary button-small reactivate-affiliate" data-id="' . esc_attr($affiliate->id) . '">' . esc_html__('Reactivate', 'flexpress') . '</button>';
-            }
-            
             echo '</td>';
             echo '</tr>';
         }
@@ -1247,249 +1218,17 @@ class FlexPress_Affiliate_Settings {
         $payouts->get_eligible_affiliates();
     }
 
-    /**
-     * Create affiliate promo code
-     */
+    // TODO: Implement remaining AJAX methods
     public function create_affiliate_code() {
-        check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
-        
-        if (!current_user_can('manage_options')) {
-            wp_die('Insufficient permissions');
-        }
-        
-        $affiliate_id = intval($_POST['affiliate_id']);
-        $code = sanitize_text_field($_POST['code']);
-        $display_name = sanitize_text_field($_POST['display_name']);
-        $custom_pricing = sanitize_textarea_field($_POST['custom_pricing']);
-        $usage_limit = intval($_POST['usage_limit']);
-        $valid_from = sanitize_text_field($_POST['valid_from']);
-        $valid_until = sanitize_text_field($_POST['valid_until']);
-        
-        global $wpdb;
-        $table = $wpdb->prefix . 'flexpress_affiliate_promo_codes';
-        
-        $result = $wpdb->insert(
-            $table,
-            [
-                'code' => $code,
-                'affiliate_id' => $affiliate_id,
-                'display_name' => $display_name,
-                'custom_pricing_json' => $custom_pricing,
-                'usage_limit' => $usage_limit ?: null,
-                'valid_from' => $valid_from ?: null,
-                'valid_until' => $valid_until ?: null,
-                'status' => 'active'
-            ],
-            ['%s', '%d', '%s', '%s', '%d', '%s', '%s', '%s']
-        );
-        
-        if ($result) {
-            wp_send_json_success(['message' => 'Promo code created successfully']);
-        } else {
-            wp_send_json_error(['message' => 'Failed to create promo code']);
-        }
+        // Implementation needed
     }
 
-    /**
-     * Delete affiliate promo code
-     */
     public function delete_affiliate_code() {
-        check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
-        
-        if (!current_user_can('manage_options')) {
-            wp_die('Insufficient permissions');
-        }
-        
-        $code_id = intval($_POST['code_id']);
-        
-        global $wpdb;
-        $table = $wpdb->prefix . 'flexpress_affiliate_promo_codes';
-        
-        $result = $wpdb->delete($table, ['id' => $code_id], ['%d']);
-        
-        if ($result) {
-            wp_send_json_success(['message' => 'Promo code deleted successfully']);
-        } else {
-            wp_send_json_error(['message' => 'Failed to delete promo code']);
-        }
+        // Implementation needed
     }
 
-    /**
-     * Toggle affiliate status (approve/reject/suspend)
-     */
     public function toggle_affiliate_status() {
-        check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
-        
-        if (!current_user_can('manage_options')) {
-            wp_die('Insufficient permissions');
-        }
-        
-        $affiliate_id = intval($_POST['affiliate_id']);
-        $new_status = sanitize_text_field($_POST['status']);
-        $notes = sanitize_textarea_field($_POST['notes'] ?? '');
-        
-        if (!in_array($new_status, ['pending', 'active', 'suspended', 'rejected'])) {
-            wp_send_json_error(['message' => 'Invalid status']);
-        }
-        
-        global $wpdb;
-        $table = $wpdb->prefix . 'flexpress_affiliates';
-        
-        $update_data = ['status' => $new_status];
-        if ($notes) {
-            $update_data['notes'] = $notes;
-        }
-        
-        $result = $wpdb->update(
-            $table,
-            $update_data,
-            ['id' => $affiliate_id],
-            ['%s', '%s'],
-            ['%d']
-        );
-        
-        if ($result !== false) {
-            // Send notification email to affiliate
-            $this->send_status_notification($affiliate_id, $new_status, $notes);
-            
-            wp_send_json_success(['message' => 'Affiliate status updated successfully']);
-        } else {
-            wp_send_json_error(['message' => 'Failed to update affiliate status']);
-        }
-    }
-
-    /**
-     * Get affiliate application details
-     */
-    public function get_affiliate_details() {
-        check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
-        
-        if (!current_user_can('manage_options')) {
-            wp_die('Insufficient permissions');
-        }
-        
-        $affiliate_id = intval($_POST['affiliate_id']);
-        
-        global $wpdb;
-        $affiliates_table = $wpdb->prefix . 'flexpress_affiliates';
-        $promo_codes_table = $wpdb->prefix . 'flexpress_affiliate_promo_codes';
-        
-        // Get affiliate details
-        $affiliate = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM $affiliates_table WHERE id = %d",
-            $affiliate_id
-        ));
-        
-        if (!$affiliate) {
-            wp_send_json_error(['message' => 'Affiliate not found']);
-        }
-        
-        // Get promo codes
-        $promo_codes = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM $promo_codes_table WHERE affiliate_id = %d ORDER BY created_at DESC",
-            $affiliate_id
-        ));
-        
-        // Get recent transactions
-        $transactions_table = $wpdb->prefix . 'flexpress_affiliate_transactions';
-        $transactions = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM $transactions_table WHERE affiliate_id = %d ORDER BY created_at DESC LIMIT 10",
-            $affiliate_id
-        ));
-        
-        // Get recent clicks
-        $clicks_table = $wpdb->prefix . 'flexpress_affiliate_clicks';
-        $clicks = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM $clicks_table WHERE affiliate_id = %d ORDER BY created_at DESC LIMIT 10",
-            $affiliate_id
-        ));
-        
-        wp_send_json_success([
-            'affiliate' => $affiliate,
-            'promo_codes' => $promo_codes,
-            'transactions' => $transactions,
-            'clicks' => $clicks
-        ]);
-    }
-
-    /**
-     * Update affiliate details
-     */
-    public function update_affiliate_details() {
-        check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
-        
-        if (!current_user_can('manage_options')) {
-            wp_die('Insufficient permissions');
-        }
-        
-        $affiliate_id = intval($_POST['affiliate_id']);
-        $field = sanitize_text_field($_POST['field']);
-        $value = sanitize_text_field($_POST['value']);
-        
-        global $wpdb;
-        $table = $wpdb->prefix . 'flexpress_affiliates';
-        
-        $allowed_fields = [
-            'display_name', 'email', 'website', 'payout_method', 
-            'payout_details', 'commission_initial', 'commission_rebill', 
-            'commission_unlock', 'payout_threshold', 'notes'
-        ];
-        
-        if (!in_array($field, $allowed_fields)) {
-            wp_send_json_error(['message' => 'Invalid field']);
-        }
-        
-        $result = $wpdb->update(
-            $table,
-            [$field => $value],
-            ['id' => $affiliate_id],
-            ['%s'],
-            ['%d']
-        );
-        
-        if ($result !== false) {
-            wp_send_json_success(['message' => 'Affiliate updated successfully']);
-        } else {
-            wp_send_json_error(['message' => 'Failed to update affiliate']);
-        }
-    }
-
-    /**
-     * Send status notification email to affiliate
-     */
-    private function send_status_notification($affiliate_id, $status, $notes = '') {
-        global $wpdb;
-        $table = $wpdb->prefix . 'flexpress_affiliates';
-        
-        $affiliate = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM $table WHERE id = %d",
-            $affiliate_id
-        ));
-        
-        if (!$affiliate) {
-            return false;
-        }
-        
-        $subject = 'Affiliate Application Status Update - ' . get_bloginfo('name');
-        
-        $status_messages = [
-            'active' => 'Congratulations! Your affiliate application has been approved.',
-            'rejected' => 'Unfortunately, your affiliate application has been rejected.',
-            'suspended' => 'Your affiliate account has been suspended.',
-            'pending' => 'Your affiliate application is still under review.'
-        ];
-        
-        $message = $status_messages[$status] ?? 'Your affiliate status has been updated.';
-        
-        if ($notes) {
-            $message .= "\n\nNotes: " . $notes;
-        }
-        
-        $message .= "\n\nIf you have any questions, please contact us.";
-        
-        $headers = ['Content-Type: text/plain; charset=UTF-8'];
-        
-        return wp_mail($affiliate->email, $subject, $message, $headers);
+        // Implementation needed
     }
 
     public function get_affiliate_stats() {

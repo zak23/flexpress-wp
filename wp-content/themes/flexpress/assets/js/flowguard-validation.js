@@ -388,6 +388,12 @@ class FlowguardValidation {
         // Watch for field containers
         const fieldContainers = document.querySelectorAll('.flowguard-field-container');
         fieldContainers.forEach(container => {
+            // Ensure container is a valid Node
+            if (!container || !container.nodeType) {
+                console.warn('Invalid container element:', container);
+                return;
+            }
+            
             // Add validation classes
             container.classList.add('validation-enabled');
             
@@ -403,7 +409,11 @@ class FlowguardValidation {
                 });
             });
             
-            observer.observe(container, { childList: true, subtree: true });
+            try {
+                observer.observe(container, { childList: true, subtree: true });
+            } catch (error) {
+                console.error('Failed to observe container:', error, container);
+            }
         });
     }
     

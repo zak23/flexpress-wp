@@ -20,7 +20,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Pay-Per-View (PPV)**: Individual episode purchases with unlock buttons
 - **Member Discounts**: Flexible pricing for subscribers
 - **Webhook Processing**: Real-time payment confirmations
-- **Affiliate System**: Commission tracking and management
+- **Affiliate System**: Complete commission tracking and management system
 
 ### 🎥 Video Management
 - **BunnyCDN Stream Integration**: Secure video hosting and streaming
@@ -293,7 +293,7 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 - **Membership**: User management and access control
 - **Verotel**: Payment processing configuration
 - **Pricing**: Episode pricing and discount management
-- **Affiliate**: Commission tracking setup
+- **Affiliate**: Complete affiliate and promo-code management system
 - **Contact & Social**: Business information and social media
 
 ### Management Tools
@@ -309,6 +309,52 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 - **Privacy Policy**: GDPR-compliant privacy documentation
 - **Terms & Conditions**: Service agreement templates
 - **Content Removal**: DMCA takedown request forms
+
+---
+
+## 🤝 Affiliate System
+
+### Core Features
+- **Module Toggle**: Enable/disable entire affiliate system from admin settings
+- **Affiliate Applications**: Public application form with admin approval workflow
+- **Commission Tracking**: Automatic commission calculation and tracking
+- **Promo Code Management**: Create and manage promotional codes with custom pricing
+- **Click Tracking**: 30-day cookie-based attribution system
+- **Payout Management**: Threshold-based payout processing with 6 payment methods (PayPal, Crypto, Australian Bank Transfer, Yoursafe, ACH, Swift)
+- **Real-time Analytics**: Live statistics and performance tracking
+
+### Commission Structure
+- **Initial Sales**: Configurable percentage (default 25%)
+- **Recurring Payments**: Lower rate for rebills (default 10%)
+- **Unlock Purchases**: Special rate for PPV content (default 15%)
+- **Per-Affiliate Overrides**: Custom rates for individual affiliates
+- **Promo Code Pricing**: Custom pricing overrides per promotional code
+
+### Database Schema
+- **wp_flexpress_affiliates**: Core affiliate data and statistics
+- **wp_flexpress_affiliate_promo_codes**: Promo code management
+- **wp_flexpress_affiliate_clicks**: Click tracking and attribution
+- **wp_flexpress_affiliate_transactions**: Commission records
+- **wp_flexpress_affiliate_payouts**: Payout management
+
+### Integration Points
+- **Flowguard Webhooks**: Automatic commission processing on payment events
+- **Cookie Tracking**: 30-day attribution window with secure cookie management
+- **User Management**: WordPress user system integration
+- **Admin Interface**: Complete management dashboard in FlexPress Settings
+
+### Frontend Components
+- **Application Form**: `[affiliate_application_form]` shortcode
+- **Affiliate Dashboard**: `[affiliate_dashboard]` shortcode
+- **Stats Widget**: `[affiliate_stats]` shortcode
+- **Referral Links**: `[affiliate_referral_link]` shortcode
+
+### Security Features
+- **Input Sanitization**: All user input properly sanitized
+- **CSRF Protection**: Nonce verification on all forms
+- **Access Controls**: Role-based permissions
+- **Cookie Security**: Secure, HTTP-only cookies
+- **GDPR Compliance**: Cookie notices and data protection
 
 ---
 
@@ -663,12 +709,12 @@ $commission_tiers = [
 1. **Multiple Payout Methods:**
 ```php
 $payout_methods = [
-    'paypal'        => ['min_amount' => 50,  'fee' => '2.9%', 'processing_time' => '1-2 days'],
-    'bank_transfer' => ['min_amount' => 100, 'fee' => '$5',   'processing_time' => '3-5 days'],
-    'crypto_btc'    => ['min_amount' => 25,  'fee' => '1%',   'processing_time' => '1 hour'],
-    'crypto_eth'    => ['min_amount' => 25,  'fee' => '1.5%', 'processing_time' => '30 minutes'],
-    'wise'          => ['min_amount' => 50,  'fee' => '$3',   'processing_time' => '1-2 days'],
-    'revolut'       => ['min_amount' => 50,  'fee' => '1%',   'processing_time' => '1 day']
+    'paypal' => 'PayPal (Free)',
+    'crypto' => 'Cryptocurrency (Free)', 
+    'aus_bank_transfer' => 'Australian Bank Transfer (Free)',
+    'yoursafe' => 'Yoursafe (Free)',
+    'ach' => 'ACH - US Only ($10 USD Fee)',
+    'swift' => 'Swift International ($30 USD Fee)'
 ];
 ```
 

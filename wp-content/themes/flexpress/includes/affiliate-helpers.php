@@ -1,196 +1,92 @@
 <?php
 /**
  * FlexPress Affiliate Helper Functions
- *
+ * 
+ * Utility functions for the affiliate system.
+ * 
  * @package FlexPress
+ * @since 1.0.0
  */
 
 if (!defined('ABSPATH')) {
-    exit; // Exit if accessed directly.
+    exit;
 }
 
 /**
- * Track affiliate commission for signup, rebill, or PPV
- *
- * @param string $promo_code The promo code used
- * @param int $user_id The user ID who made the purchase
- * @param string $transaction_type 'signup', 'rebill', or 'ppv'
- * @param string $plan_id The plan purchased
- * @param string $transaction_id The transaction ID
- * @param float $amount The amount paid
+ * Check if affiliate system is enabled
+ * 
+ * @return bool True if enabled
  */
-function flexpress_track_affiliate_commission($promo_code, $user_id, $transaction_type, $plan_id, $transaction_id, $amount = 0.00) {
-    if (empty($promo_code)) {
-        return;
-    }
-    
-    global $wpdb;
-    
-    // Find the affiliate by promo code
-    $affiliate = $wpdb->get_row($wpdb->prepare(
-        "SELECT * FROM {$wpdb->prefix}flexpress_affiliates WHERE affiliate_code = %s AND status = 'active'",
-        $promo_code
-    ));
-    
-    if (!$affiliate) {
-        error_log("FlexPress Affiliate: No active affiliate found for promo code: $promo_code");
-        return;
-    }
-    
-    // Determine commission rate based on transaction type
-    $commission_rate = ($transaction_type === 'signup') ? $affiliate->commission_signup : $affiliate->commission_rebill;
-    
-    // Calculate commission amount
-    $commission_amount = 0.00;
-    if ($affiliate->commission_type === 'percentage') {
-        $commission_amount = ($amount * $commission_rate) / 100;
-    } else {
-        $commission_amount = $commission_rate; // Flat rate
-    }
-    
-    // Insert commission record
-    $commission_id = $wpdb->insert(
-        $wpdb->prefix . 'flexpress_affiliate_commissions',
-        array(
-            'affiliate_id' => $affiliate->id,
-            'user_id' => $user_id,
-            'transaction_type' => $transaction_type,
-            'transaction_id' => $transaction_id,
-            'plan_id' => $plan_id,
-            'revenue_amount' => floatval($amount),
-            'commission_rate' => floatval($commission_rate),
-            'commission_amount' => floatval($commission_amount),
-            'commission_type' => $affiliate->commission_type,
-            'status' => 'pending',
-            'promo_code' => $promo_code,
-            'created_at' => current_time('mysql')
-        ),
-        array('%d', '%d', '%s', '%s', '%s', '%f', '%f', '%f', '%s', '%s', '%s', '%s')
-    );
-    
-    if ($commission_id) {
-        // Update affiliate totals
-        if ($transaction_type === 'signup') {
-            $wpdb->update(
-                $wpdb->prefix . 'flexpress_affiliates',
-                array(
-                    'total_signups' => $affiliate->total_signups + 1,
-                    'total_revenue' => $affiliate->total_revenue + $amount,
-                    'total_commission' => $affiliate->total_commission + $commission_amount,
-                    'pending_commission' => $affiliate->pending_commission + $commission_amount,
-                    'updated_at' => current_time('mysql')
-                ),
-                array('id' => $affiliate->id),
-                array('%d', '%f', '%f', '%f', '%s'),
-                array('%d')
-            );
-        } else if ($transaction_type === 'rebill') {
-            $wpdb->update(
-                $wpdb->prefix . 'flexpress_affiliates',
-                array(
-                    'total_rebills' => $affiliate->total_rebills + 1,
-                    'total_revenue' => $affiliate->total_revenue + $amount,
-                    'total_commission' => $affiliate->total_commission + $commission_amount,
-                    'pending_commission' => $affiliate->pending_commission + $commission_amount,
-                    'updated_at' => current_time('mysql')
-                ),
-                array('id' => $affiliate->id),
-                array('%d', '%f', '%f', '%f', '%s'),
-                array('%d')
-            );
-        }
-        
-        error_log("FlexPress Affiliate: Commission tracked - Affiliate: {$affiliate->display_name}, Type: $transaction_type, Amount: $$commission_amount");
-    }
+function flexpress_is_affiliate_system_enabled() {
+    $settings = get_option('flexpress_affiliate_settings', array());
+    return !empty($settings['module_enabled']);
 }
 
 /**
- * Register a new affiliate
- *
- * @param array $affiliate_data Affiliate registration data
- * @return array|WP_Error Success with affiliate ID or error
+ * Get client IP address
+ * 
+ * @return string IP address
  */
-function flexpress_register_affiliate($affiliate_data) {
-    global $wpdb;
+function flexpress_get_client_ip() {
+    $ip_keys = array('HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR');
     
-    // Validate required fields
-    $required_fields = array('display_name', 'email', 'affiliate_code');
-    foreach ($required_fields as $field) {
-        if (empty($affiliate_data[$field])) {
-            return new WP_Error('missing_field', "Field '$field' is required");
+    foreach ($ip_keys as $key) {
+        if (array_key_exists($key, $_SERVER) === true) {
+            foreach (explode(',', $_SERVER[$key]) as $ip) {
+                $ip = trim($ip);
+                
+                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false) {
+                    return $ip;
+                }
+            }
         }
     }
     
-    // Validate email
-    if (!is_email($affiliate_data['email'])) {
-        return new WP_Error('invalid_email', 'Invalid email address');
+    return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+}
+
+/**
+ * Generate unique affiliate code
+ * 
+ * @return string Unique affiliate code
+ */
+function flexpress_generate_affiliate_code() {
+    global $wpdb;
+    
+    do {
+        $code = 'AFF' . strtoupper(wp_generate_password(8, false));
+        $exists = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM {$wpdb->prefix}flexpress_affiliates WHERE affiliate_code = %s",
+            $code
+        ));
+    } while ($exists);
+    
+    return $code;
+}
+
+/**
+ * Create affiliate referral URL
+ * 
+ * @param string $affiliate_code Affiliate code
+ * @param string $promo_code Optional promo code
+ * @return string Referral URL
+ */
+function flexpress_create_affiliate_referral_url($affiliate_code, $promo_code = '') {
+    $base_url = home_url('/join');
+    $params = array('ref' => $affiliate_code);
+    
+    if (!empty($promo_code)) {
+        $params['promo'] = $promo_code;
     }
     
-    // Validate affiliate code format
-    if (!preg_match('/^[a-zA-Z0-9-]{3,20}$/', $affiliate_data['affiliate_code'])) {
-        return new WP_Error('invalid_code', 'Affiliate code must be 3-20 characters and contain only letters, numbers, and hyphens');
-    }
-    
-    // Check if affiliate code already exists
-    $existing_code = $wpdb->get_var($wpdb->prepare(
-        "SELECT id FROM {$wpdb->prefix}flexpress_affiliates WHERE affiliate_code = %s",
-        $affiliate_data['affiliate_code']
-    ));
-    
-    if ($existing_code) {
-        return new WP_Error('code_exists', 'Affiliate code already exists');
-    }
-    
-    // Check if email already exists
-    $existing_email = $wpdb->get_var($wpdb->prepare(
-        "SELECT id FROM {$wpdb->prefix}flexpress_affiliates WHERE email = %s",
-        $affiliate_data['email']
-    ));
-    
-    if ($existing_email) {
-        return new WP_Error('email_exists', 'Email already registered as affiliate');
-    }
-    
-    // Set default commission rates from settings
-    $affiliate_settings = get_option('flexpress_affiliate_settings', array());
-    $default_signup_commission = floatval($affiliate_settings['commission_rate'] ?? 25);
-    $default_rebill_commission = floatval($affiliate_settings['rebill_commission_rate'] ?? 10);
-    
-    // Insert new affiliate
-    $affiliate_id = $wpdb->insert(
-        $wpdb->prefix . 'flexpress_affiliates',
-        array(
-            'user_id' => intval($affiliate_data['user_id'] ?? 0),
-            'affiliate_code' => sanitize_text_field($affiliate_data['affiliate_code']),
-            'display_name' => sanitize_text_field($affiliate_data['display_name']),
-            'email' => sanitize_email($affiliate_data['email']),
-            'commission_signup' => floatval($affiliate_data['commission_signup'] ?? $default_signup_commission),
-            'commission_rebill' => floatval($affiliate_data['commission_rebill'] ?? $default_rebill_commission),
-            'commission_type' => sanitize_text_field($affiliate_data['commission_type'] ?? 'percentage'),
-            'status' => !empty($affiliate_settings['auto_approve_affiliates']) ? 'active' : 'pending',
-            'referral_url' => esc_url_raw($affiliate_data['referral_url'] ?? ''),
-            'notes' => sanitize_textarea_field($affiliate_data['notes'] ?? ''),
-            'created_at' => current_time('mysql')
-        ),
-        array('%d', '%s', '%s', '%s', '%f', '%f', '%s', '%s', '%s', '%s', '%s')
-    );
-    
-    if ($affiliate_id) {
-        return array(
-            'success' => true,
-            'affiliate_id' => $affiliate_id,
-            'status' => !empty($affiliate_settings['auto_approve_affiliates']) ? 'active' : 'pending'
-        );
-    } else {
-        return new WP_Error('insert_failed', 'Failed to create affiliate account');
-    }
+    return add_query_arg($params, $base_url);
 }
 
 /**
  * Get affiliate by code
- *
- * @param string $affiliate_code The affiliate code
- * @return object|null Affiliate data or null if not found
+ * 
+ * @param string $affiliate_code Affiliate code
+ * @return object|null Affiliate object or null
  */
 function flexpress_get_affiliate_by_code($affiliate_code) {
     global $wpdb;
@@ -202,144 +98,430 @@ function flexpress_get_affiliate_by_code($affiliate_code) {
 }
 
 /**
- * Get affiliate dashboard data
- *
- * @param int $affiliate_id The affiliate ID
- * @return array Dashboard data
+ * Get affiliate by ID
+ * 
+ * @param int $affiliate_id Affiliate ID
+ * @return object|null Affiliate object or null
  */
-function flexpress_get_affiliate_dashboard_data($affiliate_id) {
+function flexpress_get_affiliate_by_id($affiliate_id) {
     global $wpdb;
     
-    $affiliate = $wpdb->get_row($wpdb->prepare(
+    return $wpdb->get_row($wpdb->prepare(
         "SELECT * FROM {$wpdb->prefix}flexpress_affiliates WHERE id = %d",
         $affiliate_id
     ));
+}
+
+/**
+ * Get promo code by code
+ * 
+ * @param string $promo_code Promo code
+ * @return object|null Promo code object or null
+ */
+function flexpress_get_promo_code_by_code($promo_code) {
+    global $wpdb;
     
-    if (!$affiliate) {
-        return null;
+    return $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM {$wpdb->prefix}flexpress_affiliate_promo_codes WHERE code = %s AND status = 'active'",
+        $promo_code
+    ));
+}
+
+/**
+ * Check if promo code is valid
+ * 
+ * @param string $promo_code Promo code
+ * @return bool True if valid
+ */
+function flexpress_is_promo_code_valid($promo_code) {
+    $promo_data = flexpress_get_promo_code_by_code($promo_code);
+    
+    if (!$promo_data) {
+        return false;
     }
     
-    // Get recent commissions
-    $recent_commissions = $wpdb->get_results($wpdb->prepare(
-        "SELECT * FROM {$wpdb->prefix}flexpress_affiliate_commissions 
-         WHERE affiliate_id = %d 
-         ORDER BY created_at DESC 
-         LIMIT 10",
-        $affiliate_id
-    ));
+    // Check usage limit
+    if ($promo_data->usage_limit && $promo_data->usage_count >= $promo_data->usage_limit) {
+        return false;
+    }
     
-    // Get commission stats by type
-    $commission_stats = $wpdb->get_results($wpdb->prepare(
-        "SELECT 
-            transaction_type,
-            COUNT(*) as count,
-            SUM(commission_amount) as total_commission,
-            SUM(revenue_amount) as total_revenue
-         FROM {$wpdb->prefix}flexpress_affiliate_commissions 
-         WHERE affiliate_id = %d 
-         GROUP BY transaction_type",
-        $affiliate_id
-    ));
+    // Check validity dates
+    $now = current_time('mysql');
     
-    // Get monthly stats
-    $monthly_stats = $wpdb->get_results($wpdb->prepare(
-        "SELECT 
-            DATE_FORMAT(created_at, '%%Y-%%m') as month,
-            COUNT(*) as transactions,
-            SUM(commission_amount) as commission,
-            SUM(revenue_amount) as revenue
-         FROM {$wpdb->prefix}flexpress_affiliate_commissions 
-         WHERE affiliate_id = %d 
-         AND created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-         GROUP BY DATE_FORMAT(created_at, '%%Y-%%m')
-         ORDER BY month DESC",
-        $affiliate_id
-    ));
+    if ($promo_data->valid_from && $now < $promo_data->valid_from) {
+        return false;
+    }
     
-    return array(
-        'affiliate' => $affiliate,
-        'recent_commissions' => $recent_commissions,
-        'commission_stats' => $commission_stats,
-        'monthly_stats' => $monthly_stats
+    if ($promo_data->valid_until && $now > $promo_data->valid_until) {
+        return false;
+    }
+    
+    return true;
+}
+
+/**
+ * Apply promo code pricing
+ * 
+ * @param string $promo_code Promo code
+ * @param array $pricing_data Original pricing data
+ * @return array Modified pricing data
+ */
+function flexpress_apply_promo_code_pricing($promo_code, $pricing_data) {
+    $promo_data = flexpress_get_promo_code_by_code($promo_code);
+    
+    if (!$promo_data || empty($promo_data->custom_pricing_json)) {
+        return $pricing_data;
+    }
+    
+    $custom_pricing = json_decode($promo_data->custom_pricing_json, true);
+    
+    if (!$custom_pricing) {
+        return $pricing_data;
+    }
+    
+    // Apply custom pricing overrides
+    foreach ($custom_pricing as $plan_id => $plan_pricing) {
+        if (isset($pricing_data[$plan_id])) {
+            $pricing_data[$plan_id] = array_merge($pricing_data[$plan_id], $plan_pricing);
+        }
+    }
+    
+    return $pricing_data;
+}
+
+/**
+ * Process affiliate commission
+ * 
+ * @param int $affiliate_id Affiliate ID
+ * @param int $user_id User ID
+ * @param string $transaction_type Transaction type
+ * @param string $transaction_id Transaction ID
+ * @param string $plan_id Plan ID
+ * @param float $amount Transaction amount
+ * @param int|null $promo_code_id Promo code ID
+ * @param int|null $click_id Click ID
+ * @return bool True on success
+ */
+function flexpress_process_affiliate_commission($affiliate_id, $user_id, $transaction_type, $transaction_id, $plan_id, $amount, $promo_code_id = null, $click_id = null) {
+    global $wpdb;
+    
+    // Get affiliate data
+    $affiliate = flexpress_get_affiliate_by_id($affiliate_id);
+    
+    if (!$affiliate || $affiliate->status !== 'active') {
+        return false;
+    }
+    
+    // Determine commission rate based on transaction type
+    $commission_rate = 0;
+    switch ($transaction_type) {
+        case 'initial':
+            $commission_rate = $affiliate->commission_initial;
+            break;
+        case 'rebill':
+            $commission_rate = $affiliate->commission_rebill;
+            break;
+        case 'unlock':
+            $commission_rate = $affiliate->commission_unlock;
+            break;
+        default:
+            return false;
+    }
+    
+    // Calculate commission amount
+    $commission_amount = ($amount * $commission_rate) / 100;
+    
+    // Insert transaction record
+    $result = $wpdb->insert(
+        $wpdb->prefix . 'flexpress_affiliate_transactions',
+        array(
+            'affiliate_id' => $affiliate_id,
+            'promo_code_id' => $promo_code_id,
+            'user_id' => $user_id,
+            'transaction_type' => $transaction_type,
+            'transaction_id' => $transaction_id,
+            'flowguard_transaction_id' => $transaction_id,
+            'plan_id' => $plan_id,
+            'revenue_amount' => $amount,
+            'commission_rate' => $commission_rate,
+            'commission_amount' => $commission_amount,
+            'status' => 'pending',
+            'click_id' => $click_id,
+            'created_at' => current_time('mysql')
+        ),
+        array('%d', '%d', '%d', '%s', '%s', '%s', '%s', '%f', '%f', '%f', '%s', '%d', '%s')
     );
-}
-
-/**
- * Generate unique affiliate code suggestion
- *
- * @param string $base_name Base name for code generation
- * @return string Unique affiliate code
- */
-function flexpress_generate_affiliate_code($base_name) {
-    global $wpdb;
     
-    // Clean up base name
-    $base_code = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $base_name));
-    $base_code = substr($base_code, 0, 15);
-    
-    if (empty($base_code)) {
-        $base_code = 'affiliate';
+    if (!$result) {
+        return false;
     }
     
-    // Try the base code first
-    $attempt = $base_code;
-    $counter = 1;
+    $transaction_record_id = $wpdb->insert_id;
     
-    while (true) {
-        $existing = $wpdb->get_var($wpdb->prepare(
-            "SELECT id FROM {$wpdb->prefix}flexpress_affiliates WHERE affiliate_code = %s",
-            $attempt
+    // Update affiliate stats
+    $wpdb->query($wpdb->prepare(
+        "UPDATE {$wpdb->prefix}flexpress_affiliates SET 
+         total_revenue = total_revenue + %f,
+         pending_commission = pending_commission + %f,
+         total_signups = total_signups + 1
+         WHERE id = %d",
+        $amount,
+        $commission_amount,
+        $affiliate_id
+    ));
+    
+    // Update promo code stats if applicable
+    if ($promo_code_id) {
+        $wpdb->query($wpdb->prepare(
+            "UPDATE {$wpdb->prefix}flexpress_affiliate_promo_codes SET 
+             usage_count = usage_count + 1,
+             revenue_generated = revenue_generated + %f,
+             commission_earned = commission_earned + %f
+             WHERE id = %d",
+            $amount,
+            $commission_amount,
+            $promo_code_id
         ));
-        
-        if (!$existing) {
-            return $attempt;
-        }
-        
-        $attempt = $base_code . $counter;
-        $counter++;
-        
-        // Prevent infinite loop
-        if ($counter > 999) {
-            return $base_code . time();
-        }
+    }
+    
+    // Mark click as converted if applicable
+    if ($click_id) {
+        $tracker = FlexPress_Affiliate_Tracker::get_instance();
+        $tracker->mark_click_converted($click_id, $transaction_type, $amount);
+    }
+    
+    return true;
+}
+
+/**
+ * Approve affiliate commission
+ * 
+ * @param int $transaction_id Transaction ID
+ * @return bool True on success
+ */
+function flexpress_approve_affiliate_commission($transaction_id) {
+    global $wpdb;
+    
+    $transaction = $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM {$wpdb->prefix}flexpress_affiliate_transactions WHERE id = %d",
+        $transaction_id
+    ));
+    
+    if (!$transaction || $transaction->status !== 'pending') {
+        return false;
+    }
+    
+    // Update transaction status
+    $result = $wpdb->update(
+        $wpdb->prefix . 'flexpress_affiliate_transactions',
+        array(
+            'status' => 'approved',
+            'approved_at' => current_time('mysql')
+        ),
+        array('id' => $transaction_id),
+        array('%s', '%s'),
+        array('%d')
+    );
+    
+    if ($result === false) {
+        return false;
+    }
+    
+    // Update affiliate balances
+    $wpdb->query($wpdb->prepare(
+        "UPDATE {$wpdb->prefix}flexpress_affiliates SET 
+         pending_commission = pending_commission - %f,
+         approved_commission = approved_commission + %f
+         WHERE id = %d",
+        $transaction->commission_amount,
+        $transaction->commission_amount,
+        $transaction->affiliate_id
+    ));
+    
+    return true;
+}
+
+/**
+ * Process affiliate payout
+ * 
+ * @param int $affiliate_id Affiliate ID
+ * @param array $payout_data Payout data
+ * @return bool True on success
+ */
+function flexpress_process_affiliate_payout($affiliate_id, $payout_data) {
+    global $wpdb;
+    
+    // Get affiliate data
+    $affiliate = flexpress_get_affiliate_by_id($affiliate_id);
+    
+    if (!$affiliate || $affiliate->approved_commission < $affiliate->payout_threshold) {
+        return false;
+    }
+    
+    // Create payout record
+    $result = $wpdb->insert(
+        $wpdb->prefix . 'flexpress_affiliate_payouts',
+        array(
+            'affiliate_id' => $affiliate_id,
+            'period_start' => $payout_data['period_start'],
+            'period_end' => $payout_data['period_end'],
+            'total_commissions' => $affiliate->approved_commission,
+            'payout_amount' => $affiliate->approved_commission,
+            'payout_method' => $affiliate->payout_method,
+            'payout_details' => $affiliate->payout_details,
+            'status' => 'pending',
+            'created_at' => current_time('mysql')
+        ),
+        array('%d', '%s', '%s', '%f', '%f', '%s', '%s', '%s', '%s')
+    );
+    
+    if (!$result) {
+        return false;
+    }
+    
+    $payout_id = $wpdb->insert_id;
+    
+    // Update affiliate balances
+    $wpdb->query($wpdb->prepare(
+        "UPDATE {$wpdb->prefix}flexpress_affiliates SET 
+         paid_commission = paid_commission + %f,
+         approved_commission = 0
+         WHERE id = %d",
+        $affiliate->approved_commission,
+        $affiliate_id
+    ));
+    
+    // Mark transactions as paid
+    $wpdb->query($wpdb->prepare(
+        "UPDATE {$wpdb->prefix}flexpress_affiliate_transactions SET 
+         status = 'paid',
+         paid_at = %s
+         WHERE affiliate_id = %d AND status = 'approved'",
+        current_time('mysql'),
+        $affiliate_id
+    ));
+    
+    return $payout_id;
+}
+
+/**
+ * Get affiliate statistics
+ * 
+ * @param int $affiliate_id Affiliate ID
+ * @param string $period Period (7d, 30d, 90d, 1y)
+ * @return array Statistics
+ */
+function flexpress_get_affiliate_statistics($affiliate_id, $period = '30d') {
+    $tracker = FlexPress_Affiliate_Tracker::get_instance();
+    return $tracker->get_affiliate_stats($affiliate_id, $period);
+}
+
+/**
+ * Get all affiliates with filters
+ * 
+ * @param array $args Query arguments
+ * @return array Affiliates array
+ */
+function flexpress_get_affiliates($args = array()) {
+    $manager = FlexPress_Affiliate_Manager::get_instance();
+    return $manager->get_affiliates($args);
+}
+
+/**
+ * Get affiliate dashboard data
+ * 
+ * @param int $affiliate_id Affiliate ID
+ * @return array Dashboard data
+ */
+function flexpress_get_affiliate_dashboard_data($affiliate_id) {
+    $dashboard = FlexPress_Affiliate_Dashboard::get_instance();
+    return $dashboard->get_dashboard_data();
+}
+
+/**
+ * Send affiliate notification email
+ * 
+ * @param string $type Email type
+ * @param object $affiliate Affiliate object
+ * @param array $data Additional data
+ * @return bool True on success
+ */
+function flexpress_send_affiliate_notification($type, $affiliate, $data = array()) {
+    $site_name = get_bloginfo('name');
+    $admin_email = get_option('admin_email');
+    
+    switch ($type) {
+        case 'application':
+            $subject = sprintf(__('New Affiliate Application - %s', 'flexpress'), $site_name);
+            $message = sprintf(__("A new affiliate application has been submitted:\n\nName: %s\nEmail: %s\nWebsite: %s\nPayout Method: %s\n\nReview at: %s", 'flexpress'), 
+                $data['affiliate_name'],
+                $data['affiliate_email'],
+                $data['affiliate_website'],
+                $data['payout_method'],
+                admin_url('admin.php?page=flexpress-affiliate-settings')
+            );
+            return wp_mail($admin_email, $subject, $message);
+            
+        case 'approval':
+            $subject = sprintf(__('Your Affiliate Application Has Been Approved - %s', 'flexpress'), $site_name);
+            $message = sprintf(__("Congratulations %s!\n\nYour affiliate application has been approved. You can now start promoting %s and earning commissions.\n\nYour Affiliate Code: %s\nYour Referral URL: %s\nDashboard: %s", 'flexpress'),
+                $affiliate->display_name,
+                $site_name,
+                $affiliate->affiliate_code,
+                $affiliate->referral_url,
+                home_url('/affiliate-dashboard')
+            );
+            return wp_mail($affiliate->email, $subject, $message);
+            
+        case 'rejection':
+            $subject = sprintf(__('Affiliate Application Update - %s', 'flexpress'), $site_name);
+            $message = sprintf(__("Dear %s,\n\nThank you for your interest in our affiliate program. After careful review, we are unable to approve your application at this time.\n\n%s\n\nWe encourage you to reapply in the future as our program requirements may change.", 'flexpress'),
+                $affiliate->display_name,
+                !empty($data['reason']) ? "Reason: " . $data['reason'] : ''
+            );
+            return wp_mail($affiliate->email, $subject, $message);
+            
+        default:
+            return false;
     }
 }
 
 /**
- * Update affiliate commission rates
- *
- * @param int $affiliate_id The affiliate ID
- * @param array $rates New commission rates
- * @return bool Success
+ * Format affiliate commission amount
+ * 
+ * @param float $amount Amount
+ * @param string $currency Currency code
+ * @return string Formatted amount
  */
-function flexpress_update_affiliate_rates($affiliate_id, $rates) {
-    global $wpdb;
+function flexpress_format_affiliate_commission($amount, $currency = 'USD') {
+    $symbols = array(
+        'USD' => '$',
+        'EUR' => '€',
+        'GBP' => '£',
+        'CAD' => 'C$',
+        'AUD' => 'A$'
+    );
     
-    $update_data = array();
+    $symbol = $symbols[$currency] ?? $currency . ' ';
     
-    if (isset($rates['commission_signup'])) {
-        $update_data['commission_signup'] = floatval($rates['commission_signup']);
-    }
-    
-    if (isset($rates['commission_rebill'])) {
-        $update_data['commission_rebill'] = floatval($rates['commission_rebill']);
-    }
-    
-    if (isset($rates['commission_type'])) {
-        $update_data['commission_type'] = sanitize_text_field($rates['commission_type']);
-    }
-    
-    if (!empty($update_data)) {
-        $update_data['updated_at'] = current_time('mysql');
-        
-        return $wpdb->update(
-            $wpdb->prefix . 'flexpress_affiliates',
-            $update_data,
-            array('id' => $affiliate_id),
-            array_fill(0, count($update_data), '%s'),
-            array('%d')
-        );
-    }
-    
-    return false;
-} 
+    return $symbol . number_format($amount, 2);
+}
+
+/**
+ * Get affiliate system settings
+ * 
+ * @return array Settings array
+ */
+function flexpress_get_affiliate_settings() {
+    return get_option('flexpress_affiliate_settings', array());
+}
+
+/**
+ * Update affiliate system settings
+ * 
+ * @param array $settings Settings array
+ * @return bool True on success
+ */
+function flexpress_update_affiliate_settings($settings) {
+    return update_option('flexpress_affiliate_settings', $settings);
+}

@@ -112,6 +112,9 @@ function flexpress_flowguard_webhook_handler() {
             break;
     }
     
+    // Process affiliate commissions if system is enabled
+    flexpress_process_affiliate_commission_from_webhook($payload);
+    
     // Store webhook for analysis
     flexpress_flowguard_store_webhook($payload);
     
@@ -506,6 +509,71 @@ function flexpress_flowguard_store_webhook($payload) {
     
     if ($wpdb->last_error) {
         error_log('Flowguard: Failed to store webhook - ' . $wpdb->last_error);
+    }
+}
+
+/**
+ * Process affiliate commission from Flowguard webhook
+ * 
+ * @param array $payload Webhook payload
+ */
+function flexpress_process_affiliate_commission_from_webhook($payload) {
+    // Check if affiliate system is enabled
+    if (!flexpress_is_affiliate_system_enabled()) {
+        return;
+    }
+    
+    $postback_type = $payload['postbackType'] ?? '';
+    $order_type = $payload['orderType'] ?? '';
+    $transaction_id = $payload['transactionId'] ?? '';
+    $amount = floatval($payload['amount'] ?? 0);
+    $reference_id = $payload['referenceId'] ?? '';
+    
+    // Get user from reference ID
+    $user_id = flexpress_flowguard_get_user_from_reference($reference_id);
+    
+    if (!$user_id || $amount <= 0) {
+        return;
+    }
+    
+    // Get tracking data from cookie
+    $tracker = FlexPress_Affiliate_Tracker::get_instance();
+    $tracking_data = $tracker->get_tracking_data_from_cookie();
+    
+    if (!$tracking_data) {
+        return; // No affiliate tracking
+    }
+    
+    $affiliate_id = $tracking_data['affiliate_id'];
+    $promo_code_id = $tracking_data['promo_code_id'] ?? null;
+    $click_id = $tracking_data['click_id'] ?? null;
+    
+    // Determine transaction type and plan ID
+    $transaction_type = 'initial';
+    $plan_id = $payload['planId'] ?? '';
+    
+    if ($postback_type === 'rebill') {
+        $transaction_type = 'rebill';
+    } elseif ($order_type === 'purchase') {
+        $transaction_type = 'unlock';
+    }
+    
+    // Process the commission
+    $result = flexpress_process_affiliate_commission(
+        $affiliate_id,
+        $user_id,
+        $transaction_type,
+        $transaction_id,
+        $plan_id,
+        $amount,
+        $promo_code_id,
+        $click_id
+    );
+    
+    if ($result) {
+        error_log("Affiliate commission processed: Affiliate {$affiliate_id}, User {$user_id}, Amount {$amount}, Type {$transaction_type}");
+    } else {
+        error_log("Failed to process affiliate commission: Affiliate {$affiliate_id}, User {$user_id}, Amount {$amount}");
     }
 }
 

@@ -39,6 +39,14 @@ require_once FLEXPRESS_PATH . '/includes/pricing-helpers.php';
 require_once FLEXPRESS_PATH . '/includes/affiliate-helpers.php';
 require_once FLEXPRESS_PATH . '/includes/contact-helpers.php';
 
+// Affiliate System Integration
+require_once FLEXPRESS_PATH . '/includes/affiliate-database.php';
+require_once FLEXPRESS_PATH . '/includes/class-flexpress-affiliate-manager.php';
+require_once FLEXPRESS_PATH . '/includes/class-flexpress-affiliate-tracker.php';
+require_once FLEXPRESS_PATH . '/includes/class-flexpress-affiliate-dashboard.php';
+require_once FLEXPRESS_PATH . '/includes/class-flexpress-affiliate-payouts.php';
+require_once FLEXPRESS_PATH . '/includes/affiliate-shortcodes.php';
+
 // Load ACF fields after init to prevent translation issues
 function flexpress_load_acf_fields() {
     require_once FLEXPRESS_PATH . '/includes/acf-fields.php';
@@ -6124,6 +6132,9 @@ function flexpress_theme_activation() {
     // Create talent applications table
     flexpress_create_talent_applications_table();
     
+    // Create affiliate system database tables
+    flexpress_affiliate_init_database();
+    
     // Set default theme options
     flexpress_set_default_theme_options();
     
@@ -6370,3 +6381,470 @@ function flexpress_ajax_create_flowguard_payment() {
     }
 }
 add_action('wp_ajax_flexpress_create_flowguard_payment', 'flexpress_ajax_create_flowguard_payment');
+
+// Affiliate Management AJAX Actions
+add_action('wp_ajax_create_affiliate_code', 'flexpress_ajax_create_affiliate_code');
+add_action('wp_ajax_delete_affiliate_code', 'flexpress_ajax_delete_affiliate_code');
+add_action('wp_ajax_toggle_affiliate_status', 'flexpress_ajax_toggle_affiliate_status');
+add_action('wp_ajax_get_affiliate_details', 'flexpress_ajax_get_affiliate_details');
+add_action('wp_ajax_update_affiliate_details', 'flexpress_ajax_update_affiliate_details');
+add_action('wp_ajax_add_affiliate', 'flexpress_ajax_add_affiliate');
+add_action('wp_ajax_update_affiliate', 'flexpress_ajax_update_affiliate');
+add_action('wp_ajax_get_affiliate_stats', 'flexpress_ajax_get_affiliate_stats');
+add_action('wp_ajax_update_affiliate_code', 'flexpress_ajax_update_affiliate_code');
+add_action('wp_ajax_get_pricing_plans', 'flexpress_ajax_get_pricing_plans');
+add_action('wp_ajax_get_affiliates_list', 'flexpress_ajax_get_affiliates_list');
+add_action('wp_ajax_get_affiliate_statistics', 'flexpress_ajax_get_affiliate_statistics');
+add_action('wp_ajax_bulk_update_affiliate_status', 'flexpress_ajax_bulk_update_affiliate_status');
+
+/**
+ * AJAX handler for creating affiliate promo codes
+ */
+function flexpress_ajax_create_affiliate_code() {
+    if (!current_user_can('manage_options')) {
+        wp_die('Insufficient permissions');
+    }
+    
+    $settings = new FlexPress_Affiliate_Settings();
+    $settings->create_affiliate_code();
+}
+
+/**
+ * AJAX handler for deleting affiliate promo codes
+ */
+function flexpress_ajax_delete_affiliate_code() {
+    if (!current_user_can('manage_options')) {
+        wp_die('Insufficient permissions');
+    }
+    
+    $settings = new FlexPress_Affiliate_Settings();
+    $settings->delete_affiliate_code();
+}
+
+/**
+ * AJAX handler for toggling affiliate status
+ */
+function flexpress_ajax_toggle_affiliate_status() {
+    if (!current_user_can('manage_options')) {
+        wp_die('Insufficient permissions');
+    }
+    
+    $settings = new FlexPress_Affiliate_Settings();
+    $settings->toggle_affiliate_status();
+}
+
+/**
+ * AJAX handler for getting affiliate details
+ */
+function flexpress_ajax_get_affiliate_details() {
+    if (!current_user_can('manage_options')) {
+        wp_die('Insufficient permissions');
+    }
+    
+    $settings = new FlexPress_Affiliate_Settings();
+    $settings->get_affiliate_details();
+}
+
+/**
+ * AJAX handler for updating affiliate details
+ */
+function flexpress_ajax_update_affiliate_details() {
+    if (!current_user_can('manage_options')) {
+        wp_die('Insufficient permissions');
+    }
+    
+    $settings = new FlexPress_Affiliate_Settings();
+    $settings->update_affiliate_details();
+}
+
+/**
+ * AJAX handler for adding new affiliates
+ */
+function flexpress_ajax_add_affiliate() {
+    if (!current_user_can('manage_options')) {
+        wp_die('Insufficient permissions');
+    }
+    
+    check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
+    
+    $display_name = sanitize_text_field($_POST['display_name']);
+    $email = sanitize_email($_POST['email']);
+    $website = esc_url_raw($_POST['website']);
+    $payout_method = sanitize_text_field($_POST['payout_method']);
+    $payout_details = sanitize_text_field($_POST['payout_details']);
+    $commission_initial = floatval($_POST['commission_initial']);
+    $commission_rebill = floatval($_POST['commission_rebill']);
+    $commission_unlock = floatval($_POST['commission_unlock']);
+    $payout_threshold = floatval($_POST['payout_threshold']);
+    $status = sanitize_text_field($_POST['status']);
+    $notes = sanitize_textarea_field($_POST['notes']);
+    
+    global $wpdb;
+    $table = $wpdb->prefix . 'flexpress_affiliates';
+    
+    // Generate unique affiliate code
+    $affiliate_code = strtolower(str_replace(' ', '', $display_name)) . rand(100, 999);
+    
+    // Ensure code is unique
+    $counter = 1;
+    while ($wpdb->get_var($wpdb->prepare("SELECT id FROM $table WHERE affiliate_code = %s", $affiliate_code))) {
+        $affiliate_code = strtolower(str_replace(' ', '', $display_name)) . rand(100, 999);
+        $counter++;
+        if ($counter > 100) {
+            wp_send_json_error(['message' => 'Unable to generate unique affiliate code']);
+        }
+    }
+    
+    $result = $wpdb->insert(
+        $table,
+        [
+            'user_id' => 0, // Manual affiliate, no WordPress user
+            'affiliate_code' => $affiliate_code,
+            'display_name' => $display_name,
+            'email' => $email,
+            'website' => $website,
+            'payout_method' => $payout_method,
+            'payout_details' => $payout_details,
+            'commission_initial' => $commission_initial,
+            'commission_rebill' => $commission_rebill,
+            'commission_unlock' => $commission_unlock,
+            'payout_threshold' => $payout_threshold,
+            'status' => $status,
+            'notes' => $notes,
+            'referral_url' => home_url('/?affiliate=' . $affiliate_code)
+        ],
+        ['%d', '%s', '%s', '%s', '%s', '%s', '%s', '%f', '%f', '%f', '%f', '%s', '%s', '%s']
+    );
+    
+    if ($result) {
+        wp_send_json_success(['message' => 'Affiliate added successfully']);
+    } else {
+        wp_send_json_error(['message' => 'Failed to add affiliate']);
+    }
+}
+
+/**
+ * AJAX handler for updating affiliates
+ */
+function flexpress_ajax_update_affiliate() {
+    if (!current_user_can('manage_options')) {
+        wp_die('Insufficient permissions');
+    }
+    
+    check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
+    
+    $affiliate_id = intval($_POST['affiliate_id']);
+    $display_name = sanitize_text_field($_POST['display_name']);
+    $email = sanitize_email($_POST['email']);
+    $website = esc_url_raw($_POST['website']);
+    $payout_method = sanitize_text_field($_POST['payout_method']);
+    $payout_details = sanitize_text_field($_POST['payout_details']);
+    $commission_initial = floatval($_POST['commission_initial']);
+    $commission_rebill = floatval($_POST['commission_rebill']);
+    $commission_unlock = floatval($_POST['commission_unlock']);
+    $payout_threshold = floatval($_POST['payout_threshold']);
+    $status = sanitize_text_field($_POST['status']);
+    $notes = sanitize_textarea_field($_POST['notes']);
+    
+    global $wpdb;
+    $table = $wpdb->prefix . 'flexpress_affiliates';
+    
+    $result = $wpdb->update(
+        $table,
+        [
+            'display_name' => $display_name,
+            'email' => $email,
+            'website' => $website,
+            'payout_method' => $payout_method,
+            'payout_details' => $payout_details,
+            'commission_initial' => $commission_initial,
+            'commission_rebill' => $commission_rebill,
+            'commission_unlock' => $commission_unlock,
+            'payout_threshold' => $payout_threshold,
+            'status' => $status,
+            'notes' => $notes
+        ],
+        ['id' => $affiliate_id],
+        ['%s', '%s', '%s', '%s', '%s', '%f', '%f', '%f', '%f', '%s', '%s'],
+        ['%d']
+    );
+    
+    if ($result !== false) {
+        wp_send_json_success(['message' => 'Affiliate updated successfully']);
+    } else {
+        wp_send_json_error(['message' => 'Failed to update affiliate']);
+    }
+}
+
+/**
+ * AJAX handler for getting affiliate stats
+ */
+function flexpress_ajax_get_affiliate_stats() {
+    if (!current_user_can('manage_options')) {
+        wp_die('Insufficient permissions');
+    }
+    
+    check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
+    
+    $code = sanitize_text_field($_POST['code']);
+    
+    global $wpdb;
+    $promo_codes_table = $wpdb->prefix . 'flexpress_affiliate_promo_codes';
+    $transactions_table = $wpdb->prefix . 'flexpress_affiliate_transactions';
+    
+    // Get promo code data
+    $promo_code = $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM $promo_codes_table WHERE code = %s",
+        $code
+    ));
+    
+    if (!$promo_code) {
+        wp_send_json_error(['message' => 'Promo code not found']);
+    }
+    
+    // Get usage stats
+    $total_uses = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM $transactions_table WHERE promo_code_id = %d",
+        $promo_code->id
+    ));
+    
+    $recent_uses = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM $transactions_table WHERE promo_code_id = %d AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)",
+        $promo_code->id
+    ));
+    
+    $revenue = $wpdb->get_var($wpdb->prepare(
+        "SELECT SUM(revenue_amount) FROM $transactions_table WHERE promo_code_id = %d",
+        $promo_code->id
+    )) ?: 0;
+    
+    $conversion_rate = $total_uses > 0 ? ($promo_code->usage_count / $total_uses) * 100 : 0;
+    
+    wp_send_json_success([
+        'code' => $promo_code->code,
+        'affiliate_name' => $promo_code->display_name,
+        'total_uses' => $total_uses,
+        'recent_uses' => $recent_uses,
+        'revenue' => number_format($revenue, 2),
+        'conversion_rate' => number_format($conversion_rate, 1)
+    ]);
+}
+
+/**
+ * AJAX handler for updating affiliate codes
+ */
+function flexpress_ajax_update_affiliate_code() {
+    if (!current_user_can('manage_options')) {
+        wp_die('Insufficient permissions');
+    }
+    
+    check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
+    
+    $code = sanitize_text_field($_POST['code']);
+    $affiliate_name = sanitize_text_field($_POST['affiliate_name']);
+    $target_plans = array_map('sanitize_text_field', $_POST['target_plans']);
+    $commission_rate = floatval($_POST['commission_rate']);
+    
+    global $wpdb;
+    $table = $wpdb->prefix . 'flexpress_affiliate_promo_codes';
+    
+    $result = $wpdb->update(
+        $table,
+        [
+            'display_name' => $affiliate_name,
+            'custom_pricing_json' => json_encode($target_plans),
+            'commission_rate' => $commission_rate
+        ],
+        ['code' => $code],
+        ['%s', '%s', '%f'],
+        ['%s']
+    );
+    
+    if ($result !== false) {
+        wp_send_json_success(['message' => 'Promo code updated successfully']);
+    } else {
+        wp_send_json_error(['message' => 'Failed to update promo code']);
+    }
+}
+
+/**
+ * AJAX handler for getting pricing plans
+ */
+function flexpress_ajax_get_pricing_plans() {
+    if (!current_user_can('manage_options')) {
+        wp_die('Insufficient permissions');
+    }
+    
+    check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
+    
+    $plans = flexpress_get_pricing_plans();
+    
+    if ($plans) {
+        wp_send_json_success($plans);
+    } else {
+        wp_send_json_error(['message' => 'No pricing plans found']);
+    }
+}
+
+/**
+ * AJAX handler for getting affiliates list
+ */
+function flexpress_ajax_get_affiliates_list() {
+    if (!current_user_can('manage_options')) {
+        wp_die('Insufficient permissions');
+    }
+    
+    check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
+    
+    $page = intval($_POST['page']) ?: 1;
+    $per_page = intval($_POST['per_page']) ?: 20;
+    $status = sanitize_text_field($_POST['status'] ?? '');
+    $search = sanitize_text_field($_POST['search'] ?? '');
+    
+    global $wpdb;
+    $table = $wpdb->prefix . 'flexpress_affiliates';
+    
+    // Build WHERE clause
+    $where_conditions = [];
+    $where_values = [];
+    
+    if ($status) {
+        $where_conditions[] = 'status = %s';
+        $where_values[] = $status;
+    }
+    
+    if ($search) {
+        $where_conditions[] = '(display_name LIKE %s OR email LIKE %s OR affiliate_code LIKE %s)';
+        $search_term = '%' . $wpdb->esc_like($search) . '%';
+        $where_values[] = $search_term;
+        $where_values[] = $search_term;
+        $where_values[] = $search_term;
+    }
+    
+    $where_clause = '';
+    if (!empty($where_conditions)) {
+        $where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
+    }
+    
+    // Get total count
+    $count_query = "SELECT COUNT(*) FROM $table $where_clause";
+    if (!empty($where_values)) {
+        $count_query = $wpdb->prepare($count_query, $where_values);
+    }
+    $total = $wpdb->get_var($count_query);
+    
+    // Get affiliates
+    $offset = ($page - 1) * $per_page;
+    $query = "SELECT * FROM $table $where_clause ORDER BY created_at DESC LIMIT %d OFFSET %d";
+    $query_values = array_merge($where_values, [$per_page, $offset]);
+    $query = $wpdb->prepare($query, $query_values);
+    
+    $affiliates = $wpdb->get_results($query);
+    
+    wp_send_json_success([
+        'affiliates' => $affiliates,
+        'total' => $total,
+        'page' => $page,
+        'per_page' => $per_page,
+        'total_pages' => ceil($total / $per_page)
+    ]);
+}
+
+/**
+ * AJAX handler for getting affiliate statistics
+ */
+function flexpress_ajax_get_affiliate_statistics() {
+    if (!current_user_can('manage_options')) {
+        wp_die('Insufficient permissions');
+    }
+    
+    check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
+    
+    global $wpdb;
+    $table = $wpdb->prefix . 'flexpress_affiliates';
+    
+    // Get status counts
+    $status_counts = $wpdb->get_results(
+        "SELECT status, COUNT(*) as count FROM $table GROUP BY status"
+    );
+    
+    $stats = [
+        'pending' => 0,
+        'active' => 0,
+        'suspended' => 0,
+        'rejected' => 0,
+        'total_revenue' => 0
+    ];
+    
+    foreach ($status_counts as $status_count) {
+        $stats[$status_count->status] = intval($status_count->count);
+    }
+    
+    // Get total revenue
+    $total_revenue = $wpdb->get_var("SELECT SUM(total_revenue) FROM $table WHERE status = 'active'");
+    $stats['total_revenue'] = floatval($total_revenue);
+    
+    wp_send_json_success($stats);
+}
+
+/**
+ * AJAX handler for bulk updating affiliate status
+ */
+function flexpress_ajax_bulk_update_affiliate_status() {
+    if (!current_user_can('manage_options')) {
+        wp_die('Insufficient permissions');
+    }
+    
+    check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
+    
+    $affiliate_ids = array_map('intval', $_POST['affiliate_ids']);
+    $status = sanitize_text_field($_POST['status']);
+    
+    if (!in_array($status, ['pending', 'active', 'suspended', 'rejected'])) {
+        wp_send_json_error(['message' => 'Invalid status']);
+    }
+    
+    if (empty($affiliate_ids)) {
+        wp_send_json_error(['message' => 'No affiliates selected']);
+    }
+    
+    global $wpdb;
+    $table = $wpdb->prefix . 'flexpress_affiliates';
+    
+    $placeholders = implode(',', array_fill(0, count($affiliate_ids), '%d'));
+    $query = "UPDATE $table SET status = %s WHERE id IN ($placeholders)";
+    $values = array_merge([$status], $affiliate_ids);
+    
+    $result = $wpdb->query($wpdb->prepare($query, $values));
+    
+    if ($result !== false) {
+        // Send notifications to affiliates
+        foreach ($affiliate_ids as $affiliate_id) {
+            $affiliate = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM $table WHERE id = %d",
+                $affiliate_id
+            ));
+            
+            if ($affiliate) {
+                $subject = 'Affiliate Account Status Update - ' . get_bloginfo('name');
+                
+                $status_messages = [
+                    'active' => 'Congratulations! Your affiliate account has been approved.',
+                    'rejected' => 'Unfortunately, your affiliate application has been rejected.',
+                    'suspended' => 'Your affiliate account has been suspended.',
+                    'pending' => 'Your affiliate application is under review.'
+                ];
+                
+                $message = $status_messages[$status] ?? 'Your affiliate status has been updated.';
+                $message .= "\n\nIf you have any questions, please contact us.";
+                
+                $headers = ['Content-Type: text/plain; charset=UTF-8'];
+                wp_mail($affiliate->email, $subject, $message, $headers);
+            }
+        }
+        
+        wp_send_json_success(['message' => 'Affiliate statuses updated successfully']);
+    } else {
+        wp_send_json_error(['message' => 'Failed to update affiliate statuses']);
+    }
+}

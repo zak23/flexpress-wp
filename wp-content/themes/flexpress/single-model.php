@@ -358,7 +358,10 @@ get_header();
                                             ?>
                                         </h3>
                                         
-                                        <?php if ($comments_number > 0 && !flexpress_has_active_membership() && !current_user_can('administrator')) : ?>
+                                        <?php 
+                                        $membership_status = function_exists('flexpress_get_membership_status') ? flexpress_get_membership_status() : 'none';
+                                        $is_active_member = in_array($membership_status, ['active', 'cancelled']);
+                                        if ($comments_number > 0 && !$is_active_member && !current_user_can('administrator')) : ?>
                                         <div class="alert alert-info mb-4">
                                             <i class="fas fa-crown me-2"></i>
                                             <strong>Exclusive Member Messages:</strong> Only active members can send messages to models. Join our community to interact directly with your favorite performers!
@@ -403,8 +406,7 @@ get_header();
                                 
                                 if (!is_user_logged_in()) {
                                     $comment_message = '<div class="alert alert-warning"><i class="fas fa-lock me-2"></i>You must <a href="/login/">log in</a> to send messages to ' . get_the_title($main_post->ID) . '.</div>';
-                                } elseif (!flexpress_has_active_membership()) {
-                                    $membership_status = flexpress_get_membership_status();
+                                } elseif (!$is_active_member) {
                                     if ($membership_status === 'cancelled') {
                                         $comment_message = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Your membership has been cancelled. <a href="/membership/">Reactivate your membership</a> to send messages to models.</div>';
                                     } elseif ($membership_status === 'expired') {

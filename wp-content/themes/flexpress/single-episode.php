@@ -287,7 +287,7 @@ while (have_posts()):
                 <div class="episode-actions">
                     <?php if ($access_info['show_purchase_button']): ?>
                         <div class="mb-3">
-                            <h5 class="text-white mb-3">
+                            <h5 class="text-white mb-3 text-center">
                                 <i class="fas fa-unlock me-2"></i>
                                 <?php esc_html_e('Unlock Episode', 'flexpress'); ?>
                             </h5>
@@ -342,7 +342,7 @@ while (have_posts()):
                             
                             <!-- Purchase Button -->
                             <?php if (is_user_logged_in()): ?>
-                                <button class="btn btn-dark w-100 purchase-btn mb-3 border border-secondary" 
+                                <button class="btn btn-primary w-100 purchase-btn mb-3" 
                                         data-episode-id="<?php echo get_the_ID(); ?>"
                                         data-price="<?php echo esc_attr($access_info['final_price']); ?>"
                                         data-original-price="<?php echo esc_attr($access_info['price']); ?>"
@@ -354,7 +354,7 @@ while (have_posts()):
                                 </button>
                             <?php else: ?>
                                 <a href="<?php echo esc_url(home_url('/login?redirect_to=' . urlencode(get_permalink()))); ?>" 
-                                   class="btn btn-dark w-100 mb-3 border border-secondary">
+                                   class="btn btn-primary w-100 mb-3">
                                     <i class="fas fa-sign-in-alt me-2"></i>
                                     <?php esc_html_e('Login to Purchase', 'flexpress'); ?>
                                 </a>

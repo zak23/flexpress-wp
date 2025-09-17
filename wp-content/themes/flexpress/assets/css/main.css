@@ -3363,6 +3363,20 @@ footer.bg-black .row.footer {
     margin-bottom: var(--spacing-md);
 }
 
+.episode-actions .btn-primary {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-background);
+    transition: all var(--transition-fast);
+}
+
+.episode-actions .btn-primary:hover {
+    background-color: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
+    color: var(--color-background);
+    transform: translateY(-1px);
+}
+
 .episode-actions .btn-dark {
     background-color: var(--color-surface);
     border-color: var(--color-border);

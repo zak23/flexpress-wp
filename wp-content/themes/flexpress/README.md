@@ -20,6 +20,8 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Pay-Per-View (PPV)**: Individual episode purchases with unlock buttons
 - **Member Discounts**: Flexible pricing for subscribers
 - **Webhook Processing**: Real-time payment confirmations
+- **Flexible Pricing Plans**: Complete control over pricing plan creation, editing, and deletion
+- **No Auto-Recreation**: Deleted pricing plans stay deleted (no automatic regeneration)
 - **Affiliate System**: Complete commission tracking and management system
 - **Affiliate Application Management**: Comprehensive admin interface for managing affiliate applications and accounts
 - **Bulk Operations**: Approve, reject, suspend, or reactivate multiple affiliates at once
@@ -266,6 +268,53 @@ Promo code usage is automatically recorded when:
 - Payment is successfully processed
 - User applies a valid promo code
 - Transaction is completed
+
+### Pricing System Integration
+
+#### Dual Promo Code Support
+The system supports both legacy and centralized promo codes:
+
+**Legacy System (Existing):**
+- Plan-specific promo codes stored in pricing plan settings
+- Codes unlock hidden "promo-only" plans
+- Example: `WELCOME20` unlocks special pricing plans
+
+**Centralized System (New):**
+- Centralized promo codes with discount calculations
+- Apply discounts to any pricing plan
+- Example: `SUMMER2024` applies 20% discount to all plans
+
+#### Enhanced Validation
+```php
+// Validate promo code with both systems
+$result = flexpress_validate_enhanced_promo_code('SAVE20', 'monthly', 29.99);
+
+if ($result['success']) {
+    echo 'Discount: $' . $result['discount_amount'];
+    echo 'Final Amount: $' . $result['final_amount'];
+    echo 'Code Type: ' . $result['code_type']; // 'centralized' or 'legacy'
+}
+```
+
+#### Pricing Page Integration
+- Automatic promo code input field on pricing/join pages
+- Real-time discount calculation and display
+- Visual indicators for discounted plans
+- Support for both discount types and plan unlocking
+
+#### Usage Tracking
+```php
+// Track enhanced promo usage
+flexpress_track_enhanced_promo_usage(
+    'SAVE20',           // Promo code
+    $user_id,           // User ID
+    'monthly',          // Plan ID
+    'txn_123',          // Transaction ID
+    29.99,              // Original amount
+    5.99,               // Discount amount
+    24.00               // Final amount
+);
+```
 
 ---
 

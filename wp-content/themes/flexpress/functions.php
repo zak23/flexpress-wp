@@ -49,8 +49,11 @@ require_once FLEXPRESS_PATH . '/includes/class-flexpress-affiliate-payouts.php';
 require_once FLEXPRESS_PATH . '/includes/affiliate-shortcodes.php';
 
 // Promo Codes System Integration (integrated into affiliate settings)
+require_once FLEXPRESS_PATH . '/includes/promo-codes.php';
 require_once FLEXPRESS_PATH . '/includes/promo-codes-integration.php';
 require_once FLEXPRESS_PATH . '/includes/promo-codes-shortcodes.php';
+require_once FLEXPRESS_PATH . '/includes/promo-pricing-integration.php';
+require_once FLEXPRESS_PATH . '/includes/promo-pricing-frontend.php';
 
 // Load ACF fields after init to prevent translation issues
 function flexpress_load_acf_fields() {
@@ -108,10 +111,10 @@ function flexpress_setup() {
     ));
     
     // Initialize default pricing plans if none exist
-    flexpress_maybe_create_default_pricing_plans();
+    // flexpress_maybe_create_default_pricing_plans(); // Commented out to prevent auto-recreation of deleted plans
     
     // Create default plans if they don't exist or are incomplete
-    flexpress_ensure_pricing_plans_complete();
+    // flexpress_ensure_pricing_plans_complete(); // Commented out to prevent auto-recreation of deleted plans
     
     // Ensure join page exists
     flexpress_create_join_page();
@@ -6198,9 +6201,11 @@ function flexpress_create_talent_applications_table() {
 function flexpress_set_default_theme_options() {
     // Set default pricing plans if not already set
     $pricing_plans = get_option('flexpress_pricing_plans', array());
-    if (empty($pricing_plans)) {
+    // Check if this is a fresh installation (no pricing option exists at all)
+    if (get_option('flexpress_pricing_plans') === false) {
         flexpress_force_create_default_pricing_plans();
     }
+    // Note: We don't recreate plans if the option exists but is empty (user may have deleted all plans intentionally)
     
     // Set default Flowguard settings if not already set
     $flowguard_settings = get_option('flexpress_flowguard_settings', array());
@@ -6368,9 +6373,31 @@ function flexpress_ajax_create_flowguard_payment() {
     
     $user_id = get_current_user_id();
     $plan_id = sanitize_text_field($_POST['plan_id']);
+    $promo_code = sanitize_text_field($_POST['promo_code'] ?? '');
     
     if (empty($plan_id)) {
         wp_send_json_error(['message' => 'Plan ID is required']);
+    }
+    
+    // Apply promo code if provided
+    if (!empty($promo_code)) {
+        $promo_codes = new FlexPress_Promo_Codes();
+        $validation = $promo_codes->validate_promo_code_logic($promo_code, $user_id, $plan_id, 0);
+        
+        if (!$validation['valid']) {
+            wp_send_json_error(['message' => $validation['message'] ?? 'Invalid promo code']);
+        }
+        
+        // Store promo code in session for payment processing
+        if (!session_id()) {
+            session_start();
+        }
+        $_SESSION['flexpress_applied_promo'] = array(
+            'code' => $promo_code,
+            'promo_id' => $validation['promo_id'],
+            'discount_amount' => $validation['discount_amount'],
+            'final_amount' => $validation['final_amount']
+        );
     }
     
     // Create Flowguard subscription

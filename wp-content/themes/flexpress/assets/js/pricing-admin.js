@@ -140,12 +140,14 @@ jQuery(document).ready(function($) {
         handleTrialSettings();
     });
 
-    // Handle plan type change
-    $('#plan-type').change(function() {
-        const planType = $(this).val();
+    // Function to update form based on plan type
+    function updateFormForPlanType() {
+        const planType = $('#plan-type').val();
         const $durationSection = $('#duration-section');
         const $durationInputs = $durationSection.find('input, select');
         const $durationNote = $('.duration-note');
+        
+        console.log('Updating form for plan type:', planType);
         
         if (planType === 'one_time') {
             // Disable trial settings for one-time payments
@@ -207,7 +209,18 @@ jQuery(document).ready(function($) {
             $('#plan-duration-label').text('Duration');
             $durationNote.slideUp();
         }
-    });
+    }
+
+    // Handle plan type change
+    $('#plan-type').change(updateFormForPlanType);
+    
+    // Initialize form when DOM is ready (this script is already in document.ready)
+    setTimeout(function() {
+        // Trigger form update if plan type field exists (in case form is already visible)
+        if ($('#plan-type').length) {
+            updateFormForPlanType();
+        }
+    }, 300);
 
     function handleTrialSettings() {
         const planType = $('#plan-type').val();
@@ -321,6 +334,9 @@ jQuery(document).ready(function($) {
             $('#plan-promo-only').prop('checked', false);
             
             console.log('New plan defaults set - active:', $('#plan-active').prop('checked'));
+            
+            // Update form based on default plan type
+            setTimeout(updateFormForPlanType, 100);
         } else if (mode === 'edit') {
             $modalTitle.text('Edit Pricing Plan');
             loadPlanData(planId);
@@ -462,6 +478,9 @@ jQuery(document).ready(function($) {
                     }
                     
                     console.log('Form populated successfully');
+                    
+                    // Update form based on loaded plan type
+                    setTimeout(updateFormForPlanType, 100);
                     
                 } else {
                     console.error('AJAX request failed:', response.data);

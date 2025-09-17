@@ -185,7 +185,14 @@ if (isset($_GET['error'])) {
                             ?>
                             <div class="membership-plan-item <?php echo $is_featured ? 'popular-plan' : ''; ?> <?php echo esc_attr($plan_type_class); ?>" 
                                  data-plan-type="<?php echo esc_attr($plan['plan_type']); ?>"
-                                 data-plan-id="<?php echo esc_attr($plan_id); ?>">
+                                 data-plan-id="<?php echo esc_attr($plan_id); ?>"
+                                 data-plan-price="<?php echo esc_attr($plan['price']); ?>"
+                                 data-plan-currency="<?php echo esc_attr($plan['currency']); ?>"
+                                 data-plan-name="<?php echo esc_attr($plan['name']); ?>"
+                                 data-trial-enabled="<?php echo esc_attr($plan['trial_enabled'] ?? 0); ?>"
+                                 data-trial-price="<?php echo esc_attr($plan['trial_price'] ?? 0); ?>"
+                                 data-trial-duration="<?php echo esc_attr($plan['trial_duration'] ?? 0); ?>"
+                                 data-trial-duration-unit="<?php echo esc_attr($plan['trial_duration_unit'] ?? 'days'); ?>">
                                 <div class="plan-content">
                                     <div class="plan-info">
                                         <div class="plan-header">
@@ -199,6 +206,8 @@ if (isset($_GET['error'])) {
                                         <?php endif; ?>
                                         <?php if ($plan['plan_type'] === 'recurring'): ?>
                                         <p class="plan-billing"><?php esc_html_e('Recurring Charge / Billed As', 'flexpress'); ?> <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['price'], 2)); ?></p>
+                                        <?php elseif ($plan['plan_type'] === 'one_time'): ?>
+                                        <p class="plan-billing"><?php esc_html_e('One time charge Billed As', 'flexpress'); ?> <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['price'], 2)); ?></p>
                                         <?php endif; ?>
                                     </div>
                                     <div class="plan-pricing">
@@ -293,10 +302,10 @@ if (isset($_GET['error'])) {
             <div class="col-lg-8 col-xl-6">
                 <div class="legal-continue-section">
                     <div class="legal-text mb-4">
-                        <p class="legal-disclaimer">
+                        <p class="legal-disclaimer" id="dynamic-legal-text">
                             <?php esc_html_e('By clicking CONTINUE, you confirm that you are at least 18 years old and agree to our', 'flexpress'); ?>
                             <a href="<?php echo esc_url(home_url('/terms')); ?>" class="legal-link"><?php esc_html_e('Terms of Service', 'flexpress'); ?></a>.
-                            <?php esc_html_e('Your subscription will automatically renew at $29.95 every 30 days unless cancelled. You may cancel at any time', 'flexpress'); ?>
+                            <span id="billing-text"><?php esc_html_e('Your subscription will automatically renew at $29.95 every 30 days unless cancelled. You may cancel at any time', 'flexpress'); ?></span>
                             <a href="<?php echo esc_url(home_url('/dashboard')); ?>" class="legal-link"><?php esc_html_e('here', 'flexpress'); ?></a>.
                         </p>
                     </div>
@@ -307,9 +316,9 @@ if (isset($_GET['error'])) {
                         </button>
                     </div>
                     
-                    <div class="trial-disclaimer mt-3">
+                    <div class="trial-disclaimer mt-3" id="trial-disclaimer" style="display: none;">
                         <p class="trial-text">
-                            <em><?php esc_html_e('* Limited Access 2 day trial automatically rebilling at $34.95 every 30 days until cancelled', 'flexpress'); ?></em>
+                            <em id="trial-text-content"><?php esc_html_e('* Limited Access 2 day trial automatically rebilling at $34.95 every 30 days until cancelled', 'flexpress'); ?></em>
                         </p>
                     </div>
                 </div>
@@ -465,6 +474,60 @@ jQuery(document).ready(function() {
     let selectedPlan = null;
     let currentPlanType = 'recurring';
     
+    // Function to update legal text based on selected plan
+    function updateLegalText(planElement) {
+        const planType = planElement.data('plan-type');
+        const planPrice = planElement.data('plan-price');
+        const planCurrency = planElement.data('plan-currency');
+        const billingTextElement = jQuery('#billing-text');
+        
+        // Trial information
+        const trialEnabled = planElement.data('trial-enabled') == 1;
+        const trialPrice = planElement.data('trial-price');
+        const trialDuration = planElement.data('trial-duration');
+        const trialDurationUnit = planElement.data('trial-duration-unit');
+        
+        let billingText = '';
+        
+        if (planType === 'recurring') {
+            billingText = 'Your subscription will automatically renew at ' + planCurrency + planPrice.toFixed(2) + ' every 30 days unless cancelled. You may cancel at any time';
+        } else if (planType === 'one_time') {
+            billingText = 'This is a one-time payment of ' + planCurrency + planPrice.toFixed(2) + '. No recurring charges will be applied.';
+        } else {
+            // Default fallback
+            billingText = 'Your subscription will automatically renew at ' + planCurrency + planPrice.toFixed(2) + ' every 30 days unless cancelled. You may cancel at any time';
+        }
+        
+        billingTextElement.text(billingText);
+        
+        // Update trial disclaimer
+        updateTrialDisclaimer(trialEnabled, trialPrice, trialDuration, trialDurationUnit, planCurrency, planPrice);
+    }
+    
+    // Function to update trial disclaimer
+    function updateTrialDisclaimer(trialEnabled, trialPrice, trialDuration, trialDurationUnit, planCurrency, planPrice) {
+        const trialDisclaimerElement = jQuery('#trial-disclaimer');
+        const trialTextElement = jQuery('#trial-text-content');
+        
+        if (trialEnabled && trialPrice > 0 && trialDuration > 0) {
+            // Format trial duration text
+            let durationText = trialDuration + ' ' + trialDurationUnit;
+            if (trialDuration > 1 && trialDurationUnit === 'day') {
+                durationText = trialDuration + ' days';
+            } else if (trialDuration > 1 && trialDurationUnit === 'week') {
+                durationText = trialDuration + ' weeks';
+            } else if (trialDuration > 1 && trialDurationUnit === 'month') {
+                durationText = trialDuration + ' months';
+            }
+            
+            const trialText = '* Limited Access ' + durationText + ' trial automatically rebilling at ' + planCurrency + planPrice.toFixed(2) + ' every 30 days until cancelled';
+            trialTextElement.text(trialText);
+            trialDisclaimerElement.show();
+        } else {
+            trialDisclaimerElement.hide();
+        }
+    }
+    
     // Plan type toggle functionality
     jQuery('.toggle-btn[data-plan-type]').on('click', function() {
         const planType = jQuery(this).data('plan-type');
@@ -512,6 +575,9 @@ jQuery(document).ready(function() {
         jQuery('.membership-plan-item.popular-plan:not(.selected)').addClass('no-highlight');
         
         selectedPlan = jQuery(this);
+        
+        // Update legal text based on selected plan
+        updateLegalText(jQuery(this));
     });
     
     // Continue button functionality - attach after DOM is ready
@@ -618,6 +684,10 @@ jQuery(document).ready(function() {
         jQuery('.membership-plan-item.popular-plan:not(.selected)').addClass('no-highlight');
         
         selectedPlan = popularPlan;
+        
+        // Update legal text for auto-selected plan
+        updateLegalText(popularPlan);
+        
         console.log('Auto-selected popular plan:', selectedPlan);
     }
     

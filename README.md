@@ -280,6 +280,17 @@ docker exec -it flexpress_wordpress wp [command]
 - Follow WordPress coding standards
 - Test changes in development before production
 
+## 🔧 Recent Updates
+
+### September 2025
+- **Fixed Daily Pricing Calculations**: Corrected membership page to show accurate daily rates instead of full plan prices
+  - Added `flexpress_calculate_daily_rate()` function to properly convert plan prices to daily rates
+  - Added `flexpress_get_daily_rate_display()` helper for formatted display
+  - Fixed pricing display where $29.95/30 days was incorrectly showing as $29.95/Per Day
+  - Now correctly displays: $1.00/day for 30-day plans, $0.67/day for 90-day plans, $0.56/day for 180-day plans
+  - Handles different duration units (days, weeks, months, years) with proper conversion
+  - Includes trial price calculation when applicable
+
 ## 🆘 Support
 
 For issues or questions:

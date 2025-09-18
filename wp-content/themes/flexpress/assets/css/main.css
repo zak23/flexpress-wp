@@ -893,7 +893,7 @@ a:hover {
 .btn-outline-light:hover,
 .btn-outline-light:focus,
 .btn-outline-light:active {
-  background-color: var(--color-text);
+  background-color: var(--color-accent);
   border-color: var(--color-text);
   color: var(--color-background);
 }

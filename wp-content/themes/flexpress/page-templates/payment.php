@@ -694,6 +694,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (event.saleId) {
                         successUrl.searchParams.set('sale_id', event.saleId);
                     }
+                    // Add user_id if available from FlexPressData
+                    if (typeof FlexPressData !== 'undefined' && FlexPressData.userId) {
+                        successUrl.searchParams.set('user_id', FlexPressData.userId);
+                    }
                     window.location.href = successUrl.toString();
                 }, 2000);
             });

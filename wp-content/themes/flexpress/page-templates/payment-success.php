@@ -8,6 +8,23 @@
  * @since 1.0.0
  */
 
+// Check if user is logged in
+if (!is_user_logged_in()) {
+    // Check if user_id is provided in URL parameters (from payment flow)
+    $user_id_from_url = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
+    
+    if ($user_id_from_url && get_userdata($user_id_from_url)) {
+        // Auto-login the user if valid user_id is provided
+        wp_set_current_user($user_id_from_url);
+        wp_set_auth_cookie($user_id_from_url);
+    } else {
+        // No valid user_id, redirect to login with return URL
+        $current_url = home_url($_SERVER['REQUEST_URI']);
+        wp_redirect(home_url('/login?redirect_to=' . urlencode($current_url)));
+        exit;
+    }
+}
+
 get_header();
 
 $transaction_id = isset($_GET['transaction_id']) ? sanitize_text_field($_GET['transaction_id']) : '';
@@ -15,7 +32,7 @@ $sale_id = isset($_GET['sale_id']) ? sanitize_text_field($_GET['sale_id']) : '';
 $episode_id = isset($_GET['episode_id']) ? intval($_GET['episode_id']) : 0;
 $ref = isset($_GET['ref']) ? sanitize_text_field($_GET['ref']) : '';
 
-// Get current user
+// Get current user (now guaranteed to be logged in)
 $current_user = wp_get_current_user();
 $user_id = $current_user->ID;
 

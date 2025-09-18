@@ -135,8 +135,8 @@
         if (window.history.length > 1) {
             window.history.back();
         } else {
-            // If no history, redirect to a safe page
-            window.location.href = 'https://www.google.com';
+            // If no history, redirect to a safe, family-friendly page
+            window.location.href = 'https://duckduckgo.com';
         }
     }
     

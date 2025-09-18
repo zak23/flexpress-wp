@@ -653,7 +653,14 @@ if (isset($_GET['error'])) {
 
 <?php
 // Enqueue and localize promo code script data
-wp_localize_script('jquery', 'flexpressPromo', array(
+wp_enqueue_script('jquery');
+
+// Create a unique script handle for localization
+$script_handle = 'flexpress-promo-script';
+wp_register_script($script_handle, '', array('jquery'), '1.0', true);
+wp_enqueue_script($script_handle);
+
+wp_localize_script($script_handle, 'flexpressPromo', array(
     'ajaxurl' => admin_url('admin-ajax.php'),
     'nonce' => wp_create_nonce('flexpress_promo_nonce')
 ));

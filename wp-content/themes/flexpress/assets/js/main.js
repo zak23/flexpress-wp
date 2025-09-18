@@ -388,41 +388,44 @@ async function generateBunnyCDNToken(videoId) {
     }
     
 })(jQuery);
- 
-// Plan Type Switching
-$(document).on('change', '[name="plan_type"]', function() {
-    const planType = $(this).val();
-    const $recurringPlans = $('#recurring-plans');
-    const $onetimePlans = $('#onetime-plans');
-    
-    // Hide all plan groups first
-    $('.plan-group').removeClass('active').hide();
-    
-    // Show selected plan group with animation
-    if (planType === 'recurring') {
-        $recurringPlans.addClass('active').fadeIn();
-        // Uncheck any selected one-time plans
-        $onetimePlans.find('input[type="radio"]').prop('checked', false);
-    } else {
-        $onetimePlans.addClass('active').fadeIn();
-        // Uncheck any selected recurring plans
-        $recurringPlans.find('input[type="radio"]').prop('checked', false);
-    }
-    
-    // Clear any error messages
-    $('.alert-danger').fadeOut();
-});
 
-// Ensure plan type matches selected plan
-$(document).on('change', '[name="selected_plan"]', function() {
-    const $selectedPlan = $(this).closest('.plan-card');
-    const planType = $selectedPlan.data('plan-type');
-    
-    // Update plan type tabs
-    if (planType === 'one_time') {
-        $('#onetime-tab').prop('checked', true).trigger('change');
-    } else {
-        $('#recurring-tab').prop('checked', true).trigger('change');
-    }
+// Plan Type Switching
+jQuery(document).ready(function($) {
+    // Plan Type Switching
+    $(document).on('change', '[name="plan_type"]', function() {
+        const planType = $(this).val();
+        const $recurringPlans = $('#recurring-plans');
+        const $onetimePlans = $('#onetime-plans');
+        
+        // Hide all plan groups first
+        $('.plan-group').removeClass('active').hide();
+        
+        // Show selected plan group with animation
+        if (planType === 'recurring') {
+            $recurringPlans.addClass('active').fadeIn();
+            // Uncheck any selected one-time plans
+            $onetimePlans.find('input[type="radio"]').prop('checked', false);
+        } else {
+            $onetimePlans.addClass('active').fadeIn();
+            // Uncheck any selected recurring plans
+            $recurringPlans.find('input[type="radio"]').prop('checked', false);
+        }
+        
+        // Clear any error messages
+        $('.alert-danger').fadeOut();
+    });
+
+    // Ensure plan type matches selected plan
+    $(document).on('change', '[name="selected_plan"]', function() {
+        const $selectedPlan = $(this).closest('.plan-card');
+        const planType = $selectedPlan.data('plan-type');
+        
+        // Update plan type tabs
+        if (planType === 'one_time') {
+            $('#onetime-tab').prop('checked', true).trigger('change');
+        } else {
+            $('#recurring-tab').prop('checked', true).trigger('change');
+        }
+    });
 });
  

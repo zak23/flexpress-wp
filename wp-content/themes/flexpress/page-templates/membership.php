@@ -84,13 +84,6 @@ if (isset($_GET['error'])) {
                             </div>
                         <?php endif; ?>
                     </div>
-                    
-                    <div class="text-center mt-4">
-                        <a href="<?php echo esc_url(get_permalink(get_page_by_path('dashboard'))); ?>" class="btn btn-primary btn-lg">
-                            <i class="fas fa-tachometer-alt me-2"></i>
-                            <?php esc_html_e('Go to Dashboard', 'flexpress'); ?>
-                        </a>
-                    </div>
                 <?php elseif ($membership_status === 'cancelled'): ?>
                     <div class="alert alert-warning" role="alert">
                         <i class="fas fa-exclamation-circle me-2"></i>
@@ -109,13 +102,6 @@ if (isset($_GET['error'])) {
                             </div>
                         <?php endif; ?>
                     </div>
-                    
-                    <div class="text-center mt-4">
-                        <a href="<?php echo esc_url(get_permalink(get_page_by_path('dashboard'))); ?>" class="btn btn-primary btn-lg">
-                            <i class="fas fa-tachometer-alt me-2"></i>
-                            <?php esc_html_e('Go to Dashboard', 'flexpress'); ?>
-                        </a>
-                    </div>
                 <?php elseif ($membership_status === 'expired' || $membership_status === 'banned'): ?>
                     <div class="alert alert-danger" role="alert">
                         <i class="fas fa-times-circle me-2"></i>
@@ -128,21 +114,9 @@ if (isset($_GET['error'])) {
                         ?>
                     </div>
                 <?php endif; ?>
-                
-                <?php 
-                // Redirect to dashboard if user has active or cancelled membership
-                if ($membership_status === 'active' || $membership_status === 'cancelled') {
-                    $dashboard_url = get_permalink(get_page_by_path('dashboard'));
-                    if ($dashboard_url) {
-                        wp_redirect($dashboard_url);
-                        exit;
-                    }
-                }
-                ?>
             </div>
         </div>
 
-        <?php if ($membership_status !== 'active' && $membership_status !== 'cancelled'): ?>
         <!-- Promo Code Section -->
         <div class="row justify-content-center mb-4">
             <div class="col-lg-8 col-xl-6">
@@ -475,7 +449,6 @@ if (isset($_GET['error'])) {
                 </div>
             </div>
         </div>
-        <?php endif; ?>
     </div>
 </div>
 
@@ -490,14 +463,7 @@ if (isset($_GET['error'])) {
 
 <?php
 // Enqueue and localize promo code script data
-wp_enqueue_script('jquery');
-
-// Create a unique script handle for localization
-$script_handle = 'flexpress-promo-script';
-wp_register_script($script_handle, '', array('jquery'), '1.0', true);
-wp_enqueue_script($script_handle);
-
-wp_localize_script($script_handle, 'flexpressPromo', array(
+wp_localize_script('jquery', 'flexpressPromo', array(
     'ajaxurl' => admin_url('admin-ajax.php'),
     'nonce' => wp_create_nonce('flexpress_promo_nonce')
 ));

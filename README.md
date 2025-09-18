@@ -55,7 +55,7 @@ flexpress/
   - Implemented registration functionality using existing `flexpress_process_registration_and_payment` AJAX handler
   - Implemented login functionality using existing `flexpress_ajax_login` AJAX handler
   - Added proper error handling and user feedback
-  - Updated WordPress site URL to localhost:8085 for development testing
+  - Updated WordPress site URL to localhost:8085 for development testing (reverted back to zakspov.com for production)
 - **Result**: Continue button now properly processes user registration/login and redirects to payment page
 
 ## 📤 File Upload Configuration

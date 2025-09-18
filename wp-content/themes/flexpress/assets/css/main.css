@@ -2136,6 +2136,38 @@ footer.bg-black .row.footer {
 .membership-plan-item.selected {
   border-color: var(--color-accent) !important;
   background: var(--color-accent-featured-bg) !important;
+  box-shadow: 0 0 25px rgba(var(--color-accent-rgb), 0.6) !important;
+  transform: translateY(-3px) !important;
+  border-width: 2px !important;
+}
+
+.membership-plan-item.selected::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, var(--color-accent), transparent, var(--color-accent));
+  border-radius: var(--border-radius-lg);
+  z-index: -1;
+  opacity: 0.4;
+}
+
+.membership-plan-item.selected::after {
+  content: '✓ SELECTED';
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 10;
 }
 
 .membership-plan-item.popular-plan {
@@ -2147,6 +2179,21 @@ footer.bg-black .row.footer {
 .membership-plan-item.popular-plan.no-highlight {
   border-color: rgba(255, 255, 255, 0.1) !important;
   background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Override promo-only styling when not selected */
+.membership-plan-item.promo-only-plan.no-highlight {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.membership-plan-item.promo-only-plan.no-highlight::before {
+  opacity: 0.1;
+  box-shadow: none;
+}
+
+.membership-plan-item.promo-only-plan.no-highlight::after {
+  opacity: 0.1;
 }
 
 .membership-plan-item.popular-plan::before {
@@ -2189,6 +2236,24 @@ footer.bg-black .row.footer {
   border-radius: var(--border-radius-lg);
   z-index: -1;
   opacity: 0.3;
+}
+
+/* Enhanced selected state for promo-only plans */
+.membership-plan-item.promo-only-plan.selected {
+  box-shadow: 0 0 35px rgba(var(--color-accent-rgb), 0.8) !important;
+  transform: translateY(-4px) !important;
+  border-width: 3px !important;
+}
+
+.membership-plan-item.promo-only-plan.selected::before {
+  opacity: 0.6;
+  box-shadow: 0 0 20px rgba(var(--color-accent-rgb), 0.7);
+}
+
+.membership-plan-item.promo-only-plan.selected::after {
+  content: '✓ PROMO SELECTED';
+  background: linear-gradient(45deg, var(--color-accent), var(--color-primary));
+  box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.5);
 }
 
 /* Plan Content Layout */

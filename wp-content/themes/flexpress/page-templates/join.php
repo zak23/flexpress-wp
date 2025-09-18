@@ -778,10 +778,14 @@ jQuery(document).ready(function() {
     jQuery('.membership-plan-item').on('click', function() {
         jQuery('.membership-plan-item').removeClass('selected');
         jQuery('.membership-plan-item.popular-plan').removeClass('no-highlight');
+        jQuery('.membership-plan-item.promo-only-plan').removeClass('no-highlight');
         jQuery(this).addClass('selected');
         
         // Add no-highlight class to popular plans that are not selected
         jQuery('.membership-plan-item.popular-plan:not(.selected)').addClass('no-highlight');
+        
+        // Add no-highlight class to promo-only plans that are not selected
+        jQuery('.membership-plan-item.promo-only-plan:not(.selected)').addClass('no-highlight');
         
         selectedPlan = jQuery(this);
         

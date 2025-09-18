@@ -2154,21 +2154,7 @@ footer.bg-black .row.footer {
   opacity: 0.4;
 }
 
-.membership-plan-item.selected::after {
-  content: '✓ SELECTED';
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  background: var(--color-accent);
-  color: var(--color-accent-text);
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--border-radius-sm);
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  z-index: 10;
-}
+/* Selected badge removed - using other visual indicators instead */
 
 .membership-plan-item.popular-plan {
   border-color: var(--color-accent) !important;

@@ -350,6 +350,7 @@ function flexpress_add_accent_color_styles() {
     $accent_light = sprintf('rgba(%d, %d, %d, 0.2)', $accent_rgb['r'], $accent_rgb['g'], $accent_rgb['b']);
     $accent_dark = flexpress_darken_color($accent_color, 25);
     $accent_featured_bg = sprintf('rgba(%d, %d, %d, 0.15)', $accent_rgb['r'], $accent_rgb['g'], $accent_rgb['b']);
+    $accent_text_color = flexpress_get_contrast_text_color($accent_color);
     
     $custom_css = "
         /* FlexPress Dynamic Accent Colors - Override all instances */
@@ -359,11 +360,12 @@ function flexpress_add_accent_color_styles() {
             --color-accent-light: {$accent_light} !important;
             --color-accent-dark: {$accent_dark} !important;
             --color-accent-featured-bg: {$accent_featured_bg} !important;
+            --color-accent-text: {$accent_text_color} !important;
         }
         
         /* Additional specific overrides to ensure consistency */
-        .btn-primary { background-color: {$accent_color} !important; border-color: {$accent_color} !important; }
-        .btn-primary:hover { background-color: {$accent_hover} !important; border-color: {$accent_hover} !important; }
+        .btn-primary { background-color: {$accent_color} !important; border-color: {$accent_color} !important; color: {$accent_text_color} !important; }
+        .btn-primary:hover { background-color: {$accent_hover} !important; border-color: {$accent_hover} !important; color: {$accent_text_color} !important; }
         .navbar-nav .nav-link:hover { color: {$accent_color} !important; }
         .navbar-nav .nav-link.active { color: {$accent_color} !important; }
         .section-title:after { background-color: {$accent_color} !important; }
@@ -472,6 +474,20 @@ function flexpress_darken_color($hex, $percent) {
     $b = max(0, $rgb['b'] - (255 * $percent / 100));
     
     return sprintf('#%02x%02x%02x', $r, $g, $b);
+}
+
+/**
+ * Determine if a color is light or dark and return appropriate text color
+ * Returns black (#000000) for light backgrounds, white (#ffffff) for dark backgrounds
+ */
+function flexpress_get_contrast_text_color($hex) {
+    $rgb = flexpress_hex_to_rgb($hex);
+    
+    // Calculate luminance using the relative luminance formula
+    $luminance = (0.299 * $rgb['r'] + 0.587 * $rgb['g'] + 0.114 * $rgb['b']) / 255;
+    
+    // Return black for light colors (luminance > 0.5), white for dark colors
+    return $luminance > 0.5 ? '#000000' : '#ffffff';
 }
 
 /**

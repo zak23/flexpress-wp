@@ -311,6 +311,14 @@ docker exec -it flexpress_wordpress wp [command]
   - Clarified admin interface descriptions to distinguish between plan types
 
 ### September 2025
+- **Enhanced Color Contrast System**: Fixed readability issues with light accent colors by implementing automatic text color detection
+  - Added `flexpress_get_contrast_text_color()` function that calculates luminance to determine optimal text color
+  - Updated admin color picker with real-time preview that automatically adjusts text color (black for light backgrounds, white for dark backgrounds)
+  - Enhanced CSS generation to include `--color-accent-text` variable for consistent contrast across the theme
+  - Updated button styles to automatically use appropriate text color based on accent color luminance
+  - Solves the issue where light colors like yellow made white text unreadable on buttons
+  - Uses industry-standard luminance formula (0.299*R + 0.587*G + 0.114*B) for accurate contrast calculation
+
 - **Fixed Daily Pricing Calculations**: Corrected membership page to show accurate daily rates instead of full plan prices
   - Added `flexpress_calculate_daily_rate()` function to properly convert plan prices to daily rates
   - Added `flexpress_get_daily_rate_display()` helper for formatted display

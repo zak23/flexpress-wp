@@ -452,6 +452,15 @@ if (isset($_GET['error'])) {
     </div>
 </div>
 
+<style>
+/* Fix MOST POPULAR badge to stay on one line */
+.membership-page .popular-badge {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    font-size: 0.65rem !important;
+}
+</style>
+
 <?php
 // Enqueue and localize promo code script data
 wp_localize_script('jquery', 'flexpressPromo', array(

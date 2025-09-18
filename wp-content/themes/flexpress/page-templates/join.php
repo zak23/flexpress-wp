@@ -610,6 +610,13 @@ if (isset($_GET['error'])) {
     z-index: auto !important;
 }
 
+/* Fix MOST POPULAR badge to stay on one line */
+.membership-page .popular-badge {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    font-size: 0.65rem !important;
+}
+
 .membership-page .promo-code-label {
     color: white !important;
     font-size: 1rem !important;

@@ -156,7 +156,7 @@ class FlexPress_General_Settings {
             <?php esc_html_e('Choose an accent color for buttons, links, and important elements. Default is hot pink (#ff69b4).', 'flexpress'); ?>
         </p>
         <div class="accent-color-preview" style="margin-top: 10px;">
-            <div style="background-color: <?php echo esc_attr($value); ?>; color: white; padding: 10px 20px; border-radius: 4px; display: inline-block; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+            <div style="background-color: <?php echo esc_attr($value); ?>; padding: 10px 20px; border-radius: 4px; display: inline-block; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                 Sample Button
             </div>
             <div style="margin-top: 8px; color: <?php echo esc_attr($value); ?>; font-weight: 600;">
@@ -166,11 +166,40 @@ class FlexPress_General_Settings {
         
         <script type="text/javascript">
             jQuery(document).ready(function($) {
-                $('input[name="flexpress_general_settings[accent_color]"]').on('change', function() {
-                    var color = $(this).val();
-                    $('.accent-color-preview div:first-child').css('background-color', color);
+                // Function to determine if a color is light or dark
+                function isLightColor(hex) {
+                    // Remove # if present
+                    hex = hex.replace('#', '');
+                    
+                    // Convert to RGB
+                    var r = parseInt(hex.substr(0, 2), 16);
+                    var g = parseInt(hex.substr(2, 2), 16);
+                    var b = parseInt(hex.substr(4, 2), 16);
+                    
+                    // Calculate luminance
+                    var luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                    
+                    // Return true if light (luminance > 0.5)
+                    return luminance > 0.5;
+                }
+                
+                // Function to update preview colors
+                function updatePreview(color) {
+                    var textColor = isLightColor(color) ? '#000000' : '#ffffff';
+                    $('.accent-color-preview div:first-child').css({
+                        'background-color': color,
+                        'color': textColor
+                    });
                     $('.accent-color-preview div:last-child').css('color', color);
+                }
+                
+                // Update preview on color change
+                $('input[name="flexpress_general_settings[accent_color]"]').on('change', function() {
+                    updatePreview($(this).val());
                 });
+                
+                // Initialize preview with current color
+                updatePreview('<?php echo esc_js($value); ?>');
             });
         </script>
         <?php

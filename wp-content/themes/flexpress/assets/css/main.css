@@ -2181,20 +2181,7 @@ footer.bg-black .row.footer {
   background: rgba(255, 255, 255, 0.05) !important;
 }
 
-/* Override promo-only styling when not selected */
-.membership-plan-item.promo-only-plan.no-highlight {
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-}
-
-.membership-plan-item.promo-only-plan.no-highlight::before {
-  opacity: 0.1;
-  box-shadow: none;
-}
-
-.membership-plan-item.promo-only-plan.no-highlight::after {
-  opacity: 0.1;
-}
+/* Promo-only plans don't need no-highlight styling since they're not highlighted */
 
 .membership-plan-item.popular-plan::before {
   content: '';
@@ -2208,53 +2195,10 @@ footer.bg-black .row.footer {
 }
 
 .membership-plan-item.promo-only-plan {
-  border-color: var(--color-accent) !important;
-  background: var(--color-accent-featured-bg) !important;
-  position: relative;
+  /* No special highlighting - just normal plan styling */
 }
 
-.membership-plan-item.promo-only-plan::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--color-accent), var(--color-accent));
-  border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
-  box-shadow: 0 0 15px rgba(var(--color-accent-rgb), 0.5);
-}
-
-.membership-plan-item.promo-only-plan::after {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(45deg, var(--color-accent), transparent, var(--color-accent));
-  border-radius: var(--border-radius-lg);
-  z-index: -1;
-  opacity: 0.3;
-}
-
-/* Enhanced selected state for promo-only plans */
-.membership-plan-item.promo-only-plan.selected {
-  box-shadow: 0 0 35px rgba(var(--color-accent-rgb), 0.8) !important;
-  transform: translateY(-4px) !important;
-  border-width: 3px !important;
-}
-
-.membership-plan-item.promo-only-plan.selected::before {
-  opacity: 0.6;
-  box-shadow: 0 0 20px rgba(var(--color-accent-rgb), 0.7);
-}
-
-.membership-plan-item.promo-only-plan.selected::after {
-  content: '✓ PROMO SELECTED';
-  background: linear-gradient(45deg, var(--color-accent), var(--color-primary));
-  box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.5);
-}
+/* Promo-only plans use standard selected styling */
 
 /* Plan Content Layout */
 .plan-content {

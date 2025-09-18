@@ -11,7 +11,7 @@ This is a WordPress website project running in Docker containers with the follow
 - WordPress: Port 8085 (http://localhost:8085)
 - phpMyAdmin: Port 8086 (http://localhost:8086)
 - MySQL Database: Internal container network
-- Live Site: https://ZaksPOV.com (production site)
+- Live Site: https://zakspov.com (production site)
 - Test Site: https://zakspov.com (development data only)
 
 Do all pupeteer tests on the test site.

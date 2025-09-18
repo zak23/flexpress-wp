@@ -21,7 +21,7 @@ A modern WordPress website running in Docker containers with MySQL database and 
    ```
 
 3. **Access your WordPress site:**
-   - WordPress: https://ZaksPOV.com
+   - WordPress: https://zakspov.com
    - phpMyAdmin: http://localhost:8086
 
 ## 📁 Project Structure
@@ -48,13 +48,13 @@ flexpress/
 ## 🔧 Recent Fixes
 
 ### Site URL Configuration (September 2025)
-- **URL Change**: Updated WordPress site URL from `https://zakspov.com` to `https://ZaksPOV.com`
-- **Database Update**: Modified `wp_options` table to set both `siteurl` and `home` options to new URL
-- **Documentation Update**: Updated README.md and .cursorrules to reflect new URL structure
+- **URL Standardization**: Standardized WordPress site URL to lowercase `https://zakspov.com` following best practices
+- **Database Update**: Modified `wp_options` table to set both `siteurl` and `home` options to standardized URL
+- **Documentation Update**: Updated README.md and .cursorrules to reflect correct URL structure
 - **Configuration**: 
-  - Live Site: `https://ZaksPOV.com` (production site)
+  - Live Site: `https://zakspov.com` (production site)
   - Test Site: `https://zakspov.com` (development data only)
-- **Impact**: All WordPress-generated URLs now use the new domain structure
+- **Impact**: All WordPress-generated URLs now use the standardized lowercase domain structure
 
 **Files Modified:**
 - Database: `wp_options` table (`siteurl` and `home` options)
@@ -88,7 +88,7 @@ flexpress/
   - Implemented registration functionality using existing `flexpress_process_registration_and_payment` AJAX handler
   - Implemented login functionality using existing `flexpress_ajax_login` AJAX handler
   - Added proper error handling and user feedback
-  - Updated WordPress site URL to localhost:8085 for development testing (reverted back to ZaksPOV.com for production)
+  - Updated WordPress site URL to localhost:8085 for development testing (reverted back to zakspov.com for production)
 - **Result**: Continue button now properly processes user registration/login and redirects to payment page
 
 ### Payment Success Login Flow (September 2025)

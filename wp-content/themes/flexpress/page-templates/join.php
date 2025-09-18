@@ -326,15 +326,12 @@ if (isset($_GET['error'])) {
                 <div class="registration-section">
                     <h3 class="text-center mb-4"><?php esc_html_e('3. Create Your Account', 'flexpress'); ?></h3>
                     
-                    <div class="auth-toggle mb-4">
-                        <div class="toggle-buttons">
-                            <button type="button" class="toggle-btn active" data-auth-type="register">
-                                <?php esc_html_e('Register', 'flexpress'); ?>
-                            </button>
-                            <button type="button" class="toggle-btn" data-auth-type="login">
-                                <?php esc_html_e('Login', 'flexpress'); ?>
-                            </button>
-                        </div>
+                    <!-- Registration form only - no login option on join page -->
+                    <div class="text-center mb-4">
+                        <p class="text-muted">
+                            <?php esc_html_e('Already have an account?', 'flexpress'); ?>
+                            <a href="<?php echo esc_url(home_url('/login')); ?>" class="legal-link"><?php esc_html_e('Sign in here', 'flexpress'); ?></a>
+                        </p>
                     </div>
                     
                     <!-- Registration Form -->
@@ -364,22 +361,6 @@ if (isset($_GET['error'])) {
                         </form>
                     </div>
                     
-                    <!-- Login Form -->
-                    <div id="login-form" class="auth-form" style="display: none;">
-                        <form id="membership-login-form" method="post">
-                            <div class="mb-3">
-                                <label for="login-email" class="form-label"><?php esc_html_e('Email Address', 'flexpress'); ?></label>
-                                <input type="email" class="form-control" id="login-email" name="email" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="login-password" class="form-label"><?php esc_html_e('Password', 'flexpress'); ?></label>
-                                <input type="password" class="form-control" id="login-password" name="password" required>
-                            </div>
-                            <div class="mb-3">
-                                <a href="<?php echo esc_url(home_url('/lost-password')); ?>" class="legal-link"><?php esc_html_e('Forgot your password?', 'flexpress'); ?></a>
-                            </div>
-                        </form>
-                    </div>
                 </div>
             </div>
         </div>
@@ -756,23 +737,7 @@ jQuery(document).ready(function() {
         selectedPlan = null;
     });
     
-    // Auth type toggle functionality (for non-logged in users)
-    jQuery('.toggle-btn[data-auth-type]').on('click', function() {
-        const authType = jQuery(this).data('auth-type');
-        
-        // Update toggle buttons
-        jQuery('.toggle-btn[data-auth-type]').removeClass('active');
-        jQuery(this).addClass('active');
-        
-        // Show/hide forms
-        if (authType === 'register') {
-            jQuery('#register-form').show();
-            jQuery('#login-form').hide();
-        } else {
-            jQuery('#register-form').hide();
-            jQuery('#login-form').show();
-        }
-    });
+    // No auth toggle needed - only registration form on join page
     
     // Plan selection functionality
     jQuery('.membership-plan-item').on('click', function() {
@@ -831,103 +796,57 @@ jQuery(document).ready(function() {
             console.log('Redirecting logged in user to:', paymentUrl);
             window.location.href = paymentUrl;
         } else {
-            // Non-logged in user - validate form and then register/login
-            const activeForm = jQuery('.auth-form:visible');
-            const isRegisterForm = activeForm.attr('id') === 'register-form';
+            // Non-logged in user - validate registration form and proceed
+            const email = jQuery('#reg-email').val();
+            const password = jQuery('#reg-password').val();
+            const confirmPassword = jQuery('#reg-confirm-password').val();
+            const termsAccepted = jQuery('#reg-terms').is(':checked');
             
-            if (isRegisterForm) {
-                // Validate registration form
-                const email = jQuery('#reg-email').val();
-                const password = jQuery('#reg-password').val();
-                const confirmPassword = jQuery('#reg-confirm-password').val();
-                const termsAccepted = jQuery('#reg-terms').is(':checked');
-                
-                if (!email || !password || !confirmPassword) {
-                    alert('Please fill in all fields.');
-                    return;
-                }
-                
-                if (password !== confirmPassword) {
-                    alert('Passwords do not match.');
-                    return;
-                }
-                
-                if (!termsAccepted) {
-                    alert('Please accept the terms and conditions.');
-                    return;
-                }
-                
-                // Submit registration via AJAX
-                jQuery.ajax({
-                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
-                    type: 'POST',
-                    data: {
-                        action: 'flexpress_process_registration_and_payment',
-                        nonce: '<?php echo wp_create_nonce('flexpress_join_form'); ?>',
-                        first_name: email.split('@')[0], // Use email prefix as first name
-                        last_name: 'User', // Default last name
-                        email: email,
-                        password: password,
-                        selected_plan: planId,
-                        applied_promo_code: appliedPromo ? appliedPromo.code : ''
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            // Registration successful, redirect to payment or account
-                            if (response.data.payment_url) {
-                                window.location.href = response.data.payment_url;
-                            } else {
-                                window.location.href = '<?php echo home_url('/dashboard/'); ?>';
-                            }
-                        } else {
-                            alert('Registration failed: ' + response.data.message);
-                        }
-                    },
-                    error: function() {
-                        alert('An error occurred during registration. Please try again.');
-                    }
-                });
-            } else {
-                // Validate login form
-                const email = jQuery('#login-email').val();
-                const password = jQuery('#login-password').val();
-                
-                if (!email || !password) {
-                    alert('Please fill in all fields.');
-                    return;
-                }
-                
-                // Submit login via AJAX
-                jQuery.ajax({
-                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
-                    type: 'POST',
-                    data: {
-                        action: 'flexpress_ajax_login',
-                        username: email,
-                        password: password,
-                        remember: false,
-                        security: '<?php echo wp_create_nonce('ajax-login-nonce'); ?>'
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            // Login successful, redirect to payment
-                            let paymentUrl = '<?php echo esc_url(home_url('/payment')); ?>?plan=' + encodeURIComponent(planId);
-                            
-                            // Add promo code if applied
-                            if (appliedPromo && appliedPromo.code) {
-                                paymentUrl += '&promo=' + encodeURIComponent(appliedPromo.code);
-                            }
-                            
-                            window.location.href = paymentUrl;
-                        } else {
-                            alert('Login failed: ' + response.message);
-                        }
-                    },
-                    error: function() {
-                        alert('An error occurred during login. Please try again.');
-                    }
-                });
+            if (!email || !password || !confirmPassword) {
+                alert('Please fill in all fields.');
+                return;
             }
+            
+            if (password !== confirmPassword) {
+                alert('Passwords do not match.');
+                return;
+            }
+            
+            if (!termsAccepted) {
+                alert('Please accept the terms and conditions.');
+                return;
+            }
+            
+            // Submit registration via AJAX
+            jQuery.ajax({
+                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                type: 'POST',
+                data: {
+                    action: 'flexpress_process_registration_and_payment',
+                    nonce: '<?php echo wp_create_nonce('flexpress_join_form'); ?>',
+                    first_name: email.split('@')[0], // Use email prefix as first name
+                    last_name: 'User', // Default last name
+                    email: email,
+                    password: password,
+                    selected_plan: planId,
+                    applied_promo_code: appliedPromo ? appliedPromo.code : ''
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Registration successful, redirect to payment or account
+                        if (response.data.payment_url) {
+                            window.location.href = response.data.payment_url;
+                        } else {
+                            window.location.href = '<?php echo home_url('/dashboard/'); ?>';
+                        }
+                    } else {
+                        alert('Registration failed: ' + response.data.message);
+                    }
+                },
+                error: function() {
+                    alert('An error occurred during registration. Please try again.');
+                }
+            });
         }
     });
     

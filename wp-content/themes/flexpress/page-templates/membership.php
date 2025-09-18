@@ -84,6 +84,13 @@ if (isset($_GET['error'])) {
                             </div>
                         <?php endif; ?>
                     </div>
+                    
+                    <div class="text-center mt-4">
+                        <a href="<?php echo esc_url(get_permalink(get_page_by_path('dashboard'))); ?>" class="btn btn-primary btn-lg">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            <?php esc_html_e('Go to Dashboard', 'flexpress'); ?>
+                        </a>
+                    </div>
                 <?php elseif ($membership_status === 'cancelled'): ?>
                     <div class="alert alert-warning" role="alert">
                         <i class="fas fa-exclamation-circle me-2"></i>
@@ -102,6 +109,13 @@ if (isset($_GET['error'])) {
                             </div>
                         <?php endif; ?>
                     </div>
+                    
+                    <div class="text-center mt-4">
+                        <a href="<?php echo esc_url(get_permalink(get_page_by_path('dashboard'))); ?>" class="btn btn-primary btn-lg">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            <?php esc_html_e('Go to Dashboard', 'flexpress'); ?>
+                        </a>
+                    </div>
                 <?php elseif ($membership_status === 'expired' || $membership_status === 'banned'): ?>
                     <div class="alert alert-danger" role="alert">
                         <i class="fas fa-times-circle me-2"></i>
@@ -114,9 +128,21 @@ if (isset($_GET['error'])) {
                         ?>
                     </div>
                 <?php endif; ?>
+                
+                <?php 
+                // Redirect to dashboard if user has active or cancelled membership
+                if ($membership_status === 'active' || $membership_status === 'cancelled') {
+                    $dashboard_url = get_permalink(get_page_by_path('dashboard'));
+                    if ($dashboard_url) {
+                        wp_redirect($dashboard_url);
+                        exit;
+                    }
+                }
+                ?>
             </div>
         </div>
 
+        <?php if ($membership_status !== 'active' && $membership_status !== 'cancelled'): ?>
         <!-- Promo Code Section -->
         <div class="row justify-content-center mb-4">
             <div class="col-lg-8 col-xl-6">
@@ -180,10 +206,14 @@ if (isset($_GET['error'])) {
                         <?php foreach ($sorted_plans as $plan_id => $plan): ?>
                             <?php 
                                 $is_featured = $featured_plan && $featured_plan['id'] === $plan_id;
+                                $is_promo_only = !empty($plan['promo_only']);
                                 $plan_features = isset($plan['features']) ? $plan['features'] : array();
                                 $plan_type_class = 'plan-type-' . $plan['plan_type'];
+                                $plan_classes = array($plan_type_class);
+                                if ($is_featured) $plan_classes[] = 'popular-plan';
+                                if ($is_promo_only) $plan_classes[] = 'promo-plan';
                             ?>
-                            <div class="membership-plan-item <?php echo $is_featured ? 'popular-plan' : ''; ?> <?php echo esc_attr($plan_type_class); ?>" 
+                            <div class="membership-plan-item <?php echo implode(' ', $plan_classes); ?>" 
                                  data-plan-type="<?php echo esc_attr($plan['plan_type']); ?>"
                                  data-plan-id="<?php echo esc_attr($plan_id); ?>"
                                  data-plan-price="<?php echo esc_attr($plan['price']); ?>"
@@ -198,7 +228,9 @@ if (isset($_GET['error'])) {
                                         <div class="plan-header">
                                             <h5 class="plan-name"><?php echo esc_html($plan['name']); ?></h5>
                                             <?php if ($is_featured): ?>
-                                            <span class="popular-badge"><?php esc_html_e('MOST POPULAR', 'flexpress'); ?></span>
+                                            <span class="featured-badge"><?php esc_html_e('MOST POPULAR', 'flexpress'); ?></span>
+                                            <?php elseif ($is_promo_only): ?>
+                                            <span class="promo-badge"><?php esc_html_e('PROMO ONLY', 'flexpress'); ?></span>
                                             <?php endif; ?>
                                         </div>
                                         <?php if (!empty($plan['description'])): ?>
@@ -449,6 +481,7 @@ if (isset($_GET['error'])) {
                 </div>
             </div>
         </div>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -463,7 +496,14 @@ if (isset($_GET['error'])) {
 
 <?php
 // Enqueue and localize promo code script data
-wp_localize_script('jquery', 'flexpressPromo', array(
+wp_enqueue_script('jquery');
+
+// Create a unique script handle for localization
+$script_handle = 'flexpress-promo-script';
+wp_register_script($script_handle, '', array('jquery'), '1.0', true);
+wp_enqueue_script($script_handle);
+
+wp_localize_script($script_handle, 'flexpressPromo', array(
     'ajaxurl' => admin_url('admin-ajax.php'),
     'nonce' => wp_create_nonce('flexpress_promo_nonce')
 ));
@@ -553,6 +593,7 @@ jQuery(document).ready(function() {
         // Reset selection
         jQuery('.membership-plan-item').removeClass('selected');
         jQuery('.membership-plan-item.popular-plan').removeClass('no-highlight');
+        jQuery('.membership-plan-item.promo-plan').removeClass('no-highlight');
         selectedPlan = null;
     });
     
@@ -578,10 +619,12 @@ jQuery(document).ready(function() {
     jQuery('.membership-plan-item').on('click', function() {
         jQuery('.membership-plan-item').removeClass('selected');
         jQuery('.membership-plan-item.popular-plan').removeClass('no-highlight');
+        jQuery('.membership-plan-item.promo-plan').removeClass('no-highlight');
         jQuery(this).addClass('selected');
         
-        // Add no-highlight class to popular plans that are not selected
+        // Add no-highlight class to popular and promo plans that are not selected
         jQuery('.membership-plan-item.popular-plan:not(.selected)').addClass('no-highlight');
+        jQuery('.membership-plan-item.promo-plan:not(.selected)').addClass('no-highlight');
         
         selectedPlan = jQuery(this);
         
@@ -687,10 +730,12 @@ jQuery(document).ready(function() {
         // Apply the same logic as clicking a plan
         jQuery('.membership-plan-item').removeClass('selected');
         jQuery('.membership-plan-item.popular-plan').removeClass('no-highlight');
+        jQuery('.membership-plan-item.promo-plan').removeClass('no-highlight');
         popularPlan.addClass('selected');
         
-        // Add no-highlight class to other popular plans that are not selected
+        // Add no-highlight class to other popular and promo plans that are not selected
         jQuery('.membership-plan-item.popular-plan:not(.selected)').addClass('no-highlight');
+        jQuery('.membership-plan-item.promo-plan:not(.selected)').addClass('no-highlight');
         
         selectedPlan = popularPlan;
         

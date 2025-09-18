@@ -2149,6 +2149,36 @@ footer.bg-black .row.footer {
   background: rgba(255, 255, 255, 0.05) !important;
 }
 
+/* Promo Only plan styling - different from popular */
+.membership-plan-item.promo-plan {
+  border-color: #ff6b35 !important;
+  background: rgba(255, 107, 53, 0.1) !important;
+  position: relative;
+}
+
+.membership-plan-item.promo-plan::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ff6b35, #f7931e, #ff6b35);
+  background-size: 200% 100%;
+  animation: promo-border-flow 3s ease-in-out infinite;
+}
+
+@keyframes promo-border-flow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Override promo styling when not selected */
+.membership-plan-item.promo-plan.no-highlight {
+  border-color: rgba(255, 107, 53, 0.3) !important;
+  background: rgba(255, 107, 53, 0.05) !important;
+}
+
 .membership-plan-item.popular-plan::before {
   content: '';
   position: absolute;
@@ -2428,7 +2458,7 @@ footer.bg-black .row.footer {
 .membership-page .alert-success {
   background-color: rgba(40, 167, 69, 0.1);
   border-color: rgba(40, 167, 69, 0.3);
-  color: #28a745;
+  color: white;
 }
 
 .membership-page .alert-warning {
@@ -5009,6 +5039,38 @@ input[type="radio"]:checked {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+/* Promo Only badge - different style from Most Popular */
+.promo-badge {
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  color: white;
+  padding: 3px 10px;
+  border-radius: 15px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.promo-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: promo-shine 2s infinite;
+}
+
+@keyframes promo-shine {
+  0% { left: -100%; }
+  100% { left: 100%; }
 }
 
 /* Accent glow effects for interactive elements */

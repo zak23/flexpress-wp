@@ -177,7 +177,13 @@ function flexpress_enqueue_scripts_and_styles() {
     wp_enqueue_script('bootstrap-js', 'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js', array(), '5.1.3', true);
     
     // Enqueue age verification JavaScript (always loaded)
-    wp_enqueue_script('flexpress-age-verification', get_template_directory_uri() . '/assets/js/age-verification.js', array(), wp_get_theme()->get('Version'), true);
+    wp_enqueue_script('flexpress-age-verification', get_template_directory_uri() . '/assets/js/age-verification.js', array(), wp_get_theme()->get('Version') . '.' . time(), true);
+    
+    // Localize age verification script with exit URL
+    wp_localize_script('flexpress-age-verification', 'flexpressAgeVerificationData', array(
+        'exit_url' => flexpress_get_age_verification_exit_url(),
+        'timestamp' => time() // Force cache refresh
+    ));
     
     // Enqueue main JavaScript (only on pages that need it)
     if (!is_page_template('page-templates/register-flowguard.php') && 
@@ -449,7 +455,22 @@ function flexpress_sanitize_general_settings($input) {
         $sanitized['accent_color'] = $color ? $color : '#ff6b35'; // Fallback to default
     }
     
+    // Sanitize age verification exit URL
+    if (isset($input['age_verification_exit_url'])) {
+        $url = esc_url_raw($input['age_verification_exit_url']);
+        $sanitized['age_verification_exit_url'] = $url ? $url : 'https://duckduckgo.com'; // Fallback to default
+    }
+    
     return $sanitized;
+}
+
+/**
+ * Get age verification exit URL from settings
+ */
+function flexpress_get_age_verification_exit_url() {
+    $options = get_option('flexpress_general_settings', array());
+    $exit_url = isset($options['age_verification_exit_url']) ? $options['age_verification_exit_url'] : 'https://duckduckgo.com';
+    return esc_url($exit_url);
 }
 
 /**

@@ -1,6 +1,7 @@
 /**
  * Age Verification Modal
  * Handles the age verification popup with localStorage persistence
+ * Updated: 2025-09-18 - Added configurable exit URL
  */
 
 (function() {
@@ -131,13 +132,23 @@
      * Handle exit button click
      */
     function handleExit() {
-        // Redirect to a safe page or close the tab
-        if (window.history.length > 1) {
-            window.history.back();
-        } else {
-            // If no history, redirect to a safe, family-friendly page
-            window.location.href = 'https://duckduckgo.com';
+        // Redirect to the configured exit URL
+        let exitUrl = 'https://duckduckgo.com'; // Default fallback
+        
+        // Check if the localized data exists and has the exit URL
+        if (typeof flexpressAgeVerificationData !== 'undefined' && flexpressAgeVerificationData.exit_url) {
+            exitUrl = flexpressAgeVerificationData.exit_url;
         }
+        
+        console.log('=== EXIT FUNCTION DEBUG ===');
+        console.log('flexpressAgeVerificationData object:', flexpressAgeVerificationData);
+        console.log('typeof flexpressAgeVerificationData:', typeof flexpressAgeVerificationData);
+        console.log('exit_url value:', flexpressAgeVerificationData ? flexpressAgeVerificationData.exit_url : 'undefined');
+        console.log('Final exit URL:', exitUrl);
+        console.log('===========================');
+        
+        // Force redirect
+        window.location.href = exitUrl;
     }
     
     /**
@@ -188,7 +199,35 @@
     window.flexpressAgeVerification = {
         reset: reset,
         status: status,
-        hasVerifiedAge: hasVerifiedAge
+        hasVerifiedAge: hasVerifiedAge,
+        testExit: function() {
+            console.log('Testing exit URL...');
+            handleExit();
+        },
+        forceReload: function() {
+            console.log('Force reloading page to clear cache...');
+            window.location.reload(true);
+        },
+        debug: function() {
+            console.log('=== Age Verification Debug Info ===');
+            console.log('flexpressAgeVerificationData object:', flexpressAgeVerificationData);
+            console.log('Exit URL:', flexpressAgeVerificationData ? flexpressAgeVerificationData.exit_url : 'undefined');
+            console.log('Has verified age:', hasVerifiedAge());
+            console.log('Storage key:', STORAGE_KEY);
+            console.log('=====================================');
+        },
+        testExitUrl: function() {
+            console.log('=== Testing Exit URL Directly ===');
+            const testUrl = flexpressAgeVerificationData ? flexpressAgeVerificationData.exit_url : 'undefined';
+            console.log('Configured exit URL:', testUrl);
+            if (testUrl && testUrl !== 'undefined') {
+                console.log('Redirecting to:', testUrl);
+                window.location.href = testUrl;
+            } else {
+                console.log('No valid exit URL found, using fallback');
+                window.location.href = 'https://duckduckgo.com';
+            }
+        }
     };
     
     // Initialize when script loads

@@ -68,6 +68,7 @@ flexpress/
 - **Accessibility Features**: Keyboard navigation support (ESC to exit, Enter to confirm)
 - **Responsive Design**: Mobile-optimized layout with proper touch targets
 - **Custom Logo Integration**: Automatically displays site logo or falls back to site title
+- **Configurable Exit URL**: Admin can set custom exit URL in FlexPress Settings → General
 - **Legal Compliance**: Includes required age verification text for adult content sites
 
 **Files Added:**
@@ -79,6 +80,7 @@ flexpress/
 - Modal appears automatically on first visit
 - Users can reset verification status via browser console: `flexpressAgeVerification.reset()`
 - Check verification status: `flexpressAgeVerification.status()`
+- Configure exit URL in WordPress Admin → FlexPress Settings → General → "Age Verification Exit URL"
 
 ### Join Page Continue Button (September 2025)
 - **Issue**: Continue button on join page was not responding to clicks

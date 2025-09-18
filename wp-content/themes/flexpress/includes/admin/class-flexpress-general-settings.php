@@ -91,6 +91,15 @@ class FlexPress_General_Settings {
             'flexpress_general_settings',
             'flexpress_color_section'
         );
+        
+        // Add age verification exit URL field
+        add_settings_field(
+            'flexpress_age_verification_exit_url',
+            __('Age Verification Exit URL', 'flexpress'),
+            array($this, 'render_age_verification_exit_url_field'),
+            'flexpress_general_settings',
+            'flexpress_general_section'
+        );
     }
 
     /**
@@ -202,6 +211,24 @@ class FlexPress_General_Settings {
                 updatePreview('<?php echo esc_js($value); ?>');
             });
         </script>
+        <?php
+    }
+    
+    /**
+     * Render age verification exit URL field
+     */
+    public function render_age_verification_exit_url_field() {
+        $options = get_option('flexpress_general_settings');
+        $value = isset($options['age_verification_exit_url']) ? $options['age_verification_exit_url'] : 'https://duckduckgo.com';
+        ?>
+        <input type="url" 
+               name="flexpress_general_settings[age_verification_exit_url]" 
+               value="<?php echo esc_attr($value); ?>" 
+               class="regular-text"
+               placeholder="https://example.com">
+        <p class="description">
+            <?php esc_html_e('URL to redirect users when they click "Exit Site" in the age verification modal. Default is DuckDuckGo.', 'flexpress'); ?>
+        </p>
         <?php
     }
 

@@ -4,7 +4,8 @@
 
 FlexPress is designed specifically for content websites (primarily adult content) but can be adapted for any premium content platform. It includes comprehensive built-in integrations and management tools, eliminating the need for multiple plugins.
 
-**Test Site:** ZaksPOV.com (development data only)
+**Live Site:** ZaksPOV.com (production site)  
+**Test Site:** zakspov.com (development data only)
 
 ---
 

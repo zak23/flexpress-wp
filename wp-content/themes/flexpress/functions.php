@@ -162,6 +162,9 @@ function flexpress_enqueue_scripts_and_styles() {
     wp_enqueue_style('flexpress-gallery', get_template_directory_uri() . '/assets/css/gallery.css', array('flexpress-main'), wp_get_theme()->get('Version'));
     wp_enqueue_style('flexpress-style', get_stylesheet_uri(), array('flexpress-main'), wp_get_theme()->get('Version'));
     
+    // Enqueue age verification CSS (always loaded)
+    wp_enqueue_style('flexpress-age-verification', get_template_directory_uri() . '/assets/css/age-verification.css', array('flexpress-main'), wp_get_theme()->get('Version'));
+    
     // Enqueue hero video CSS on homepage
     if (is_page_template('page-templates/page-home.php')) {
         wp_enqueue_style('flexpress-hero-video', get_template_directory_uri() . '/assets/css/hero-video.css', array('flexpress-main'), wp_get_theme()->get('Version'));
@@ -172,6 +175,9 @@ function flexpress_enqueue_scripts_and_styles() {
     
     // Enqueue Bootstrap JS
     wp_enqueue_script('bootstrap-js', 'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js', array(), '5.1.3', true);
+    
+    // Enqueue age verification JavaScript (always loaded)
+    wp_enqueue_script('flexpress-age-verification', get_template_directory_uri() . '/assets/js/age-verification.js', array(), wp_get_theme()->get('Version'), true);
     
     // Enqueue main JavaScript (only on pages that need it)
     if (!is_page_template('page-templates/register-flowguard.php') && 

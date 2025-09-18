@@ -167,5 +167,34 @@
 
 <?php wp_footer(); ?>
 
+<!-- Age Verification Modal -->
+<div id="age-verification-modal" class="age-verification-modal">
+    <div class="age-verification-modal-content">
+        <div class="age-verification-modal-body">
+            <?php
+            // Get the custom logo or fallback to site title
+            $logo_data = flexpress_get_custom_logo();
+            if ($logo_data && isset($logo_data['url'])) {
+                echo '<img src="' . esc_url($logo_data['url']) . '" alt="' . esc_attr(get_bloginfo('name')) . '" class="age-verification-modal-logo">';
+            } else {
+                echo '<div class="age-verification-modal-logo" style="background: var(--color-text); color: var(--color-accent); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 24px;">' . esc_html(get_bloginfo('name')) . '</div>';
+            }
+            ?>
+            <h3 class="age-verification-modal-title">Age Verification Required</h3>
+            <p class="age-verification-modal-text">
+                This website contains sensitive material that in some jurisdictions accessing this content might be considered violating prevailing law and regulation. By entering this website you are accepting responsibility, and confirming your age is considered 'adult' in your actual location and you are able to legally access this material responsibly.
+            </p>
+            <div class="age-verification-modal-buttons">
+                <button type="button" class="age-verification-btn age-verification-btn-primary" id="age-verification-agree">
+                    I am 18 or older - Enter
+                </button>
+                <button type="button" class="age-verification-btn age-verification-btn-secondary" id="age-verification-exit">
+                    Exit Site
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html> 

@@ -21,7 +21,7 @@ A modern WordPress website running in Docker containers with MySQL database and 
    ```
 
 3. **Access your WordPress site:**
-   - WordPress: https://zakspov.com
+   - WordPress: https://ZaksPOV.com
    - phpMyAdmin: http://localhost:8086
 
 ## 📁 Project Structure
@@ -47,6 +47,39 @@ flexpress/
 
 ## 🔧 Recent Fixes
 
+### Site URL Configuration (September 2025)
+- **URL Change**: Updated WordPress site URL from `https://zakspov.com` to `https://ZaksPOV.com`
+- **Database Update**: Modified `wp_options` table to set both `siteurl` and `home` options to new URL
+- **Documentation Update**: Updated README.md and .cursorrules to reflect new URL structure
+- **Configuration**: 
+  - Live Site: `https://ZaksPOV.com` (production site)
+  - Test Site: `https://zakspov.com` (development data only)
+- **Impact**: All WordPress-generated URLs now use the new domain structure
+
+**Files Modified:**
+- Database: `wp_options` table (`siteurl` and `home` options)
+- `README.md` - Updated all URL references
+- `.cursorrules` - Updated project configuration
+
+### Age Verification Modal (September 2025)
+- **SEO-Compliant Implementation**: Modal positioned in footer to avoid H3 interference with main content H1s
+- **localStorage Persistence**: Users only see the modal once per browser session
+- **Dynamic Styling**: Uses theme accent colors with automatic text color contrast
+- **Accessibility Features**: Keyboard navigation support (ESC to exit, Enter to confirm)
+- **Responsive Design**: Mobile-optimized layout with proper touch targets
+- **Custom Logo Integration**: Automatically displays site logo or falls back to site title
+- **Legal Compliance**: Includes required age verification text for adult content sites
+
+**Files Added:**
+- `assets/css/age-verification.css` - Modal styling with accent color theming
+- `assets/js/age-verification.js` - Modal functionality and localStorage management
+- Modal HTML integrated into `footer.php` for SEO compliance
+
+**Usage:**
+- Modal appears automatically on first visit
+- Users can reset verification status via browser console: `flexpressAgeVerification.reset()`
+- Check verification status: `flexpressAgeVerification.status()`
+
 ### Join Page Continue Button (September 2025)
 - **Issue**: Continue button on join page was not responding to clicks
 - **Root Cause**: JavaScript selector mismatch (`join-continue-btn` vs `membership-continue-btn`)
@@ -55,7 +88,7 @@ flexpress/
   - Implemented registration functionality using existing `flexpress_process_registration_and_payment` AJAX handler
   - Implemented login functionality using existing `flexpress_ajax_login` AJAX handler
   - Added proper error handling and user feedback
-  - Updated WordPress site URL to localhost:8085 for development testing (reverted back to zakspov.com for production)
+  - Updated WordPress site URL to localhost:8085 for development testing (reverted back to ZaksPOV.com for production)
 - **Result**: Continue button now properly processes user registration/login and redirects to payment page
 
 ### Payment Success Login Flow (September 2025)

@@ -4,7 +4,7 @@
  */
 
 // Define theme constants
-define('FLEXPRESS_VERSION', '1.0.0');
+define('FLEXPRESS_VERSION', '1.0.1');
 define('FLEXPRESS_PATH', get_template_directory());
 define('FLEXPRESS_URL', get_template_directory_uri());
 
@@ -164,6 +164,9 @@ function flexpress_enqueue_scripts_and_styles() {
     
     // Enqueue age verification CSS (always loaded)
     wp_enqueue_style('flexpress-age-verification', get_template_directory_uri() . '/assets/css/age-verification.css', array('flexpress-main'), wp_get_theme()->get('Version'));
+    
+    // Enqueue casting section CSS (always loaded)
+    wp_enqueue_style('flexpress-casting-section', get_template_directory_uri() . '/assets/css/casting-section.css', array('flexpress-main'), wp_get_theme()->get('Version'));
     
     // Enqueue hero video CSS on homepage
     if (is_page_template('page-templates/page-home.php')) {

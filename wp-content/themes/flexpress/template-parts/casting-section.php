@@ -1,0 +1,92 @@
+<?php
+/**
+ * Template part for displaying the casting section
+ *
+ * @package FlexPress
+ */
+
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+?>
+
+<div class="casting-section bg-black text-white py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="casting-title text-uppercase mb-3">Want to Join Our Cast?</h2>
+                <p class="casting-subtitle lead">We're always looking for new talent to join the Dolls Down Under family</p>
+            </div>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="casting-content-container bg-dark rounded-3 p-4 shadow-lg">
+                    <div class="row align-items-center">
+                        <!-- Large Image on the Left -->
+                        <div class="col-md-6 mb-4 mb-md-0">
+                            <div class="casting-image">
+                                <img src="https://cdn.dollsdownunder.com/wp-content/uploads/2024/09/zak-sterre-7701-936x936.jpg" 
+                                     alt="Join Our Cast" 
+                                     class="img-fluid rounded-3 shadow">
+                            </div>
+                        </div>
+                        
+                        <!-- Benefits on the Right -->
+                        <div class="col-md-6">
+                            <div class="casting-benefits">
+                                <ul class="casting-benefits-list list-unstyled">
+                                    <li class="casting-benefit-item">
+                                        <i class="fas fa-film casting-benefit-icon"></i>
+                                        <span class="casting-benefit-text">Professional production environment</span>
+                                    </li>
+                                    <li class="casting-benefit-item">
+                                        <i class="fas fa-dollar-sign casting-benefit-icon"></i>
+                                        <span class="casting-benefit-text">Competitive rates</span>
+                                    </li>
+                                    <li class="casting-benefit-item">
+                                        <i class="fas fa-calendar-alt casting-benefit-icon"></i>
+                                        <span class="casting-benefit-text">Flexible scheduling</span>
+                                    </li>
+                                    <li class="casting-benefit-item">
+                                        <i class="fas fa-heart casting-benefit-icon"></i>
+                                        <span class="casting-benefit-text">Safe and respectful workplace</span>
+                                    </li>
+                                    <li class="casting-benefit-item">
+                                        <i class="fas fa-camera casting-benefit-icon"></i>
+                                        <span class="casting-benefit-text">Professional photography included</span>
+                                    </li>
+                                    <li class="casting-benefit-item">
+                                        <i class="fas fa-magic casting-benefit-icon"></i>
+                                        <span class="casting-benefit-text">Hair and makeup provided</span>
+                                    </li>
+                                    <li class="casting-benefit-item">
+                                        <i class="fas fa-file-signature casting-benefit-icon"></i>
+                                        <span class="casting-benefit-text">Flexible content agreements</span>
+                                    </li>
+                                    <li class="casting-benefit-item">
+                                        <i class="fas fa-trophy casting-benefit-icon"></i>
+                                        <span class="casting-benefit-text">Award-winning production team</span>
+                                    </li>
+                                    <li class="casting-benefit-item">
+                                        <i class="fas fa-shield-alt casting-benefit-icon"></i>
+                                        <span class="casting-benefit-text">Secure, private filming locations</span>
+                                    </li>
+                                    <li class="casting-benefit-item">
+                                        <i class="fas fa-handshake casting-benefit-icon"></i>
+                                        <span class="casting-benefit-text">Industry-standard contracts</span>
+                                    </li>
+                                </ul>
+                                
+                                <div class="text-center mt-4">
+                                    <a href="/casting" class="btn casting-apply-btn btn-lg">Apply Now</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -2997,7 +2997,247 @@ footer.bg-black .row.footer {
 .site-main.legal-page .alert-warning {
     background-color: rgba(255, 193, 7, 0.1);
     border-color: #ffc107;
-    color: #ffc107;
+}
+
+/* Casting Page Forms */
+.site-main .page-template-casting .form-control {
+    background-color: var(--color-surface) !important;
+    border: 1px solid var(--color-border) !important;
+    color: var(--color-text) !important;
+}
+
+.site-main .page-template-casting .form-control:focus {
+    background-color: var(--color-surface) !important;
+    border-color: var(--color-accent) !important;
+    color: var(--color-text) !important;
+    box-shadow: 0 0 0 0.2rem var(--color-accent-light) !important;
+}
+
+.site-main .page-template-casting .form-label {
+    color: var(--color-text) !important;
+}
+
+.site-main .page-template-casting .form-check-label {
+    color: var(--color-text) !important;
+}
+
+.site-main .page-template-casting .form-check-input {
+    background-color: var(--color-surface) !important;
+    border-color: var(--color-border) !important;
+}
+
+.site-main .page-template-casting .form-check-input:checked {
+    background-color: var(--color-accent) !important;
+    border-color: var(--color-accent) !important;
+}
+
+.site-main .page-template-casting .form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem var(--color-accent-light) !important;
+}
+
+.site-main .page-template-casting .invalid-feedback {
+    color: var(--color-accent);
+}
+
+.site-main .page-template-casting .card {
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+}
+
+.site-main .page-template-casting .card-header {
+    background-color: var(--color-accent);
+    border-bottom-color: var(--color-border);
+}
+
+.site-main .page-template-casting .alert {
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-text);
+}
+
+.site-main .page-template-casting .alert-info {
+    background-color: rgba(13, 202, 240, 0.1);
+    border-color: #0dcaf0;
+    color: var(--color-text);
+}
+
+.site-main .page-template-casting .alert-success {
+    background-color: rgba(25, 135, 84, 0.1);
+    border-color: #198754;
+    color: var(--color-text);
+}
+
+.site-main .page-template-casting .alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: #dc3545;
+    color: var(--color-text);
+}
+
+/* Casting FAQ Section */
+.casting-faq {
+    background-color: var(--color-background);
+    padding: 4rem 0;
+}
+
+.casting-faq h2 {
+    color: var(--color-text);
+    font-weight: 700;
+    margin-bottom: 0rem;
+}
+
+.casting-faq .accordion-item {
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.casting-faq .accordion-button {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    border: none;
+    font-weight: 600;
+    padding: 1.25rem 1.5rem;
+}
+
+.casting-faq .accordion-button:not(.collapsed) {
+    background-color: var(--color-accent);
+    color: var(--color-accent-text);
+    box-shadow: none;
+}
+
+.casting-faq .accordion-button:focus {
+    box-shadow: 0 0 0 0.2rem var(--color-accent-light);
+    border-color: var(--color-accent);
+}
+
+.casting-faq .accordion-button::after {
+    filter: brightness(0) invert(1);
+}
+
+.casting-faq .accordion-button:not(.collapsed)::after {
+    filter: brightness(0) invert(1);
+}
+
+.casting-faq .accordion-body {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    padding: 1.5rem;
+    border-top: 1px solid var(--color-border);
+}
+
+/* Casting Requirements Section */
+.casting-requirements {
+    background-color: var(--color-background);
+    padding: 4rem 0;
+}
+
+.casting-requirements h2 {
+    color: var(--color-text);
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.casting-requirements .lead {
+    color: var(--color-text-secondary);
+    font-size: 1.1rem;
+    margin-bottom: 3rem;
+}
+
+.requirement-card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    padding: 2rem;
+    text-align: center;
+    height: 100%;
+    transition: all 0.3s ease;
+}
+
+.requirement-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border-color: var(--color-accent);
+}
+
+.requirement-card i.fas {
+    font-size: 2.5rem;
+    color: var(--color-accent);
+    margin-bottom: 1.5rem;
+    display: block;
+}
+
+.requirement-card h3 {
+    color: var(--color-text);
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+}
+
+.requirements-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+}
+
+.requirements-list li {
+    color: var(--color-text);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.requirements-list li i.fa-check {
+    color: var(--color-accent);
+    margin-right: 0.75rem;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+}
+
+/* Casting Text Block */
+.casting-text-block {
+    background-color: var(--color-background);
+    padding: 4rem 0;
+}
+
+.casting-text-block .text-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.casting-text-block p {
+    color: var(--color-text);
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.casting-text-block p:last-child {
+    margin-bottom: 0;
+}
+
+.casting-text-block p strong {
+    color: var(--color-accent);
+    font-weight: 700;
+}
+
+.casting-text-block a {
+    color: var(--color-accent);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.casting-text-block a:hover {
+    color: var(--color-accent-hover);
+    text-decoration: underline;
 }
 
 .site-main.legal-page .alert-success {
@@ -5241,5 +5481,54 @@ select:focus {
 * {
     scrollbar-width: thin;
     scrollbar-color: var(--color-accent) #000000;
+}
+
+/* High specificity casting form overrides */
+body.page-template-casting .site-main .form-control {
+    background-color: #0a0a0a !important;
+    border: 1px solid #222222 !important;
+    color: #ffffff !important;
+}
+
+body.page-template-casting .site-main .form-control:focus {
+    background-color: #0a0a0a !important;
+    border-color: #17d0d3 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 0 0.2rem rgba(23, 208, 211, 0.25) !important;
+}
+
+body.page-template-casting .site-main .form-label {
+    color: #ffffff !important;
+}
+
+body.page-template-casting .site-main .form-check-label {
+    color: #ffffff !important;
+}
+
+body.page-template-casting .site-main .form-check-input {
+    background-color: #0a0a0a !important;
+    border-color: #222222 !important;
+}
+
+body.page-template-casting .site-main .form-check-input:checked {
+    background-color: #17d0d3 !important;
+    border-color: #17d0d3 !important;
+}
+
+body.page-template-casting .site-main .card {
+    background-color: #0a0a0a !important;
+    border-color: #222222 !important;
+}
+
+body.page-template-casting .site-main .alert {
+    background-color: #0a0a0a !important;
+    border-color: #222222 !important;
+    color: #ffffff !important;
+}
+
+body.page-template-casting .site-main .alert-info {
+    background-color: rgba(13, 202, 240, 0.1) !important;
+    border-color: #0dcaf0 !important;
+    color: #ffffff !important;
 }
   

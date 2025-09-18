@@ -242,6 +242,39 @@ Transaction ID: TXN_12345
 4. **Environment**: Sandbox and production use the same API URL
 5. **Credentials**: Shop ID `134837` and Signature Key from ControlCenter
 
+### Casting Section
+
+FlexPress includes a professional casting section that appears above the footer on all pages, designed to attract new talent to join the Dolls Down Under family.
+
+#### Casting Section Features
+
+- **Professional Presentation**: Large image with compelling benefits list
+- **Comprehensive Benefits**: 10 key benefits including professional production, competitive rates, flexible scheduling
+- **Call-to-Action**: Prominent "Apply Now" button linking to `/casting` page
+- **Responsive Design**: Mobile-friendly layout with Bootstrap grid system
+- **Theme Integration**: Uses theme's accent colors and styling for consistency
+
+#### Benefits Highlighted
+
+- Professional production environment
+- Competitive rates
+- Flexible scheduling
+- Safe and respectful workplace
+- Professional photography included
+- Hair and makeup provided
+- Flexible content agreements
+- Award-winning production team
+- Secure, private filming locations
+- Industry-standard contracts
+
+#### Technical Implementation
+
+- **Template Part**: `template-parts/casting-section.php`
+- **Integration**: Automatically included above footer via `footer.php`
+- **Styling**: Uses theme's existing CSS classes (`btn-accent`, `text-white`, etc.)
+- **Responsive**: Bootstrap classes for mobile optimization
+- **Accessibility**: Proper alt text and semantic HTML structure
+
 ## ⚙️ Configuration
 
 ### Environment Variables

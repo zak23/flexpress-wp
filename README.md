@@ -58,6 +58,16 @@ flexpress/
   - Updated WordPress site URL to localhost:8085 for development testing (reverted back to zakspov.com for production)
 - **Result**: Continue button now properly processes user registration/login and redirects to payment page
 
+### Payment Success Login Flow (September 2025)
+- **Issue**: Users redirected to `/payment-success/` after payment were not logged in, causing redirect to login page
+- **Root Cause**: Payment-success page lacked login check and auto-login capability
+- **Solution**: 
+  - Added login check to payment-success page with auto-login for valid user_id parameters
+  - Updated JavaScript redirects in flowguard.js and payment.php to include user_id
+  - Payment-success page now handles both logged-in and non-logged-in scenarios gracefully
+  - Users with valid user_id are automatically logged in, others redirected to login with return URL
+- **Result**: Smooth payment flow without jarring redirects to login page after successful payment
+
 ## 📤 File Upload Configuration
 
 The WordPress site is configured to handle large file uploads:

@@ -54,6 +54,8 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Activity Logging**: Comprehensive user interaction tracking
 - **Access Management**: Grant/revoke episode access
 - **Profile Management**: User information and preferences
+- **Smart Dashboard Redirects**: Automatic redirection to dashboard for active/cancelled members
+- **Enhanced User Experience**: Improved membership page with clear navigation options
 
 ### 🎨 Modern Interface
 - **Dark Theme Design**: Vixen.com-inspired professional aesthetics
@@ -624,6 +626,21 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 - **SINGLE_MODEL_FEATURES.md**: Model profile functionality
 - **FOOTER_SETUP.md**: Footer customization guide
 - **LINTING_SETUP.md**: Code quality tools
+
+### Recent Updates (January 2025)
+
+#### Membership Page Enhancements
+- **Smart Dashboard Redirects**: Active and cancelled members are automatically redirected to their dashboard when accessing the membership page
+- **Enhanced Navigation**: Added prominent "Go to Dashboard" buttons for better user experience
+- **Improved Styling**: Fixed alert text colors for better visibility in dark theme (white text instead of green)
+- **Conditional Content Display**: Membership signup forms only show for non-active members
+- **Better User Flow**: Streamlined navigation between membership status and dashboard access
+
+#### Technical Improvements
+- **CSS Color Fixes**: Updated `.membership-page .alert-success` color from green (#28a745) to white for dark theme compatibility
+- **Template Logic**: Added conditional rendering to hide signup forms for existing members
+- **Redirect Implementation**: Automatic WordPress redirect to dashboard page for active/cancelled members
+- **User Experience**: Clear visual hierarchy with dashboard access buttons prominently displayed
 
 ### Development Resources
 - **PRD.md**: Product requirements document

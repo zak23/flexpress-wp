@@ -45,6 +45,19 @@ flexpress/
 | MySQL | flexpress_mysql | 3306 (internal) | Database server |
 | phpMyAdmin | flexpress_phpmyadmin | 8086 | Database administration |
 
+## 🔧 Recent Fixes
+
+### Join Page Continue Button (September 2025)
+- **Issue**: Continue button on join page was not responding to clicks
+- **Root Cause**: JavaScript selector mismatch (`join-continue-btn` vs `membership-continue-btn`)
+- **Solution**: 
+  - Fixed JavaScript selector to match button ID
+  - Implemented registration functionality using existing `flexpress_process_registration_and_payment` AJAX handler
+  - Implemented login functionality using existing `flexpress_ajax_login` AJAX handler
+  - Added proper error handling and user feedback
+  - Updated WordPress site URL to localhost:8085 for development testing
+- **Result**: Continue button now properly processes user registration/login and redirects to payment page
+
 ## 📤 File Upload Configuration
 
 The WordPress site is configured to handle large file uploads:

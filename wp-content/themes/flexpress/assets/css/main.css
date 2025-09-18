@@ -23,7 +23,7 @@ a:hover {
 
 .btn-primary {
   background-color: var(--color-accent);
-  color: var(--color-background);
+  color: var(--color-accent-text);
   border: none;
   font-weight: 600;
   letter-spacing: 0.5px;
@@ -34,7 +34,7 @@ a:hover {
 
 .btn-primary:hover {
   background-color: var(--color-accent-hover);
-  color: var(--color-background);
+  color: var(--color-accent-text);
 }
 
 .btn-outline-light {
@@ -874,7 +874,7 @@ a:hover {
 .btn-primary {
   background-color: var(--color-accent);
   border-color: var(--color-accent);
-  color: var(--color-background);
+  color: var(--color-accent-text);
 }
 
 .btn-primary:hover,
@@ -908,7 +908,7 @@ a:hover {
 .btn-outline-primary:active {
   background-color: var(--color-accent);
   border-color: var(--color-accent);
-  color: var(--color-background);
+  color: var(--color-accent-text);
 }
 
 /* ==========================================================================
@@ -935,7 +935,7 @@ a:hover {
 .page-numbers:hover,
 .page-numbers.current {
   background-color: var(--color-accent);
-  color: var(--color-background);
+  color: var(--color-accent-text);
 }
 
 /* ==========================================================================
@@ -1346,7 +1346,7 @@ footer.bg-black .row.footer {
 
 .payment-page .accordion-button:not(.collapsed) {
   background-color: var(--color-accent);
-  color: var(--color-background);
+  color: var(--color-accent-text);
   box-shadow: none;
 }
 
@@ -1397,7 +1397,7 @@ footer.bg-black .row.footer {
 
 .payment-page .btn-primary {
   background-color: var(--color-accent);
-  color: var(--color-background);
+  color: var(--color-accent-text);
   border: none;
   font-weight: 600;
   letter-spacing: 0.5px;
@@ -1409,7 +1409,7 @@ footer.bg-black .row.footer {
 
 .payment-page .btn-primary:hover {
   background-color: var(--color-accent-hover);
-  color: var(--color-background);
+  color: var(--color-accent-text);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.3);
 }
@@ -1449,7 +1449,7 @@ footer.bg-black .row.footer {
 
 .payment-page .btn-outline-primary:hover {
   background-color: var(--color-accent);
-  color: var(--color-background);
+  color: var(--color-accent-text);
 }
 
 /* Flowguard Form Styling */
@@ -1746,7 +1746,7 @@ footer.bg-black .row.footer {
 
 .membership-card .card-header.bg-primary {
   background-color: var(--color-accent) !important;
-  color: var(--color-background) !important;
+  color: var(--color-accent-text) !important;
 }
 
 .membership-card .badge.bg-white {
@@ -1870,7 +1870,7 @@ footer.bg-black .row.footer {
 .membership-page .membership-promo-card .btn-outline-primary:hover {
   background-color: var(--color-accent);
   border-color: var(--color-accent);
-  color: var(--color-background);
+  color: var(--color-accent-text);
 }
 
 /* New Promo Code Section */
@@ -1954,7 +1954,7 @@ footer.bg-black .row.footer {
 .continue-btn {
   background: var(--color-accent);
   border-color: var(--color-accent);
-  color: white;
+  color: var(--color-accent-text);
   font-size: 1.25rem;
   font-weight: 600;
   padding: 1rem 3rem;
@@ -2103,7 +2103,7 @@ footer.bg-black .row.footer {
 
 .toggle-btn.active {
   background: var(--color-accent);
-  color: white;
+  color: var(--color-accent-text);
 }
 
 .toggle-btn:hover:not(.active) {
@@ -2250,7 +2250,7 @@ footer.bg-black .row.footer {
 
 .popular-badge {
   background-color: var(--color-accent);
-  color: var(--color-background);
+  color: var(--color-accent-text);
   padding: 0.25rem 0.75rem;
   border-radius: var(--border-radius-sm);
   font-size: 0.75rem;
@@ -2365,7 +2365,7 @@ footer.bg-black .row.footer {
 
 .membership-page .accordion-button:not(.collapsed) {
   background-color: var(--color-accent);
-  color: var(--color-background);
+  color: var(--color-accent-text);
   box-shadow: none;
 }
 
@@ -2400,7 +2400,7 @@ footer.bg-black .row.footer {
 
 .join-page .accordion-button:not(.collapsed) {
   background-color: var(--color-accent);
-  color: var(--color-background);
+  color: var(--color-accent-text);
   box-shadow: none;
 }
 
@@ -2451,7 +2451,7 @@ footer.bg-black .row.footer {
 .membership-page .btn-primary {
   background-color: var(--color-accent);
   border-color: var(--color-accent);
-  color: var(--color-background);
+  color: var(--color-accent-text);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -2633,7 +2633,7 @@ footer.bg-black .row.footer {
 
 .dashboard-page .list-group-item.active {
   background-color: var(--color-accent);
-    color: var(--color-background);
+    color: var(--color-accent-text);
   border-color: var(--color-accent);
 }
 
@@ -3754,7 +3754,7 @@ footer.bg-black .row.footer {
 .pagination .page-item.active .page-link {
   background-color: var(--color-accent);
   border-color: var(--color-accent);
-  color: var(--color-background);
+  color: var(--color-accent-text);
   font-weight: 600;
 }
 
@@ -4803,7 +4803,7 @@ footer.bg-black .row.footer {
 
 .model-messages .submit {
   background-color: var(--color-accent);
-  color: var(--color-background);
+  color: var(--color-accent-text);
   border: none;
   padding: 1rem 2rem;
   font-size: 1.1rem;
@@ -4817,7 +4817,7 @@ footer.bg-black .row.footer {
 
 .model-messages .submit:hover {
   background-color: var(--color-accent-hover);
-  color: var(--color-background);
+  color: var(--color-accent-text);
   transform: translateY(-2px);
   box-shadow: 0 4px 15px var(--color-accent-light);
 }
@@ -4905,7 +4905,7 @@ footer.bg-black .row.footer {
 .btn-accent {
   background-color: var(--color-accent);
   border-color: var(--color-accent);
-  color: var(--color-background);
+  color: var(--color-accent-text);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -5002,7 +5002,7 @@ input[type="radio"]:checked {
 /* Special highlight for featured content */
 .featured-badge {
   background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%);
-  color: var(--color-background);
+  color: var(--color-accent-text);
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 12px;
@@ -5023,7 +5023,7 @@ select:focus {
 /* Special accent treatment for CTAs */
 .cta-primary {
   background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%);
-  color: var(--color-background);
+  color: var(--color-accent-text);
   border: none;
   padding: 15px 30px;
   font-size: 18px;

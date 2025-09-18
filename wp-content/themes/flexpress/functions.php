@@ -8,6 +8,21 @@ define('FLEXPRESS_VERSION', '1.0.0');
 define('FLEXPRESS_PATH', get_template_directory());
 define('FLEXPRESS_URL', get_template_directory_uri());
 
+// Increase upload limits for large images and files
+function flexpress_increase_upload_limits() {
+    // Set WordPress upload size limit
+    if (!defined('WP_MAX_MEMORY_LIMIT')) {
+        define('WP_MAX_MEMORY_LIMIT', '512M');
+    }
+    
+    // Increase PHP limits if possible
+    @ini_set('upload_max_filesize', '64M');
+    @ini_set('post_max_size', '64M');
+    @ini_set('max_execution_time', 300);
+    @ini_set('memory_limit', '512M');
+}
+add_action('init', 'flexpress_increase_upload_limits');
+
 // Include required files
 require_once FLEXPRESS_PATH . '/includes/post-types.php';
 require_once FLEXPRESS_PATH . '/includes/bunnycdn.php';

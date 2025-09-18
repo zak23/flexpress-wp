@@ -45,6 +45,25 @@ flexpress/
 | MySQL | flexpress_mysql | 3306 (internal) | Database server |
 | phpMyAdmin | flexpress_phpmyadmin | 8086 | Database administration |
 
+## 📤 File Upload Configuration
+
+The WordPress site is configured to handle large file uploads:
+
+- **Upload Max Filesize:** 64MB
+- **Post Max Size:** 64MB  
+- **Memory Limit:** 512MB
+- **Max Execution Time:** 300 seconds
+
+These limits are configured in:
+- `Dockerfile` - PHP configuration via `/usr/local/etc/php/conf.d/uploads.ini`
+- `wp-content/themes/flexpress/functions.php` - WordPress-specific limits
+
+To modify upload limits, update both the Dockerfile and rebuild the container:
+```bash
+docker-compose down
+docker-compose up --build -d
+```
+
 ## 💳 Payment Integration
 
 ### Flowguard Payment System

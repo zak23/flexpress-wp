@@ -780,7 +780,7 @@ jQuery(document).ready(function() {
     });
     
     // Continue button functionality
-    jQuery('#join-continue-btn').on('click', function(e) {
+    jQuery('#membership-continue-btn').on('click', function(e) {
         e.preventDefault();
         console.log('Continue button clicked!');
         console.log('Selected plan:', selectedPlan);
@@ -847,8 +847,36 @@ jQuery(document).ready(function() {
                     return;
                 }
                 
-                // TODO: Submit registration and then redirect to payment
-                alert('Registration functionality will be implemented next.');
+                // Submit registration via AJAX
+                jQuery.ajax({
+                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                    type: 'POST',
+                    data: {
+                        action: 'flexpress_process_registration_and_payment',
+                        nonce: '<?php echo wp_create_nonce('flexpress_join_form'); ?>',
+                        first_name: email.split('@')[0], // Use email prefix as first name
+                        last_name: 'User', // Default last name
+                        email: email,
+                        password: password,
+                        selected_plan: planId,
+                        applied_promo_code: appliedPromo ? appliedPromo.code : ''
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Registration successful, redirect to payment or account
+                            if (response.data.payment_url) {
+                                window.location.href = response.data.payment_url;
+                            } else {
+                                window.location.href = '<?php echo home_url('/dashboard/'); ?>';
+                            }
+                        } else {
+                            alert('Registration failed: ' + response.data.message);
+                        }
+                    },
+                    error: function() {
+                        alert('An error occurred during registration. Please try again.');
+                    }
+                });
             } else {
                 // Validate login form
                 const email = jQuery('#login-email').val();
@@ -859,8 +887,36 @@ jQuery(document).ready(function() {
                     return;
                 }
                 
-                // TODO: Submit login and then redirect to payment
-                alert('Login functionality will be implemented next.');
+                // Submit login via AJAX
+                jQuery.ajax({
+                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                    type: 'POST',
+                    data: {
+                        action: 'flexpress_ajax_login',
+                        username: email,
+                        password: password,
+                        remember: false,
+                        security: '<?php echo wp_create_nonce('ajax-login-nonce'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Login successful, redirect to payment
+                            let paymentUrl = '<?php echo esc_url(home_url('/payment')); ?>?plan=' + encodeURIComponent(planId);
+                            
+                            // Add promo code if applied
+                            if (appliedPromo && appliedPromo.code) {
+                                paymentUrl += '&promo=' + encodeURIComponent(appliedPromo.code);
+                            }
+                            
+                            window.location.href = paymentUrl;
+                        } else {
+                            alert('Login failed: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('An error occurred during login. Please try again.');
+                    }
+                });
             }
         }
     });

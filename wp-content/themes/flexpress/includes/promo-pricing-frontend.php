@@ -303,7 +303,8 @@ function flexpress_add_promo_code_to_pricing() {
     </script>
     <?php
 }
-add_action('wp_footer', 'flexpress_add_promo_code_to_pricing');
+// Disabled - promo code section is now integrated directly into templates
+// add_action('wp_footer', 'flexpress_add_promo_code_to_pricing');
 
 /**
  * AJAX handler for validating promo codes on pricing page

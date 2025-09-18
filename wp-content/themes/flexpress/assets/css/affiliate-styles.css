@@ -84,7 +84,7 @@
 .affiliate-signup-form .form-control:focus {
     background-color: #222222;
     border-color: #ff6b35;
-    box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(var(--color-accent-rgb), 0.25);
     color: #ffffff;
 }
 
@@ -139,7 +139,7 @@
 
 #generate-code-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+    box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.3);
 }
 
 /* Submit Button */
@@ -154,7 +154,7 @@
 
 .affiliate-signup-form .btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+    box-shadow: 0 6px 20px rgba(var(--color-accent-rgb), 0.4);
 }
 
 .affiliate-signup-form .btn-primary:disabled {
@@ -239,7 +239,7 @@
 
 .stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(255, 107, 53, 0.2);
+    box-shadow: 0 8px 25px rgba(var(--color-accent-rgb), 0.2);
 }
 
 .stat-icon {
@@ -311,7 +311,7 @@
 .link-generator .form-control:focus {
     background-color: #2a2a2a;
     border-color: #ff6b35;
-    box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(var(--color-accent-rgb), 0.25);
 }
 
 /* Generated Link Display */
@@ -371,7 +371,7 @@
 }
 
 .commission-table tr:hover {
-    background-color: rgba(255, 107, 53, 0.1);
+    background-color: rgba(var(--color-accent-rgb), 0.1);
 }
 
 /* Commission Type Badges */
@@ -444,7 +444,7 @@
 }
 
 .alert-info {
-    background-color: rgba(255, 107, 53, 0.2);
+    background-color: rgba(var(--color-accent-rgb), 0.2);
     color: #ff6b35;
     border-left: 4px solid #ff6b35;
 }

@@ -64,6 +64,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Interactive Elements**: Hover effects and smooth animations
 - **Video Cards**: Clean episode presentation with play buttons
 - **Model Profiles**: Performer showcase with relationship linking
+- **Join Now CTA**: Compelling call-to-action section with features list and promotional offers
 - **Clean User Experience**: Admin toolbar disabled for non-admin users
 
 ---
@@ -695,6 +696,14 @@ wp_flexpress_affiliate_payouts:
   - Monthly performance charts using Chart.js
   - Promotional link generators
   - Payout status and history
+- **Join Now CTA** (`template-parts/join-now-cta.php`)
+  - Compelling call-to-action section for homepage
+  - Dynamic featured episode image with hover play button
+  - Features list with checkmark icons
+  - Promotional offer display (50% off first month)
+  - Direct links to join and login pages
+  - Fully responsive design with mobile optimization
+  - Uses FlexPress theme variables for consistent styling
 
 #### Admin Integration
 - **Enhanced Settings** (`class-flexpress-affiliate-settings.php`)

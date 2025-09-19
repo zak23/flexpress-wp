@@ -44,6 +44,8 @@ $hero_episode = new WP_Query($hero_args);
     endif; 
     ?>
 
+
+
     <div class="container py-5">
         <!-- Featured Videos Grid -->
         <div class="featured-videos-section mb-5">
@@ -129,6 +131,9 @@ $hero_episode = new WP_Query($hero_args);
                 </div>
             <?php endif; ?>
         </div>
+
+          <!-- Upcoming Episode -->
+    <?php get_template_part('template-parts/join-now-cta'); ?>
 
         <!-- Recent Videos Grid -->
         <div class="recent-videos-section mb-5">

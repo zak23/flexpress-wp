@@ -30,10 +30,19 @@ if (empty($featured_media)) {
                         <div class="media-slide">
                             <div class="text-center d-flex flex-column align-items-center">
                                 <a href="<?php echo esc_url($media['url']); ?>" target="_blank" class="d-inline-block media-link" rel="noopener">
-                                    <img src="<?php echo esc_url($media['logo']); ?>" 
-                                         class="img-fluid media-logo" 
-                                         alt="<?php echo esc_attr($media['alt']); ?>"
-                                         loading="lazy">
+                                    <?php if (!empty($media['logo_id'])): 
+                                        $logo_image = wp_get_attachment_image($media['logo_id'], 'medium', false, array(
+                                            'class' => 'img-fluid media-logo',
+                                            'alt' => esc_attr($media['alt']),
+                                            'loading' => 'lazy'
+                                        ));
+                                        echo $logo_image;
+                                    else: ?>
+                                        <img src="<?php echo esc_url($media['logo']); ?>" 
+                                             class="img-fluid media-logo" 
+                                             alt="<?php echo esc_attr($media['alt']); ?>"
+                                             loading="lazy">
+                                    <?php endif; ?>
                                     <p class="media-name"><?php echo esc_html($media['name']); ?></p>
                                 </a>
                             </div>

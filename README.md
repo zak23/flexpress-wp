@@ -401,11 +401,20 @@ The Featured On section can be managed through **FlexPress Settings → General 
 - **Media Outlets Management**: Add, edit, or remove media outlets with:
   - **Name**: Display name of the media outlet
   - **URL**: Link to the media outlet's website
-  - **Logo URL**: Direct link to the outlet's logo image
+  - **Logo**: Upload logo via WordPress media library OR enter external URL
   - **Alt Text**: Accessibility text for the logo
 - **Dynamic Management**: Add unlimited media outlets with "Add Media Outlet" button
 - **Remove Functionality**: Each outlet can be individually removed
 - **Default Content**: Includes Aus Adult News as default when no outlets are configured
+
+#### Image Management Features
+
+- **WordPress Media Library Integration**: Upload logos directly through WordPress media library
+- **Image Preview**: See uploaded logos in admin interface before saving
+- **Fallback Support**: Option to use external URLs for logos not in media library
+- **Automatic Optimization**: WordPress handles image optimization and responsive sizing
+- **Security**: All uploaded images are validated and sanitized
+- **Performance**: Locally hosted images load faster than external hotlinks
 
 #### Helper Functions
 

@@ -808,15 +808,47 @@ class FlexPress_General_Settings {
                     </tr>
                     <tr>
                         <th scope="row">
-                            <label for="featured_on_media_<?php echo $index; ?>_logo"><?php esc_html_e('Logo URL', 'flexpress'); ?></label>
+                            <label for="featured_on_media_<?php echo $index; ?>_logo"><?php esc_html_e('Logo', 'flexpress'); ?></label>
                         </th>
                         <td>
-                            <input type="url" 
-                                   id="featured_on_media_<?php echo $index; ?>_logo"
-                                   name="flexpress_general_settings[featured_on_media][<?php echo $index; ?>][logo]" 
-                                   value="<?php echo esc_attr($outlet['logo']); ?>" 
-                                   class="regular-text"
-                                   placeholder="https://example.com/logo.png">
+                            <div class="featured-on-logo-upload">
+                                <?php if (!empty($outlet['logo_id'])): 
+                                    $logo_url = wp_get_attachment_url($outlet['logo_id']);
+                                    $logo_alt = get_post_meta($outlet['logo_id'], '_wp_attachment_image_alt', true);
+                                ?>
+                                    <div class="logo-preview" style="margin-bottom: 10px;">
+                                        <img src="<?php echo esc_url($logo_url); ?>" 
+                                             style="max-height: 60px; max-width: 200px; object-fit: contain;" 
+                                             alt="<?php echo esc_attr($logo_alt); ?>">
+                                    </div>
+                                    <input type="hidden" 
+                                           name="flexpress_general_settings[featured_on_media][<?php echo $index; ?>][logo_id]" 
+                                           value="<?php echo esc_attr($outlet['logo_id']); ?>">
+                                    <button type="button" class="button remove-logo" data-index="<?php echo $index; ?>">
+                                        <?php esc_html_e('Remove Logo', 'flexpress'); ?>
+                                    </button>
+                                <?php else: ?>
+                                    <input type="hidden" 
+                                           name="flexpress_general_settings[featured_on_media][<?php echo $index; ?>][logo_id]" 
+                                           value="">
+                                    <button type="button" class="button upload-logo" data-index="<?php echo $index; ?>">
+                                        <?php esc_html_e('Upload Logo', 'flexpress'); ?>
+                                    </button>
+                                <?php endif; ?>
+                                
+                                <!-- Fallback URL field for external logos -->
+                                <div style="margin-top: 10px;">
+                                    <label for="featured_on_media_<?php echo $index; ?>_logo_url">
+                                        <?php esc_html_e('Or enter logo URL:', 'flexpress'); ?>
+                                    </label>
+                                    <input type="url" 
+                                           id="featured_on_media_<?php echo $index; ?>_logo_url"
+                                           name="flexpress_general_settings[featured_on_media][<?php echo $index; ?>][logo]" 
+                                           value="<?php echo esc_attr($outlet['logo']); ?>" 
+                                           class="regular-text"
+                                           placeholder="https://example.com/logo.png">
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     <tr>
@@ -852,6 +884,7 @@ class FlexPress_General_Settings {
         <script>
         jQuery(document).ready(function($) {
             var mediaIndex = <?php echo count($media_outlets); ?>;
+            var mediaUploader;
             
             $('#add-featured-on-media').on('click', function() {
                 var newItem = '<div class="featured-on-media-item" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; background: #f9f9f9;">' +
@@ -866,8 +899,17 @@ class FlexPress_General_Settings {
                             '<td><input type="url" name="flexpress_general_settings[featured_on_media][' + mediaIndex + '][url]" class="regular-text" placeholder="https://example.com"></td>' +
                         '</tr>' +
                         '<tr>' +
-                            '<th scope="row"><label><?php esc_html_e('Logo URL', 'flexpress'); ?></label></th>' +
-                            '<td><input type="url" name="flexpress_general_settings[featured_on_media][' + mediaIndex + '][logo]" class="regular-text" placeholder="https://example.com/logo.png"></td>' +
+                            '<th scope="row"><label><?php esc_html_e('Logo', 'flexpress'); ?></label></th>' +
+                            '<td>' +
+                                '<div class="featured-on-logo-upload">' +
+                                    '<input type="hidden" name="flexpress_general_settings[featured_on_media][' + mediaIndex + '][logo_id]" value="">' +
+                                    '<button type="button" class="button upload-logo" data-index="' + mediaIndex + '"><?php esc_html_e('Upload Logo', 'flexpress'); ?></button>' +
+                                    '<div style="margin-top: 10px;">' +
+                                        '<label><?php esc_html_e('Or enter logo URL:', 'flexpress'); ?></label>' +
+                                        '<input type="url" name="flexpress_general_settings[featured_on_media][' + mediaIndex + '][logo]" class="regular-text" placeholder="https://example.com/logo.png">' +
+                                    '</div>' +
+                                '</div>' +
+                            '</td>' +
                         '</tr>' +
                         '<tr>' +
                             '<th scope="row"><label><?php esc_html_e('Alt Text', 'flexpress'); ?></label></th>' +
@@ -883,6 +925,67 @@ class FlexPress_General_Settings {
             
             $(document).on('click', '.remove-featured-on-media', function() {
                 $(this).closest('.featured-on-media-item').remove();
+            });
+            
+            // Handle logo upload
+            $(document).on('click', '.upload-logo', function(e) {
+                e.preventDefault();
+                
+                var button = $(this);
+                var index = button.data('index');
+                
+                if (mediaUploader) {
+                    mediaUploader.open();
+                    return;
+                }
+                
+                mediaUploader = wp.media({
+                    title: '<?php esc_html_e('Choose Logo', 'flexpress'); ?>',
+                    button: {
+                        text: '<?php esc_html_e('Use This Logo', 'flexpress'); ?>'
+                    },
+                    multiple: false,
+                    library: {
+                        type: 'image'
+                    }
+                });
+                
+                mediaUploader.on('select', function() {
+                    var attachment = mediaUploader.state().get('selection').first().toJSON();
+                    
+                    var logoPreview = '<div class="logo-preview" style="margin-bottom: 10px;">' +
+                        '<img src="' + attachment.url + '" style="max-height: 60px; max-width: 200px; object-fit: contain;" alt="' + attachment.alt + '">' +
+                    '</div>';
+                    
+                    button.closest('.featured-on-logo-upload').html(
+                        logoPreview +
+                        '<input type="hidden" name="flexpress_general_settings[featured_on_media][' + index + '][logo_id]" value="' + attachment.id + '">' +
+                        '<button type="button" class="button remove-logo" data-index="' + index + '"><?php esc_html_e('Remove Logo', 'flexpress'); ?></button>' +
+                        '<div style="margin-top: 10px;">' +
+                            '<label><?php esc_html_e('Or enter logo URL:', 'flexpress'); ?></label>' +
+                            '<input type="url" name="flexpress_general_settings[featured_on_media][' + index + '][logo]" class="regular-text" placeholder="https://example.com/logo.png">' +
+                        '</div>'
+                    );
+                });
+                
+                mediaUploader.open();
+            });
+            
+            // Handle logo removal
+            $(document).on('click', '.remove-logo', function(e) {
+                e.preventDefault();
+                
+                var index = $(this).data('index');
+                var container = $(this).closest('.featured-on-logo-upload');
+                
+                container.html(
+                    '<input type="hidden" name="flexpress_general_settings[featured_on_media][' + index + '][logo_id]" value="">' +
+                    '<button type="button" class="button upload-logo" data-index="' + index + '"><?php esc_html_e('Upload Logo', 'flexpress'); ?></button>' +
+                    '<div style="margin-top: 10px;">' +
+                        '<label><?php esc_html_e('Or enter logo URL:', 'flexpress'); ?></label>' +
+                        '<input type="url" name="flexpress_general_settings[featured_on_media][' + index + '][logo]" class="regular-text" placeholder="https://example.com/logo.png">' +
+                    '</div>'
+                );
             });
         });
         </script>

@@ -530,6 +530,7 @@ function flexpress_sanitize_general_settings($input) {
                     'name' => isset($outlet['name']) ? sanitize_text_field($outlet['name']) : '',
                     'url' => isset($outlet['url']) ? esc_url_raw($outlet['url']) : '',
                     'logo' => isset($outlet['logo']) ? esc_url_raw($outlet['logo']) : '',
+                    'logo_id' => isset($outlet['logo_id']) ? absint($outlet['logo_id']) : 0,
                     'alt' => isset($outlet['alt']) ? sanitize_text_field($outlet['alt']) : ''
                 );
             }
@@ -571,6 +572,7 @@ function flexpress_get_featured_on_media() {
                 'name' => 'Aus Adult News',
                 'url' => 'https://ausadultnews.com/',
                 'logo' => 'https://ausadultnews.com/wp-content/uploads/2024/05/Aus-Adult-News-header.png',
+                'logo_id' => 0,
                 'alt' => 'Aus Adult News'
             )
         );

@@ -6232,6 +6232,7 @@ body.page-template-casting .site-main .alert-info {
     border-radius: 8px;
     background-color: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--color-border);
+    margin: 2px 0;
 }
 
 .media-link:hover {
@@ -6247,7 +6248,7 @@ body.page-template-casting .site-main .alert-info {
     width: auto;
     max-width: 200px;
     object-fit: contain;
-    margin: 0 auto 1rem auto;
+    margin: 1rem auto 1rem auto;
     display: block;
     filter: grayscale(100%);
     transition: var(--transition-fast);

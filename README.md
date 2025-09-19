@@ -393,6 +393,18 @@ docker exec -it flexpress_wordpress wp [command]
 ## 🔧 Recent Updates
 
 ### January 2025
+- **Enhanced Model Archive Filtering System**: Added comprehensive Vixen.com-style filtering to model archive pages
+  - **Sidebar Filters**: Toggle-able sidebar with sorting and filtering options
+  - **Sorting Options**: Newest, Oldest, and Alphabetical (A-Z) sorting
+  - **Category Filtering**: Filter models by post tags with count display
+  - **Alphabetical Filtering**: A-Z grid for quick model name filtering
+  - **Dynamic Layout**: 8/4 column layout with filters, 12 column layout without filters
+  - **Responsive Grid**: 2 models per row with filters, 3 models per row without filters
+  - **Vixen-Style Pagination**: First/Back/Next/Last navigation with page info
+  - **Active Filter Display**: Shows current filters with clear functionality
+  - **Enhanced UX**: Consistent styling and behavior matching episode archive page
+  - **JavaScript Toggle**: Smooth show/hide filter functionality
+  - **Clear Filters**: Easy reset to remove all active filters
 - **Fixed One-Time Payment Pricing Logic**: Resolved critical bug where "One-Time Payment" plans were incorrectly configured as lifetime access
   - Separated 'one_time' and 'lifetime' plan types properly in admin interface
   - One-time payments now allow configurable durations (30 days, 90 days, etc.) instead of forcing 999 years

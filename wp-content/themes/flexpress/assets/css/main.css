@@ -5568,7 +5568,13 @@ body.page-template-casting .site-main .alert-info {
 .model-grid .model-grid-item {
   flex: 0 0 auto !important;
   width: auto !important;
-  transition: all 0.1s ease-in-out !important;
+  /* You can transition specific properties for more control: */
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out,
+    opacity 0.2s ease-in-out,
+    background-color 0.2s ease-in-out,
+    border-color 0.2s ease-in-out;
 }
 
 /* Force Bootstrap column behavior for model grid items */
@@ -5643,4 +5649,17 @@ body.page-template-casting .site-main .alert-info {
 
 .archive-model #sidebar-col {
   transition: all 0.1s ease-in-out !important;
+}
+
+/* Direct fix for model grid - force the layout */
+.archive-model .model-grid-item.col-lg-4 {
+  flex: 0 0 33.333333% !important;
+  max-width: 33.333333% !important;
+  width: 33.333333% !important;
+}
+
+.archive-model .model-grid-item.col-lg-3 {
+  flex: 0 0 25% !important;
+  max-width: 25% !important;
+  width: 25% !important;
 }

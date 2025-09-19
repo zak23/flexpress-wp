@@ -36,7 +36,7 @@ $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;
 // Query models
 $models_args = array(
     'post_type' => 'model',
-    'posts_per_page' => 10, // 10 models per page (2 per row, 5 rows)
+    'posts_per_page' => 16, // 16 models per page (4 per row, 4 rows)
     'paged' => $paged,
     'orderby' => $orderby,
     'order' => $order
@@ -87,16 +87,16 @@ $models_query = new WP_Query($models_args);
         <div class="row" id="main-content-row">
             <!-- Main Content - 8 Columns (Dynamic) -->
             <div class="col-lg-8" id="main-content-col">
-                <!-- Models Grid - 2 models per row (Dynamic) -->
+                <!-- Models Grid - 4 models wide (Dynamic) -->
                 <?php if ($models_query->have_posts()): ?>
                     <div class="model-grid">
                         <div class="row g-4" id="models-grid">
                             <?php while ($models_query->have_posts()): $models_query->the_post(); ?>
-                                <div class="col-12 col-md-6 model-grid-item">
+                                <div class="col-6 col-md-3 model-grid-item">
                                     <?php get_template_part('template-parts/content-model/card'); ?>
                                 </div>
                             <?php endwhile; ?>
-                        </div>
+            </div>
                     </div>
 
                     <!-- Vixen-Style Pagination -->
@@ -182,9 +182,9 @@ $models_query = new WP_Query($models_args);
                                     <span class="text-muted">
                                         <?php echo esc_html($current_page); ?> of <?php echo esc_html($total_pages); ?>
                                     </span>
-                                </div>
+                </div>
                             <?php endif; ?>
-                        </div>
+            </div>
                     </nav>
                     <?php endif; ?>
 
@@ -197,8 +197,8 @@ $models_query = new WP_Query($models_args);
                         <a href="<?php echo esc_url(remove_query_arg(array('filter_type', 'filter_value', 'sort'))); ?>" class="btn btn-primary">
                             <?php esc_html_e('Clear Filters', 'flexpress'); ?>
                         </a>
-                    </div>
-                <?php endif; ?>
+                </div>
+            <?php endif; ?>
 
                 <?php wp_reset_postdata(); ?>
             </div>
@@ -364,23 +364,23 @@ document.addEventListener('DOMContentLoaded', function() {
             filtersVisible = !filtersVisible;
             
             if (filtersVisible) {
-                // Show filters - 8/4 layout, 2 models per row
+                // Show filters - 8/4 layout, 4 models per row
                 sidebarCol.style.display = 'block';
                 mainContentCol.classList.remove('col-lg-12');
                 mainContentCol.classList.add('col-lg-8');
                 modelGridItems.forEach(item => {
-                    item.classList.remove('col-lg-6');
-                    item.classList.add('col-md-6');
+                    item.classList.remove('col-lg-3');
+                    item.classList.add('col-6', 'col-md-3');
                 });
                 toggleText.textContent = '<?php esc_html_e('Hide Filters', 'flexpress'); ?>';
             } else {
-                // Hide filters - 12 column layout, 2 models per row
+                // Hide filters - 12 column layout, 4 models per row
                 sidebarCol.style.display = 'none';
                 mainContentCol.classList.remove('col-lg-8');
                 mainContentCol.classList.add('col-lg-12');
                 modelGridItems.forEach(item => {
-                    item.classList.remove('col-md-6');
-                    item.classList.add('col-lg-6');
+                    item.classList.remove('col-6', 'col-md-3');
+                    item.classList.add('col-lg-3');
                 });
                 toggleText.textContent = '<?php esc_html_e('Show Filters', 'flexpress'); ?>';
             }

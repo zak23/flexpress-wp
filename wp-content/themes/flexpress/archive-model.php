@@ -92,7 +92,7 @@ $models_query = new WP_Query($models_args);
                     <div class="model-grid">
                         <div class="row g-4" id="models-grid">
                             <?php while ($models_query->have_posts()): $models_query->the_post(); ?>
-                                <div class="col-6 col-lg-4 model-grid-item">
+                                <div class="col-6 col-lg-4 model-grid-item" style="flex: 0 0 33.333333% !important; max-width: 33.333333% !important; width: 33.333333% !important;">
                                     <?php get_template_part('template-parts/content-model/card'); ?>
                                 </div>
                             <?php endwhile; ?>
@@ -371,6 +371,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 modelGridItems.forEach(item => {
                     item.classList.remove('col-lg-3');
                     item.classList.add('col-6', 'col-lg-4');
+                    item.style.flex = '0 0 33.333333%';
+                    item.style.maxWidth = '33.333333%';
+                    item.style.width = '33.333333%';
                 });
                 toggleText.textContent = '<?php esc_html_e('Hide Filters', 'flexpress'); ?>';
             } else {
@@ -381,6 +384,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 modelGridItems.forEach(item => {
                     item.classList.remove('col-6', 'col-lg-4');
                     item.classList.add('col-lg-3');
+                    item.style.flex = '0 0 25%';
+                    item.style.maxWidth = '25%';
+                    item.style.width = '25%';
                 });
                 toggleText.textContent = '<?php esc_html_e('Show Filters', 'flexpress'); ?>';
             }

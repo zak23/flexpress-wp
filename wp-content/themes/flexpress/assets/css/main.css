@@ -5568,7 +5568,7 @@ body.page-template-casting .site-main .alert-info {
 .model-grid .model-grid-item {
   flex: 0 0 auto !important;
   width: auto !important;
-  transition: all 0.2s ease-in-out !important;
+  transition: all 0.1s ease-in-out !important;
 }
 
 /* Force Bootstrap column behavior for model grid items */
@@ -5619,28 +5619,28 @@ body.page-template-casting .site-main .alert-info {
   flex: 0 0 33.333333% !important;
   max-width: 33.333333% !important;
   width: 33.333333% !important;
-  transition: all 0.2s ease-in-out !important;
+  transition: all 0.1s ease-in-out !important;
 }
 
 .site-main.archive-model .model-grid .row .model-grid-item.col-lg-3 {
   flex: 0 0 25% !important;
   max-width: 25% !important;
   width: 25% !important;
-  transition: all 0.2s ease-in-out !important;
+  transition: all 0.1s ease-in-out !important;
 }
 
 .site-main.archive-model .model-grid .row .model-grid-item.col-6 {
   flex: 0 0 50% !important;
   max-width: 50% !important;
   width: 50% !important;
-  transition: all 0.2s ease-in-out !important;
+  transition: all 0.1s ease-in-out !important;
 }
 
 /* Smooth transitions for filter toggle */
 .archive-model #main-content-col {
-  transition: all 0.2s ease-in-out !important;
+  transition: all 0.1s ease-in-out !important;
 }
 
 .archive-model #sidebar-col {
-  transition: all 0.2s ease-in-out !important;
+  transition: all 0.1s ease-in-out !important;
 }

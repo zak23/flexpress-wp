@@ -5612,3 +5612,22 @@ body.page-template-casting .site-main .alert-info {
   max-width: 50% !important;
   width: 50% !important;
 }
+
+/* Ultra-specific override for model archive grid */
+.site-main.archive-model .model-grid .row .model-grid-item.col-lg-4 {
+  flex: 0 0 33.333333% !important;
+  max-width: 33.333333% !important;
+  width: 33.333333% !important;
+}
+
+.site-main.archive-model .model-grid .row .model-grid-item.col-lg-3 {
+  flex: 0 0 25% !important;
+  max-width: 25% !important;
+  width: 25% !important;
+}
+
+.site-main.archive-model .model-grid .row .model-grid-item.col-6 {
+  flex: 0 0 50% !important;
+  max-width: 50% !important;
+  width: 50% !important;
+}

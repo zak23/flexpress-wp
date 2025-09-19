@@ -28,6 +28,9 @@ require_once FLEXPRESS_PATH . '/includes/post-types.php';
 require_once FLEXPRESS_PATH . '/includes/bunnycdn.php';
 require_once FLEXPRESS_PATH . '/includes/gallery-system.php';
 
+// Cheeky ACF Repeater Mod (for free ACF version)
+require_once FLEXPRESS_PATH . '/includes/acf-repeater-mod.php';
+
 // Flowguard Integration (replaces Verotel)
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-flowguard-api.php';
 require_once FLEXPRESS_PATH . '/includes/flowguard-integration.php';

@@ -74,33 +74,6 @@
     line-height: 1.5;
 }
 
-.casting-apply-btn {
-    background: var(--color-accent);
-    color: #ffffff;
-    border: none;
-    padding: 1rem 2.5rem;
-    font-size: 1.125rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border-radius: 0.5rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
-}
-
-.casting-apply-btn:hover {
-    background: var(--color-accent-hover);
-    color: #ffffff;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 105, 180, 0.4);
-}
-
-.casting-apply-btn:focus {
-    background: var(--color-accent-hover);
-    color: #ffffff;
-    box-shadow: 0 0 0 3px rgba(255, 105, 180, 0.3);
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
     .casting-title {

@@ -1,6 +1,6 @@
     </div><!-- #content -->
 
-    <?php get_template_part('template-parts/casting-section'); ?>
+  
 
     <footer class="bg-black text-white">
         <div class="container">

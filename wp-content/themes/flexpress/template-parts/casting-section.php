@@ -15,8 +15,8 @@ if (!defined('ABSPATH')) {
     <div class="container">
         <div class="row">
             <div class="col-12 text-center mb-5">
-                <h2 class="casting-title text-uppercase mb-3">Want to Join Our Cast?</h2>
-                <p class="casting-subtitle lead">We're always looking for new talent to join the Dolls Down Under family</p>
+                <h2 class="casting-title text-uppercase mb-3">Want to Join the Cast?</h2>
+                <p class="casting-subtitle lead">We're always looking for new talent to join the team</p>
             </div>
         </div>
         
@@ -27,9 +27,13 @@ if (!defined('ABSPATH')) {
                         <!-- Large Image on the Left -->
                         <div class="col-md-6 mb-4 mb-md-0">
                             <div class="casting-image">
-                                <img src="https://cdn.dollsdownunder.com/wp-content/uploads/2024/09/zak-sterre-7701-936x936.jpg" 
-                                     alt="Join Our Cast" 
-                                     class="img-fluid rounded-3 shadow">
+                                <?php if (has_post_thumbnail()) : ?>
+                                    <?php the_post_thumbnail('large', array(
+                                        'alt' => esc_attr__('Join Our Cast', 'flexpress'),
+                                        'class' => 'img-fluid rounded-3 shadow'
+                                    )); ?>
+                 
+                                <?php endif; ?>
                             </div>
                         </div>
                         

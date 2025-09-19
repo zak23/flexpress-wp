@@ -730,4 +730,109 @@ if (function_exists('acf_add_local_field_group')):
         'show_in_rest' => 0,
     ));
 
+    // Casting Page Custom Fields
+    acf_add_local_field_group(array(
+        'key' => 'group_casting_page',
+        'title' => 'Casting Page Content',
+        'fields' => array(
+            // Header Section
+            array(
+                'key' => 'field_casting_header_title',
+                'label' => 'Header Title',
+                'name' => 'casting_header_title',
+                'type' => 'text',
+                'default_value' => 'Join Our Cast',
+                'instructions' => 'Main title for the casting page header',
+            ),
+            array(
+                'key' => 'field_casting_header_subtitle',
+                'label' => 'Header Subtitle',
+                'name' => 'casting_header_subtitle',
+                'type' => 'textarea',
+                'default_value' => 'Be part of Australia\'s most exciting adult entertainment production',
+                'instructions' => 'Subtitle text for the casting page header',
+            ),
+            
+            // Text Block Section
+            array(
+                'key' => 'field_casting_text_block',
+                'label' => 'Brand Description Text',
+                'name' => 'casting_text_block',
+                'type' => 'wysiwyg',
+                'instructions' => 'Main brand description and mission statement',
+                'default_value' => '<p>Indulge in the opulence of our distinctive adult entertainment. We are the polar opposite of the sordid Adult Industry, upholding the worth of sophistication and refinement.</p>
+<p>Our mission is to produce Australian High-Class Glamour Porn in a Professional setting. Dolls Downunder is an adult and lifestyle brand, celebrated for its top-tier, diverse, and relevant content in Adult Entertainment.</p>
+<p>We strive to be the most inclusive sex-positive brand, creating content that encompasses a wide spectrum of sexualities, genders, races, body types, and ages. To witness our brand style, visit our social media:</p>
+<p>Instagram: <a href="https://instagram.com/dollsdownunderofficial" target="_blank" rel="noopener">@dollsdownunderofficial</a></p>
+<p>Twitter: <a href="https://x.com/dollsdownunder_" target="_blank" rel="noopener">@dollsdownunder_</a></p>
+<p><strong>What we seek</strong></p>
+<p>We\'re looking for models with natural allure that commands attention. Models of all shapes, sizes, backgrounds, and ethnicities are welcome. What we value most is AUTHENTICITY.</p>
+<p>With numerous casting applications daily, ensure yours stands out! If you\'re interested in collaborating with the best and gaining significant exposure, apply here:</p>',
+            ),
+            
+            // FAQ Section
+            array(
+                'key' => 'field_casting_faq_title',
+                'label' => 'FAQ Section Title',
+                'name' => 'casting_faq_title',
+                'type' => 'text',
+                'default_value' => 'Frequently Asked Questions',
+                'instructions' => 'Title for the FAQ section',
+            ),
+            array(
+                'key' => 'field_casting_faq_items',
+                'label' => 'FAQ Items (JSON)',
+                'name' => 'casting_faq_items',
+                'type' => 'textarea',
+                'instructions' => 'Enter FAQ items as JSON. Use the helper function to manage this data.',
+                'rows' => 10,
+                'default_value' => '[]',
+            ),
+            
+            // Requirements Section
+            array(
+                'key' => 'field_casting_requirements_title',
+                'label' => 'Requirements Section Title',
+                'name' => 'casting_requirements_title',
+                'type' => 'text',
+                'default_value' => 'Requirements',
+                'instructions' => 'Title for the requirements section',
+            ),
+            array(
+                'key' => 'field_casting_requirements_subtitle',
+                'label' => 'Requirements Section Subtitle',
+                'name' => 'casting_requirements_subtitle',
+                'type' => 'text',
+                'default_value' => 'What you need to get started',
+                'instructions' => 'Subtitle for the requirements section',
+            ),
+            array(
+                'key' => 'field_casting_requirements_cards',
+                'label' => 'Requirement Cards (JSON)',
+                'name' => 'casting_requirements_cards',
+                'type' => 'textarea',
+                'instructions' => 'Enter requirement cards as JSON. Use the helper function to manage this data.',
+                'rows' => 10,
+                'default_value' => '[]',
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param' => 'page_template',
+                    'operator' => '==',
+                    'value' => 'page-templates/casting.php',
+                ),
+            ),
+        ),
+        'menu_order' => 0,
+        'position' => 'normal',
+        'style' => 'default',
+        'label_placement' => 'top',
+        'instruction_placement' => 'label',
+        'hide_on_screen' => '',
+        'active' => true,
+        'description' => 'Custom fields for the casting page content management',
+    ));
+
 endif; 

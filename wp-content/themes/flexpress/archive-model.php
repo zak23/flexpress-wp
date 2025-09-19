@@ -368,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Delay sidebar appearance to prevent DOM shifting
                 setTimeout(() => {
                     sidebarCol.style.display = 'block';
-                }, 200);
+                }, 100);
                 
                 mainContentCol.classList.remove('col-lg-12');
                 mainContentCol.classList.add('col-lg-8');

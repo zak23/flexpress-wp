@@ -1,0 +1,136 @@
+/**
+ * Cheeky ACF Repeater Mod CSS
+ * Styles for our custom repeater fields
+ */
+
+.flexpress-repeater {
+    margin: 20px 0;
+}
+
+.repeater-item {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.repeater-item-header {
+    background: #f7f7f7;
+    padding: 10px 15px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.repeater-item-title {
+    font-weight: 600;
+    color: #333;
+}
+
+.remove-repeater-item {
+    background: #dc3232;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.remove-repeater-item:hover {
+    background: #a00;
+}
+
+.repeater-item-content {
+    padding: 15px;
+}
+
+.repeater-item-content p {
+    margin-bottom: 15px;
+}
+
+.repeater-item-content label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.repeater-item-content input[type="text"],
+.repeater-item-content textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 14px;
+}
+
+.repeater-item-content input[type="text"]:focus,
+.repeater-item-content textarea:focus {
+    border-color: #0073aa;
+    box-shadow: 0 0 0 1px #0073aa;
+    outline: none;
+}
+
+.repeater-item-content textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.repeater-item-content input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.add-repeater-item {
+    background: #0073aa;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.add-repeater-item:hover {
+    background: #005a87;
+}
+
+/* Dark theme support */
+.wp-admin .flexpress-repeater {
+    background: #1e1e1e;
+    color: #fff;
+}
+
+.wp-admin .repeater-item {
+    background: #2c2c2c;
+    border-color: #444;
+}
+
+.wp-admin .repeater-item-header {
+    background: #3c3c3c;
+    border-color: #444;
+}
+
+.wp-admin .repeater-item-title {
+    color: #fff;
+}
+
+.wp-admin .repeater-item-content label {
+    color: #fff;
+}
+
+.wp-admin .repeater-item-content input[type="text"],
+.wp-admin .repeater-item-content textarea {
+    background: #1e1e1e;
+    border-color: #444;
+    color: #fff;
+}
+
+.wp-admin .repeater-item-content input[type="text"]:focus,
+.wp-admin .repeater-item-content textarea:focus {
+    border-color: #0073aa;
+    box-shadow: 0 0 0 1px #0073aa;
+}

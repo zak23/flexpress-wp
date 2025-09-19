@@ -5574,9 +5574,29 @@ body.page-template-casting .site-main .alert-info {
 .model-grid .model-grid-item.col-lg-3 {
   flex: 0 0 25% !important;
   max-width: 25% !important;
+  width: 25% !important;
 }
 
 .model-grid .model-grid-item.col-6 {
   flex: 0 0 50% !important;
   max-width: 50% !important;
+  width: 50% !important;
+}
+
+/* Additional override for model archive specifically */
+.archive-model .model-grid .model-grid-item {
+  flex: 0 0 auto !important;
+  width: auto !important;
+}
+
+.archive-model .model-grid .model-grid-item.col-lg-3 {
+  flex: 0 0 25% !important;
+  max-width: 25% !important;
+  width: 25% !important;
+}
+
+.archive-model .model-grid .model-grid-item.col-6 {
+  flex: 0 0 50% !important;
+  max-width: 50% !important;
+  width: 50% !important;
 }

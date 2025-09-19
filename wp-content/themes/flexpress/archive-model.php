@@ -73,7 +73,7 @@ if (!empty($filter_type) && !empty($filter_value)) {
 $models_query = new WP_Query($models_args);
 ?>
 
-<div class="site-main">
+<div class="site-main archive-model">
     <div class="container py-5">
         <!-- Page Header -->
         <div class="text-center mb-5">

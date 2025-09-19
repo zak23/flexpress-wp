@@ -100,6 +100,67 @@ class FlexPress_General_Settings {
             'flexpress_general_settings',
             'flexpress_general_section'
         );
+        
+        // Add Awards Section
+        add_settings_section(
+            'flexpress_awards_section',
+            __('Awards & Recognition', 'flexpress'),
+            array($this, 'render_awards_section_description'),
+            'flexpress_general_settings'
+        );
+        
+        // Add awards section enable/disable field
+        add_settings_field(
+            'flexpress_awards_enabled',
+            __('Enable Awards Section', 'flexpress'),
+            array($this, 'render_awards_enabled_field'),
+            'flexpress_general_settings',
+            'flexpress_awards_section'
+        );
+        
+        // Add awards title field
+        add_settings_field(
+            'flexpress_awards_title',
+            __('Awards Section Title', 'flexpress'),
+            array($this, 'render_awards_title_field'),
+            'flexpress_general_settings',
+            'flexpress_awards_section'
+        );
+        
+        // Add awards repeater field
+        add_settings_field(
+            'flexpress_awards_list',
+            __('Awards & Recognitions', 'flexpress'),
+            array($this, 'render_awards_list_field'),
+            'flexpress_general_settings',
+            'flexpress_awards_section'
+        );
+        
+        // Add Featured On section
+        add_settings_section(
+            'flexpress_featured_on_section',
+            __('Featured On Section', 'flexpress'),
+            array($this, 'render_featured_on_section_description'),
+            'flexpress_general_settings'
+        );
+        
+        // Add Featured On enable field
+        add_settings_field(
+            'flexpress_featured_on_enabled',
+            __('Enable Featured On Section', 'flexpress'),
+            array($this, 'render_featured_on_enabled_field'),
+            'flexpress_general_settings',
+            'flexpress_featured_on_section'
+        );
+        
+        // Add Featured On media outlets field
+        add_settings_field(
+            'flexpress_featured_on_media',
+            __('Media Outlets', 'flexpress'),
+            array($this, 'render_featured_on_media_field'),
+            'flexpress_general_settings',
+            'flexpress_featured_on_section'
+        );
     }
 
     /**
@@ -310,6 +371,520 @@ class FlexPress_General_Settings {
                     $(this).remove();
                 });
             });
+        </script>
+        <?php
+    }
+
+    /**
+     * Render awards section description
+     */
+    public function render_awards_section_description() {
+        echo '<p>' . esc_html__('Configure the Awards & Recognition section that appears on your homepage.', 'flexpress') . '</p>';
+    }
+
+    /**
+     * Render awards enabled field
+     */
+    public function render_awards_enabled_field() {
+        $options = get_option('flexpress_general_settings');
+        $value = isset($options['awards_enabled']) ? $options['awards_enabled'] : 0;
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="flexpress_general_settings[awards_enabled]" 
+                   value="1" 
+                   <?php checked($value, 1); ?>>
+            <?php esc_html_e('Show Awards & Recognition section on homepage', 'flexpress'); ?>
+        </label>
+        <p class="description">
+            <?php esc_html_e('Enable or disable the awards section that appears above the footer on your homepage.', 'flexpress'); ?>
+        </p>
+        <?php
+    }
+
+    /**
+     * Render awards title field
+     */
+    public function render_awards_title_field() {
+        $options = get_option('flexpress_general_settings');
+        $value = isset($options['awards_title']) ? $options['awards_title'] : 'Awards & Recognition';
+        ?>
+        <input type="text" 
+               name="flexpress_general_settings[awards_title]" 
+               value="<?php echo esc_attr($value); ?>" 
+               class="regular-text">
+        <p class="description">
+            <?php esc_html_e('The title displayed in the awards section. Default: "Awards & Recognition"', 'flexpress'); ?>
+        </p>
+        <?php
+    }
+
+    /**
+     * Render awards list field
+     */
+    public function render_awards_list_field() {
+        $options = get_option('flexpress_general_settings');
+        $awards_list = isset($options['awards_list']) ? $options['awards_list'] : array();
+        
+        // Default awards if none exist
+        if (empty($awards_list)) {
+            $awards_list = array(
+                array(
+                    'title' => 'AAIA 2024 Winner',
+                    'logo_id' => '',
+                    'logo_url' => 'https://cdn.dollsdownunder.com/wp-content/themes/dolls_downunder/images/AAIA-2024-Winner-light.png',
+                    'link' => 'https://adultawards.com.au/aaia2024-winners/',
+                    'alt' => 'AAIA 2024 Winner'
+                )
+            );
+        }
+        ?>
+        <div id="awards-list-container">
+            <p class="description">
+                <?php esc_html_e('Add multiple awards and recognitions. Each award can have its own logo and link.', 'flexpress'); ?>
+            </p>
+            
+            <div id="awards-list">
+                <?php foreach ($awards_list as $index => $award): ?>
+                    <div class="award-item" data-index="<?php echo $index; ?>">
+                        <div class="award-item-header">
+                            <h4><?php printf(esc_html__('Award %d', 'flexpress'), $index + 1); ?></h4>
+                            <button type="button" class="button button-secondary remove-award" data-index="<?php echo $index; ?>">
+                                <?php esc_html_e('Remove', 'flexpress'); ?>
+                            </button>
+                        </div>
+                        
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row">
+                                    <label for="award_title_<?php echo $index; ?>"><?php esc_html_e('Award Title', 'flexpress'); ?></label>
+                                </th>
+                                <td>
+                                    <input type="text" 
+                                           id="award_title_<?php echo $index; ?>"
+                                           name="flexpress_general_settings[awards_list][<?php echo $index; ?>][title]" 
+                                           value="<?php echo esc_attr($award['title'] ?? ''); ?>" 
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <label for="award_logo_<?php echo $index; ?>"><?php esc_html_e('Award Logo', 'flexpress'); ?></label>
+                                </th>
+                                <td>
+                                    <input type="hidden" 
+                                           id="award_logo_id_<?php echo $index; ?>"
+                                           name="flexpress_general_settings[awards_list][<?php echo $index; ?>][logo_id]" 
+                                           value="<?php echo esc_attr($award['logo_id'] ?? ''); ?>">
+                                    
+                                    <?php 
+                                    $logo_url = '';
+                                    if (!empty($award['logo_id'])) {
+                                        $logo_url = wp_get_attachment_url($award['logo_id']);
+                                    } elseif (!empty($award['logo_url'])) {
+                                        $logo_url = $award['logo_url'];
+                                    }
+                                    ?>
+                                    
+                                    <?php if ($logo_url): ?>
+                                        <div class="award-logo-preview">
+                                            <img src="<?php echo esc_url($logo_url); ?>" 
+                                                 style="max-width: 150px; height: auto; margin-bottom: 10px; border: 1px solid #ddd; padding: 10px;">
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <input type="button" 
+                                           class="button upload-award-logo" 
+                                           data-index="<?php echo $index; ?>"
+                                           value="<?php esc_attr_e('Select Logo', 'flexpress'); ?>">
+                                    
+                                    <?php if ($logo_url): ?>
+                                        <input type="button" 
+                                               class="button button-secondary remove-award-logo" 
+                                               data-index="<?php echo $index; ?>"
+                                               value="<?php esc_attr_e('Remove Logo', 'flexpress'); ?>">
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <label for="award_link_<?php echo $index; ?>"><?php esc_html_e('Award Link', 'flexpress'); ?></label>
+                                </th>
+                                <td>
+                                    <input type="url" 
+                                           id="award_link_<?php echo $index; ?>"
+                                           name="flexpress_general_settings[awards_list][<?php echo $index; ?>][link]" 
+                                           value="<?php echo esc_attr($award['link'] ?? ''); ?>" 
+                                           class="regular-text"
+                                           placeholder="https://example.com/award">
+                                    <p class="description">
+                                        <?php esc_html_e('Optional: URL to link to when the award logo is clicked.', 'flexpress'); ?>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <label for="award_alt_<?php echo $index; ?>"><?php esc_html_e('Alt Text', 'flexpress'); ?></label>
+                                </th>
+                                <td>
+                                    <input type="text" 
+                                           id="award_alt_<?php echo $index; ?>"
+                                           name="flexpress_general_settings[awards_list][<?php echo $index; ?>][alt]" 
+                                           value="<?php echo esc_attr($award['alt'] ?? ''); ?>" 
+                                           class="regular-text"
+                                           placeholder="<?php echo esc_attr($award['title'] ?? 'Award'); ?>">
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            
+            <button type="button" class="button button-primary" id="add-award">
+                <?php esc_html_e('Add New Award', 'flexpress'); ?>
+            </button>
+        </div>
+        
+        <script type="text/javascript">
+            jQuery(document).ready(function($) {
+                var awardIndex = <?php echo count($awards_list); ?>;
+                var mediaUploaders = {};
+                
+                // Add new award
+                $('#add-award').on('click', function() {
+                    var newAwardHtml = `
+                        <div class="award-item" data-index="${awardIndex}">
+                            <div class="award-item-header">
+                                <h4>Award ${awardIndex + 1}</h4>
+                                <button type="button" class="button button-secondary remove-award" data-index="${awardIndex}">
+                                    Remove
+                                </button>
+                            </div>
+                            
+                            <table class="form-table">
+                                <tr>
+                                    <th scope="row">
+                                        <label for="award_title_${awardIndex}">Award Title</label>
+                                    </th>
+                                    <td>
+                                        <input type="text" 
+                                               id="award_title_${awardIndex}"
+                                               name="flexpress_general_settings[awards_list][${awardIndex}][title]" 
+                                               value="" 
+                                               class="regular-text">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        <label for="award_logo_${awardIndex}">Award Logo</label>
+                                    </th>
+                                    <td>
+                                        <input type="hidden" 
+                                               id="award_logo_id_${awardIndex}"
+                                               name="flexpress_general_settings[awards_list][${awardIndex}][logo_id]" 
+                                               value="">
+                                        
+                                        <input type="button" 
+                                               class="button upload-award-logo" 
+                                               data-index="${awardIndex}"
+                                               value="Select Logo">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        <label for="award_link_${awardIndex}">Award Link</label>
+                                    </th>
+                                    <td>
+                                        <input type="url" 
+                                               id="award_link_${awardIndex}"
+                                               name="flexpress_general_settings[awards_list][${awardIndex}][link]" 
+                                               value="" 
+                                               class="regular-text"
+                                               placeholder="https://example.com/award">
+                                        <p class="description">
+                                            Optional: URL to link to when the award logo is clicked.
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        <label for="award_alt_${awardIndex}">Alt Text</label>
+                                    </th>
+                                    <td>
+                                        <input type="text" 
+                                               id="award_alt_${awardIndex}"
+                                               name="flexpress_general_settings[awards_list][${awardIndex}][alt]" 
+                                               value="" 
+                                               class="regular-text"
+                                               placeholder="Award">
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    `;
+                    
+                    $('#awards-list').append(newAwardHtml);
+                    awardIndex++;
+                });
+                
+                // Remove award
+                $(document).on('click', '.remove-award', function() {
+                    $(this).closest('.award-item').remove();
+                    updateAwardNumbers();
+                });
+                
+                // Upload award logo
+                $(document).on('click', '.upload-award-logo', function() {
+                    var index = $(this).data('index');
+                    
+                    if (mediaUploaders[index]) {
+                        mediaUploaders[index].open();
+                        return;
+                    }
+                    
+                    mediaUploaders[index] = wp.media({
+                        title: 'Select Award Logo',
+                        button: {
+                            text: 'Use this image'
+                        },
+                        multiple: false
+                    });
+                    
+                    mediaUploaders[index].on('select', function() {
+                        var attachment = mediaUploaders[index].state().get('selection').first().toJSON();
+                        $('#award_logo_id_' + index).val(attachment.id);
+                        
+                        var previewHtml = `
+                            <div class="award-logo-preview">
+                                <img src="${attachment.url}" style="max-width: 150px; height: auto; margin-bottom: 10px; border: 1px solid #ddd; padding: 10px;">
+                            </div>
+                        `;
+                        
+                        var removeButtonHtml = `
+                            <input type="button" 
+                                   class="button button-secondary remove-award-logo" 
+                                   data-index="${index}"
+                                   value="Remove Logo">
+                        `;
+                        
+                        $(this).closest('td').find('.award-logo-preview').remove();
+                        $(this).closest('td').find('.upload-award-logo').after(previewHtml);
+                        $(this).closest('td').find('.remove-award-logo').remove();
+                        $(this).closest('td').find('.award-logo-preview').after(removeButtonHtml);
+                    });
+                    
+                    mediaUploaders[index].open();
+                });
+                
+                // Remove award logo
+                $(document).on('click', '.remove-award-logo', function() {
+                    var index = $(this).data('index');
+                    $('#award_logo_id_' + index).val('');
+                    $(this).closest('td').find('.award-logo-preview').remove();
+                    $(this).remove();
+                });
+                
+                // Update award numbers
+                function updateAwardNumbers() {
+                    $('#awards-list .award-item').each(function(newIndex) {
+                        $(this).attr('data-index', newIndex);
+                        $(this).find('h4').text('Award ' + (newIndex + 1));
+                        $(this).find('input, button').each(function() {
+                            var name = $(this).attr('name');
+                            var id = $(this).attr('id');
+                            if (name) {
+                                $(this).attr('name', name.replace(/\[\d+\]/, '[' + newIndex + ']'));
+                            }
+                            if (id) {
+                                $(this).attr('id', id.replace(/\d+/, newIndex));
+                            }
+                        });
+                    });
+                }
+            });
+        </script>
+        
+        <style>
+            .award-item {
+                border: 1px solid #ddd;
+                margin-bottom: 20px;
+                padding: 15px;
+                background: #f9f9f9;
+            }
+            .award-item-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+            }
+            .award-item-header h4 {
+                margin: 0;
+            }
+        </style>
+        <?php
+    }
+
+    /**
+     * Render Featured On section description
+     */
+    public function render_featured_on_section_description() {
+        ?>
+        <p>
+            <?php esc_html_e('Configure the "Featured On" section that displays media outlets and publications that have featured your site.', 'flexpress'); ?>
+        </p>
+        <?php
+    }
+
+    /**
+     * Render Featured On enabled field
+     */
+    public function render_featured_on_enabled_field() {
+        $options = get_option('flexpress_general_settings');
+        $value = isset($options['featured_on_enabled']) ? $options['featured_on_enabled'] : '0';
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="flexpress_general_settings[featured_on_enabled]" 
+                   value="1" 
+                   <?php checked($value, '1'); ?>>
+            <?php esc_html_e('Show the Featured On section on the homepage', 'flexpress'); ?>
+        </label>
+        <p class="description">
+            <?php esc_html_e('When enabled, the Featured On section will appear just above the footer on the homepage.', 'flexpress'); ?>
+        </p>
+        <?php
+    }
+
+    /**
+     * Render Featured On media outlets field
+     */
+    public function render_featured_on_media_field() {
+        $options = get_option('flexpress_general_settings');
+        $media_outlets = isset($options['featured_on_media']) ? $options['featured_on_media'] : array();
+        
+        // Default media outlets if none are set
+        if (empty($media_outlets)) {
+            $media_outlets = array(
+                array(
+                    'name' => 'Aus Adult News',
+                    'url' => 'https://ausadultnews.com/',
+                    'logo' => 'https://ausadultnews.com/wp-content/uploads/2024/05/Aus-Adult-News-header.png',
+                    'alt' => 'Aus Adult News'
+                )
+            );
+        }
+        ?>
+        <div id="featured-on-media-container">
+            <?php foreach ($media_outlets as $index => $outlet): ?>
+            <div class="featured-on-media-item" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; background: #f9f9f9;">
+                <h4><?php echo sprintf(__('Media Outlet %d', 'flexpress'), $index + 1); ?></h4>
+                
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="featured_on_media_<?php echo $index; ?>_name"><?php esc_html_e('Name', 'flexpress'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" 
+                                   id="featured_on_media_<?php echo $index; ?>_name"
+                                   name="flexpress_general_settings[featured_on_media][<?php echo $index; ?>][name]" 
+                                   value="<?php echo esc_attr($outlet['name']); ?>" 
+                                   class="regular-text"
+                                   placeholder="<?php esc_attr_e('Media Outlet Name', 'flexpress'); ?>">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="featured_on_media_<?php echo $index; ?>_url"><?php esc_html_e('URL', 'flexpress'); ?></label>
+                        </th>
+                        <td>
+                            <input type="url" 
+                                   id="featured_on_media_<?php echo $index; ?>_url"
+                                   name="flexpress_general_settings[featured_on_media][<?php echo $index; ?>][url]" 
+                                   value="<?php echo esc_attr($outlet['url']); ?>" 
+                                   class="regular-text"
+                                   placeholder="https://example.com">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="featured_on_media_<?php echo $index; ?>_logo"><?php esc_html_e('Logo URL', 'flexpress'); ?></label>
+                        </th>
+                        <td>
+                            <input type="url" 
+                                   id="featured_on_media_<?php echo $index; ?>_logo"
+                                   name="flexpress_general_settings[featured_on_media][<?php echo $index; ?>][logo]" 
+                                   value="<?php echo esc_attr($outlet['logo']); ?>" 
+                                   class="regular-text"
+                                   placeholder="https://example.com/logo.png">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="featured_on_media_<?php echo $index; ?>_alt"><?php esc_html_e('Alt Text', 'flexpress'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" 
+                                   id="featured_on_media_<?php echo $index; ?>_alt"
+                                   name="flexpress_general_settings[featured_on_media][<?php echo $index; ?>][alt]" 
+                                   value="<?php echo esc_attr($outlet['alt']); ?>" 
+                                   class="regular-text"
+                                   placeholder="<?php esc_attr_e('Alt text for logo', 'flexpress'); ?>">
+                        </td>
+                    </tr>
+                </table>
+                
+                <button type="button" class="button remove-featured-on-media" style="color: #a00;">
+                    <?php esc_html_e('Remove This Media Outlet', 'flexpress'); ?>
+                </button>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        
+        <button type="button" id="add-featured-on-media" class="button button-secondary">
+            <?php esc_html_e('Add Media Outlet', 'flexpress'); ?>
+        </button>
+        
+        <p class="description">
+            <?php esc_html_e('Add media outlets and publications that have featured your site. Each outlet will appear as a slide in the Featured On carousel.', 'flexpress'); ?>
+        </p>
+        
+        <script>
+        jQuery(document).ready(function($) {
+            var mediaIndex = <?php echo count($media_outlets); ?>;
+            
+            $('#add-featured-on-media').on('click', function() {
+                var newItem = '<div class="featured-on-media-item" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; background: #f9f9f9;">' +
+                    '<h4><?php esc_html_e('Media Outlet', 'flexpress'); ?> ' + (mediaIndex + 1) + '</h4>' +
+                    '<table class="form-table">' +
+                        '<tr>' +
+                            '<th scope="row"><label><?php esc_html_e('Name', 'flexpress'); ?></label></th>' +
+                            '<td><input type="text" name="flexpress_general_settings[featured_on_media][' + mediaIndex + '][name]" class="regular-text" placeholder="<?php esc_attr_e('Media Outlet Name', 'flexpress'); ?>"></td>' +
+                        '</tr>' +
+                        '<tr>' +
+                            '<th scope="row"><label><?php esc_html_e('URL', 'flexpress'); ?></label></th>' +
+                            '<td><input type="url" name="flexpress_general_settings[featured_on_media][' + mediaIndex + '][url]" class="regular-text" placeholder="https://example.com"></td>' +
+                        '</tr>' +
+                        '<tr>' +
+                            '<th scope="row"><label><?php esc_html_e('Logo URL', 'flexpress'); ?></label></th>' +
+                            '<td><input type="url" name="flexpress_general_settings[featured_on_media][' + mediaIndex + '][logo]" class="regular-text" placeholder="https://example.com/logo.png"></td>' +
+                        '</tr>' +
+                        '<tr>' +
+                            '<th scope="row"><label><?php esc_html_e('Alt Text', 'flexpress'); ?></label></th>' +
+                            '<td><input type="text" name="flexpress_general_settings[featured_on_media][' + mediaIndex + '][alt]" class="regular-text" placeholder="<?php esc_attr_e('Alt text for logo', 'flexpress'); ?>"></td>' +
+                        '</tr>' +
+                    '</table>' +
+                    '<button type="button" class="button remove-featured-on-media" style="color: #a00;"><?php esc_html_e('Remove This Media Outlet', 'flexpress'); ?></button>' +
+                '</div>';
+                
+                $('#featured-on-media-container').append(newItem);
+                mediaIndex++;
+            });
+            
+            $(document).on('click', '.remove-featured-on-media', function() {
+                $(this).closest('.featured-on-media-item').remove();
+            });
+        });
         </script>
         <?php
     }

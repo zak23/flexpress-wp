@@ -219,6 +219,12 @@ $hero_episode = new WP_Query($hero_args);
 
     <!-- Upcoming Episode -->
     <?php get_template_part('template-parts/upcoming-episode'); ?>
+
+    <!-- Awards and Nominations -->
+    <?php get_template_part('template-parts/awards-nominations'); ?>
+
+    <!-- Featured On Section -->
+    <?php get_template_part('template-parts/featured-on'); ?>
 </main>
 
 <?php

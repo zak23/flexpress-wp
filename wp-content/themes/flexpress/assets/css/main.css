@@ -6119,3 +6119,249 @@ body.page-template-casting .site-main .alert-info {
         padding: 0.4rem 0.8rem;
     }
 }
+
+/* Awards and Nominations Section - Subtle */
+.awards-nominations-section {
+    background: transparent;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.awards-subtitle {
+    color: #888;
+    font-size: 0.9rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.award-link-subtle {
+    text-decoration: none;
+    transition: all 0.2s ease;
+    opacity: 0.7;
+}
+
+.award-link-subtle:hover {
+    opacity: 1;
+    text-decoration: none;
+}
+
+.award-image-subtle {
+    max-width: 80px;
+    height: auto;
+    filter: grayscale(100%) brightness(0.8);
+    transition: all 0.2s ease;
+}
+
+.award-link-subtle:hover .award-image-subtle {
+    filter: grayscale(0%) brightness(1);
+}
+
+/* Multiple awards spacing */
+.awards-logos .award-link-subtle:not(:last-child) {
+    margin-right: 1rem;
+}
+
+.awards-logos .award-link-subtle:last-child {
+    margin-right: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .awards-subtitle {
+        font-size: 0.8rem;
+        margin-bottom: 1rem !important;
+    }
+    
+    .awards-logos {
+        justify-content: center !important;
+    }
+    
+    .award-image-subtle {
+        max-width: 60px;
+    }
+}
+
+@media (max-width: 576px) {
+    .awards-subtitle {
+        font-size: 0.75rem;
+    }
+    
+    .award-image-subtle {
+        max-width: 50px;
+    }
+}
+
+/* ==========================================================================
+   Featured On Section - Media Slider
+   ========================================================================== */
+.featured-on-section {
+    background-color: var(--color-background);
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.featured-on-section .section-title {
+    color: var(--color-text);
+    font-size: 2rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 3rem;
+}
+
+.media-slider-wrapper {
+    position: relative;
+    padding: 0 2rem;
+}
+
+.media-slider {
+    position: relative;
+}
+
+.media-slide {
+    padding: 0 1rem;
+}
+
+.media-link {
+    display: block;
+    text-decoration: none;
+    color: var(--color-text);
+    transition: var(--transition-fast);
+    padding: 1rem;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--color-border);
+}
+
+.media-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.media-logo {
+    height: 60px;
+    width: auto;
+    max-width: 200px;
+    object-fit: contain;
+    margin: 0 auto 1rem auto;
+    display: block;
+    filter: grayscale(100%);
+    transition: var(--transition-fast);
+}
+
+.media-link:hover .media-logo {
+    filter: grayscale(0%);
+}
+
+.media-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+    color: inherit;
+}
+
+/* Slick Slider Customization for Featured On */
+.featured-on-section .slick-slider {
+    position: relative;
+}
+
+.featured-on-section .slick-list {
+    overflow: hidden;
+    margin: 0 -1rem;
+}
+
+.featured-on-section .slick-track {
+    display: flex;
+    align-items: center;
+}
+
+.featured-on-section .slick-slide {
+    height: auto;
+}
+
+.featured-on-section .slick-slide > div {
+    height: 100%;
+}
+
+/* Slick Dots */
+.featured-on-section .slick-dots {
+    position: relative;
+    bottom: 0;
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.featured-on-section .slick-dots li {
+    display: inline-block;
+    margin: 0 0.5rem;
+}
+
+.featured-on-section .slick-dots li button {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: none;
+    background-color: var(--color-border);
+    font-size: 0;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.featured-on-section .slick-dots li.slick-active button {
+    background-color: var(--color-accent);
+    transform: scale(1.2);
+}
+
+.featured-on-section .slick-dots li button:hover {
+    background-color: var(--color-accent);
+    opacity: 0.7;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .featured-on-section .section-title {
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .media-slider-wrapper {
+        padding: 0 1rem;
+    }
+    
+    .media-slide {
+        padding: 0 0.5rem;
+    }
+    
+    .media-link {
+        padding: 0.75rem;
+    }
+    
+    .media-logo {
+        height: 50px;
+        margin-bottom: 0.75rem;
+    }
+    
+    .media-name {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .featured-on-section .section-title {
+        font-size: 1.25rem;
+    }
+    
+    .media-logo {
+        height: 40px;
+    }
+    
+    .media-name {
+        font-size: 0.75rem;
+    }
+}

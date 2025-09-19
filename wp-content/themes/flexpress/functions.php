@@ -57,6 +57,7 @@ require_once FLEXPRESS_PATH . '/includes/pricing-helpers.php';
 require_once FLEXPRESS_PATH . '/includes/affiliate-helpers.php';
 require_once FLEXPRESS_PATH . '/includes/payout-display-helpers.php';
 require_once FLEXPRESS_PATH . '/includes/contact-helpers.php';
+require_once FLEXPRESS_PATH . '/includes/awards-helpers.php';
 
 // Affiliate System Integration
 require_once FLEXPRESS_PATH . '/includes/affiliate-database.php';
@@ -178,6 +179,11 @@ function flexpress_enqueue_scripts_and_styles() {
     // Enqueue hero video CSS on homepage
     if (is_page_template('page-templates/page-home.php')) {
         wp_enqueue_style('flexpress-hero-video', get_template_directory_uri() . '/assets/css/hero-video.css', array('flexpress-main'), wp_get_theme()->get('Version'));
+        
+        // Enqueue Slick slider for Featured On section
+        wp_enqueue_style('slick-css', 'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css', array(), '1.8.1');
+        wp_enqueue_style('slick-theme-css', 'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css', array('slick-css'), '1.8.1');
+        wp_enqueue_script('slick-js', 'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js', array('jquery'), '1.8.1', true);
     }
     
     // Enqueue jQuery
@@ -471,6 +477,66 @@ function flexpress_sanitize_general_settings($input) {
         $sanitized['age_verification_exit_url'] = $url ? $url : 'https://duckduckgo.com'; // Fallback to default
     }
     
+    // Sanitize awards enabled
+    if (isset($input['awards_enabled'])) {
+        $sanitized['awards_enabled'] = '1';
+    } else {
+        $sanitized['awards_enabled'] = '0';
+    }
+    
+    // Sanitize awards title
+    if (isset($input['awards_title'])) {
+        $sanitized['awards_title'] = sanitize_text_field($input['awards_title']);
+    }
+    
+    // Sanitize awards list
+    if (isset($input['awards_list']) && is_array($input['awards_list'])) {
+        $sanitized_awards = array();
+        foreach ($input['awards_list'] as $index => $award) {
+            if (is_array($award)) {
+                $sanitized_awards[$index] = array(
+                    'title' => sanitize_text_field($award['title'] ?? ''),
+                    'logo_id' => absint($award['logo_id'] ?? 0),
+                    'link' => esc_url_raw($award['link'] ?? ''),
+                    'alt' => sanitize_text_field($award['alt'] ?? '')
+                );
+            }
+        }
+        $sanitized['awards_list'] = $sanitized_awards;
+    }
+    
+    // Legacy awards fields (for backward compatibility)
+    if (isset($input['awards_logo'])) {
+        $sanitized['awards_logo'] = absint($input['awards_logo']);
+    }
+    
+    if (isset($input['awards_link'])) {
+        $sanitized['awards_link'] = esc_url_raw($input['awards_link']);
+    }
+    
+    // Sanitize Featured On enabled
+    if (isset($input['featured_on_enabled'])) {
+        $sanitized['featured_on_enabled'] = '1';
+    } else {
+        $sanitized['featured_on_enabled'] = '0';
+    }
+    
+    // Sanitize Featured On media outlets
+    if (isset($input['featured_on_media']) && is_array($input['featured_on_media'])) {
+        $sanitized_media = array();
+        foreach ($input['featured_on_media'] as $index => $outlet) {
+            if (is_array($outlet)) {
+                $sanitized_media[$index] = array(
+                    'name' => isset($outlet['name']) ? sanitize_text_field($outlet['name']) : '',
+                    'url' => isset($outlet['url']) ? esc_url_raw($outlet['url']) : '',
+                    'logo' => isset($outlet['logo']) ? esc_url_raw($outlet['logo']) : '',
+                    'alt' => isset($outlet['alt']) ? sanitize_text_field($outlet['alt']) : ''
+                );
+            }
+        }
+        $sanitized['featured_on_media'] = $sanitized_media;
+    }
+    
     return $sanitized;
 }
 
@@ -481,6 +547,36 @@ function flexpress_get_age_verification_exit_url() {
     $options = get_option('flexpress_general_settings', array());
     $exit_url = isset($options['age_verification_exit_url']) ? $options['age_verification_exit_url'] : 'https://duckduckgo.com';
     return esc_url($exit_url);
+}
+
+/**
+ * Check if Featured On section is enabled
+ */
+function flexpress_is_featured_on_enabled() {
+    $options = get_option('flexpress_general_settings', array());
+    return isset($options['featured_on_enabled']) && $options['featured_on_enabled'] === '1';
+}
+
+/**
+ * Get Featured On media outlets from settings
+ */
+function flexpress_get_featured_on_media() {
+    $options = get_option('flexpress_general_settings', array());
+    $media_outlets = isset($options['featured_on_media']) ? $options['featured_on_media'] : array();
+    
+    // Return default media outlets if none are configured
+    if (empty($media_outlets)) {
+        return array(
+            array(
+                'name' => 'Aus Adult News',
+                'url' => 'https://ausadultnews.com/',
+                'logo' => 'https://ausadultnews.com/wp-content/uploads/2024/05/Aus-Adult-News-header.png',
+                'alt' => 'Aus Adult News'
+            )
+        );
+    }
+    
+    return $media_outlets;
 }
 
 /**

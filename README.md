@@ -275,6 +275,144 @@ FlexPress includes a professional casting section that appears above the footer 
 - **Responsive**: Bootstrap classes for mobile optimization
 - **Accessibility**: Proper alt text and semantic HTML structure
 
+### Awards and Nominations Section
+
+FlexPress includes a professional awards and nominations section that showcases industry recognition and achievements, displayed prominently on the homepage.
+
+#### Awards Section Features
+
+- **Subtle Design**: Minimal, understated presentation with grayscale logos
+- **Simple Layout**: Horizontal layout with small subtitle and logo
+- **Hover Effects**: Logos become colorful on hover with smooth transitions
+- **External Links**: Direct links to award websites for verification
+- **Responsive Layout**: Mobile-optimized with adaptive sizing
+- **Theme Integration**: Transparent background with subtle borders
+
+#### Awards Management
+
+- **Multiple Awards Support**: Add unlimited awards and recognitions
+- **Individual Logos**: Each award can have its own logo/badge
+- **Custom Links**: Optional external links for each award
+- **Flexible Titles**: Custom titles for each award
+- **Alt Text**: Proper accessibility with custom alt text
+
+#### Technical Implementation
+
+- **Template Part**: `template-parts/awards-nominations.php`
+- **Integration**: Included in homepage template above the footer
+- **Styling**: Comprehensive CSS in `main.css` (lines 6123-6184)
+- **Admin Settings**: Managed through FlexPress Settings → General → Awards & Recognition
+- **Helper Functions**: `includes/awards-helpers.php` for settings management
+- **Conditional Display**: Only shows when enabled and logo is uploaded
+
+#### CSS Classes
+
+- `.awards-nominations-section`: Main container with subtle borders
+- `.awards-subtitle`: Small subtitle text with muted color
+- `.award-link-subtle`: Award link with opacity transitions
+- `.award-image-subtle`: Award logo with grayscale filter
+- `.awards-logos`: Flex container for logo alignment
+
+#### Design Features
+
+- **Transparent Background**: Clean, minimal appearance
+- **Subtle Borders**: Top and bottom borders for section definition
+- **Grayscale Effect**: Logos start grayscale and become colorful on hover
+- **Small Typography**: Understated subtitle with muted colors
+- **Horizontal Layout**: Simple left-right alignment
+- **Responsive Design**: Adapts to mobile with centered alignment
+
+#### Admin Management
+
+The Awards section can be fully managed through the WordPress admin:
+
+- **Enable/Disable**: Toggle the section on/off via checkbox
+- **Custom Title**: Set a custom title (default: "Awards & Recognition")
+- **Multiple Awards**: Add unlimited awards with individual settings
+- **Individual Logos**: Upload custom logo for each award
+- **Custom Links**: Set unique URL for each award (optional)
+- **Alt Text**: Set accessibility text for each award logo
+- **Conditional Display**: Section only appears when enabled AND at least one award has a logo
+
+**Admin Location**: FlexPress Settings → General → Awards & Recognition
+
+**Helper Functions Available**:
+- `flexpress_is_awards_section_enabled()` - Check if section is enabled
+- `flexpress_get_awards_title()` - Get section title
+- `flexpress_get_awards_list()` - Get array of all awards
+- `flexpress_get_awards_count()` - Get number of awards
+- `flexpress_should_display_awards_section()` - Check if section should display
+- `flexpress_get_awards_data()` - Get all awards data as array
+
+**Data Sanitization**: All awards data is properly sanitized through `flexpress_sanitize_general_settings()` function including awards_enabled, awards_title, and awards_list array with individual award fields.
+
+### Featured On Section
+
+FlexPress includes a professional "Featured On" section that showcases media outlets and publications that have featured the site, displayed prominently on the homepage with an interactive slider.
+
+#### Featured On Section Features
+
+- **Interactive Slider**: Slick carousel displaying multiple media outlets
+- **Professional Design**: Grayscale logos that become colorful on hover
+- **External Links**: Direct links to media outlet websites
+- **Responsive Layout**: Mobile-optimized with adaptive slide counts
+- **Theme Integration**: Matches FlexPress dark theme with subtle borders
+- **Auto-rotation**: Automatic slider rotation with manual controls and dots
+
+#### Current Media Outlets Displayed
+
+- **Aus Adult News** - Australian adult industry news and reviews
+- **Adult Industry News** - Industry publication (placeholder)
+- **Industry Insider** - Professional industry coverage (placeholder)
+- **Media Spotlight** - Featured content showcase (placeholder)
+
+#### Technical Implementation
+
+- **Template Part**: `template-parts/featured-on.php`
+- **Integration**: Included in homepage template above footer
+- **Styling**: Comprehensive CSS in `main.css` (lines 6341-6511)
+- **Slider**: Slick carousel with custom styling and responsive breakpoints
+- **Scripts**: Slick slider CSS/JS loaded only on homepage for performance
+- **Admin Settings**: Managed through FlexPress Settings → General → Featured On Section
+
+#### CSS Classes
+
+- `.featured-on-section`: Main container with border styling
+- `.media-slider-wrapper`: Slider container with padding
+- `.media-slide`: Individual slide container
+- `.media-link`: Media outlet link with hover effects
+- `.media-logo`: Logo images with grayscale filter
+- `.media-name`: Media outlet name with typography styling
+- `.slick-dots`: Custom styled navigation dots
+
+#### Design Features
+
+- **Subtle Borders**: Top and bottom borders for section definition
+- **Hover Effects**: Lift animation and color transitions
+- **Grayscale Filter**: Logos start grayscale and become colorful on hover
+- **Card Design**: Each media outlet in a subtle card with borders
+- **Responsive Breakpoints**: 4 slides on desktop, 3 on tablet, 2 on mobile, 1 on small mobile
+
+#### Admin Settings
+
+The Featured On section can be managed through **FlexPress Settings → General → Featured On Section**:
+
+- **Enable/Disable**: Toggle the section on/off with a checkbox
+- **Media Outlets Management**: Add, edit, or remove media outlets with:
+  - **Name**: Display name of the media outlet
+  - **URL**: Link to the media outlet's website
+  - **Logo URL**: Direct link to the outlet's logo image
+  - **Alt Text**: Accessibility text for the logo
+- **Dynamic Management**: Add unlimited media outlets with "Add Media Outlet" button
+- **Remove Functionality**: Each outlet can be individually removed
+- **Default Content**: Includes Aus Adult News as default when no outlets are configured
+
+#### Helper Functions
+
+- `flexpress_is_featured_on_enabled()`: Check if the section is enabled
+- `flexpress_get_featured_on_media()`: Get configured media outlets array
+- Automatic fallback to default content when no outlets are configured
+
 ## 🎬 Upcoming Episode System
 
 ### Overview

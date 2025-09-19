@@ -92,7 +92,7 @@ $models_query = new WP_Query($models_args);
                     <div class="model-grid">
                         <div class="row g-4" id="models-grid">
                             <?php while ($models_query->have_posts()): $models_query->the_post(); ?>
-                                <div class="col-6 col-md-3 model-grid-item">
+                                <div class="col-6 col-lg-3 model-grid-item">
                                     <?php get_template_part('template-parts/content-model/card'); ?>
                                 </div>
                             <?php endwhile; ?>
@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 mainContentCol.classList.add('col-lg-8');
                 modelGridItems.forEach(item => {
                     item.classList.remove('col-lg-3');
-                    item.classList.add('col-6', 'col-md-3');
+                    item.classList.add('col-6', 'col-lg-3');
                 });
                 toggleText.textContent = '<?php esc_html_e('Hide Filters', 'flexpress'); ?>';
             } else {
@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 mainContentCol.classList.remove('col-lg-8');
                 mainContentCol.classList.add('col-lg-12');
                 modelGridItems.forEach(item => {
-                    item.classList.remove('col-6', 'col-md-3');
+                    item.classList.remove('col-6', 'col-lg-3');
                     item.classList.add('col-lg-3');
                 });
                 toggleText.textContent = '<?php esc_html_e('Show Filters', 'flexpress'); ?>';

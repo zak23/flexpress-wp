@@ -365,7 +365,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (filtersVisible) {
                 // Show filters - 8/4 layout, 3 models per row
-                sidebarCol.style.display = 'block';
+                // Delay sidebar appearance to prevent DOM shifting
+                setTimeout(() => {
+                    sidebarCol.style.display = 'block';
+                }, 200);
+                
                 mainContentCol.classList.remove('col-lg-12');
                 mainContentCol.classList.add('col-lg-8');
                 modelGridItems.forEach(item => {

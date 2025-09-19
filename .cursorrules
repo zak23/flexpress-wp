@@ -64,6 +64,7 @@ flexpress/
 - **Models**: Performer profiles with relationship linking
 - **Galleries**: Image galleries attached to episodes with BunnyCDN Storage
 - **Access Control**: Flexible pricing and member discount systems
+- **Upcoming Episodes**: Automatic countdown timer system for scheduled episodes
 
 ### Payment System (Flowguard)
 - **Embedded Payment Forms**: No redirects, seamless user experience
@@ -80,10 +81,11 @@ flexpress/
 - **Affiliate System**: Commission tracking and management
 
 ### Admin Features
-- **Settings Panels**: General, Video, Membership, Flowguard, Pricing, Affiliate, Contact
+- **Settings Panels**: General, Video, Membership, Flowguard, Pricing, Affiliate, Contact, Upcoming Episode
 - **Webhook Management**: Flowguard payment processing and debugging
 - **User Management**: Member profiles, purchases, activity logs
 - **Legal Pages**: Dynamic content generation for compliance
+- **Automatic Episode Scheduling**: WordPress scheduled posts integration
 
 ### Frontend Features
 - **Modern Dark Theme**: Vixen.com-inspired design with responsive layouts
@@ -91,6 +93,7 @@ flexpress/
 - **Professional UI**: Card-based layouts with hover effects and animations
 - **Legal Compliance**: 2257, privacy policy, terms, content removal forms
 - **Casting Section**: Professional talent recruitment section above footer with benefits list and apply button
+- **Upcoming Episode Display**: Automatic countdown timers for scheduled episodes
 
 ## Flowguard Integration Details
 

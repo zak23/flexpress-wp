@@ -275,6 +275,58 @@ FlexPress includes a professional casting section that appears above the footer 
 - **Responsive**: Bootstrap classes for mobile optimization
 - **Accessibility**: Proper alt text and semantic HTML structure
 
+## 🎬 Upcoming Episode System
+
+### Overview
+The FlexPress theme includes an automatic upcoming episode system that displays the next scheduled episode with countdown timers, teaser videos, and hero-style design.
+
+### Features
+- **Automatic Detection**: Automatically finds the next scheduled episode
+- **Countdown Timer**: Real-time countdown to episode release
+- **Teaser Video Support**: Optional video preview with autoplay
+- **Hero-Style Design**: Matches your site's aesthetic
+- **Responsive Design**: Mobile-optimized layout with adaptive timers
+- **Smart Display**: Only shows if there's a scheduled episode
+
+### How It Works
+The system automatically:
+1. **Queries for scheduled episodes** (`post_status => 'future'`)
+2. **Gets the next upcoming episode** (ordered by date ASC)
+3. **Displays countdown timer** to the release date
+4. **Shows teaser video** if available
+5. **Prevents clicking** until episode is released
+
+### Technical Implementation
+
+#### Integration
+- **Homepage**: Automatically displays in `page-templates/page-home.php`
+- **Styling**: All CSS in `main.css` (lines 5680-6120)
+- **JavaScript**: Inline countdown timer and video autoplay
+
+#### Key Features
+- **Automatic Post Query**: Uses `WP_Query` with `post_status => 'future'`
+- **Video Autoplay**: Teaser videos autoplay after 3 seconds with intersection observer
+- **Responsive Timers**: Timer layout adapts to screen size
+- **BunnyCDN Integration**: Uses existing video settings for teaser videos
+- **Performance**: Lazy loading for videos and optimized CSS
+
+#### CSS Classes
+- `.upcoming-episode-section`: Main container
+- `.hero-section`: Hero-style wrapper
+- `.countdown-timer`: Countdown timer container
+- `.countdown-unit`: Individual timer elements (days, hours, minutes, seconds)
+- `.hero-content-overlay`: Content overlay with gradient background
+
+### Usage
+Simply **schedule an episode** in WordPress admin:
+1. Create a new episode post
+2. Set the **publish date** to a future date/time
+3. Add **preview video** and **featured models** if desired
+4. The upcoming episode will automatically appear on your homepage
+
+### Styling Customization
+The upcoming episode system uses CSS custom properties and can be customized by overriding the styles in your child theme or via the WordPress customizer.
+
 ## ⚙️ Configuration
 
 ### Environment Variables

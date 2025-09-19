@@ -5676,3 +5676,446 @@ body.page-template-casting .site-main .alert-info {
   max-width: 25% !important;
   width: 25% !important;
 }
+
+/* ========================================
+   UPCOMING EPISODE STYLES
+   ======================================== */
+
+/* Upcoming Episode Section */
+.upcoming-episode-section {
+    margin: 2rem 0;
+    padding: 2rem 0;
+}
+
+.upcoming-episode-card {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+}
+
+.upcoming-episode-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+}
+
+.upcoming-episode-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.upcoming-episode-link:hover {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Media Container */
+.upcoming-episode-media {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+}
+
+.upcoming-poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 0.3s ease;
+}
+
+.upcoming-video-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.upcoming-teaser-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 2;
+}
+
+/* Overlay */
+.upcoming-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(0, 0, 0, 0.7) 0%,
+        rgba(0, 0, 0, 0.3) 50%,
+        rgba(0, 0, 0, 0.8) 100%
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    padding: 2rem;
+}
+
+.upcoming-content {
+    text-align: center;
+    color: white;
+    max-width: 600px;
+}
+
+/* Title */
+.upcoming-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    line-height: 1.2;
+}
+
+/* Description */
+.upcoming-description {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+    line-height: 1.6;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Timer */
+.upcoming-timer {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    align-items: baseline;
+}
+
+.timer-value {
+    display: inline-block;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    line-height: 1;
+}
+
+.timer-label {
+    display: inline-block;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-left: 0.3rem;
+    opacity: 0.9;
+    color: white;
+}
+
+/* Release Date */
+.upcoming-release-date {
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.9;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    font-weight: 500;
+}
+
+/* Play Button - Match Hero Style */
+.upcoming-play-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    font-size: 2rem;
+    color: white;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.upcoming-play-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+    box-shadow: 0 8px 24px rgba(255, 255, 255, 0.2);
+}
+
+/* Link Button */
+.upcoming-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    background: rgba(255, 107, 107, 0.9);
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.upcoming-link:hover {
+    background: rgba(255, 107, 107, 1);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 107, 107, 0.4);
+}
+
+.upcoming-link-text {
+    color: white;
+}
+
+.upcoming-link i {
+    transition: transform 0.3s ease;
+}
+
+.upcoming-episode-link:hover .upcoming-link i {
+    transform: translateX(5px);
+}
+
+/* Episode Available State */
+.episode-available {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #4ecdc4;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.05);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .upcoming-episode-section {
+        margin: 1rem 0;
+        padding: 1rem 0;
+    }
+    
+    .upcoming-episode-media {
+        height: 300px;
+    }
+    
+    .upcoming-title {
+        font-size: 2rem;
+        margin-bottom: 0.8rem;
+    }
+    
+    .upcoming-description {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .upcoming-timer {
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .timer-value {
+        font-size: 1.5rem;
+    }
+    
+    .timer-label {
+        font-size: 0.8rem;
+    }
+    
+    .upcoming-release-date {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .upcoming-play-button {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+    
+    .upcoming-link {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+    }
+    
+    .upcoming-overlay {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .upcoming-episode-media {
+        height: 250px;
+    }
+    
+    .upcoming-title {
+        font-size: 1.5rem;
+        letter-spacing: 1px;
+    }
+    
+    .upcoming-timer {
+        gap: 0.5rem;
+    }
+    
+    .timer-value {
+        font-size: 1.2rem;
+    }
+    
+    .timer-label {
+        font-size: 0.7rem;
+    }
+    
+    .upcoming-play-button {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    .upcoming-link {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Dark theme compatibility */
+.dark-theme .upcoming-episode-card {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+}
+
+.dark-theme .upcoming-play-button,
+.dark-theme .upcoming-link {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark-theme .upcoming-play-button:hover,
+.dark-theme .upcoming-link:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Upcoming Episode Countdown Timer */
+.upcoming-countdown-hero {
+    margin-top: 1rem;
+}
+
+.countdown-timer {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+    align-items: baseline;
+}
+
+.countdown-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 60px;
+}
+
+.countdown-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    line-height: 1;
+}
+
+.countdown-text {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 0.3rem;
+    opacity: 0.9;
+    color: white;
+}
+
+.release-date-display {
+    text-align: center;
+    opacity: 0.8;
+    color: white;
+    margin-top: 0.5rem;
+}
+
+.episode-available {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.available-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: rgba(78, 205, 196, 0.9);
+    border-radius: 25px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    animation: pulse 2s infinite;
+}
+
+/* Responsive countdown */
+@media (max-width: 768px) {
+    .countdown-timer {
+        gap: 0.8rem;
+    }
+    
+    .countdown-unit {
+        min-width: 50px;
+    }
+    
+    .countdown-number {
+        font-size: 1.5rem;
+    }
+    
+    .countdown-text {
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .countdown-timer {
+        gap: 0.5rem;
+    }
+    
+    .countdown-unit {
+        min-width: 40px;
+    }
+    
+    .countdown-number {
+        font-size: 1.2rem;
+    }
+    
+    .countdown-text {
+        font-size: 0.6rem;
+    }
+    
+    .available-badge {
+        font-size: 1rem;
+        padding: 0.4rem 0.8rem;
+    }
+}

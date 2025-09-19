@@ -4,6 +4,10 @@
  */
 
 get_header();
+
+// Check if upcoming episode should be shown on episodes page
+$upcoming_settings = get_option('flexpress_upcoming_episode_settings', array());
+$show_upcoming_episodes = !empty($upcoming_settings['enabled']) && $upcoming_settings['position'] === 'episodes_page';
 ?>
 
 <div class="site-main">
@@ -13,6 +17,11 @@ get_header();
             <h1 class="display-4 mb-4"><?php the_title(); ?></h1>
             <p class="lead mb-4"><?php the_content(); ?></p>
         </div>
+        
+        <!-- Upcoming Episode -->
+        <?php if ($show_upcoming_episodes): ?>
+            <?php get_template_part('template-parts/upcoming-episode'); ?>
+        <?php endif; ?>
 
         <!-- Filters -->
         <div class="card mb-4">

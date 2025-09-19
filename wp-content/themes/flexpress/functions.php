@@ -94,6 +94,7 @@ require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-flowguard-setting
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-pricing-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-affiliate-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-contact-settings.php';
+// Upcoming episode settings removed - now uses automatic post query
 
 // FlexPress Settings menus are initialized via admin settings classes above
 

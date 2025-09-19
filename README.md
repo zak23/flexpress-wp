@@ -318,11 +318,48 @@ The system automatically:
 - `.hero-content-overlay`: Content overlay with gradient background
 
 ### Usage
+
+#### Automatic Display
 Simply **schedule an episode** in WordPress admin:
 1. Create a new episode post
 2. Set the **publish date** to a future date/time
 3. Add **preview video** and **featured models** if desired
 4. The upcoming episode will automatically appear on your homepage
+
+#### Manual Display
+You can also include the upcoming episode anywhere using the template part:
+
+```php
+<?php get_template_part('template-parts/upcoming-episode'); ?>
+```
+
+**Use Cases:**
+- **Homepage**: Already included automatically
+- **Episodes Page**: Add to `page-templates/episodes.php`
+- **Custom Pages**: Include in any template
+- **Sidebar Widget**: Create a custom widget
+- **Shortcode**: Wrap in a shortcode function
+
+**Example Usage:**
+```php
+// In any template file
+<?php get_template_part('template-parts/upcoming-episode'); ?>
+
+// In a custom widget
+public function widget($args, $instance) {
+    echo $args['before_widget'];
+    get_template_part('template-parts/upcoming-episode');
+    echo $args['after_widget'];
+}
+
+// In a shortcode
+function upcoming_episode_shortcode($atts) {
+    ob_start();
+    get_template_part('template-parts/upcoming-episode');
+    return ob_get_clean();
+}
+add_shortcode('upcoming_episode', 'upcoming_episode_shortcode');
+```
 
 ### Styling Customization
 The upcoming episode system uses CSS custom properties and can be customized by overriding the styles in your child theme or via the WordPress customizer.

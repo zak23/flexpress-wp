@@ -36,7 +36,7 @@ $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;
 // Query models
 $models_args = array(
     'post_type' => 'model',
-    'posts_per_page' => 12, // 6 models per page (2 per row, 6 rows)
+    'posts_per_page' => 10, // 10 models per page (2 per row, 5 rows)
     'paged' => $paged,
     'orderby' => $orderby,
     'order' => $order
@@ -87,12 +87,12 @@ $models_query = new WP_Query($models_args);
         <div class="row" id="main-content-row">
             <!-- Main Content - 8 Columns (Dynamic) -->
             <div class="col-lg-8" id="main-content-col">
-                <!-- Models Grid - 2 models wide (Dynamic) -->
+                <!-- Models Grid - 2 models per row (Dynamic) -->
                 <?php if ($models_query->have_posts()): ?>
                     <div class="model-grid">
                         <div class="row g-4" id="models-grid">
                             <?php while ($models_query->have_posts()): $models_query->the_post(); ?>
-                                <div class="col-6 model-grid-item">
+                                <div class="col-12 col-md-6 model-grid-item">
                                     <?php get_template_part('template-parts/content-model/card'); ?>
                                 </div>
                             <?php endwhile; ?>
@@ -369,18 +369,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 mainContentCol.classList.remove('col-lg-12');
                 mainContentCol.classList.add('col-lg-8');
                 modelGridItems.forEach(item => {
-                    item.classList.remove('col-lg-4');
-                    item.classList.add('col-6');
+                    item.classList.remove('col-lg-6');
+                    item.classList.add('col-md-6');
                 });
                 toggleText.textContent = '<?php esc_html_e('Hide Filters', 'flexpress'); ?>';
             } else {
-                // Hide filters - 12 column layout, 3 models per row
+                // Hide filters - 12 column layout, 2 models per row
                 sidebarCol.style.display = 'none';
                 mainContentCol.classList.remove('col-lg-8');
                 mainContentCol.classList.add('col-lg-12');
                 modelGridItems.forEach(item => {
-                    item.classList.remove('col-6');
-                    item.classList.add('col-lg-4');
+                    item.classList.remove('col-md-6');
+                    item.classList.add('col-lg-6');
                 });
                 toggleText.textContent = '<?php esc_html_e('Show Filters', 'flexpress'); ?>';
             }

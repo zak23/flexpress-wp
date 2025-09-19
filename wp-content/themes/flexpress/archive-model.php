@@ -87,12 +87,12 @@ $models_query = new WP_Query($models_args);
         <div class="row" id="main-content-row">
             <!-- Main Content - 8 Columns (Dynamic) -->
             <div class="col-lg-8" id="main-content-col">
-                <!-- Models Grid - 4 models wide (Dynamic) -->
+                <!-- Models Grid - 3 models wide with filters, 4 models wide without filters -->
                 <?php if ($models_query->have_posts()): ?>
                     <div class="model-grid">
                         <div class="row g-4" id="models-grid">
                             <?php while ($models_query->have_posts()): $models_query->the_post(); ?>
-                                <div class="col-6 col-lg-3 model-grid-item">
+                                <div class="col-6 col-lg-4 model-grid-item">
                                     <?php get_template_part('template-parts/content-model/card'); ?>
                                 </div>
                             <?php endwhile; ?>
@@ -364,13 +364,13 @@ document.addEventListener('DOMContentLoaded', function() {
             filtersVisible = !filtersVisible;
             
             if (filtersVisible) {
-                // Show filters - 8/4 layout, 4 models per row
+                // Show filters - 8/4 layout, 3 models per row
                 sidebarCol.style.display = 'block';
                 mainContentCol.classList.remove('col-lg-12');
                 mainContentCol.classList.add('col-lg-8');
                 modelGridItems.forEach(item => {
                     item.classList.remove('col-lg-3');
-                    item.classList.add('col-6', 'col-lg-3');
+                    item.classList.add('col-6', 'col-lg-4');
                 });
                 toggleText.textContent = '<?php esc_html_e('Hide Filters', 'flexpress'); ?>';
             } else {
@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 mainContentCol.classList.remove('col-lg-8');
                 mainContentCol.classList.add('col-lg-12');
                 modelGridItems.forEach(item => {
-                    item.classList.remove('col-6', 'col-lg-3');
+                    item.classList.remove('col-6', 'col-lg-4');
                     item.classList.add('col-lg-3');
                 });
                 toggleText.textContent = '<?php esc_html_e('Show Filters', 'flexpress'); ?>';

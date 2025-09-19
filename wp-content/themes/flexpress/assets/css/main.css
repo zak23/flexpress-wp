@@ -3076,7 +3076,7 @@ footer.bg-black .row.footer {
 /* Casting FAQ Section */
 .casting-faq {
     background-color: var(--color-background);
-    padding: 4rem 0;
+    padding: 2rem 0;
 }
 
 .casting-faq h2 {
@@ -3130,7 +3130,7 @@ footer.bg-black .row.footer {
 /* Casting Requirements Section */
 .casting-requirements {
     background-color: var(--color-background);
-    padding: 4rem 0;
+    padding: 2rem 0;
 }
 
 .casting-requirements h2 {
@@ -5494,7 +5494,7 @@ body.page-template-casting .site-main .form-control:focus {
     background-color: #0a0a0a !important;
     border-color: #17d0d3 !important;
     color: #ffffff !important;
-    box-shadow: 0 0 0 0.2rem rgba(23, 208, 211, 0.25) !important;
+    box-shadow: 0 0 0 0.2rem rgba(var(--color-accent), 0.25) !important;
 }
 
 body.page-template-casting .site-main .form-label {
@@ -5511,8 +5511,8 @@ body.page-template-casting .site-main .form-check-input {
 }
 
 body.page-template-casting .site-main .form-check-input:checked {
-    background-color: #17d0d3 !important;
-    border-color: #17d0d3 !important;
+    background-color: var(--color-accent) !important;
+    border-color: var(--color-accent) !important;
 }
 
 body.page-template-casting .site-main .card {
@@ -5527,8 +5527,45 @@ body.page-template-casting .site-main .alert {
 }
 
 body.page-template-casting .site-main .alert-info {
-    background-color: rgba(13, 202, 240, 0.1) !important;
-    border-color: #0dcaf0 !important;
+    background-color: rgba(var(--color-accent), 0.1) !important;
+    border-color: var(--color-accent) !important;
     color: #ffffff !important;
 }
   
+.casting-apply-btn {
+  background: var(--color-accent);
+  color: #ffffff;
+  border: none;
+  padding: 1rem 2.5rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(var(--color-accent), 0.3);
+}
+
+.casting-apply-btn:hover {
+  background: var(--color-accent-hover);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(var(--color-accent), 0.4);
+}
+
+.casting-apply-btn:focus {
+  background: var(--color-accent-hover);
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(var(--color-accent), 0.3);
+}
+
+/* Model Archive Grid Fix - Ensure Bootstrap grid works properly */
+.model-grid .row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+}
+
+.model-grid .model-grid-item {
+  flex: 0 0 auto !important;
+  width: auto !important;
+}

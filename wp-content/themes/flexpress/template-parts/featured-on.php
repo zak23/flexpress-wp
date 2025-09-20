@@ -59,27 +59,43 @@ if (empty($featured_media)) {
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Slick slider for media outlets
     if (typeof jQuery !== 'undefined' && jQuery.fn.slick) {
+        // Destroy existing slider if it exists
+        if (jQuery('#mediaSlider').hasClass('slick-initialized')) {
+            jQuery('#mediaSlider').slick('destroy');
+        }
+        
+        // Count the number of slides
+        const slideCount = jQuery('#mediaSlider .media-slide').length;
+        
+        // Determine slidesToShow based on actual slide count
+        // For dots to show properly, we need slidesToShow to be less than total slides
+        let slidesToShow = slideCount > 1 ? 1 : slideCount; // Show 1 slide at a time to force dots
+        let slidesToShowMedium = slideCount > 1 ? 1 : slideCount;
+        let slidesToShowSmall = slideCount > 1 ? 1 : slideCount;
+        
         jQuery('#mediaSlider').slick({
-            dots: true,
-            infinite: true,
+            dots: slideCount > 1, // Only show dots if there's more than 1 slide
+            infinite: slideCount > 1, // Only enable infinite scroll if there's more than 1 slide
             speed: 500,
-            slidesToShow: 4,
+            slidesToShow: slidesToShow,
             slidesToScroll: 1,
-            autoplay: true,
+            autoplay: slideCount > 1, // Only autoplay if there's more than 1 slide
             autoplaySpeed: 3000,
             pauseOnHover: true,
+            adaptiveHeight: false,
+            variableWidth: false,
             responsive: [
                 {
                     breakpoint: 1200,
                     settings: {
-                        slidesToShow: 3,
+                        slidesToShow: slidesToShowMedium,
                         slidesToScroll: 1
                     }
                 },
                 {
                     breakpoint: 768,
                     settings: {
-                        slidesToShow: 2,
+                        slidesToShow: slidesToShowSmall,
                         slidesToScroll: 1
                     }
                 },
@@ -92,6 +108,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             ]
         });
+        
+        // Force dots to show if we have multiple slides but Slick isn't showing them
+        if (slideCount > 1) {
+            setTimeout(() => {
+                const dotsContainer = jQuery('#mediaSlider').siblings('.slick-dots');
+                if (dotsContainer.length === 0 || dotsContainer.find('li').length < slideCount) {
+                    console.log('Forcing dots regeneration...');
+                    jQuery('#mediaSlider').slick('setPosition');
+                }
+            }, 100);
+        }
     }
 });
 </script>

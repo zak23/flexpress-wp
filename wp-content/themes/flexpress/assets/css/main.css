@@ -6304,24 +6304,38 @@ body.page-template-casting .site-main .alert-info {
 }
 
 .featured-on-section .slick-dots li button {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: none;
-    background-color: var(--color-border);
-    font-size: 0;
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 50% !important;
+    border: none !important;
+    background-color: var(--color-border) !important;
+    font-size: 0 !important;
     cursor: pointer;
     transition: var(--transition-fast);
+    padding: 0 !important;
+    margin: 0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    position: relative;
 }
 
 .featured-on-section .slick-dots li.slick-active button {
-    background-color: var(--color-accent);
+    background-color: var(--color-accent) !important;
     transform: scale(1.2);
 }
 
 .featured-on-section .slick-dots li button:hover {
-    background-color: var(--color-accent);
+    background-color: var(--color-accent) !important;
     opacity: 0.7;
+}
+
+/* Override any Slick default styles that might cause the dot-in-dot effect */
+.featured-on-section .slick-dots li button:before {
+    display: none !important;
+}
+
+.featured-on-section .slick-dots li button:after {
+    display: none !important;
 }
 
 /* Responsive Design */

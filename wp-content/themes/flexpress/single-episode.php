@@ -8,6 +8,15 @@ get_header();
 while (have_posts()):
     the_post();
     
+    // Check if user can view this episode
+    if (!flexpress_can_user_view_episode(get_the_ID())) {
+        // Redirect non-logged-in users to login page
+        if (!is_user_logged_in()) {
+            wp_redirect(wp_login_url(get_permalink()));
+            exit;
+        }
+    }
+    
     $preview_video = get_field('preview_video');
     $trailer_video = get_field('trailer_video');
     $full_video = get_field('full_video');

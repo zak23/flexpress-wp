@@ -846,6 +846,131 @@ add_shortcode('upcoming_episode', 'upcoming_episode_shortcode');
 ### Styling Customization
 The upcoming episode system uses CSS custom properties and can be customized by overriding the styles in your child theme or via the WordPress customizer.
 
+## 🔒 Hidden Episode System
+
+### Overview
+The FlexPress theme includes a comprehensive episode visibility system that allows content creators to hide episodes from public view, requiring user registration to access previews and content.
+
+### Features
+- **ACF Integration**: Simple checkbox field in episode editor
+- **Automatic Filtering**: All episode queries automatically exclude hidden episodes for non-logged-in users
+- **Search Protection**: Hidden episodes are excluded from search results for public users
+- **Individual Page Protection**: Direct access to hidden episodes redirects non-logged-in users to login
+- **Helper Functions**: Comprehensive utility functions for visibility checking
+
+### How It Works
+The system automatically:
+1. **Checks user login status** on all episode displays
+2. **Filters episode queries** to exclude hidden episodes for public users
+3. **Protects individual episodes** with redirect to login page
+4. **Excludes from search results** for non-logged-in users
+5. **Shows all episodes** to logged-in users regardless of visibility setting
+
+### Technical Implementation
+
+#### ACF Field Configuration
+- **Field Name**: `hidden_from_public`
+- **Field Type**: True/False (checkbox)
+- **Default Value**: `false` (public)
+- **Location**: Episode Videos field group
+- **Instructions**: "Check this box to hide this episode from non-logged-in users. Only registered users will be able to see previews and access this content."
+
+#### Helper Functions
+Located in `includes/episode-visibility-helpers.php`:
+
+```php
+// Check if episode is hidden from public
+flexpress_is_episode_hidden_from_public($episode_id)
+
+// Check if current user can view episode
+flexpress_can_user_view_episode($episode_id)
+
+// Get meta query for visibility filtering
+flexpress_get_episode_visibility_meta_query()
+
+// Apply visibility filtering to query args
+flexpress_add_episode_visibility_to_query($args)
+
+// Check if episode should be displayed
+flexpress_should_display_episode($episode_id)
+
+// Get count of visible episodes for current user
+flexpress_get_visible_episodes_count($additional_args)
+
+// Display visibility notice for non-logged-in users
+flexpress_display_episode_visibility_notice($context)
+```
+
+#### Query Filtering
+All episode queries automatically apply visibility filtering:
+
+**Homepage Queries:**
+- Hero episode section
+- Featured episodes grid
+- Recent episodes grid
+
+**Archive Pages:**
+- Episode archive (`archive-episode.php`)
+- Episodes page (`page-templates/episodes.php`)
+- Episode grid template (`template-parts/episode-grid.php`)
+
+**Search Results:**
+- Main search query filtering via `pre_get_posts` hook
+- Search page template filtering
+
+**Individual Episodes:**
+- Single episode template (`single-episode.php`) with redirect protection
+
+### Usage
+
+#### Setting Episode Visibility
+1. **Edit an episode** in WordPress admin
+2. **Scroll to Episode Videos section**
+3. **Check "Hidden from Public"** checkbox
+4. **Save the episode**
+
+#### For Developers
+Use helper functions to check visibility:
+
+```php
+// Check if user can view specific episode
+if (flexpress_can_user_view_episode($episode_id)) {
+    // Display episode content
+    get_template_part('template-parts/content', 'episode-card');
+}
+
+// Apply visibility filtering to custom queries
+$args = array(
+    'post_type' => 'episode',
+    'posts_per_page' => 10
+);
+$args = flexpress_add_episode_visibility_to_query($args);
+$query = new WP_Query($args);
+
+// Get count of visible episodes
+$visible_count = flexpress_get_visible_episodes_count();
+```
+
+#### Display Visibility Notice
+Show a notice to non-logged-in users about hidden content:
+
+```php
+// In any template
+flexpress_display_episode_visibility_notice('homepage');
+```
+
+### Security Features
+- **Query-Level Protection**: Hidden episodes never appear in public queries
+- **Direct Access Protection**: Attempting to access hidden episodes redirects to login
+- **Search Protection**: Hidden episodes excluded from search results
+- **Template-Level Checks**: Additional validation in template files
+
+### User Experience
+- **Seamless for Logged-in Users**: All episodes visible regardless of setting
+- **Clear Messaging**: Non-logged-in users see registration prompts
+- **No Broken Links**: Hidden episodes don't appear in navigation or search
+- **Consistent Behavior**: Same visibility rules apply across all site areas
+
 ## ⚙️ Configuration
 
 ### Environment Variables

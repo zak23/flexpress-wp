@@ -14,6 +14,9 @@ $upcoming_args = array(
     'order' => 'ASC' // Get the next scheduled post
 );
 
+// Apply episode visibility filtering
+$upcoming_args = flexpress_add_episode_visibility_to_query($upcoming_args);
+
 $upcoming_episode = new WP_Query($upcoming_args);
 
 if ($upcoming_episode->have_posts()): 

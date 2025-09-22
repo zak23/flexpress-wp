@@ -115,6 +115,9 @@ $show_upcoming_episodes = !empty($upcoming_settings['enabled']) && $upcoming_set
                 }
             }
 
+            // Apply episode visibility filtering
+            $args = flexpress_add_episode_visibility_to_query($args);
+            
             $query = new WP_Query($args);
 
             if ($query->have_posts()):

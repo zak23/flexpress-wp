@@ -22,6 +22,9 @@ $hero_args = array(
     'order' => 'DESC'
 );
 
+// Apply episode visibility filtering
+$hero_args = flexpress_add_episode_visibility_to_query($hero_args);
+
 $hero_episode = new WP_Query($hero_args);
 ?>
 
@@ -71,6 +74,9 @@ $hero_episode = new WP_Query($hero_args);
                 'meta_key' => 'release_date',
                 'order' => 'DESC'
             );
+            
+            // Apply episode visibility filtering
+            $featured_args = flexpress_add_episode_visibility_to_query($featured_args);
             
             $featured_episodes = new WP_Query($featured_args);
             
@@ -154,6 +160,9 @@ $hero_episode = new WP_Query($hero_args);
                 'meta_key' => 'release_date',
                 'order' => 'DESC'
             );
+            
+            // Apply episode visibility filtering
+            $recent_args = flexpress_add_episode_visibility_to_query($recent_args);
             
             $recent_episodes = new WP_Query($recent_args);
             

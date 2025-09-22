@@ -20,6 +20,9 @@ $args = array(
     'order' => 'DESC'
 );
 
+// Apply episode visibility filtering
+$args = flexpress_add_episode_visibility_to_query($args);
+
 $episodes = new WP_Query($args);
 ?>
 

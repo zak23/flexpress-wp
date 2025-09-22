@@ -58,6 +58,28 @@ require_once FLEXPRESS_PATH . '/includes/affiliate-helpers.php';
 require_once FLEXPRESS_PATH . '/includes/payout-display-helpers.php';
 require_once FLEXPRESS_PATH . '/includes/contact-helpers.php';
 require_once FLEXPRESS_PATH . '/includes/awards-helpers.php';
+require_once FLEXPRESS_PATH . '/includes/episode-visibility-helpers.php';
+
+// Filter search queries to exclude hidden episodes for non-logged-in users
+function flexpress_filter_search_query($query) {
+    if (!is_admin() && $query->is_search() && $query->is_main_query()) {
+        if (!is_user_logged_in()) {
+            $meta_query = flexpress_get_episode_visibility_meta_query();
+            if (!empty($meta_query)) {
+                $existing_meta_query = $query->get('meta_query');
+                if ($existing_meta_query) {
+                    $meta_query = array(
+                        'relation' => 'AND',
+                        $existing_meta_query,
+                        $meta_query
+                    );
+                }
+                $query->set('meta_query', $meta_query);
+            }
+        }
+    }
+}
+add_action('pre_get_posts', 'flexpress_filter_search_query');
 
 // Affiliate System Integration
 require_once FLEXPRESS_PATH . '/includes/affiliate-database.php';

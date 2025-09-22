@@ -93,6 +93,9 @@ if (!empty($filter_type) && !empty($filter_value)) {
     }
 }
 
+// Apply episode visibility filtering
+$episodes_args = flexpress_add_episode_visibility_to_query($episodes_args);
+
 $episodes_query = new WP_Query($episodes_args);
 ?>
 

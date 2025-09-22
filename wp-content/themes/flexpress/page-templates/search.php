@@ -47,8 +47,12 @@ get_header();
             <div class="row g-4">
                 <?php
                 while (have_posts()): the_post();
+                    // Check if this is an episode and if user can view it
                     if (get_post_type() === 'episode') {
-                        get_template_part('template-parts/content', 'episode-card');
+                        if (flexpress_can_user_view_episode(get_the_ID())) {
+                            get_template_part('template-parts/content', 'episode-card');
+                        }
+                        // Skip hidden episodes for non-logged-in users
                     } else {
                         get_template_part('template-parts/content', 'search');
                     }

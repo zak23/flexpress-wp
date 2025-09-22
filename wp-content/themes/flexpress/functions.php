@@ -3273,6 +3273,292 @@ function flexpress_get_episode_video_for_access($episode_id = null, $user_id = n
 }
 
 /**
+ * Check if user has access to extras content based on access type
+ * 
+ * @param int $extras_id The extras ID
+ * @param int $user_id The user ID (optional, defaults to current user)
+ * @return array Access information array
+ */
+function flexpress_check_extras_access($extras_id = null, $user_id = null) {
+    if (!$extras_id) {
+        $extras_id = get_the_ID();
+    }
+    
+    if (!$user_id) {
+        $user_id = get_current_user_id();
+    }
+    
+    // Get extras fields
+    $access_type = get_field('access_type', $extras_id) ?: 'membership';
+    $price = get_field('extras_price', $extras_id);
+    $member_discount = get_field('member_discount', $extras_id) ?: 0;
+    
+    // Initialize access info
+    $access_info = array(
+        'has_access' => false,
+        'access_type' => $access_type,
+        'price' => $price,
+        'final_price' => $price,
+        'discount' => 0,
+        'is_member' => false,
+        'is_purchased' => false,
+        'show_purchase_button' => false,
+        'purchase_reason' => '',
+        'membership_notice' => ''
+    );
+    
+    // Check if user is logged in
+    $is_logged_in = $user_id > 0;
+    
+    // Check membership status
+    $membership_status = '';
+    $is_active_member = false;
+    if ($is_logged_in) {
+        $membership_status = get_user_meta($user_id, 'membership_status', true);
+        $is_active_member = in_array($membership_status, ['active', 'cancelled']);
+        $access_info['is_member'] = $is_active_member;
+        
+        // Check if user has purchased this extras content
+        $purchased_extras_meta = get_user_meta($user_id, 'purchased_extras_' . $extras_id, true);
+        $ppv_purchases = get_user_meta($user_id, 'ppv_purchases', true) ?: [];
+        $access_info['is_purchased'] = (bool) $purchased_extras_meta || in_array($extras_id, $ppv_purchases);
+    }
+    
+    // Handle different access types
+    switch ($access_type) {
+        case 'free':
+            // Free for everyone
+            $access_info['has_access'] = true;
+            break;
+            
+        case 'ppv_only':
+            // Only purchasable, no membership access
+            if ($access_info['is_purchased']) {
+                $access_info['has_access'] = true;
+            } else {
+                $access_info['show_purchase_button'] = true;
+                $access_info['purchase_reason'] = 'This extra content is available for individual purchase only.';
+                if ($is_active_member) {
+                    $access_info['membership_notice'] = 'This extra content is not included in your membership and must be purchased separately.';
+                }
+            }
+            break;
+            
+        case 'membership':
+            // Members get free access, non-members can purchase
+            if ($is_active_member || $access_info['is_purchased']) {
+                $access_info['has_access'] = true;
+            } else {
+                $access_info['show_purchase_button'] = true;
+                if ($is_logged_in) {
+                    $access_info['purchase_reason'] = 'Join our membership for unlimited access to all extra content, or purchase this content individually.';
+                } else {
+                    $access_info['purchase_reason'] = 'Login to access with membership, or purchase this extra content individually.';
+                }
+            }
+            break;
+            
+        case 'mixed':
+            // Members get discount, everyone can purchase
+            if ($access_info['is_purchased']) {
+                $access_info['has_access'] = true;
+            } else {
+                $access_info['show_purchase_button'] = true;
+                if ($is_active_member && $member_discount > 0) {
+                    $access_info['discount'] = $member_discount;
+                    $access_info['final_price'] = $price * (1 - ($member_discount / 100));
+                    $access_info['purchase_reason'] = sprintf('Get %d%% member discount on this extra content!', $member_discount);
+                } else if ($is_logged_in && !$is_active_member && $member_discount > 0) {
+                    $access_info['purchase_reason'] = sprintf('Active members save %d%% on this extra content. Join our membership to unlock the discount!', $member_discount);
+                } else {
+                    $access_info['purchase_reason'] = 'Purchase this premium extra content to watch instantly.';
+                }
+            }
+            break;
+    }
+    
+    return $access_info;
+}
+
+/**
+ * Get extras access summary for display
+ * 
+ * @param int $extras_id The extras ID
+ * @return string Human-readable access summary
+ */
+function flexpress_get_extras_access_summary($extras_id = null) {
+    if (!$extras_id) {
+        $extras_id = get_the_ID();
+    }
+    
+    $access_type = get_field('access_type', $extras_id) ?: 'membership';
+    $price = get_field('extras_price', $extras_id);
+    $member_discount = get_field('member_discount', $extras_id) ?: 0;
+    
+    switch ($access_type) {
+        case 'free':
+            return 'Free';
+            
+        case 'ppv_only':
+            return $price ? '$' . number_format($price, 2) . ' (PPV Only)' : 'PPV Only';
+            
+        case 'membership':
+            if ($price) {
+                return 'Included in Membership<br />' .
+                    '$' . number_format($price, 2) . ' for Non-Members';
+            } else {
+                return 'Members Only';
+            }
+        case 'mixed':
+            if ($price && $member_discount > 0) {
+                $discounted_price = $price * (1 - ($member_discount / 100));
+                return '$' . number_format($discounted_price, 2) . ' for Members<br>$' . number_format($price, 2) . ' for Non-Members';
+            } else if ($price) {
+                return '$' . number_format($price, 2) . ' for Everyone';
+            } else {
+                return 'Available for Purchase';
+            }
+            
+        default:
+            return 'Unknown';
+    }
+}
+
+/**
+ * Check if extras should show purchase button
+ * 
+ * @param int $extras_id The extras ID
+ * @param int $user_id The user ID (optional)
+ * @return bool Whether to show purchase button
+ */
+function flexpress_should_show_extras_purchase_button($extras_id = null, $user_id = null) {
+    $access_info = flexpress_check_extras_access($extras_id, $user_id);
+    return $access_info['show_purchase_button'];
+}
+
+/**
+ * Get video to display based on access level for extras
+ * 
+ * @param int $extras_id The extras ID
+ * @param int $user_id The user ID (optional)
+ * @return string Video ID to display (full, trailer, or preview)
+ */
+function flexpress_get_extras_video_for_access($extras_id = null, $user_id = null) {
+    if (!$extras_id) {
+        $extras_id = get_the_ID();
+    }
+    
+    $access_info = flexpress_check_extras_access($extras_id, $user_id);
+    
+    $full_video = get_field('full_video', $extras_id);
+    $trailer_video = get_field('trailer_video', $extras_id);
+    $preview_video = get_field('preview_video', $extras_id);
+    
+    if ($access_info['has_access'] && $full_video) {
+        return $full_video;
+    } elseif ($trailer_video) {
+        return $trailer_video;
+    } elseif ($preview_video) {
+        return $preview_video;
+    }
+    
+    return null;
+}
+
+/**
+ * Check if user can view extras content
+ * 
+ * @param int $extras_id The extras ID
+ * @param int $user_id The user ID (optional)
+ * @return bool Whether user can view the extras
+ */
+function flexpress_can_user_view_extras($extras_id = null, $user_id = null) {
+    $access_info = flexpress_check_extras_access($extras_id, $user_id);
+    return $access_info['has_access'];
+}
+
+/**
+ * Get primary video ID for extras (for thumbnails)
+ * 
+ * @param int $extras_id The extras ID
+ * @return string Video ID
+ */
+function flexpress_get_primary_extras_video_id($extras_id = null) {
+    if (!$extras_id) {
+        $extras_id = get_the_ID();
+    }
+    
+    $full_video = get_field('full_video', $extras_id);
+    $trailer_video = get_field('trailer_video', $extras_id);
+    $preview_video = get_field('preview_video', $extras_id);
+    
+    return $full_video ?: $trailer_video ?: $preview_video ?: '';
+}
+
+/**
+ * Display extras thumbnail
+ * 
+ * @param string $size Image size
+ * @param string $class CSS class
+ */
+function flexpress_display_extras_thumbnail($size = 'medium', $class = 'extras-thumbnail') {
+    $video_id = flexpress_get_primary_extras_video_id();
+    
+    if ($video_id) {
+        $thumbnail_url = flexpress_get_bunnycdn_video_thumbnail($video_id);
+        if ($thumbnail_url) {
+            echo '<img src="' . esc_url($thumbnail_url) . '" alt="' . esc_attr(get_the_title()) . '" class="' . esc_attr($class) . '" />';
+            return;
+        }
+    }
+    
+    // Fallback to featured image
+    if (has_post_thumbnail()) {
+        the_post_thumbnail($size, array('class' => $class));
+    } else {
+        // Fallback to placeholder
+        echo '<img src="' . esc_url(get_template_directory_uri() . '/assets/images/placeholder-episode.jpg') . '" alt="' . esc_attr(get_the_title()) . '" class="' . esc_attr($class) . '" />';
+    }
+}
+
+/**
+ * Add extras visibility filtering to query
+ * 
+ * @param array $args Query arguments
+ * @return array Modified query arguments
+ */
+function flexpress_add_extras_visibility_to_query($args) {
+    // Check if extras are enabled
+    $options = get_option('flexpress_general_settings');
+    $extras_enabled = isset($options['extras_enabled']) ? $options['extras_enabled'] : '0';
+    
+    if (!$extras_enabled) {
+        // If extras are disabled, return empty results
+        $args['post__in'] = array(0);
+        return $args;
+    }
+    
+    // Add visibility filtering similar to episodes
+    if (!is_user_logged_in()) {
+        // For non-logged-in users, only show non-hidden extras
+        $args['meta_query'][] = array(
+            'relation' => 'OR',
+            array(
+                'key' => 'hidden_from_public',
+                'compare' => 'NOT EXISTS'
+            ),
+            array(
+                'key' => 'hidden_from_public',
+                'value' => '0',
+                'compare' => '='
+            )
+        );
+    }
+    
+    return $args;
+}
+
+/**
  * Enqueue admin scripts and styles
  */
 function flexpress_admin_enqueue_scripts($hook) {
@@ -6593,6 +6879,17 @@ function flexpress_get_membership_status($user_id = null) {
     }
     
     return $membership_status;
+}
+
+/**
+ * Check if user has active membership
+ *
+ * @param int $user_id User ID (optional, defaults to current user)
+ * @return bool True if user has active or cancelled membership, false otherwise
+ */
+function flexpress_has_active_membership($user_id = null) {
+    $membership_status = flexpress_get_membership_status($user_id);
+    return in_array($membership_status, ['active', 'cancelled']);
 }
 
 /**

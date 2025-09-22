@@ -327,6 +327,10 @@ get_header();
         global $post;
         $main_post = $post;
         
+        // Get membership status for access control
+        $membership_status = function_exists('flexpress_get_membership_status') ? flexpress_get_membership_status() : 'none';
+        $is_active_member = in_array($membership_status, ['active', 'cancelled']);
+        
         if (comments_open($main_post->ID) || get_comments_number($main_post->ID)) : ?>
             <div class="container py-5">
                 <div class="row">
@@ -354,8 +358,6 @@ get_header();
                                         </h3>
                                         
                                         <?php 
-                                        $membership_status = function_exists('flexpress_get_membership_status') ? flexpress_get_membership_status() : 'none';
-                                        $is_active_member = in_array($membership_status, ['active', 'cancelled']);
                                         if ($comments_number > 0 && !$is_active_member && !current_user_can('administrator')) : ?>
                                         <div class="alert alert-info mb-4">
                                             <i class="fas fa-crown me-2"></i>

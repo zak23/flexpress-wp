@@ -108,7 +108,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Admin Dashboard**: Complete management interface with bulk operations
 
 ### WordPress Integration
-- **Custom Post Types**: Episodes and Models
+- **Custom Post Types**: Episodes, Extras, and Models
 - **Advanced Custom Fields (ACF)**: Content management
 - **User Roles**: Member and admin capabilities
 - **Menu Systems**: Automated navigation setup with Main, Support, Legal, and Friends menus
@@ -331,6 +331,18 @@ flexpress_track_enhanced_promo_usage(
 - **Release Scheduling**: Future episode planning
 - **Duration Tracking**: Episode length management
 - **Category System**: Tags and filtering
+
+### Extras/BTS Content
+- **Behind-the-Scenes Content**: Bloopers, interviews, photo shoots, making-of content
+- **Content Types**: Categorized extras (Behind the Scenes, Bloopers, Interviews, Photo Shoots, Making Of, Deleted Scenes, Extended Cuts, Other)
+- **Access Control**: Same access types as episodes (Free, PPV-only, membership, mixed pricing)
+- **Video Integration**: Full BunnyCDN Stream integration with previews, trailers, and full videos
+- **Model Relationships**: Link performers to extra content
+- **Enable/Disable Setting**: Toggle extras system on/off in FlexPress Settings → General
+- **Archive System**: Dedicated extras archive page with filtering by content type, models, and categories
+- **Template System**: Complete single-extras.php and archive-extras.php templates
+- **Helper Functions**: Comprehensive access control and display functions
+- **Gallery Support**: Some extras can be galleries-only content
 
 ### Models
 - **Profile Pages**: Individual performer showcases

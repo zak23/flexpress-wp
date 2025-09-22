@@ -161,6 +161,23 @@ class FlexPress_General_Settings {
             'flexpress_general_settings',
             'flexpress_featured_on_section'
         );
+        
+        // Add Extras Section
+        add_settings_section(
+            'flexpress_extras_section',
+            __('Extras Content', 'flexpress'),
+            array($this, 'render_extras_section_description'),
+            'flexpress_general_settings'
+        );
+        
+        // Add Extras enable field
+        add_settings_field(
+            'flexpress_extras_enabled',
+            __('Enable Extras', 'flexpress'),
+            array($this, 'render_extras_enabled_field'),
+            'flexpress_general_settings',
+            'flexpress_extras_section'
+        );
     }
 
     /**
@@ -989,6 +1006,37 @@ class FlexPress_General_Settings {
             });
         });
         </script>
+        <?php
+    }
+
+    /**
+     * Render Extras section description
+     */
+    public function render_extras_section_description() {
+        ?>
+        <p>
+            <?php esc_html_e('Configure the Extras/BTS (Behind the Scenes) content system. Extras can include galleries, behind-the-scenes videos, bloopers, interviews, and other bonus content.', 'flexpress'); ?>
+        </p>
+        <?php
+    }
+
+    /**
+     * Render Extras enabled field
+     */
+    public function render_extras_enabled_field() {
+        $options = get_option('flexpress_general_settings');
+        $value = isset($options['extras_enabled']) ? $options['extras_enabled'] : '0';
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="flexpress_general_settings[extras_enabled]" 
+                   value="1" 
+                   <?php checked($value, '1'); ?>>
+            <?php esc_html_e('Enable Extras/BTS content system', 'flexpress'); ?>
+        </label>
+        <p class="description">
+            <?php esc_html_e('When enabled, you can create and manage Extras content including galleries, behind-the-scenes videos, bloopers, interviews, and other bonus content. The Extras post type will be available in the admin menu.', 'flexpress'); ?>
+        </p>
         <?php
     }
 

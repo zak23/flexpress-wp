@@ -213,9 +213,15 @@ if (function_exists('acf_add_local_field_group')):
         'show_in_rest' => 0,
     ));
 
-    acf_add_local_field_group(array(
-        'key' => 'group_extras_videos',
-        'title' => 'Extras Videos',
+    // Check if Extras are enabled in settings
+    $options = get_option('flexpress_general_settings');
+    $extras_enabled = isset($options['extras_enabled']) ? $options['extras_enabled'] : '0';
+    
+    // Only register Extras ACF fields if enabled
+    if ($extras_enabled) {
+        acf_add_local_field_group(array(
+            'key' => 'group_extras_videos',
+            'title' => 'Extras Videos',
         'fields' => array(
             array(
                 'key' => 'field_extras_preview_video',
@@ -432,6 +438,7 @@ if (function_exists('acf_add_local_field_group')):
         'description' => '',
         'show_in_rest' => 0,
     ));
+    } // End Extras conditional block
 
     acf_add_local_field_group(array(
         'key' => 'group_model_details',

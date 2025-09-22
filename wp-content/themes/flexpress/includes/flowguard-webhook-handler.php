@@ -152,7 +152,10 @@ function flexpress_flowguard_handle_subscription_approved($payload) {
         update_user_meta($user_id, 'membership_expires', $payload['expiresOn']);
     }
     
-    // Store transaction
+    // Parse enhanced reference data
+    $reference_data = flexpress_flowguard_parse_enhanced_reference($payload['referenceId'] ?? '');
+    
+    // Store transaction with enhanced reference data
     flexpress_flowguard_store_transaction([
         'user_id' => $user_id,
         'transaction_id' => $payload['transactionId'],
@@ -162,7 +165,11 @@ function flexpress_flowguard_handle_subscription_approved($payload) {
         'currency' => $payload['priceCurrency'],
         'status' => 'approved',
         'order_type' => 'subscription',
-        'reference_id' => $payload['referenceId'] ?? ''
+        'reference_id' => $payload['referenceId'] ?? '',
+        'affiliate_code' => $reference_data['affiliate_code'] ?? '',
+        'promo_code' => $reference_data['promo_code'] ?? '',
+        'signup_source' => $reference_data['signup_source'] ?? '',
+        'plan_id' => $reference_data['plan_id'] ?? ''
     ]);
     
     // Log activity

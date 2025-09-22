@@ -954,7 +954,7 @@ function flexpress_create_flowguard_subscription_data($plan_id, $plan, $user_id)
             $plan['duration'] ?? 30, 
             $plan['duration_unit'] ?? 'days'
         ),
-        'referenceId' => 'user_' . $user_id . '_plan_' . $plan_id
+        'referenceId' => flexpress_flowguard_generate_enhanced_reference($user_id, $plan_id)
     );
     
     // Add trial information if enabled
@@ -991,7 +991,7 @@ function flexpress_create_flowguard_purchase_data($plan_id, $plan, $user_id) {
         'declineUrl' => home_url('/payment-declined'),
         'postbackUrl' => home_url('/wp-admin/admin-ajax.php?action=flowguard_webhook'),
         'email' => $user->user_email,
-        'referenceId' => 'user_' . $user_id . '_plan_' . $plan_id
+        'referenceId' => flexpress_flowguard_generate_enhanced_reference($user_id, $plan_id)
     );
     
     return array('success' => true, 'data' => $purchase_data);

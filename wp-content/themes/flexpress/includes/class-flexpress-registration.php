@@ -141,6 +141,32 @@ class FlexPress_Registration {
         update_user_meta($user_id, 'registration_date', current_time('mysql'));
         update_user_meta($user_id, 'registration_ip', $_SERVER['REMOTE_ADDR']);
         
+        // Store signup source and tracking data
+        $signup_source = 'direct'; // Default source
+        if (!empty($_SERVER['HTTP_REFERER'])) {
+            $referrer = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
+            if (strpos($referrer, 'google') !== false) {
+                $signup_source = 'google';
+            } elseif (strpos($referrer, 'facebook') !== false) {
+                $signup_source = 'facebook';
+            } elseif (strpos($referrer, 'twitter') !== false) {
+                $signup_source = 'twitter';
+            } elseif (strpos($referrer, 'instagram') !== false) {
+                $signup_source = 'instagram';
+            } elseif (strpos($referrer, 'reddit') !== false) {
+                $signup_source = 'reddit';
+            } else {
+                $signup_source = 'referral';
+            }
+        }
+        update_user_meta($user_id, 'signup_source', $signup_source);
+        
+        // Check for affiliate referral
+        if (!empty($_COOKIE['flexpress_affiliate_tracking'])) {
+            $affiliate_data = sanitize_text_field($_COOKIE['flexpress_affiliate_tracking']);
+            update_user_meta($user_id, 'affiliate_referred_by', $affiliate_data);
+        }
+        
         // Store selected plan for later reference
         if (!empty($selected_plan)) {
             update_user_meta($user_id, 'selected_plan', $selected_plan);

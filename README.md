@@ -197,6 +197,7 @@ FlexPress now uses **Flowguard** as the primary payment processing system, repla
 - **PCI DSS Compliance**: Secure payment processing with hosted iframes
 - **3D Secure Support**: Enhanced security for card transactions
 - **Webhook Integration**: Real-time payment notifications
+- **Enhanced Reference System**: Meaningful payment references with user data (affiliate, promo, signup source)
 - **Admin Dashboard**: Complete payment management interface
 
 #### Flowguard Configuration
@@ -220,6 +221,31 @@ Flowguard webhooks are automatically handled at:
 ```
 /wp-admin/admin-ajax.php?action=flowguard_webhook
 ```
+
+#### Enhanced Reference System
+
+FlexPress now includes an enhanced reference system that stores meaningful user information in Flowguard payment references:
+
+**Reference Format**: `uid123_affAFF12345_promoWELCOME_srcgoogle_planpremium_monthly_reg12345678`
+
+**Components**:
+- `uid123` - User ID
+- `affAFF12345` - Affiliate code (truncated to 8 chars, or `affnone` if no affiliate)
+- `promoWELCOME` - Promo code (truncated to 8 chars, or `promonone` if no promo)
+- `srcgoogle` - Signup source (google, facebook, twitter, etc., or `srcnone` if no source)
+- `planpremium_monthly` - Plan ID
+- `reg12345678` - Registration timestamp (last 8 digits)
+
+**Empty Field Handling**: When fields are empty, the system uses placeholder values (`none`) to maintain consistent reference structure and enable proper parsing.
+
+**Benefits**:
+- **User Tracking**: Easily identify users from payment references
+- **Affiliate Attribution**: Track which affiliates referred users
+- **Promo Analytics**: Monitor promo code usage and effectiveness
+- **Source Attribution**: Understand where users are coming from
+- **Admin Interface**: View and manage reference data via `FlexPress → Flowguard References`
+
+**Backward Compatibility**: Legacy references (`user_123_plan_456`) continue to work seamlessly.
 
 #### Database Tables
 

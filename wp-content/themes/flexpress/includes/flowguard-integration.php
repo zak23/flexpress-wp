@@ -55,6 +55,9 @@ function flexpress_flowguard_create_subscription($user_id, $plan_id) {
         return ['success' => false, 'error' => 'Flowguard API not configured'];
     }
     
+    // Generate enhanced reference ID with meaningful user data
+    $enhanced_reference = flexpress_flowguard_generate_enhanced_reference($user_id, $plan_id);
+    
     $subscription_data = [
         'priceAmount' => number_format($plan['price'], 2, '.', ''),
         'priceCurrency' => flexpress_flowguard_convert_currency_symbol_to_code($plan['currency']),
@@ -64,7 +67,7 @@ function flexpress_flowguard_create_subscription($user_id, $plan_id) {
         'email' => $user->user_email,
         'subscriptionType' => $plan['plan_type'] === 'one_time' ? 'one-time' : 'recurring',
         'period' => flexpress_format_plan_duration_for_flowguard($plan['duration'], $plan['duration_unit']),
-        'referenceId' => 'user_' . $user_id . '_plan_' . $plan_id
+        'referenceId' => $enhanced_reference
     ];
     
     // Add trial information if enabled
@@ -216,27 +219,170 @@ function flexpress_flowguard_convert_currency_symbol_to_code($currency_symbol) {
 }
 
 /**
- * Get user ID from Flowguard reference ID
+ * Generate enhanced Flowguard reference ID with meaningful user data
+ * 
+ * @param int $user_id User ID
+ * @param string $plan_id Plan ID
+ * @param array $additional_data Additional data to include
+ * @return string Enhanced reference ID
+ */
+function flexpress_flowguard_generate_enhanced_reference($user_id, $plan_id, $additional_data = array()) {
+    $user = get_userdata($user_id);
+    if (!$user) {
+        return 'user_' . $user_id . '_plan_' . $plan_id;
+    }
+    
+    // Get user's affiliate tracking data
+    $affiliate_code = get_user_meta($user_id, 'affiliate_referred_by', true);
+    $promo_code = get_user_meta($user_id, 'applied_promo_code', true);
+    $signup_source = get_user_meta($user_id, 'signup_source', true);
+    $registration_date = get_user_meta($user_id, 'registration_date', true);
+    
+    // Build reference components
+    $components = array();
+    
+    // User ID (always first)
+    $components[] = 'uid' . $user_id;
+    
+    // Affiliate code (if exists, otherwise use placeholder)
+    if (!empty($affiliate_code)) {
+        $components[] = 'aff' . substr($affiliate_code, 0, 8); // Limit length
+    } else {
+        $components[] = 'affnone'; // Placeholder for no affiliate
+    }
+    
+    // Promo code (if exists, otherwise use placeholder)
+    if (!empty($promo_code)) {
+        $components[] = 'promo' . substr($promo_code, 0, 8); // Limit length
+    } else {
+        $components[] = 'promonone'; // Placeholder for no promo
+    }
+    
+    // Signup source (if exists, otherwise use placeholder)
+    if (!empty($signup_source)) {
+        $components[] = 'src' . substr($signup_source, 0, 6); // Limit length
+    } else {
+        $components[] = 'srcnone'; // Placeholder for no source
+    }
+    
+    // Plan ID
+    $components[] = 'plan' . $plan_id;
+    
+    // Registration timestamp (if exists, otherwise use current time)
+    if (!empty($registration_date)) {
+        $timestamp = strtotime($registration_date);
+        $components[] = 'reg' . substr($timestamp, -8); // Last 8 digits
+    } else {
+        $timestamp = time();
+        $components[] = 'reg' . substr($timestamp, -8); // Last 8 digits of current time
+    }
+    
+    // Join components with underscores
+    $reference = implode('_', $components);
+    
+    // Store the enhanced reference data for later retrieval
+    update_user_meta($user_id, 'flowguard_enhanced_reference', $reference);
+    update_user_meta($user_id, 'flowguard_reference_data', array(
+        'user_id' => $user_id,
+        'plan_id' => $plan_id,
+        'affiliate_code' => $affiliate_code,
+        'promo_code' => $promo_code,
+        'signup_source' => $signup_source,
+        'registration_date' => $registration_date,
+        'generated_at' => current_time('mysql')
+    ));
+    
+    return $reference;
+}
+
+/**
+ * Parse enhanced Flowguard reference ID to extract meaningful data
+ * 
+ * @param string $reference_id Reference ID
+ * @return array Parsed reference data
+ */
+function flexpress_flowguard_parse_enhanced_reference($reference_id) {
+    if (empty($reference_id)) {
+        return array();
+    }
+    
+    $data = array(
+        'user_id' => 0,
+        'plan_id' => '',
+        'affiliate_code' => '',
+        'promo_code' => '',
+        'signup_source' => '',
+        'registration_timestamp' => '',
+        'is_enhanced' => false,
+        'is_ppv' => false
+    );
+    
+    // Handle PPV references (ppv_episodeId_userId_timestamp)
+    if (preg_match('/^ppv_(\d+)_(\d+)_\d+$/', $reference_id, $matches)) {
+        $data['is_ppv'] = true;
+        $data['episode_id'] = intval($matches[1]);
+        $data['user_id'] = intval($matches[2]);
+        return $data;
+    }
+    
+    // Handle enhanced references (uid123_affABC123_promoXYZ_reg12345678_plan456)
+    if (preg_match('/^uid(\d+)/', $reference_id)) {
+        $data['is_enhanced'] = true;
+        
+        // Extract user ID
+        if (preg_match('/uid(\d+)/', $reference_id, $matches)) {
+            $data['user_id'] = intval($matches[1]);
+        }
+        
+        // Extract affiliate code
+        if (preg_match('/aff([^_]+)/', $reference_id, $matches)) {
+            $affiliate_code = $matches[1];
+            $data['affiliate_code'] = ($affiliate_code === 'none') ? '' : $affiliate_code;
+        }
+        
+        // Extract promo code
+        if (preg_match('/promo([^_]+)/', $reference_id, $matches)) {
+            $promo_code = $matches[1];
+            $data['promo_code'] = ($promo_code === 'none') ? '' : $promo_code;
+        }
+        
+        // Extract signup source
+        if (preg_match('/src([^_]+)/', $reference_id, $matches)) {
+            $signup_source = $matches[1];
+            $data['signup_source'] = ($signup_source === 'none') ? '' : $signup_source;
+        }
+        
+        // Extract plan ID
+        if (preg_match('/plan([^_]+)/', $reference_id, $matches)) {
+            $data['plan_id'] = $matches[1];
+        }
+        
+        // Extract registration timestamp
+        if (preg_match('/reg(\d+)/', $reference_id, $matches)) {
+            $data['registration_timestamp'] = $matches[1];
+        }
+        
+        return $data;
+    }
+    
+    // Handle legacy format: "user_123_plan_456"
+    if (preg_match('/user_(\d+)/', $reference_id, $matches)) {
+        $data['user_id'] = intval($matches[1]);
+        return $data;
+    }
+    
+    return $data;
+}
+
+/**
+ * Get user ID from Flowguard reference ID (backward compatibility)
  * 
  * @param string $reference_id Reference ID
  * @return int User ID or 0 if not found
  */
 function flexpress_flowguard_get_user_from_reference($reference_id) {
-    if (empty($reference_id)) {
-        return 0;
-    }
-    
-    // Handle new PPV reference format: ppv_123_456_789 (ppv_episodeId_userId_timestamp)
-    if (preg_match('/^ppv_(\d+)_(\d+)_\d+$/', $reference_id, $matches)) {
-        return intval($matches[2]); // Return user ID
-    }
-    
-    // Handle legacy format: "user_123_plan_456" or "ppv_user_123_episode_456"
-    if (preg_match('/user_(\d+)/', $reference_id, $matches)) {
-        return intval($matches[1]);
-    }
-    
-    return 0;
+    $parsed = flexpress_flowguard_parse_enhanced_reference($reference_id);
+    return $parsed['user_id'] ?? 0;
 }
 
 /**
@@ -363,6 +509,10 @@ function flexpress_flowguard_store_transaction($transaction_data) {
             'status' => $transaction_data['status'],
             'order_type' => $transaction_data['order_type'],
             'reference_id' => $transaction_data['reference_id'] ?? '',
+            'affiliate_code' => $transaction_data['affiliate_code'] ?? '',
+            'promo_code' => $transaction_data['promo_code'] ?? '',
+            'signup_source' => $transaction_data['signup_source'] ?? '',
+            'plan_id' => $transaction_data['plan_id'] ?? '',
             'created_at' => current_time('mysql'),
             'updated_at' => current_time('mysql')
         ],
@@ -376,6 +526,10 @@ function flexpress_flowguard_store_transaction($transaction_data) {
             '%s', // status
             '%s', // order_type
             '%s', // reference_id
+            '%s', // affiliate_code
+            '%s', // promo_code
+            '%s', // signup_source
+            '%s', // plan_id
             '%s', // created_at
             '%s'  // updated_at
         ]

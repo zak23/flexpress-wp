@@ -52,6 +52,10 @@ function flexpress_flowguard_create_tables() {
         status varchar(50) NOT NULL,
         order_type varchar(50) NOT NULL,
         reference_id varchar(255),
+        affiliate_code varchar(50),
+        promo_code varchar(50),
+        signup_source varchar(50),
+        plan_id varchar(50),
         created_at datetime NOT NULL,
         updated_at datetime NOT NULL,
         PRIMARY KEY (id),
@@ -60,6 +64,9 @@ function flexpress_flowguard_create_tables() {
         KEY status (status),
         KEY order_type (order_type),
         KEY sale_id (sale_id),
+        KEY affiliate_code (affiliate_code),
+        KEY promo_code (promo_code),
+        KEY signup_source (signup_source),
         KEY created_at (created_at)
     ) $charset_collate;";
     

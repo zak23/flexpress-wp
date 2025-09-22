@@ -139,6 +139,30 @@ FlexPress
   - Users with valid user_id are automatically logged in, others redirected to login with return URL
 - **Result**: Smooth payment flow without jarring redirects to login page after successful payment
 
+### Enhanced 404 Page (January 2025)
+- **Dark Theme Integration**: Fully styled to match FlexPress dark aesthetic with CSS variables
+- **Animated Error Display**: Large "404" text with pulsing glow animation and decorative underline
+- **Comprehensive Navigation**: Multiple action cards for episodes, models, join, contact, and homepage
+- **Search Functionality**: Integrated search form with enhanced styling and hover effects
+- **Recent Episodes Preview**: Shows 3 most recent episodes with thumbnails and hover overlays
+- **Responsive Design**: Mobile-optimized with proper scaling for all screen sizes
+- **Accessibility Features**: Proper focus states, contrast ratios, and keyboard navigation
+- **Theme Consistency**: Uses FlexPress CSS variables, accent colors, and design patterns
+
+**Implementation:**
+- Enhanced `page-templates/404.php` with comprehensive layout and functionality
+- Added 404 page styles to `assets/css/main.css` (following theme convention)
+- Integrated with existing FlexPress design system and color variables
+- Includes recent episodes query with proper date formatting and timezone handling
+
+**Features:**
+- Animated 404 number with glow effects
+- Search form with accent color theming
+- 5 navigation cards (Episodes, Join, Models, Help, Home)
+- Recent episodes section with video thumbnails
+- Fully responsive design (desktop → tablet → mobile)
+- Dark theme optimized with proper contrast
+
 ## 📤 File Upload Configuration
 
 The WordPress site is configured to handle large file uploads:

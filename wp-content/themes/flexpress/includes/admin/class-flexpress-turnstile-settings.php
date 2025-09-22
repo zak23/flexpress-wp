@@ -137,12 +137,14 @@ class FlexPress_Turnstile_Settings {
     /**
      * Enqueue admin scripts
      */
-	public function enqueue_admin_scripts($hook) {
-		if ($hook !== 'flexpress-settings_page_flexpress-turnstile-settings') {
+    public function enqueue_admin_scripts($hook) {
+        $is_turnstile_page = ($hook === 'flexpress-settings_page_flexpress-turnstile-settings')
+            || (!empty($_GET['page']) && $_GET['page'] === 'flexpress-turnstile-settings');
+        if (!$is_turnstile_page) {
             return;
         }
 
-        wp_enqueue_script('flexpress-turnstile-admin', get_template_directory_uri() . '/assets/js/turnstile-admin.js', array('jquery'), '1.0.0', true);
+        wp_enqueue_script('flexpress-turnstile-admin', get_template_directory_uri() . '/assets/js/turnstile-admin.js', array('jquery'), '1.0.1', true);
         wp_localize_script('flexpress-turnstile-admin', 'flexpressTurnstileAdmin', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('flexpress_turnstile_test')

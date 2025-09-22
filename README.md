@@ -47,6 +47,14 @@ flexpress/
 
 ## 🔧 Recent Fixes
 
+### Flowguard Subscription Extend Webhook Fix (January 2025)
+- Fixed critical issue where extending cancelled users incorrectly changed their status to 'active'
+- Changes:
+  - Modified `flexpress_flowguard_handle_subscription_extend()` to preserve current user status
+  - Only updates relevant dates (nextChargeOn for recurring, expiresOn for one-time) without changing status
+  - Enhanced logging to show preserved status in activity logs and error logs
+- Impact: Cancelled users remain cancelled when extended, only their access dates are updated appropriately.
+
 ### Newsletter Modal Turnstile Fix (September 2025)
 - Resolved console error: `Uncaught TurnstileError: [Cloudflare Turnstile] Could not find widget.` when subscribing from the newsletter modal
 - Changes:
@@ -281,6 +289,7 @@ FlexPress includes a comprehensive Discord notification system that provides rea
 - **💰 Subscription Rebills** - Successful recurring payments
 - **❌ Subscription Cancellations** - When members cancel
 - **⏰ Subscription Expirations** - When memberships expire
+- **🔄 Subscription Extensions** - When memberships are extended
 - **🎬 PPV Purchases** - Pay-per-view episode purchases
 - **⚠️ Refunds & Chargebacks** - Payment issues and disputes
 - **🌟 Talent Applications** - New performer applications
@@ -380,6 +389,18 @@ Username: John Doe
 User ID: 123
 Sale ID: 987654321
 Subscription Type: Recurring
+```
+
+**🔄 Subscription Extended:**
+```
+🔄 Subscription Extended
+Username: John Doe
+User ID: 123
+Amount: USD 29.95
+Subscription Type: Recurring
+Transaction ID: 123456793
+Sale ID: 987654321
+Next Charge: Mar 15, 2025
 ```
 
 #### Pro Tips

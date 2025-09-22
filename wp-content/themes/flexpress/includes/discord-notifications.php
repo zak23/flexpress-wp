@@ -316,6 +316,79 @@ class FlexPress_Discord_Notifications {
     }
     
     /**
+     * Create subscription extend embed
+     * 
+     * @param array $payload Flowguard webhook payload
+     * @param int $user_id User ID
+     * @return array Discord embed
+     */
+    public function create_subscription_extend_embed($payload, $user_id) {
+        $user_display_name = flexpress_get_user_display_name($user_id);
+        
+        $embed = [
+            'title' => '🔄 Subscription Extended',
+            'color' => 0x00bfff, // Deep Sky Blue
+            'fields' => [
+                [
+                    'name' => 'Username',
+                    'value' => $user_display_name,
+                    'inline' => true
+                ],
+                [
+                    'name' => 'User ID',
+                    'value' => '`' . $user_id . '`',
+                    'inline' => true
+                ],
+                [
+                    'name' => 'Amount',
+                    'value' => $payload['priceCurrency'] . ' ' . $payload['priceAmount'],
+                    'inline' => true
+                ],
+                [
+                    'name' => 'Subscription Type',
+                    'value' => ucfirst($payload['subscriptionType'] ?? 'unknown'),
+                    'inline' => true
+                ],
+                [
+                    'name' => 'Transaction ID',
+                    'value' => '`' . $payload['transactionId'] . '`',
+                    'inline' => true
+                ],
+                [
+                    'name' => 'Sale ID',
+                    'value' => '`' . $payload['saleId'] . '`',
+                    'inline' => true
+                ]
+            ],
+            'footer' => [
+                'text' => $this->site_name . ' • Flowguard',
+                'icon_url' => get_site_icon_url()
+            ],
+            'timestamp' => date('c')
+        ];
+        
+        // Add next charge date for recurring subscriptions
+        if ($payload['subscriptionType'] ?? 'unknown' === 'recurring' && !empty($payload['nextChargeOn'])) {
+            $embed['fields'][] = [
+                'name' => 'Next Charge',
+                'value' => date('M j, Y', strtotime($payload['nextChargeOn'])),
+                'inline' => true
+            ];
+        }
+        
+        // Add expiration date for one-time subscriptions
+        if (($payload['subscriptionType'] ?? 'unknown') === 'one-time' && isset($payload['expiresOn']) && !empty($payload['expiresOn'])) {
+            $embed['fields'][] = [
+                'name' => 'New Expiration',
+                'value' => date('M j, Y', strtotime($payload['expiresOn'])),
+                'inline' => true
+            ];
+        }
+        
+        return $embed;
+    }
+    
+    /**
      * Create purchase approved embed (PPV)
      * 
      * @param array $payload Flowguard webhook payload
@@ -587,6 +660,32 @@ function flexpress_discord_notify_subscription_expiry($payload, $user_id) {
     $embed = $discord->create_subscription_expiry_embed($payload, $user_id);
     
     $discord->send_notification($embed, '⏰ **Subscription expired!**');
+}
+
+/**
+ * Send Discord notification for Flowguard subscription extend
+ * 
+ * @param array $payload Flowguard webhook payload
+ * @param int $user_id User ID
+ */
+function flexpress_discord_notify_subscription_extend($payload, $user_id) {
+    $discord_settings = get_option('flexpress_discord_settings', []);
+    
+    // Debug logging
+    error_log('Discord Extend: Checking settings - webhook_url: ' . (empty($discord_settings['webhook_url']) ? 'empty' : 'set') . ', notify_extensions: ' . ($discord_settings['notify_extensions'] ?? 'not set'));
+    
+    if (empty($discord_settings['webhook_url']) || !($discord_settings['notify_extensions'] ?? true)) {
+        error_log('Discord Extend: Notification skipped - webhook_url empty or notify_extensions disabled');
+        return;
+    }
+    
+    error_log('Discord Extend: Sending notification for user ' . $user_id);
+    
+    $discord = new FlexPress_Discord_Notifications();
+    $embed = $discord->create_subscription_extend_embed($payload, $user_id);
+    
+    $result = $discord->send_notification($embed, '🔄 **Subscription extended!**');
+    error_log('Discord Extend: Notification result: ' . ($result ? 'success' : 'failed'));
 }
 
 /**

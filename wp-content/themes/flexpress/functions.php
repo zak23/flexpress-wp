@@ -6543,6 +6543,10 @@ function flexpress_sanitize_discord_settings($input) {
         $sanitized['notify_refunds'] = (bool) $input['notify_refunds'];
     }
     
+    if (isset($input['notify_extensions'])) {
+        $sanitized['notify_extensions'] = (bool) $input['notify_extensions'];
+    }
+    
     if (isset($input['notify_talent_applications'])) {
         $sanitized['notify_talent_applications'] = (bool) $input['notify_talent_applications'];
     }

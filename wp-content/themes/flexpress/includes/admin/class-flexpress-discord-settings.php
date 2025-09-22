@@ -113,6 +113,14 @@ class FlexPress_Discord_Settings {
         );
         
         add_settings_field(
+            'notify_extensions',
+            'Subscription Extensions',
+            array($this, 'render_notify_extensions_field'),
+            'flexpress_discord_settings',
+            'discord_notifications_section'
+        );
+        
+        add_settings_field(
             'notify_talent_applications',
             'Talent Applications',
             array($this, 'render_notify_talent_applications_field'),
@@ -156,6 +164,10 @@ class FlexPress_Discord_Settings {
         
         if (isset($input['notify_refunds'])) {
             $sanitized['notify_refunds'] = (bool) $input['notify_refunds'];
+        }
+        
+        if (isset($input['notify_extensions'])) {
+            $sanitized['notify_extensions'] = (bool) $input['notify_extensions'];
         }
         
         if (isset($input['notify_talent_applications'])) {
@@ -324,6 +336,24 @@ class FlexPress_Discord_Settings {
     }
     
     /**
+     * Render notify extensions field
+     */
+    public function render_notify_extensions_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $notify_extensions = $options['notify_extensions'] ?? true;
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="flexpress_discord_settings[notify_extensions]" 
+                   value="1" 
+                   <?php checked($notify_extensions); ?> />
+            Send notifications for subscription extensions
+        </label>
+        <p class="description">🔄 Notifications include member name, amount, subscription type, and new expiration/charge dates.</p>
+        <?php
+    }
+    
+    /**
      * Render notify talent applications field
      */
     public function render_notify_talent_applications_field() {
@@ -436,12 +466,13 @@ class FlexPress_Discord_Settings {
                     <td>
                         <?php
                         $enabled_count = 0;
-                        $total_count = 7;
+                        $total_count = 8;
                         
                         if ($options['notify_subscriptions'] ?? true) $enabled_count++;
                         if ($options['notify_rebills'] ?? true) $enabled_count++;
                         if ($options['notify_cancellations'] ?? true) $enabled_count++;
                         if ($options['notify_expirations'] ?? true) $enabled_count++;
+                        if ($options['notify_extensions'] ?? true) $enabled_count++;
                         if ($options['notify_ppv'] ?? true) $enabled_count++;
                         if ($options['notify_refunds'] ?? true) $enabled_count++;
                         if ($options['notify_talent_applications'] ?? true) $enabled_count++;

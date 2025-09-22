@@ -218,6 +218,14 @@ class FlexPress_Settings {
         );
         
         add_settings_field(
+            'notify_extensions',
+            'Subscription Extensions',
+            array($this, 'render_discord_notify_extensions_field'),
+            'flexpress_discord_settings',
+            'discord_notifications_section'
+        );
+        
+        add_settings_field(
             'notify_talent_applications',
             'Talent Applications',
             array($this, 'render_discord_notify_talent_applications_field'),
@@ -814,6 +822,24 @@ class FlexPress_Settings {
             Send notifications for refunds and chargebacks
         </label>
         <p class="description">⚠️ Notifications include member name, amount, refund type, and transaction details.</p>
+        <?php
+    }
+
+    /**
+     * Render Discord notify extensions field
+     */
+    public function render_discord_notify_extensions_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $notify_extensions = $options['notify_extensions'] ?? true;
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="flexpress_discord_settings[notify_extensions]" 
+                   value="1" 
+                   <?php checked($notify_extensions); ?> />
+            Send notifications for subscription extensions
+        </label>
+        <p class="description">🔄 Notifications include member name, amount, subscription type, and new expiration/charge dates.</p>
         <?php
     }
 

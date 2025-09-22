@@ -452,8 +452,8 @@ function flexpress_flowguard_handle_subscription_extend($payload) {
         return;
     }
     
-    // Update membership status
-    flexpress_update_membership_status($user_id, 'active');
+    // Get current membership status - DO NOT change the status, only update dates
+    $current_status = flexpress_get_membership_status($user_id);
     
     // Update dates based on subscription type
     if ($payload['subscriptionType'] === 'recurring' && !empty($payload['nextChargeOn'])) {
@@ -468,11 +468,14 @@ function flexpress_flowguard_handle_subscription_extend($payload) {
     flexpress_flowguard_log_activity(
         $user_id,
         'flowguard_subscription_extended',
-        'Subscription extended via Flowguard',
+        'Subscription extended via Flowguard (status preserved: ' . $current_status . ')',
         $payload
     );
     
-    error_log('Flowguard Webhook: Subscription extended for user ' . $user_id);
+    // Send Discord notification
+    flexpress_discord_notify_subscription_extend($payload, $user_id);
+    
+    error_log('Flowguard Webhook: Subscription extended for user ' . $user_id . ' (status preserved: ' . $current_status . ')');
 }
 
 /**

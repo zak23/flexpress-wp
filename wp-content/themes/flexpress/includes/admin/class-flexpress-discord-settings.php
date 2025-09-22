@@ -143,6 +143,47 @@ class FlexPress_Discord_Settings {
             'flexpress_discord_settings',
             'discord_notifications_section'
         );
+        
+        // Contact Form 7 notification settings
+        add_settings_field(
+            'notify_contact_forms',
+            'Contact Forms',
+            array($this, 'render_notify_contact_forms_field'),
+            'flexpress_discord_settings',
+            'discord_notifications_section'
+        );
+        
+        add_settings_field(
+            'notify_casting_applications',
+            'Casting Applications',
+            array($this, 'render_notify_casting_applications_field'),
+            'flexpress_discord_settings',
+            'discord_notifications_section'
+        );
+        
+        add_settings_field(
+            'notify_support_requests',
+            'Support Requests',
+            array($this, 'render_notify_support_requests_field'),
+            'flexpress_discord_settings',
+            'discord_notifications_section'
+        );
+        
+        add_settings_field(
+            'notify_general_forms',
+            'General Forms',
+            array($this, 'render_notify_general_forms_field'),
+            'flexpress_discord_settings',
+            'discord_notifications_section'
+        );
+        
+        add_settings_field(
+            'notify_form_failures',
+            'Form Submission Failures',
+            array($this, 'render_notify_form_failures_field'),
+            'flexpress_discord_settings',
+            'discord_notifications_section'
+        );
     }
     
     /**
@@ -197,6 +238,27 @@ class FlexPress_Discord_Settings {
         
         if (isset($input['notify_talent_applications'])) {
             $sanitized['notify_talent_applications'] = (bool) $input['notify_talent_applications'];
+        }
+        
+        // Contact Form 7 notification settings
+        if (isset($input['notify_contact_forms'])) {
+            $sanitized['notify_contact_forms'] = (bool) $input['notify_contact_forms'];
+        }
+        
+        if (isset($input['notify_casting_applications'])) {
+            $sanitized['notify_casting_applications'] = (bool) $input['notify_casting_applications'];
+        }
+        
+        if (isset($input['notify_support_requests'])) {
+            $sanitized['notify_support_requests'] = (bool) $input['notify_support_requests'];
+        }
+        
+        if (isset($input['notify_general_forms'])) {
+            $sanitized['notify_general_forms'] = (bool) $input['notify_general_forms'];
+        }
+        
+        if (isset($input['notify_form_failures'])) {
+            $sanitized['notify_form_failures'] = (bool) $input['notify_form_failures'];
         }
         
         return $sanitized;
@@ -436,6 +498,96 @@ class FlexPress_Discord_Settings {
     }
     
     /**
+     * Render notify contact forms field
+     */
+    public function render_notify_contact_forms_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $notify_contact_forms = $options['notify_contact_forms'] ?? true;
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="flexpress_discord_settings[notify_contact_forms]" 
+                   value="1" 
+                   <?php checked($notify_contact_forms); ?> />
+            Send notifications for contact form submissions
+        </label>
+        <p class="description">📧 Notifications include sender name, email, subject, and message.</p>
+        <?php
+    }
+    
+    /**
+     * Render notify casting applications field
+     */
+    public function render_notify_casting_applications_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $notify_casting_applications = $options['notify_casting_applications'] ?? true;
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="flexpress_discord_settings[notify_casting_applications]" 
+                   value="1" 
+                   <?php checked($notify_casting_applications); ?> />
+            Send notifications for casting applications
+        </label>
+        <p class="description">🌟 Notifications include applicant details, age, experience, and social media.</p>
+        <?php
+    }
+    
+    /**
+     * Render notify support requests field
+     */
+    public function render_notify_support_requests_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $notify_support_requests = $options['notify_support_requests'] ?? true;
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="flexpress_discord_settings[notify_support_requests]" 
+                   value="1" 
+                   <?php checked($notify_support_requests); ?> />
+            Send notifications for support requests
+        </label>
+        <p class="description">🆘 Notifications include issue type, priority, and detailed message.</p>
+        <?php
+    }
+    
+    /**
+     * Render notify general forms field
+     */
+    public function render_notify_general_forms_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $notify_general_forms = $options['notify_general_forms'] ?? true;
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="flexpress_discord_settings[notify_general_forms]" 
+                   value="1" 
+                   <?php checked($notify_general_forms); ?> />
+            Send notifications for other form submissions
+        </label>
+        <p class="description">📝 Notifications for any Contact Form 7 forms not specifically categorized.</p>
+        <?php
+    }
+    
+    /**
+     * Render notify form failures field
+     */
+    public function render_notify_form_failures_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $notify_form_failures = $options['notify_form_failures'] ?? false;
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="flexpress_discord_settings[notify_form_failures]" 
+                   value="1" 
+                   <?php checked($notify_form_failures); ?> />
+            Send notifications for form submission failures
+        </label>
+        <p class="description">⚠️ Get alerted when forms fail to send properly (useful for debugging).</p>
+        <?php
+    }
+    
+    /**
      * Add submenu page
      */
     public function add_submenu_page() {
@@ -540,6 +692,11 @@ class FlexPress_Discord_Settings {
                         if ($options['notify_ppv'] ?? true) $enabled_count++;
                         if ($options['notify_refunds'] ?? true) $enabled_count++;
                         if ($options['notify_talent_applications'] ?? true) $enabled_count++;
+                        if ($options['notify_contact_forms'] ?? true) $enabled_count++;
+                        if ($options['notify_casting_applications'] ?? true) $enabled_count++;
+                        if ($options['notify_support_requests'] ?? true) $enabled_count++;
+                        if ($options['notify_general_forms'] ?? true) $enabled_count++;
+                        if ($options['notify_form_failures'] ?? false) $enabled_count++;
                         
                         $status_color = $enabled_count > 0 ? 'green' : 'red';
                         ?>

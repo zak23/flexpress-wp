@@ -18,63 +18,15 @@ get_header();
                         </div>
 
                         <?php
-                        // Show any error messages
-                        if (isset($_GET['sent']) && $_GET['sent'] === 'failed') {
-                            echo '<div class="alert alert-danger">';
-                            echo esc_html__('Failed to send message. Please try again.', 'flexpress');
-                            echo '</div>';
-                        }
-
-                        // Show success message
-                        if (isset($_GET['sent']) && $_GET['sent'] === 'success') {
-                            echo '<div class="alert alert-success">';
-                            echo esc_html__('Message sent successfully. We\'ll get back to you soon.', 'flexpress');
+                        // Display Contact Form 7 form
+                        if (class_exists('WPCF7')) {
+                            flexpress_display_cf7_form('contact');
+                        } else {
+                            echo '<div class="alert alert-warning">';
+                            echo '<p>' . esc_html__('Contact Form 7 plugin is required for this form to work. Please install and activate Contact Form 7.', 'flexpress') . '</p>';
                             echo '</div>';
                         }
                         ?>
-
-                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="needs-validation" novalidate>
-                            <?php wp_nonce_field('contact_form', 'contact_nonce'); ?>
-                            <input type="hidden" name="action" value="contact_form">
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="name" class="form-label"><?php esc_html_e('Name', 'flexpress'); ?></label>
-                                    <input type="text" class="form-control" id="name" name="name" required>
-                                    <div class="invalid-feedback">
-                                        <?php esc_html_e('Please enter your name.', 'flexpress'); ?>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6 mb-3">
-                                    <label for="email" class="form-label"><?php esc_html_e('Email Address', 'flexpress'); ?></label>
-                                    <input type="email" class="form-control" id="email" name="email" required>
-                                    <div class="invalid-feedback">
-                                        <?php esc_html_e('Please enter a valid email address.', 'flexpress'); ?>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="subject" class="form-label"><?php esc_html_e('Subject', 'flexpress'); ?></label>
-                                <input type="text" class="form-control" id="subject" name="subject" required>
-                                <div class="invalid-feedback">
-                                    <?php esc_html_e('Please enter a subject.', 'flexpress'); ?>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="message" class="form-label"><?php esc_html_e('Message', 'flexpress'); ?></label>
-                                <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
-                                <div class="invalid-feedback">
-                                    <?php esc_html_e('Please enter your message.', 'flexpress'); ?>
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary w-100">
-                                <?php esc_html_e('Send Message', 'flexpress'); ?>
-                            </button>
-                        </form>
 
                         <hr class="my-4">
 

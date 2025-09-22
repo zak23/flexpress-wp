@@ -45,6 +45,26 @@ flexpress/
 | MySQL | flexpress_mysql | 3306 (internal) | Database server |
 | phpMyAdmin | flexpress_phpmyadmin | 8086 | Database administration |
 
+## 📧 Email Configuration
+
+### Amazon SES Integration
+FlexPress includes comprehensive Amazon SES integration for reliable email delivery:
+
+- **Admin Interface**: Configure SES settings under `FlexPress → Amazon SES`
+- **SMTP Support**: Full SMTP configuration with TLS/SSL encryption
+- **Environment Variables**: Optional secure credential storage via environment variables
+- **Email Testing**: Built-in test email functionality
+- **Monitoring**: Email delivery statistics and logging
+- **Security**: Support for both database and environment variable credential storage
+
+#### Quick Setup
+1. Set up Amazon SES in AWS console
+2. Verify your domain and create SMTP credentials
+3. Configure settings in `FlexPress → Amazon SES`
+4. Test email delivery using the built-in test function
+
+For detailed setup instructions, see [Amazon SES Setup Guide](docs/AMAZON_SES_SETUP_GUIDE.md).
+
 ## 🔧 Recent Fixes
 
 ### Flowguard Subscription Extend Webhook Fix (January 2025)

@@ -124,6 +124,16 @@ require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-plunk-settings.ph
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-plunk-api.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-plunk-subscriber.php';
 require_once FLEXPRESS_PATH . '/includes/plunk-frontend-integration.php';
+
+// Amazon SES Integration
+require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-ses-settings.php';
+require_once FLEXPRESS_PATH . '/includes/class-flexpress-ses-smtp.php';
+
+// Include Contact Form 7 templates
+require_once FLEXPRESS_PATH . '/includes/contact-form-7-templates.php';
+
+// Include Contact Form 7 Discord integration
+require_once FLEXPRESS_PATH . '/includes/contact-form-7-discord-integration.php';
 // Upcoming episode settings removed - now uses automatic post query
 
 // FlexPress Settings menus are initialized via admin settings classes above
@@ -1514,114 +1524,36 @@ function flexpress_maybe_create_home_page() {
 add_action('init', 'flexpress_maybe_create_home_page');
 
 /**
- * Handle Contact Form submission
+ * Handle Contact Form submission (DEPRECATED - Now using Contact Form 7)
+ * This function is kept for backward compatibility but forms now use CF7
  */
 function flexpress_handle_contact_form() {
-    // Verify nonce
-    if (!isset($_POST['contact_nonce']) || !wp_verify_nonce($_POST['contact_nonce'], 'contact_form')) {
-        wp_redirect(add_query_arg('sent', 'failed', wp_get_referer()));
+    // Redirect to Contact Form 7 if available
+    if (class_exists('WPCF7')) {
+        wp_redirect(add_query_arg('cf7_redirect', '1', wp_get_referer()));
         exit;
     }
-
-    // Get form data
-    $name = isset($_POST['name']) ? sanitize_text_field($_POST['name']) : '';
-    $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
-    $subject = isset($_POST['subject']) ? sanitize_text_field($_POST['subject']) : '';
-    $message = isset($_POST['message']) ? sanitize_textarea_field($_POST['message']) : '';
-
-    // Validate required fields
-    if (empty($name) || empty($email) || empty($subject) || empty($message)) {
-        wp_redirect(add_query_arg('sent', 'failed', wp_get_referer()));
-        exit;
-    }
-
-    // Get admin email
-    $admin_email = get_option('admin_email');
-
-    // Email headers
-    $headers = array(
-        'Content-Type: text/html; charset=UTF-8',
-        'From: ' . $name . ' <' . $email . '>',
-        'Reply-To: ' . $email,
-    );
-
-    // Email content
-    $email_content = '<p><strong>' . esc_html__('Name:', 'flexpress') . '</strong> ' . esc_html($name) . '</p>';
-    $email_content .= '<p><strong>' . esc_html__('Email:', 'flexpress') . '</strong> ' . esc_html($email) . '</p>';
-    $email_content .= '<p><strong>' . esc_html__('Subject:', 'flexpress') . '</strong> ' . esc_html($subject) . '</p>';
-    $email_content .= '<p><strong>' . esc_html__('Message:', 'flexpress') . '</strong></p>';
-    $email_content .= '<p>' . nl2br(esc_html($message)) . '</p>';
-
-    // Send email
-    $mail_sent = wp_mail($admin_email, sprintf(__('Contact Form: %s', 'flexpress'), $subject), $email_content, $headers);
-
-    // Redirect based on result
-    if ($mail_sent) {
-        wp_redirect(add_query_arg('sent', 'success', wp_get_referer()));
-    } else {
-        wp_redirect(add_query_arg('sent', 'failed', wp_get_referer()));
-    }
+    
+    // Fallback to old system if CF7 not available
+    wp_redirect(add_query_arg('sent', 'failed', wp_get_referer()));
     exit;
 }
 add_action('admin_post_contact_form', 'flexpress_handle_contact_form');
 add_action('admin_post_nopriv_contact_form', 'flexpress_handle_contact_form');
 
 /**
- * Handle Casting Application Form submission
+ * Handle Casting Application Form submission (DEPRECATED - Now using Contact Form 7)
+ * This function is kept for backward compatibility but forms now use CF7
  */
 function flexpress_handle_casting_form() {
-    // Verify nonce
-    if (!isset($_POST['casting_nonce']) || !wp_verify_nonce($_POST['casting_nonce'], 'casting_form')) {
-        wp_redirect(add_query_arg('sent', 'failed', wp_get_referer()));
+    // Redirect to Contact Form 7 if available
+    if (class_exists('WPCF7')) {
+        wp_redirect(add_query_arg('cf7_redirect', '1', wp_get_referer()));
         exit;
     }
-
-    // Get form data
-    $name = isset($_POST['name']) ? sanitize_text_field($_POST['name']) : '';
-    $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
-    $phone = isset($_POST['phone']) ? sanitize_text_field($_POST['phone']) : '';
-    $age = isset($_POST['age']) ? intval($_POST['age']) : 0;
-    $experience = isset($_POST['experience']) ? sanitize_textarea_field($_POST['experience']) : '';
-    $social_media = isset($_POST['social_media']) ? sanitize_textarea_field($_POST['social_media']) : '';
-    $message = isset($_POST['message']) ? sanitize_textarea_field($_POST['message']) : '';
-
-    // Validate required fields
-    if (empty($name) || empty($email) || empty($age) || $age < 18) {
-        wp_redirect(add_query_arg('sent', 'failed', wp_get_referer()));
-        exit;
-    }
-
-    // Get admin email
-    $admin_email = get_option('admin_email');
-
-    // Email headers
-    $headers = array(
-        'Content-Type: text/html; charset=UTF-8',
-        'From: ' . $name . ' <' . $email . '>',
-        'Reply-To: ' . $email,
-    );
-
-    // Email content
-    $email_content = '<p><strong>' . esc_html__('Name:', 'flexpress') . '</strong> ' . esc_html($name) . '</p>';
-    $email_content .= '<p><strong>' . esc_html__('Email:', 'flexpress') . '</strong> ' . esc_html($email) . '</p>';
-    $email_content .= '<p><strong>' . esc_html__('Phone:', 'flexpress') . '</strong> ' . esc_html($phone) . '</p>';
-    $email_content .= '<p><strong>' . esc_html__('Age:', 'flexpress') . '</strong> ' . esc_html($age) . '</p>';
-    $email_content .= '<p><strong>' . esc_html__('Experience:', 'flexpress') . '</strong></p>';
-    $email_content .= '<p>' . nl2br(esc_html($experience)) . '</p>';
-    $email_content .= '<p><strong>' . esc_html__('Social Media:', 'flexpress') . '</strong></p>';
-    $email_content .= '<p>' . nl2br(esc_html($social_media)) . '</p>';
-    $email_content .= '<p><strong>' . esc_html__('Additional Information:', 'flexpress') . '</strong></p>';
-    $email_content .= '<p>' . nl2br(esc_html($message)) . '</p>';
-
-    // Send email
-    $mail_sent = wp_mail($admin_email, __('New Casting Application', 'flexpress'), $email_content, $headers);
-
-    // Redirect based on result
-    if ($mail_sent) {
-        wp_redirect(add_query_arg('sent', 'success', wp_get_referer()));
-    } else {
-        wp_redirect(add_query_arg('sent', 'failed', wp_get_referer()));
-    }
+    
+    // Fallback to old system if CF7 not available
+    wp_redirect(add_query_arg('sent', 'failed', wp_get_referer()));
     exit;
 }
 add_action('admin_post_casting_form', 'flexpress_handle_casting_form');

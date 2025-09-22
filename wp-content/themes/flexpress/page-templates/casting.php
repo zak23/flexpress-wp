@@ -113,6 +113,39 @@ get_header();
 </div>
 <?php endif; ?>
 
+<style>
+/* Fix checkbox alignment - override Contact Form 7 styling */
+.form-check p {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.form-check-input {
+    margin-top: 0.25rem !important;
+    flex-shrink: 0 !important;
+    margin-right: 0.5rem !important;
+}
+
+.form-check-label {
+    margin-bottom: 0 !important;
+    line-height: 1.5 !important;
+    flex: 1 !important;
+}
+
+.form-check br {
+    display: none !important;
+}
+
+/* Center the submit button */
+.wpcf7-submit {
+    display: block !important;
+    margin: 0 auto !important;
+}
+</style>
+
 <script>
 // Form validation and UX enhancements
 (function () {
@@ -137,28 +170,39 @@ get_header();
         }, false)
     })
     
-    // Age validation
-    var ageInput = document.getElementById('age')
-    if (ageInput) {
-        ageInput.addEventListener('input', function() {
-            var age = parseInt(this.value)
-            if (age < 18 && age > 0) {
-                this.setCustomValidity('You must be at least 18 years old.')
-            } else {
-                this.setCustomValidity('')
+    // Instagram handle formatting
+    var instagramInput = document.getElementById('instagram')
+    if (instagramInput) {
+        instagramInput.addEventListener('input', function() {
+            var value = this.value
+            // Remove @ symbol if user adds it
+            if (value.startsWith('@')) {
+                this.value = value.substring(1)
             }
         })
     }
     
-    // Phone number formatting
-    var phoneInput = document.getElementById('phone')
-    if (phoneInput) {
-        phoneInput.addEventListener('input', function() {
-            var value = this.value.replace(/\D/g, '')
-            if (value.length >= 10) {
-                value = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3')
+    // Twitter handle formatting
+    var twitterInput = document.getElementById('twitter')
+    if (twitterInput) {
+        twitterInput.addEventListener('input', function() {
+            var value = this.value
+            // Remove @ symbol if user adds it
+            if (value.startsWith('@')) {
+                this.value = value.substring(1)
             }
-            this.value = value
+        })
+    }
+    
+    // Agreement checkbox validation
+    var agreementCheckbox = document.getElementById('agreement')
+    if (agreementCheckbox) {
+        agreementCheckbox.addEventListener('change', function() {
+            if (!this.checked) {
+                this.setCustomValidity('You must agree to the terms to submit your application.')
+            } else {
+                this.setCustomValidity('')
+            }
         })
     }
 })()
@@ -190,77 +234,16 @@ get_header();
                         }
                         ?>
 
-                        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="needs-validation" novalidate>
-                            <?php wp_nonce_field('casting_form', 'casting_nonce'); ?>
-                            <input type="hidden" name="action" value="casting_form">
-
-                            <div class="alert alert-info mb-4">
-                                <i class="bi bi-info-circle-fill me-2"></i>
-                                <?php esc_html_e('All applicants must be at least 18 years of age. ID verification will be required if selected.', 'flexpress'); ?>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="name" class="form-label"><?php esc_html_e('Full Name', 'flexpress'); ?> <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="name" name="name" required>
-                                    <div class="invalid-feedback">
-                                        <?php esc_html_e('Please enter your full name.', 'flexpress'); ?>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6 mb-3">
-                                    <label for="email" class="form-label"><?php esc_html_e('Email Address', 'flexpress'); ?> <span class="text-danger">*</span></label>
-                                    <input type="email" class="form-control" id="email" name="email" required>
-                                    <div class="invalid-feedback">
-                                        <?php esc_html_e('Please enter a valid email address.', 'flexpress'); ?>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="phone" class="form-label"><?php esc_html_e('Phone Number', 'flexpress'); ?></label>
-                                    <input type="tel" class="form-control" id="phone" name="phone">
-                                </div>
-
-                                <div class="col-md-6 mb-3">
-                                    <label for="age" class="form-label"><?php esc_html_e('Age', 'flexpress'); ?> <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="age" name="age" min="18" required>
-                                    <div class="invalid-feedback">
-                                        <?php esc_html_e('You must be at least 18 years old.', 'flexpress'); ?>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="experience" class="form-label"><?php esc_html_e('Previous Experience', 'flexpress'); ?></label>
-                                <textarea class="form-control" id="experience" name="experience" rows="3" placeholder="<?php esc_attr_e('Please list any previous modeling or adult industry experience.', 'flexpress'); ?>"></textarea>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="social_media" class="form-label"><?php esc_html_e('Social Media Profiles', 'flexpress'); ?></label>
-                                <textarea class="form-control" id="social_media" name="social_media" rows="3" placeholder="<?php esc_attr_e('Instagram, Twitter, OnlyFans, etc.', 'flexpress'); ?>"></textarea>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="message" class="form-label"><?php esc_html_e('Why would you like to work with us?', 'flexpress'); ?></label>
-                                <textarea class="form-control" id="message" name="message" rows="5"></textarea>
-                            </div>
-
-                            <div class="form-check mb-4">
-                                <input class="form-check-input" type="checkbox" value="" id="agreeCheck" required>
-                                <label class="form-check-label" for="agreeCheck">
-                                    <?php esc_html_e('I confirm that I am at least 18 years of age and consent to the processing of my personal data.', 'flexpress'); ?> <span class="text-danger">*</span>
-                                </label>
-                                <div class="invalid-feedback">
-                                    <?php esc_html_e('You must agree before submitting.', 'flexpress'); ?>
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary w-100">
-                                <?php esc_html_e('Submit Application', 'flexpress'); ?>
-                            </button>
-                        </form>
+                        <?php
+                        // Display Contact Form 7 casting form
+                        if (class_exists('WPCF7')) {
+                            flexpress_display_cf7_form('casting');
+                        } else {
+                            echo '<div class="alert alert-warning">';
+                            echo '<p>' . esc_html__('Contact Form 7 plugin is required for this form to work. Please install and activate Contact Form 7.', 'flexpress') . '</p>';
+                            echo '</div>';
+                        }
+                        ?>
                     </div>
                 </div>
             </div>

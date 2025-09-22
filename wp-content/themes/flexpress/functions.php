@@ -248,6 +248,11 @@ function flexpress_enqueue_scripts_and_styles() {
     // Enqueue join now CTA CSS (always loaded)
     wp_enqueue_style('flexpress-join-now-cta', get_template_directory_uri() . '/assets/css/join-now-cta.css', array('flexpress-main'), wp_get_theme()->get('Version'));
     
+    // Enqueue 404 page CSS on 404 pages
+    if (is_404()) {
+        wp_enqueue_style('flexpress-404-page', get_template_directory_uri() . '/assets/css/404-page.css', array('flexpress-main'), wp_get_theme()->get('Version'));
+    }
+    
     // Enqueue hero video CSS on homepage
     if (is_page_template('page-templates/page-home.php')) {
         wp_enqueue_style('flexpress-hero-video', get_template_directory_uri() . '/assets/css/hero-video.css', array('flexpress-main'), wp_get_theme()->get('Version'));

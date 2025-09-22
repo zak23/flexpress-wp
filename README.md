@@ -47,6 +47,15 @@ flexpress/
 
 ## 🔧 Recent Fixes
 
+### Newsletter Modal Turnstile Fix (September 2025)
+- Resolved console error: `Uncaught TurnstileError: [Cloudflare Turnstile] Could not find widget.` when subscribing from the newsletter modal
+- Changes:
+  - Turnstile widget now uses required `cf-turnstile` class and fixed id `newsletter-turnstile`
+  - Widget is explicitly rendered on modal open to ensure presence before token retrieval
+  - JS targets the rendered widget id for `turnstile.getResponse(widgetId)` and `turnstile.reset(widgetId)`
+  - Defensive guards added when `window.turnstile` is not yet ready
+- Impact: Newsletter subscribe flow works reliably with Turnstile protection.
+
 ### Admin Menu Consolidation (September 2025)
 - Consolidated all settings under the single top-level menu: `FlexPress`
 - Removed duplicate/standalone menus:

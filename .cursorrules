@@ -8,13 +8,19 @@ FlexPress is a premium WordPress theme for content creators (primarily adult con
 - **Comprehensive Admin System** - Built-in settings and management tools
 
 This is a WordPress website project running in Docker containers with the following setup:
-- WordPress: Port 8085 (http://localhost:8085)
-- phpMyAdmin: Port 8086 (http://localhost:8086)
+- WordPress: Port 8085 (use IP instead of localhost)
+- phpMyAdmin: Port 8086 (use IP instead of localhost)
 - MySQL Database: Internal container network
 - Live Site: https://zakspov.com (production site)
 - Test Site: https://zakspov.com (development data only)
 
 Do all pupeteer tests on the test site.
+
+### Newsletter & Turnstile Rules
+- Newsletter modal includes Cloudflare Turnstile widget rendered on modal open
+- Use `cf-turnstile` class and stable element id `newsletter-turnstile`
+- Access token via `turnstile.getResponse(widgetId)`; reset via `turnstile.reset(widgetId)`
+- Add defensive guards if `window.turnstile` is not ready
 
 ## Docker Configuration
 - Main service: `wordpress` (custom build)

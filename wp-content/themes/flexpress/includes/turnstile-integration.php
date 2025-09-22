@@ -102,19 +102,24 @@ function flexpress_render_turnstile_widget($args = array()) {
         'callback' => '',
         'expired-callback' => '',
         'error-callback' => '',
-        'class' => 'flexpress-turnstile-widget'
+        'class' => 'flexpress-turnstile-widget',
+        'id' => ''
     );
     
     $args = wp_parse_args($args, $defaults);
     
     $site_key = flexpress_get_turnstile_site_key();
     
+    $classes = trim('cf-turnstile ' . $args['class']);
     $attributes = array(
         'data-sitekey' => $site_key,
         'data-theme' => $args['theme'],
         'data-size' => $args['size'],
-        'class' => $args['class']
+        'class' => $classes
     );
+    if (!empty($args['id'])) {
+        $attributes['id'] = $args['id'];
+    }
     
     if (!empty($args['callback'])) {
         $attributes['data-callback'] = $args['callback'];

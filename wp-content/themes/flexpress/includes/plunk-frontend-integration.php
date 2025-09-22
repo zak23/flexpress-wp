@@ -84,7 +84,8 @@ function flexpress_render_newsletter_modal() {
                                 <?php echo flexpress_render_turnstile_widget(array(
                                     'callback' => 'flexpressNewsletterTurnstileCallback',
                                     'expired-callback' => 'flexpressNewsletterTurnstileExpired',
-                                    'error-callback' => 'flexpressNewsletterTurnstileError'
+                                    'error-callback' => 'flexpressNewsletterTurnstileError',
+                                    'id' => 'newsletter-turnstile'
                                 )); ?>
                             </div>
                         <?php endif; ?>
@@ -103,6 +104,30 @@ function flexpress_render_newsletter_modal() {
             $('#newsletterModal').modal('show');
         }, <?php echo $modal_delay * 1000; ?>);
 
+        <?php if (flexpress_is_turnstile_enabled()): ?>
+        // Explicitly render Turnstile when modal is shown to ensure widget exists
+        var flexpressNewsletterWidgetId = null;
+        var flexpressTurnstileRendered = false;
+
+        $('#newsletterModal').on('shown.bs.modal', function() {
+            try {
+                if (window.turnstile && !flexpressTurnstileRendered) {
+                    flexpressNewsletterWidgetId = turnstile.render('#newsletter-turnstile', {
+                        sitekey: '<?php echo esc_js(flexpress_get_turnstile_site_key()); ?>',
+                        theme: '<?php echo esc_js(flexpress_get_turnstile_theme()); ?>',
+                        size: '<?php echo esc_js(flexpress_get_turnstile_size()); ?>',
+                        callback: 'flexpressNewsletterTurnstileCallback',
+                        'expired-callback': 'flexpressNewsletterTurnstileExpired',
+                        'error-callback': 'flexpressNewsletterTurnstileError'
+                    });
+                    flexpressTurnstileRendered = true;
+                }
+            } catch (e) {
+                console.error('Turnstile render error:', e);
+            }
+        });
+        <?php endif; ?>
+
         // Handle form submission
         $('#newsletterForm').on('submit', function(e) {
             e.preventDefault();
@@ -116,7 +141,16 @@ function flexpress_render_newsletter_modal() {
             }
 
             <?php if (flexpress_is_turnstile_enabled()): ?>
-            const token = turnstile.getResponse();
+            if (!window.turnstile) {
+                alert('Security system not loaded. Please wait a moment and try again.');
+                return;
+            }
+            var token = null;
+            try {
+                token = flexpressNewsletterWidgetId ? turnstile.getResponse(flexpressNewsletterWidgetId) : turnstile.getResponse();
+            } catch (e) {
+                console.error('Turnstile getResponse error:', e);
+            }
             if (!token) {
                 alert('Please complete the security verification');
                 return;
@@ -159,7 +193,7 @@ function flexpress_render_newsletter_modal() {
                     } else {
                         $submitBtn.prop('disabled', false).text('Subscribe Now');
                         <?php if (flexpress_is_turnstile_enabled()): ?>
-                        turnstile.reset();
+                        try { if (window.turnstile) { turnstile.reset(flexpressNewsletterWidgetId || undefined); } } catch (e) { console.warn('Turnstile reset error:', e); }
                         <?php endif; ?>
                         $form.prepend(`<div class="alert alert-danger">${response.data}</div>`);
                     }
@@ -167,7 +201,7 @@ function flexpress_render_newsletter_modal() {
                 error: function() {
                     $submitBtn.prop('disabled', false).text('Subscribe Now');
                     <?php if (flexpress_is_turnstile_enabled()): ?>
-                    turnstile.reset();
+                    try { if (window.turnstile) { turnstile.reset(flexpressNewsletterWidgetId || undefined); } } catch (e) { console.warn('Turnstile reset error:', e); }
                     <?php endif; ?>
                     $form.prepend('<div class="alert alert-danger">An error occurred. Please try again.</div>');
                 }

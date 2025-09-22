@@ -304,25 +304,82 @@ FlexPress includes a comprehensive Discord notification system that provides rea
    - All notifications include rich embeds with detailed information
    - Color-coded notifications for easy identification
 
+#### Standardized Notification Format
+
+All Discord notifications follow a consistent data structure for easy tracking and management:
+
+**Standard Field Order:**
+1. **Username** - User's display name
+2. **User ID** - WordPress user ID (for tracking)
+3. **Email** - User's email address (subscription events only)
+4. **Amount** - Payment amount with currency
+5. **Transaction ID** - Flowguard transaction identifier
+6. **Sale ID** - Flowguard sale identifier
+7. **Additional Fields** - Event-specific information
+
 #### Notification Examples
 
-**New Member Signup:**
+**🎉 New Member Signup:**
 ```
 🎉 New Member Signup!
-Member: John Doe
+Username: John Doe
+User ID: 123
 Email: john@example.com
 Amount: USD 29.95
-Type: Recurring
+Subscription Type: Recurring
+Transaction ID: 123456789
+Sale ID: 987654321
 Next Charge: Jan 15, 2025
 ```
 
-**PPV Purchase:**
+**💰 Subscription Rebill:**
+```
+💰 Subscription Rebill Success
+Username: John Doe
+User ID: 123
+Amount: USD 29.95
+Transaction ID: 123456790
+Sale ID: 987654321
+Next Charge: Feb 15, 2025
+```
+
+**🎬 PPV Purchase:**
 ```
 🎬 PPV Purchase Approved
-Member: Jane Smith
+Username: John Doe
+User ID: 123
 Amount: USD 9.95
+Transaction ID: 123456791
 Episode: "Hot Summer Nights"
-Transaction ID: TXN_12345
+Episode Link: View Episode
+```
+
+**❌ Subscription Cancelled:**
+```
+❌ Subscription Cancelled
+Username: John Doe
+User ID: 123
+Cancelled By: User
+Sale ID: 987654321
+```
+
+**⚠️ Refund/Chargeback:**
+```
+⚠️ Chargeback Processed
+Username: John Doe
+User ID: 123
+Amount: USD 29.95
+Transaction ID: 123456792
+Order Type: Subscription
+```
+
+**⏰ Subscription Expired:**
+```
+⏰ Subscription Expired
+Username: John Doe
+User ID: 123
+Sale ID: 987654321
+Subscription Type: Recurring
 ```
 
 #### Pro Tips

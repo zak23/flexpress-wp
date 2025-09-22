@@ -98,8 +98,13 @@ class FlexPress_Discord_Notifications {
             'color' => 0x00ff00, // Green
             'fields' => [
                 [
-                    'name' => 'Member',
+                    'name' => 'Username',
                     'value' => $user_display_name,
+                    'inline' => true
+                ],
+                [
+                    'name' => 'User ID',
+                    'value' => '`' . $user_id . '`',
                     'inline' => true
                 ],
                 [
@@ -171,8 +176,13 @@ class FlexPress_Discord_Notifications {
             'color' => 0x00ff00, // Green
             'fields' => [
                 [
-                    'name' => 'Member',
+                    'name' => 'Username',
                     'value' => $user_display_name,
+                    'inline' => true
+                ],
+                [
+                    'name' => 'User ID',
+                    'value' => '`' . $user_id . '`',
                     'inline' => true
                 ],
                 [
@@ -183,6 +193,11 @@ class FlexPress_Discord_Notifications {
                 [
                     'name' => 'Transaction ID',
                     'value' => '`' . $payload['transactionId'] . '`',
+                    'inline' => true
+                ],
+                [
+                    'name' => 'Sale ID',
+                    'value' => '`' . $payload['saleId'] . '`',
                     'inline' => true
                 ],
                 [
@@ -216,8 +231,13 @@ class FlexPress_Discord_Notifications {
             'color' => 0xff6b35, // Orange
             'fields' => [
                 [
-                    'name' => 'Member',
+                    'name' => 'Username',
                     'value' => $user_display_name,
+                    'inline' => true
+                ],
+                [
+                    'name' => 'User ID',
+                    'value' => '`' . $user_id . '`',
                     'inline' => true
                 ],
                 [
@@ -265,8 +285,13 @@ class FlexPress_Discord_Notifications {
             'color' => 0xff0000, // Red
             'fields' => [
                 [
-                    'name' => 'Member',
+                    'name' => 'Username',
                     'value' => $user_display_name,
+                    'inline' => true
+                ],
+                [
+                    'name' => 'User ID',
+                    'value' => '`' . $user_id . '`',
                     'inline' => true
                 ],
                 [
@@ -306,8 +331,13 @@ class FlexPress_Discord_Notifications {
             'color' => 0x0099ff, // Blue
             'fields' => [
                 [
-                    'name' => 'Member',
+                    'name' => 'Username',
                     'value' => $user_display_name,
+                    'inline' => true
+                ],
+                [
+                    'name' => 'User ID',
+                    'value' => '`' . $user_id . '`',
                     'inline' => true
                 ],
                 [
@@ -365,8 +395,13 @@ class FlexPress_Discord_Notifications {
             'color' => 0xff0000, // Red
             'fields' => [
                 [
-                    'name' => 'Member',
+                    'name' => 'Username',
                     'value' => $user_display_name,
+                    'inline' => true
+                ],
+                [
+                    'name' => 'User ID',
+                    'value' => '`' . $user_id . '`',
                     'inline' => true
                 ],
                 [

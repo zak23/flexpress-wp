@@ -337,9 +337,9 @@ while (have_posts()):
                                         </div>
                                         <div class="discounted-price fs-4 text-white fw-bold">
                                             $<?php echo number_format($access_info['final_price'], 2); ?>
-                                            <span class="fs-6 text-secondary">
-                                                (<?php echo $access_info['discount']; ?>% member discount)
-                                            </span>
+                                        </div>
+                                        <div class="fs-6 text-secondary">
+                                            (<?php echo $access_info['discount']; ?>% member discount)
                                         </div>
                                     <?php else: ?>
                                         <div class="current-price fs-4 text-white fw-bold">

@@ -82,7 +82,7 @@ class FlexPress_Plunk_Subscriber {
                 'source' => 'Membership Registration',
                 'userType' => 'member',
                 'membershipStatus' => 'active',
-                'userId' => $user_id
+                'userId' => (string) $user_id
             )
         );
         
@@ -100,7 +100,7 @@ class FlexPress_Plunk_Subscriber {
                 
                 // Track registration event
                 $this->api->track_event($result['id'], 'user-registration', $user->user_email, array(
-                    'userId' => $user_id,
+                    'userId' => (string) $user_id,
                     'timestamp' => date('c')
                 ));
             }

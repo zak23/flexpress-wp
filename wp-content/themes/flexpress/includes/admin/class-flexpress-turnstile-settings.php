@@ -17,23 +17,8 @@ class FlexPress_Turnstile_Settings {
      * Constructor
      */
     public function __construct() {
-        add_action('admin_menu', array($this, 'add_turnstile_settings_page'));
         add_action('admin_init', array($this, 'register_turnstile_settings'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
-    }
-
-    /**
-     * Add the Turnstile settings page to admin menu
-     */
-    public function add_turnstile_settings_page() {
-        add_submenu_page(
-            'flexpress-settings',
-            __('Cloudflare Turnstile', 'flexpress'),
-            __('Turnstile', 'flexpress'),
-            'manage_options',
-            'flexpress-turnstile-settings',
-            array($this, 'render_turnstile_settings_page')
-        );
     }
 
     /**
@@ -152,8 +137,8 @@ class FlexPress_Turnstile_Settings {
     /**
      * Enqueue admin scripts
      */
-    public function enqueue_admin_scripts($hook) {
-        if ($hook !== 'flexpress_page_flexpress-turnstile-settings') {
+	public function enqueue_admin_scripts($hook) {
+		if ($hook !== 'flexpress-settings_page_flexpress-turnstile-settings') {
             return;
         }
 

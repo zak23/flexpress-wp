@@ -56,6 +56,11 @@ flexpress/
   - Episode Date Synchronization utilities
   - Clear debug.log: truncates `wp-content/debug.log` with nonce + capability checks
 
+### Admin Menu Structure (Consolidated)
+- All settings live under the top-level `FlexPress` menu.
+- Removed duplicates/standalone items: Flowguard and Discord top-level menus removed; Turnstile and Plunk registered only once as FlexPress submenus.
+- Admin page hooks use `flexpress-settings_page_*` for enqueue logic.
+
 ## Theme Features & Integrations
 
 ### Core Integrations

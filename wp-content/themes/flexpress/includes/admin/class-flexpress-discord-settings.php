@@ -345,7 +345,7 @@ class FlexPress_Discord_Settings {
      * Add submenu page
      */
     public function add_submenu_page() {
-        // Add as submenu under FlexPress Settings
+        // Add as submenu under FlexPress Settings only (remove standalone top-level menu)
         add_submenu_page(
             'flexpress-settings',
             'Discord Notifications',
@@ -353,17 +353,6 @@ class FlexPress_Discord_Settings {
             'manage_options',
             'flexpress-discord-settings',
             array($this, 'render_settings_page')
-        );
-        
-        // Also add as top-level menu for easier access
-        add_menu_page(
-            'Discord Notifications',
-            'Discord',
-            'manage_options',
-            'flexpress-discord-settings',
-            array($this, 'render_settings_page'),
-            'dashicons-format-chat',
-            31
         );
     }
     

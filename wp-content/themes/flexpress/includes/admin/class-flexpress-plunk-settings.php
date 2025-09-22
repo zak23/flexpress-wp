@@ -17,23 +17,8 @@ class FlexPress_Plunk_Settings {
      * Constructor
      */
     public function __construct() {
-        add_action('admin_menu', array($this, 'add_plunk_settings_page'));
         add_action('admin_init', array($this, 'register_plunk_settings'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
-    }
-
-    /**
-     * Add the Plunk settings page to admin menu
-     */
-    public function add_plunk_settings_page() {
-        add_submenu_page(
-            'flexpress-settings',
-            __('Plunk Email Marketing', 'flexpress'),
-            __('Plunk', 'flexpress'),
-            'manage_options',
-            'flexpress-plunk-settings',
-            array($this, 'render_plunk_settings_page')
-        );
     }
 
     /**
@@ -142,8 +127,8 @@ class FlexPress_Plunk_Settings {
     /**
      * Enqueue admin scripts
      */
-    public function enqueue_admin_scripts($hook) {
-        if ($hook !== 'flexpress_page_flexpress-plunk-settings') {
+	public function enqueue_admin_scripts($hook) {
+		if ($hook !== 'flexpress-settings_page_flexpress-plunk-settings') {
             return;
         }
 

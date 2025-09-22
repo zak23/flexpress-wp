@@ -101,6 +101,23 @@ class FlexPress_Settings {
             'flexpress-plunk-settings',
             array($this, 'render_plunk_settings_page')
         );
+
+        // Add Flowguard submenu (centralized under FlexPress)
+        add_submenu_page(
+            $this->page_slug,
+            __('Flowguard', 'flexpress'),
+            __('Flowguard', 'flexpress'),
+            'manage_options',
+            'flexpress-flowguard-settings',
+            function() {
+                if (class_exists('FlexPress_Flowguard_Settings')) {
+                    $obj = new FlexPress_Flowguard_Settings();
+                    $obj->render_settings_page();
+                } else {
+                    echo '<div class="wrap"><h1>Flowguard Settings</h1><p>Flowguard settings class not found.</p></div>';
+                }
+            }
+        );
     }
 
     /**

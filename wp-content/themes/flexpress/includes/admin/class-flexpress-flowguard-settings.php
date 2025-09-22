@@ -241,31 +241,7 @@ class FlexPress_Flowguard_Settings {
     }
     
     
-    /**
-     * Add submenu page
-     */
-    public function add_submenu_page() {
-        // Add as submenu under FlexPress Settings
-        add_submenu_page(
-            'flexpress-settings',
-            'Flowguard Settings',
-            'Flowguard',
-            'manage_options',
-            'flexpress-flowguard-settings',
-            array($this, 'render_settings_page')
-        );
-        
-        // Also add as top-level menu for easier access
-        add_menu_page(
-            'Flowguard',
-            'Flowguard',
-            'manage_options',
-            'flexpress-flowguard-settings',
-            array($this, 'render_settings_page'),
-            'dashicons-money-alt',
-            30
-        );
-    }
+    // Submenu is registered centrally in FlexPress_Settings to avoid duplicates
     
     /**
      * Enqueue admin scripts

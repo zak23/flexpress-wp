@@ -47,6 +47,33 @@ flexpress/
 
 ## 🔧 Recent Fixes
 
+### Admin Menu Consolidation (September 2025)
+- Consolidated all settings under the single top-level menu: `FlexPress`
+- Removed duplicate/standalone menus:
+  - Turnstile: now only under `FlexPress → Turnstile`
+  - Plunk: now only under `FlexPress → Plunk`
+  - Flowguard: removed standalone top-level; now only `FlexPress → Flowguard`
+  - Discord: removed standalone top-level; now only `FlexPress → Discord`
+- Updated admin enqueue hooks to match correct page hooks (`flexpress-settings_page_*`)
+
+New menu structure:
+
+```
+FlexPress
+  ├─ General
+  ├─ Pages & Menus
+  ├─ Auto-Setup
+  ├─ Discord
+  ├─ Turnstile
+  ├─ Plunk
+  ├─ Flowguard
+  ├─ Video Settings
+  ├─ Membership
+  ├─ Pricing
+  ├─ Affiliate
+  └─ Contact
+```
+
 ### Site URL Configuration (September 2025)
 - **URL Standardization**: Standardized WordPress site URL to lowercase `https://zakspov.com` following best practices
 - **Database Update**: Modified `wp_options` table to set both `siteurl` and `home` options to standardized URL

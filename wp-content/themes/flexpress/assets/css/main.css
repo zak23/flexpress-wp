@@ -52,7 +52,7 @@ a:hover {
 }
 
 .site-content {
-  min-height: 100vh;
+  min-height: 60vh;
 }
 
 /* Header */
@@ -6389,7 +6389,7 @@ body.page-template-casting .site-main .alert-info {
 .error-404-page {
     background-color: var(--color-background);
     color: var(--color-text);
-    min-height: 80vh;
+    min-height: 50vh;
     padding: 2rem 0;
 }
 

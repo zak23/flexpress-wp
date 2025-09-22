@@ -56,6 +56,11 @@ flexpress/
   - Defensive guards added when `window.turnstile` is not yet ready
 - Impact: Newsletter subscribe flow works reliably with Turnstile protection.
 
+### Newsletter Modal Dismissal Persistence (September 2025)
+- Added localStorage persistence to prevent the newsletter modal from reappearing after the user closes it
+- Uses key `flexpress_newsletter_modal_dismissed` set to `true` on modal hide
+- Auto-show is gated by this flag; users won’t be spammed with repeated prompts
+
 ### Admin Menu Consolidation (September 2025)
 - Consolidated all settings under the single top-level menu: `FlexPress`
 - Removed duplicate/standalone menus:

@@ -21,6 +21,7 @@ Do all pupeteer tests on the test site.
 - Use `cf-turnstile` class and stable element id `newsletter-turnstile`
 - Access token via `turnstile.getResponse(widgetId)`; reset via `turnstile.reset(widgetId)`
 - Add defensive guards if `window.turnstile` is not ready
+- Persist dismissal using localStorage key `flexpress_newsletter_modal_dismissed`; gate auto-show by this flag
 
 ## Docker Configuration
 - Main service: `wordpress` (custom build)

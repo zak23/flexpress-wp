@@ -99,10 +99,36 @@ function flexpress_render_newsletter_modal() {
 
     <script>
     jQuery(document).ready(function($) {
-        // Show modal after delay
-        setTimeout(function() {
-            $('#newsletterModal').modal('show');
-        }, <?php echo $modal_delay * 1000; ?>);
+        // LocalStorage key to persist dismissal
+        var NEWSLETTER_LS_KEY = 'flexpress_newsletter_modal_dismissed';
+
+        function hasDismissedNewsletterModal() {
+            try {
+                return window.localStorage && localStorage.getItem(NEWSLETTER_LS_KEY) === 'true';
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function markNewsletterModalDismissed() {
+            try {
+                if (window.localStorage) {
+                    localStorage.setItem(NEWSLETTER_LS_KEY, 'true');
+                }
+            } catch (e) {}
+        }
+
+        // Show modal after delay if not previously dismissed
+        if (!hasDismissedNewsletterModal()) {
+            setTimeout(function() {
+                $('#newsletterModal').modal('show');
+            }, <?php echo $modal_delay * 1000; ?>);
+        }
+
+        // When modal fully hides (any dismissal path), remember preference
+        $('#newsletterModal').on('hidden.bs.modal', function() {
+            markNewsletterModalDismissed();
+        });
 
         <?php if (flexpress_is_turnstile_enabled()): ?>
         // Explicitly render Turnstile when modal is shown to ensure widget exists

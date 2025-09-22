@@ -81,6 +81,16 @@ class FlexPress_Settings {
             'flexpress-discord-settings',
             array($this, 'render_discord_settings_page')
         );
+
+        // Add Cloudflare Turnstile submenu
+        add_submenu_page(
+            $this->page_slug,
+            __('Cloudflare Turnstile', 'flexpress'),
+            __('Turnstile', 'flexpress'),
+            'manage_options',
+            'flexpress-turnstile-settings',
+            array($this, 'render_turnstile_settings_page')
+        );
     }
 
     /**
@@ -796,6 +806,20 @@ class FlexPress_Settings {
         </label>
         <p class="description">🌟 Notifications include applicant name, contact info, experience, and bio.</p>
         <?php
+    }
+
+    /**
+     * Render the Turnstile settings page
+     */
+    public function render_turnstile_settings_page() {
+        // This method will be handled by the FlexPress_Turnstile_Settings class
+        // We just need to include the class file
+        if (class_exists('FlexPress_Turnstile_Settings')) {
+            $turnstile_settings = new FlexPress_Turnstile_Settings();
+            $turnstile_settings->render_turnstile_settings_page();
+        } else {
+            echo '<div class="wrap"><h1>Turnstile Settings</h1><p>Turnstile settings class not found.</p></div>';
+        }
     }
 }
 

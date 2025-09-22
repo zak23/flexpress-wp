@@ -95,9 +95,65 @@ require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-flowguard-setting
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-pricing-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-affiliate-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-contact-settings.php';
+require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-turnstile-settings.php';
+require_once FLEXPRESS_PATH . '/includes/turnstile-integration.php';
 // Upcoming episode settings removed - now uses automatic post query
 
 // FlexPress Settings menus are initialized via admin settings classes above
+
+// AJAX handler for testing Turnstile connection
+add_action('wp_ajax_test_turnstile_connection', 'flexpress_test_turnstile_connection');
+function flexpress_test_turnstile_connection() {
+    // Verify nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'flexpress_turnstile_test')) {
+        wp_die('Security check failed');
+    }
+    
+    // Check user permissions
+    if (!current_user_can('manage_options')) {
+        wp_die('Insufficient permissions');
+    }
+    
+    $options = get_option('flexpress_turnstile_settings', array());
+    $site_key = $options['site_key'] ?? '';
+    $secret_key = $options['secret_key'] ?? '';
+    
+    if (empty($site_key) || empty($secret_key)) {
+        wp_send_json_error('Please enter both Site Key and Secret Key first.');
+        return;
+    }
+    
+    // Test the connection by making a request to Cloudflare's API
+    $test_data = array(
+        'secret' => $secret_key,
+        'response' => 'test_response',
+        'remoteip' => $_SERVER['REMOTE_ADDR'] ?? ''
+    );
+    
+    $response = wp_remote_post('https://challenges.cloudflare.com/turnstile/v0/siteverify', array(
+        'body' => $test_data,
+        'timeout' => 10
+    ));
+    
+    if (is_wp_error($response)) {
+        wp_send_json_error('Failed to connect to Cloudflare API: ' . $response->get_error_message());
+        return;
+    }
+    
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+    
+    if ($data && isset($data['success'])) {
+        if ($data['success']) {
+            wp_send_json_success('Turnstile connection successful! Your keys are valid.');
+        } else {
+            $error_codes = $data['error-codes'] ?? array('Unknown error');
+            wp_send_json_error('Turnstile validation failed: ' . implode(', ', $error_codes));
+        }
+    } else {
+        wp_send_json_error('Invalid response from Cloudflare API.');
+    }
+}
 
 
 
@@ -3659,7 +3715,7 @@ function flexpress_create_support_pages_and_menu() {
         ),
         'Cancel Membership' => array(
             'content' => 'Cancel your membership subscription and manage your account status.',
-            'template' => '', // Uses default page template
+            'template' => 'page-templates/cancel-membership.php',
             'menu_title' => 'Cancel'
         ),
         'Affiliates' => array(
@@ -7050,5 +7106,75 @@ function flexpress_ajax_bulk_update_affiliate_status() {
         wp_send_json_success(['message' => 'Affiliate statuses updated successfully']);
     } else {
         wp_send_json_error(['message' => 'Failed to update affiliate statuses']);
+    }
+}
+
+/**
+ * Cancel user membership
+ *
+ * @param int $user_id User ID
+ * @return array Result array with success status and message
+ */
+function flexpress_cancel_user_membership($user_id) {
+    if (!$user_id) {
+        return array(
+            'success' => false,
+            'message' => 'Invalid user ID'
+        );
+    }
+    
+    // Check if user has an active membership
+    $membership_status = get_user_meta($user_id, 'membership_status', true);
+    if ($membership_status !== 'active') {
+        return array(
+            'success' => false,
+            'message' => 'No active membership found to cancel'
+        );
+    }
+    
+    // Check if user has Flowguard subscription
+    $flowguard_sale_id = get_user_meta($user_id, 'flowguard_sale_id', true);
+    
+    if (!empty($flowguard_sale_id)) {
+        // Try to cancel via Flowguard API first
+        $result = flexpress_flowguard_cancel_subscription($user_id);
+        
+        if (is_wp_error($result)) {
+            // If API cancellation fails, still mark as cancelled locally
+            flexpress_update_membership_status($user_id, 'cancelled');
+            
+            return array(
+                'success' => true,
+                'message' => 'Membership cancelled locally. Please contact support if you continue to be charged.',
+                'api_error' => $result->get_error_message()
+            );
+        }
+        
+        if (isset($result['success']) && $result['success']) {
+            // API cancellation successful
+            flexpress_update_membership_status($user_id, 'cancelled');
+            
+            return array(
+                'success' => true,
+                'message' => 'Membership cancelled successfully'
+            );
+        } else {
+            // API cancellation failed, but mark as cancelled locally
+            flexpress_update_membership_status($user_id, 'cancelled');
+            
+            return array(
+                'success' => true,
+                'message' => 'Membership cancelled locally. Please contact support if you continue to be charged.',
+                'api_error' => 'Unknown API error'
+            );
+        }
+    } else {
+        // No Flowguard subscription, just mark as cancelled locally
+        flexpress_update_membership_status($user_id, 'cancelled');
+        
+        return array(
+            'success' => true,
+            'message' => 'Membership cancelled successfully'
+        );
     }
 }

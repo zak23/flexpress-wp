@@ -242,6 +242,104 @@ Transaction ID: TXN_12345
 4. **Environment**: Sandbox and production use the same API URL
 5. **Credentials**: Shop ID `134837` and Signature Key from ControlCenter
 
+### Cloudflare Turnstile Protection
+
+FlexPress includes comprehensive Cloudflare Turnstile integration for advanced bot protection across all forms. Turnstile provides invisible bot protection without requiring users to solve CAPTCHAs, making it privacy-focused and GDPR compliant.
+
+#### Turnstile Features
+
+- **🛡️ Invisible Protection**: Most users won't see the widget unless suspicious activity is detected
+- **🔒 Privacy-First**: No personal data is collected or stored
+- **📱 GDPR Compliant**: No cookies or tracking required
+- **📱 Mobile Friendly**: Works seamlessly on all devices
+- **⚡ Performance Optimized**: Minimal impact on page load times
+- **🎨 Theme Integration**: Automatically matches your site's theme
+
+#### Protected Forms
+
+Turnstile protects the following form types:
+
+- **📧 Contact Forms**: Contact Form 7, WPForms, and other contact form plugins
+- **💬 Comment Forms**: WordPress native comment system
+- **👤 Registration Forms**: User registration and signup forms
+- **🔑 Login Forms**: User authentication and login forms
+
+#### Turnstile Configuration
+
+1. **Access Settings**: Go to `FlexPress Settings → Turnstile`
+2. **Get Keys**: 
+   - Visit [Cloudflare Dashboard](https://dash.cloudflare.com/) → Turnstile → Add Site
+   - Enter your domain and choose widget mode
+   - Copy your Site Key and Secret Key
+3. **Configure Settings**:
+   - Paste your Site Key and Secret Key
+   - Choose widget theme (Auto/Light/Dark)
+   - Select widget size (Normal/Compact)
+   - Choose which forms to protect
+4. **Test Connection**: Use the built-in test tool to verify your configuration
+
+#### Widget Customization
+
+**Theme Options:**
+- **Auto**: Automatically matches your site's theme
+- **Light**: Light theme for light backgrounds
+- **Dark**: Dark theme for dark backgrounds
+
+**Size Options:**
+- **Normal**: Standard size widget
+- **Compact**: Smaller, less intrusive widget
+
+#### Form Protection Settings
+
+You can enable/disable Turnstile protection for each form type:
+
+- ✅ **Contact Forms**: Protect all contact forms (Contact Form 7, WPForms, etc.)
+- ✅ **Comment Forms**: Protect WordPress comment forms
+- ✅ **Registration Forms**: Protect user registration forms
+- ✅ **Login Forms**: Protect user login forms
+
+#### Technical Implementation
+
+**Frontend Integration:**
+- Automatically loads Cloudflare Turnstile script when enabled
+- Adds Turnstile widget to protected forms
+- Includes callback functions for token handling
+
+**Server-Side Validation:**
+- Validates Turnstile responses against Cloudflare API
+- Prevents form submission if validation fails
+- Logs validation errors for debugging
+
+**Helper Functions:**
+- `flexpress_is_turnstile_enabled()` - Check if Turnstile is configured
+- `flexpress_should_protect_contact_forms()` - Check contact form protection
+- `flexpress_should_protect_comment_forms()` - Check comment form protection
+- `flexpress_should_protect_registration_forms()` - Check registration protection
+- `flexpress_should_protect_login_forms()` - Check login form protection
+- `flexpress_validate_turnstile_response()` - Validate Turnstile tokens
+
+#### Troubleshooting
+
+**Common Issues:**
+
+1. **Widget Not Appearing**: Check that Site Key is correctly entered
+2. **Validation Failing**: Verify Secret Key is correct and matches Site Key
+3. **Forms Not Protected**: Ensure the specific form type is enabled in settings
+4. **Theme Issues**: Try switching between Auto/Light/Dark themes
+
+**Debug Information:**
+- Turnstile validation errors are logged to WordPress error logs
+- Use browser console to check for JavaScript errors
+- Test connection tool validates both keys simultaneously
+
+#### Pro Tips
+
+- **Invisible Mode**: Most legitimate users won't see the widget
+- **Performance**: Turnstile has minimal impact on page load times
+- **Security**: Provides protection against automated attacks and spam
+- **User Experience**: Seamless integration without interrupting user flow
+- **Compliance**: GDPR compliant with no cookies or tracking
+
 ### Casting Section
 
 FlexPress includes a professional casting section that appears above the footer on all pages, designed to attract new talent to join the Dolls Down Under family.

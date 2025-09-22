@@ -134,8 +134,8 @@ function flexpress_flowguard_create_ppv_purchase($user_id, $episode_id, $final_p
         $price_to_charge = 2.95;
     }
     
-    // Create unique transaction reference
-    $transaction_ref = 'ppv_' . $episode_id . '_' . $user_id . '_' . time();
+    // Generate enhanced reference for PPV purchase
+    $transaction_ref = flexpress_flowguard_generate_enhanced_ppv_reference($user_id, $episode_id);
     
     $purchase_data = [
         'priceAmount' => number_format($price_to_charge, 2, '.', ''),
@@ -296,6 +296,81 @@ function flexpress_flowguard_generate_enhanced_reference($user_id, $plan_id, $ad
 }
 
 /**
+ * Generate enhanced Flowguard reference ID for PPV purchases
+ * 
+ * @param int $user_id User ID
+ * @param int $episode_id Episode ID
+ * @return string Enhanced PPV reference ID
+ */
+function flexpress_flowguard_generate_enhanced_ppv_reference($user_id, $episode_id) {
+    $user = get_userdata($user_id);
+    if (!$user) {
+        return 'ppv_' . $episode_id . '_' . $user_id . '_' . time();
+    }
+    
+    // Get user's affiliate tracking data
+    $affiliate_code = get_user_meta($user_id, 'affiliate_referred_by', true);
+    $promo_code = get_user_meta($user_id, 'applied_promo_code', true);
+    $signup_source = get_user_meta($user_id, 'signup_source', true);
+    $registration_date = get_user_meta($user_id, 'registration_date', true);
+    
+    // Build reference components for PPV
+    $components = array();
+    
+    // PPV identifier (always first)
+    $components[] = 'ppv';
+    
+    // Episode ID
+    $components[] = 'ep' . $episode_id;
+    
+    // User ID
+    $components[] = 'uid' . $user_id;
+    
+    // Affiliate code (if exists, otherwise use placeholder)
+    if (!empty($affiliate_code)) {
+        $components[] = 'aff' . substr($affiliate_code, 0, 8); // Limit length
+    } else {
+        $components[] = 'affnone'; // Placeholder for no affiliate
+    }
+    
+    // Promo code (if exists, otherwise use placeholder)
+    if (!empty($promo_code)) {
+        $components[] = 'promo' . substr($promo_code, 0, 8); // Limit length
+    } else {
+        $components[] = 'promonone'; // Placeholder for no promo
+    }
+    
+    // Signup source (if exists, otherwise use placeholder)
+    if (!empty($signup_source)) {
+        $components[] = 'src' . substr($signup_source, 0, 6); // Limit length
+    } else {
+        $components[] = 'srcnone'; // Placeholder for no source
+    }
+    
+    // Purchase timestamp (last 8 digits)
+    $timestamp = time();
+    $components[] = 'ts' . substr($timestamp, -8);
+    
+    // Join components with underscores
+    $reference = implode('_', $components);
+    
+    // Store the enhanced PPV reference data for later retrieval
+    update_user_meta($user_id, 'flowguard_enhanced_ppv_reference', $reference);
+    update_user_meta($user_id, 'flowguard_ppv_reference_data', array(
+        'user_id' => $user_id,
+        'episode_id' => $episode_id,
+        'affiliate_code' => $affiliate_code,
+        'promo_code' => $promo_code,
+        'signup_source' => $signup_source,
+        'registration_date' => $registration_date,
+        'purchase_timestamp' => $timestamp,
+        'generated_at' => current_time('mysql')
+    ));
+    
+    return $reference;
+}
+
+/**
  * Parse enhanced Flowguard reference ID to extract meaningful data
  * 
  * @param string $reference_id Reference ID
@@ -317,7 +392,48 @@ function flexpress_flowguard_parse_enhanced_reference($reference_id) {
         'is_ppv' => false
     );
     
-    // Handle PPV references (ppv_episodeId_userId_timestamp)
+    // Handle enhanced PPV references (ppv_ep123_uid456_affABC_promoXYZ_srcgoogle_ts12345678)
+    if (preg_match('/^ppv_ep(\d+)_uid(\d+)/', $reference_id)) {
+        $data['is_ppv'] = true;
+        $data['is_enhanced'] = true;
+        
+        // Extract episode ID
+        if (preg_match('/ep(\d+)/', $reference_id, $matches)) {
+            $data['episode_id'] = intval($matches[1]);
+        }
+        
+        // Extract user ID
+        if (preg_match('/uid(\d+)/', $reference_id, $matches)) {
+            $data['user_id'] = intval($matches[1]);
+        }
+        
+        // Extract affiliate code
+        if (preg_match('/aff([^_]+)/', $reference_id, $matches)) {
+            $affiliate_code = $matches[1];
+            $data['affiliate_code'] = ($affiliate_code === 'none') ? '' : $affiliate_code;
+        }
+        
+        // Extract promo code
+        if (preg_match('/promo([^_]+)/', $reference_id, $matches)) {
+            $promo_code = $matches[1];
+            $data['promo_code'] = ($promo_code === 'none') ? '' : $promo_code;
+        }
+        
+        // Extract signup source
+        if (preg_match('/src([^_]+)/', $reference_id, $matches)) {
+            $signup_source = $matches[1];
+            $data['signup_source'] = ($signup_source === 'none') ? '' : $signup_source;
+        }
+        
+        // Extract purchase timestamp
+        if (preg_match('/ts(\d+)/', $reference_id, $matches)) {
+            $data['purchase_timestamp'] = $matches[1];
+        }
+        
+        return $data;
+    }
+    
+    // Handle legacy PPV references (ppv_episodeId_userId_timestamp)
     if (preg_match('/^ppv_(\d+)_(\d+)_\d+$/', $reference_id, $matches)) {
         $data['is_ppv'] = true;
         $data['episode_id'] = intval($matches[1]);

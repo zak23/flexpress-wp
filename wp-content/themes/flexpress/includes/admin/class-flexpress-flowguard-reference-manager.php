@@ -23,6 +23,7 @@ class FlexPress_Flowguard_Reference_Manager {
         add_action('wp_ajax_flexpress_get_reference_data', array($this, 'ajax_get_reference_data'));
         add_action('wp_ajax_flexpress_update_reference_data', array($this, 'ajax_update_reference_data'));
         add_action('wp_ajax_flexpress_test_enhanced_references', array($this, 'ajax_test_enhanced_references'));
+        add_action('wp_ajax_flexpress_update_database_schema', array($this, 'ajax_update_database_schema'));
     }
     
     /**
@@ -64,6 +65,12 @@ class FlexPress_Flowguard_Reference_Manager {
             <h1>Flowguard Reference Manager</h1>
             <p>View and manage enhanced Flowguard reference data for users.</p>
             
+            <?php if (!$this->check_enhanced_columns_exist()): ?>
+            <div class="notice notice-warning">
+                <p><strong>Database Update Required:</strong> The enhanced reference system requires additional database columns. Click "Update Database Schema" below to add the required columns. This is safe and will not affect existing data.</p>
+            </div>
+            <?php endif; ?>
+            
             <div class="flexpress-admin-container">
                 <div class="flexpress-admin-sidebar">
                     <div class="flexpress-admin-widget">
@@ -82,6 +89,11 @@ class FlexPress_Flowguard_Reference_Manager {
                         <button type="button" class="button button-secondary" onclick="flexpressTestEnhancedReferences()">
                             Test System
                         </button>
+                        <?php if (!$this->check_enhanced_columns_exist()): ?>
+                        <button type="button" class="button button-primary" onclick="flexpressUpdateDatabaseSchema()" style="background: #d63638; border-color: #d63638;">
+                            Update Database Schema
+                        </button>
+                        <?php endif; ?>
                     </div>
                 </div>
                 
@@ -300,6 +312,41 @@ class FlexPress_Flowguard_Reference_Manager {
                 }
             });
         }
+        
+        function flexpressUpdateDatabaseSchema() {
+            if (!confirm('This will update the database schema to add enhanced reference columns. This is safe and will not affect existing data. Continue?')) {
+                return;
+            }
+            
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = 'Updating...';
+            button.disabled = true;
+            
+            jQuery.ajax({
+                url: flexpress_admin.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'flexpress_update_database_schema',
+                    nonce: flexpress_admin.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Database schema updated successfully! The page will now reload.');
+                        location.reload();
+                    } else {
+                        alert('Update failed: ' + response.data);
+                    }
+                },
+                error: function() {
+                    alert('Update failed: AJAX error');
+                },
+                complete: function() {
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }
+            });
+        }
         </script>
         <?php
     }
@@ -315,31 +362,41 @@ class FlexPress_Flowguard_Reference_Manager {
         // Get total transactions
         $total_transactions = $wpdb->get_var("SELECT COUNT(*) FROM {$transactions_table}");
         
-        // Get enhanced references count
-        $enhanced_references = $wpdb->get_var("SELECT COUNT(*) FROM {$transactions_table} WHERE (affiliate_code != '' AND affiliate_code != 'none') OR (promo_code != '' AND promo_code != 'none') OR (signup_source != '' AND signup_source != 'none')");
+        // Check if enhanced columns exist
+        $columns_exist = $this->check_enhanced_columns_exist();
         
-        // Get affiliate referrals
-        $affiliate_referrals = $wpdb->get_var("SELECT COUNT(*) FROM {$transactions_table} WHERE affiliate_code != '' AND affiliate_code != 'none'");
-        
-        // Get promo code usage
-        $promo_usage = $wpdb->get_var("SELECT COUNT(*) FROM {$transactions_table} WHERE promo_code != '' AND promo_code != 'none'");
+        if ($columns_exist) {
+            // Get enhanced references count
+            $enhanced_references = $wpdb->get_var("SELECT COUNT(*) FROM {$transactions_table} WHERE (affiliate_code != '' AND affiliate_code != 'none') OR (promo_code != '' AND promo_code != 'none') OR (signup_source != '' AND signup_source != 'none')");
+            
+            // Get affiliate referrals
+            $affiliate_referrals = $wpdb->get_var("SELECT COUNT(*) FROM {$transactions_table} WHERE affiliate_code != '' AND affiliate_code != 'none'");
+            
+            // Get promo code usage
+            $promo_usage = $wpdb->get_var("SELECT COUNT(*) FROM {$transactions_table} WHERE promo_code != '' AND promo_code != 'none'");
+        } else {
+            // Fallback to 0 if columns don't exist
+            $enhanced_references = 0;
+            $affiliate_referrals = 0;
+            $promo_usage = 0;
+        }
         
         ?>
         <div class="stats-grid">
             <div class="stat-item">
-                <div class="stat-number"><?php echo number_format($total_transactions); ?></div>
+                <div class="stat-number"><?php echo number_format(intval($total_transactions)); ?></div>
                 <div class="stat-label">Total Transactions</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number"><?php echo number_format($enhanced_references); ?></div>
+                <div class="stat-number"><?php echo number_format(intval($enhanced_references)); ?></div>
                 <div class="stat-label">Enhanced References</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number"><?php echo number_format($affiliate_referrals); ?></div>
+                <div class="stat-number"><?php echo number_format(intval($affiliate_referrals)); ?></div>
                 <div class="stat-label">Affiliate Referrals</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number"><?php echo number_format($promo_usage); ?></div>
+                <div class="stat-number"><?php echo number_format(intval($promo_usage)); ?></div>
                 <div class="stat-label">Promo Usage</div>
             </div>
         </div>
@@ -424,16 +481,48 @@ class FlexPress_Flowguard_Reference_Manager {
         
         $transactions_table = $wpdb->prefix . 'flexpress_flowguard_transactions';
         
-        $transactions = $wpdb->get_results("
-            SELECT 
-                t.*,
-                u.user_email,
-                u.display_name
-            FROM {$transactions_table} t
-            LEFT JOIN {$wpdb->users} u ON t.user_id = u.ID
-            ORDER BY t.created_at DESC
-            LIMIT 50
-        ");
+        // Check if enhanced columns exist
+        $columns_exist = $this->check_enhanced_columns_exist();
+        
+        if ($columns_exist) {
+            $transactions = $wpdb->get_results("
+                SELECT 
+                    t.*,
+                    u.user_email,
+                    u.display_name
+                FROM {$transactions_table} t
+                LEFT JOIN {$wpdb->users} u ON t.user_id = u.ID
+                ORDER BY t.created_at DESC
+                LIMIT 50
+            ");
+        } else {
+            // Fallback query without enhanced columns
+            $transactions = $wpdb->get_results("
+                SELECT 
+                    t.id,
+                    t.user_id,
+                    t.transaction_id,
+                    t.session_id,
+                    t.sale_id,
+                    t.amount,
+                    t.currency,
+                    t.status,
+                    t.order_type,
+                    t.reference_id,
+                    t.created_at,
+                    t.updated_at,
+                    '' as affiliate_code,
+                    '' as promo_code,
+                    '' as signup_source,
+                    '' as plan_id,
+                    u.user_email,
+                    u.display_name
+                FROM {$transactions_table} t
+                LEFT JOIN {$wpdb->users} u ON t.user_id = u.ID
+                ORDER BY t.created_at DESC
+                LIMIT 50
+            ");
+        }
         
         ?>
         <table class="reference-data-table">
@@ -470,7 +559,11 @@ class FlexPress_Flowguard_Reference_Manager {
                         if ($reference_data['is_enhanced']): ?>
                             <span class="reference-badge enhanced">Enhanced</span>
                         <?php elseif ($reference_data['is_ppv']): ?>
-                            <span class="reference-badge ppv">PPV</span>
+                            <?php if ($reference_data['is_enhanced']): ?>
+                                <span class="reference-badge enhanced">Enhanced PPV</span>
+                            <?php else: ?>
+                                <span class="reference-badge ppv">Legacy PPV</span>
+                            <?php endif; ?>
                         <?php else: ?>
                             <span class="reference-badge legacy">Legacy</span>
                         <?php endif; ?>
@@ -495,30 +588,39 @@ class FlexPress_Flowguard_Reference_Manager {
         
         $transactions_table = $wpdb->prefix . 'flexpress_flowguard_transactions';
         
-        // Get signup sources breakdown
-        $signup_sources = $wpdb->get_results("
-            SELECT 
-                signup_source,
-                COUNT(*) as count,
-                SUM(amount) as total_revenue
-            FROM {$transactions_table}
-            WHERE signup_source != '' AND signup_source != 'none' AND status = 'approved'
-            GROUP BY signup_source
-            ORDER BY count DESC
-        ");
+        // Check if enhanced columns exist
+        $columns_exist = $this->check_enhanced_columns_exist();
         
-        // Get affiliate performance
-        $affiliate_performance = $wpdb->get_results("
-            SELECT 
-                affiliate_code,
-                COUNT(*) as conversions,
-                SUM(amount) as total_revenue
-            FROM {$transactions_table}
-            WHERE affiliate_code != '' AND affiliate_code != 'none' AND status = 'approved'
-            GROUP BY affiliate_code
-            ORDER BY conversions DESC
-            LIMIT 10
-        ");
+        if ($columns_exist) {
+            // Get signup sources breakdown
+            $signup_sources = $wpdb->get_results("
+                SELECT 
+                    signup_source,
+                    COUNT(*) as count,
+                    SUM(amount) as total_revenue
+                FROM {$transactions_table}
+                WHERE signup_source != '' AND signup_source != 'none' AND status = 'approved'
+                GROUP BY signup_source
+                ORDER BY count DESC
+            ");
+            
+            // Get affiliate performance
+            $affiliate_performance = $wpdb->get_results("
+                SELECT 
+                    affiliate_code,
+                    COUNT(*) as conversions,
+                    SUM(amount) as total_revenue
+                FROM {$transactions_table}
+                WHERE affiliate_code != '' AND affiliate_code != 'none' AND status = 'approved'
+                GROUP BY affiliate_code
+                ORDER BY conversions DESC
+                LIMIT 10
+            ");
+        } else {
+            // Fallback empty arrays if columns don't exist
+            $signup_sources = array();
+            $affiliate_performance = array();
+        }
         
         ?>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
@@ -718,6 +820,48 @@ class FlexPress_Flowguard_Reference_Manager {
         }
         
         wp_send_json_success($test_results);
+    }
+    
+    /**
+     * Check if enhanced columns exist in the transactions table
+     * 
+     * @return bool True if columns exist
+     */
+    private function check_enhanced_columns_exist() {
+        global $wpdb;
+        
+        $transactions_table = $wpdb->prefix . 'flexpress_flowguard_transactions';
+        
+        // Check if table exists
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$transactions_table}'") == $transactions_table;
+        if (!$table_exists) {
+            return false;
+        }
+        
+        // Check if enhanced columns exist
+        $columns = $wpdb->get_results("DESCRIBE {$transactions_table}");
+        $column_names = array_column($columns, 'Field');
+        
+        $required_columns = ['affiliate_code', 'promo_code', 'signup_source', 'plan_id'];
+        $missing_columns = array_diff($required_columns, $column_names);
+        
+        return empty($missing_columns);
+    }
+    
+    /**
+     * AJAX handler for updating database schema
+     */
+    public function ajax_update_database_schema() {
+        check_ajax_referer('flexpress_admin_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Insufficient permissions');
+        }
+        
+        // Update the database schema
+        flexpress_flowguard_create_tables();
+        
+        wp_send_json_success('Database schema updated successfully');
     }
 }
 

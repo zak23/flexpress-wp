@@ -226,15 +226,24 @@ Flowguard webhooks are automatically handled at:
 
 FlexPress now includes an enhanced reference system that stores meaningful user information in Flowguard payment references:
 
-**Reference Format**: `uid123_affAFF12345_promoWELCOME_srcgoogle_planpremium_monthly_reg12345678`
+**Reference Formats**:
 
-**Components**:
+**Subscription References**: `uid123_affAFF12345_promoWELCOME_srcgoogle_planpremium_monthly_reg12345678`
 - `uid123` - User ID
 - `affAFF12345` - Affiliate code (truncated to 8 chars, or `affnone` if no affiliate)
 - `promoWELCOME` - Promo code (truncated to 8 chars, or `promonone` if no promo)
 - `srcgoogle` - Signup source (google, facebook, twitter, etc., or `srcnone` if no source)
 - `planpremium_monthly` - Plan ID
 - `reg12345678` - Registration timestamp (last 8 digits)
+
+**PPV/Unlock References**: `ppv_ep123_uid456_affAFF12345_promoWELCOME_srcgoogle_ts12345678`
+- `ppv` - PPV identifier
+- `ep123` - Episode ID
+- `uid456` - User ID
+- `affAFF12345` - Affiliate code (truncated to 8 chars, or `affnone` if no affiliate)
+- `promoWELCOME` - Promo code (truncated to 8 chars, or `promonone` if no promo)
+- `srcgoogle` - Signup source (google, facebook, twitter, etc., or `srcnone` if no source)
+- `ts12345678` - Purchase timestamp (last 8 digits)
 
 **Empty Field Handling**: When fields are empty, the system uses placeholder values (`none`) to maintain consistent reference structure and enable proper parsing.
 

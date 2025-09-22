@@ -239,23 +239,6 @@ class FlexPress_Plunk_Settings {
             <?php $this->render_plunk_preview(); ?>
         </div>
         
-        <script>
-        function testPlunkConnection() {
-            var resultsDiv = document.getElementById('plunk-test-results');
-            resultsDiv.innerHTML = '<p>Testing Plunk connection...</p>';
-            
-            jQuery.post(ajaxurl, {
-                action: 'test_plunk_connection',
-                nonce: '<?php echo wp_create_nonce('test_plunk_connection'); ?>'
-            }, function(response) {
-                if (response.success) {
-                    resultsDiv.innerHTML = '<p style="color: green;">✓ ' + response.data + '</p>';
-                } else {
-                    resultsDiv.innerHTML = '<p style="color: red;">✗ ' + response.data + '</p>';
-                }
-            });
-        }
-        </script>
         <?php
     }
 
@@ -434,9 +417,7 @@ class FlexPress_Plunk_Settings {
      */
     public function render_test_connection_field() {
         ?>
-        <button type="button" 
-                onclick="testPlunkConnection()" 
-                class="button button-secondary">Test Plunk Connection</button>
+        <button type="button" id="test-plunk-connection" class="button button-secondary">Test Plunk Connection</button>
         <div id="plunk-test-results" style="margin-top: 10px;"></div>
         <p class="description">Test your Plunk API credentials and connection.</p>
         <?php

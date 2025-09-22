@@ -244,24 +244,6 @@ class FlexPress_Turnstile_Settings {
             
             <?php $this->render_turnstile_preview(); ?>
         </div>
-        
-        <script>
-        function testTurnstileConnection() {
-            var resultsDiv = document.getElementById('turnstile-test-results');
-            resultsDiv.innerHTML = '<p>Testing Turnstile connection...</p>';
-            
-            jQuery.post(ajaxurl, {
-                action: 'test_turnstile_connection',
-                nonce: '<?php echo wp_create_nonce('test_turnstile_connection'); ?>'
-            }, function(response) {
-                if (response.success) {
-                    resultsDiv.innerHTML = '<p style="color: green;">✓ Turnstile connection successful! Your keys are valid.</p>';
-                } else {
-                    resultsDiv.innerHTML = '<p style="color: red;">✗ Turnstile connection failed: ' + response.data + '</p>';
-                }
-            });
-        }
-        </script>
         <?php
     }
 
@@ -467,7 +449,7 @@ class FlexPress_Turnstile_Settings {
     public function render_test_connection_field() {
         ?>
         <button type="button" 
-                onclick="testTurnstileConnection()" 
+                id="test-turnstile-connection" 
                 class="button button-secondary">Test Turnstile Connection</button>
         <div id="turnstile-test-results" style="margin-top: 10px;"></div>
         <p class="description">Test your Turnstile keys and configuration.</p>

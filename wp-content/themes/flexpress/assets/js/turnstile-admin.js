@@ -23,10 +23,12 @@ jQuery(document).ready(function($) {
                 nonce: flexpressTurnstileAdmin.nonce
             },
             success: function(response) {
-                if (response.success) {
-                    $results.html('<div class="notice notice-success inline"><p>✓ ' + response.data + '</p></div>');
+                var success = response && response.success === true;
+                var message = response && response.data ? response.data : 'Unknown error';
+                if (success) {
+                    $results.html('<div class="notice notice-success inline"><p>✓ ' + message + '</p></div>');
                 } else {
-                    $results.html('<div class="notice notice-error inline"><p>✗ ' + response.data + '</p></div>');
+                    $results.html('<div class="notice notice-error inline"><p>✗ ' + message + '</p></div>');
                 }
             },
             error: function() {

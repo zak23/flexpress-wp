@@ -278,6 +278,18 @@ Turnstile protects the following form types:
    - Choose which forms to protect
 4. **Test Connection**: Use the built-in test tool to verify your configuration
 
+#### Turnstile Test Tool Behavior
+
+- The admin Test Connection button hits Cloudflare's `siteverify` endpoint using your Secret Key. Because no user token is sent during a test, Cloudflare will typically respond with validation error codes (e.g., `missing-input-response`).
+- This still confirms connectivity. The tool reports success when the API is reachable and returns a JSON response, even if validation errors are present due to the missing token.
+- If the API cannot be reached (network/DNS/SSL issues), the tool reports an error with the underlying reason.
+
+Troubleshooting:
+
+- Ensure both Site Key and Secret Key are saved in `FlexPress Settings → Turnstile`.
+- If you see a generic “undefined” message, refresh and try again. The tool now defaults to clear messages when `response.data` is missing.
+- Check `wp-content/debug.log` for any “Turnstile validation error” entries when validating actual form submissions.
+
 #### Widget Customization
 
 **Theme Options:**
@@ -359,13 +371,22 @@ FlexPress includes comprehensive Plunk email marketing integration for automated
 1. **Access Settings**: Go to `FlexPress Settings → Plunk`
 2. **Get Credentials**: 
    - Sign up at [Plunk.com](https://plunk.com)
-   - Copy your API Key and Install URL from your dashboard
+   - Copy your **Public API Key (pk_...)**, **Secret API Key (sk_...)**, and **Install URL**
 3. **Configure Settings**:
-   - Paste your API Key and Install URL
+   - Paste your Public API Key, Secret API Key, and Install URL
    - Enable auto-subscribe for new users
    - Configure newsletter modal settings
    - Set modal delay timing
 4. **Test Connection**: Use the built-in test tool to verify your setup
+
+#### Plunk Testing & Diagnostics
+
+- Click "Test Plunk Connection" in `FlexPress Settings → Plunk`.
+- Detailed logs are written to `wp-content/debug.log` with the prefix `[FlexPress][Plunk]`:
+  - `[Test] Starting connection test / Success / Error`
+  - `[Request]` url, method, timeout, has_body, masked keys
+  - `[Response]` HTTP status, duration_ms, and a short body snippet
+- Keys are masked in logs; the secret key is never printed in full.
 
 #### Newsletter Modal Features
 
@@ -472,7 +493,7 @@ Display subscription management for logged-in users:
 
 **Common Issues:**
 
-1. **API Connection Failed**: Verify API Key and Install URL are correct
+1. **API Connection Failed**: Verify Public API Key, Secret API Key, and Install URL are correct
 2. **Modal Not Showing**: Check if newsletter modal is enabled in settings
 3. **Users Not Syncing**: Ensure auto-subscribe is enabled
 4. **Events Not Tracking**: Verify API credentials and user contact IDs

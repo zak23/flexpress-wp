@@ -65,13 +65,17 @@ define('PLUNK_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 ### 2. Configuration Setup
 
-Navigate to **WordPress Admin > Plunk > Settings** and configure:
+Navigate to **WordPress Admin > FlexPress > Plunk** and configure:
 
-```php
-// Required settings
-$api_key = get_option('plunk_api_key');        // Your Plunk API key
-$install_url = get_option('plunk_install_url'); // Your Plunk install URL
 ```
+Public API Key (pk_...)
+Secret API Key (sk_...)
+Install URL (e.g., https://em.your-domain.com)
+```
+
+Notes:
+- Public key is safe for frontend event publishing.
+- Secret key MUST only be used server-side.
 
 ### 3. Activation Hook
 
@@ -80,7 +84,8 @@ register_activation_hook(__FILE__, 'plunk_activate');
 
 function plunk_activate() {
     // Create default options
-    add_option('plunk_api_key', '');
+    add_option('plunk_public_api_key', '');
+    add_option('plunk_secret_api_key', '');
     add_option('plunk_install_url', '');
 }
 ```
@@ -95,18 +100,20 @@ The `Plunk\API` class handles all communication with the Plunk API:
 namespace Plunk;
 
 class API {
-    private $api_key;
+    private $public_api_key;
+    private $secret_api_key;
     private $install_url;
 
     public function __construct() {
-        $this->api_key = get_option('plunk_api_key');
+        $this->public_api_key = get_option('plunk_public_api_key');
+        $this->secret_api_key = get_option('plunk_secret_api_key');
         $this->install_url = get_option('plunk_install_url');
     }
 
     private function make_request($endpoint, $args = []) {
         $default_args = [
             'headers' => [
-                'Authorization' => 'Bearer ' . $this->api_key,
+                'Authorization' => 'Bearer ' . $this->secret_api_key,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json'
             ],

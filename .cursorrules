@@ -148,3 +148,8 @@ flexpress/
 - **Flowguard Priority**: Flowguard is now the primary payment system
 - **Backward Compatibility**: Existing user data is preserved during migration
 - **Testing**: All payment flows should be tested in sandbox mode before production
+
+## Turnstile Test Tool Behavior
+- The admin Test Connection button uses AJAX to call WordPress `admin-ajax.php` with a nonce.
+- The tool now reports success if the Cloudflare API is reachable and returns JSON, even when validation errors occur due to a missing user token (e.g., `missing-input-response`).
+- If the API is unreachable, a clear error is shown instead of "undefined".

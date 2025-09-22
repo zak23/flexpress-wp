@@ -219,7 +219,9 @@ if (isset($_GET['error'])) {
                                  data-trial-enabled="<?php echo esc_attr($plan['trial_enabled'] ?? 0); ?>"
                                  data-trial-price="<?php echo esc_attr($plan['trial_price'] ?? 0); ?>"
                                  data-trial-duration="<?php echo esc_attr($plan['trial_duration'] ?? 0); ?>"
-                                 data-trial-duration-unit="<?php echo esc_attr($plan['trial_duration_unit'] ?? 'days'); ?>">
+                                 data-trial-duration-unit="<?php echo esc_attr($plan['trial_duration_unit'] ?? 'days'); ?>"
+                                 data-duration="<?php echo esc_attr($plan['duration'] ?? 30); ?>"
+                                 data-duration-unit="<?php echo esc_attr($plan['duration_unit'] ?? 'days'); ?>">
                                 <div class="plan-content">
                                     <div class="plan-info">
                                         <div class="plan-header">
@@ -525,6 +527,8 @@ jQuery(document).ready(function() {
         const planType = planElement.data('plan-type');
         const planPrice = planElement.data('plan-price');
         const planCurrency = planElement.data('plan-currency');
+        const planDuration = planElement.data('duration');
+        const planDurationUnit = planElement.data('duration-unit');
         const billingTextElement = jQuery('#billing-text');
         
         // Trial information
@@ -535,38 +539,64 @@ jQuery(document).ready(function() {
         
         let billingText = '';
         
+        // Format duration text
+        let durationText = planDuration + ' ' + planDurationUnit;
+        if (planDuration > 1 && planDurationUnit === 'day') {
+            durationText = planDuration + ' days';
+        } else if (planDuration > 1 && planDurationUnit === 'week') {
+            durationText = planDuration + ' weeks';
+        } else if (planDuration > 1 && planDurationUnit === 'month') {
+            durationText = planDuration + ' months';
+        } else if (planDuration > 1 && planDurationUnit === 'year') {
+            durationText = planDuration + ' years';
+        }
+        
         if (planType === 'recurring') {
-            billingText = 'Your subscription will automatically renew at ' + planCurrency + planPrice.toFixed(2) + ' every 30 days unless cancelled. You may cancel at any time';
+            billingText = 'Your subscription will automatically renew at ' + planCurrency + planPrice.toFixed(2) + ' every ' + durationText + ' unless cancelled. You may cancel at any time';
         } else if (planType === 'one_time') {
             billingText = 'This is a one-time payment of ' + planCurrency + planPrice.toFixed(2) + '. No recurring charges will be applied.';
+        } else if (planType === 'lifetime') {
+            billingText = 'This is a one-time payment of ' + planCurrency + planPrice.toFixed(2) + ' for lifetime access. No recurring charges will be applied.';
         } else {
             // Default fallback
-            billingText = 'Your subscription will automatically renew at ' + planCurrency + planPrice.toFixed(2) + ' every 30 days unless cancelled. You may cancel at any time';
+            billingText = 'Your subscription will automatically renew at ' + planCurrency + planPrice.toFixed(2) + ' every ' + durationText + ' unless cancelled. You may cancel at any time';
         }
         
         billingTextElement.text(billingText);
         
         // Update trial disclaimer
-        updateTrialDisclaimer(trialEnabled, trialPrice, trialDuration, trialDurationUnit, planCurrency, planPrice);
+        updateTrialDisclaimer(trialEnabled, trialPrice, trialDuration, trialDurationUnit, planCurrency, planPrice, planDuration, planDurationUnit);
     }
     
     // Function to update trial disclaimer
-    function updateTrialDisclaimer(trialEnabled, trialPrice, trialDuration, trialDurationUnit, planCurrency, planPrice) {
+    function updateTrialDisclaimer(trialEnabled, trialPrice, trialDuration, trialDurationUnit, planCurrency, planPrice, planDuration, planDurationUnit) {
         const trialDisclaimerElement = jQuery('#trial-disclaimer');
         const trialTextElement = jQuery('#trial-text-content');
         
         if (trialEnabled && trialPrice > 0 && trialDuration > 0) {
             // Format trial duration text
-            let durationText = trialDuration + ' ' + trialDurationUnit;
+            let trialDurationText = trialDuration + ' ' + trialDurationUnit;
             if (trialDuration > 1 && trialDurationUnit === 'day') {
-                durationText = trialDuration + ' days';
+                trialDurationText = trialDuration + ' days';
             } else if (trialDuration > 1 && trialDurationUnit === 'week') {
-                durationText = trialDuration + ' weeks';
+                trialDurationText = trialDuration + ' weeks';
             } else if (trialDuration > 1 && trialDurationUnit === 'month') {
-                durationText = trialDuration + ' months';
+                trialDurationText = trialDuration + ' months';
             }
             
-            const trialText = '* Limited Access ' + durationText + ' trial automatically rebilling at ' + planCurrency + planPrice.toFixed(2) + ' every 30 days until cancelled';
+            // Format billing cycle duration text
+            let billingDurationText = planDuration + ' ' + planDurationUnit;
+            if (planDuration > 1 && planDurationUnit === 'day') {
+                billingDurationText = planDuration + ' days';
+            } else if (planDuration > 1 && planDurationUnit === 'week') {
+                billingDurationText = planDuration + ' weeks';
+            } else if (planDuration > 1 && planDurationUnit === 'month') {
+                billingDurationText = planDuration + ' months';
+            } else if (planDuration > 1 && planDurationUnit === 'year') {
+                billingDurationText = planDuration + ' years';
+            }
+            
+            const trialText = '* Limited Access ' + trialDurationText + ' trial automatically rebilling at ' + planCurrency + planPrice.toFixed(2) + ' every ' + billingDurationText + ' until cancelled';
             trialTextElement.text(trialText);
             trialDisclaimerElement.show();
         } else {

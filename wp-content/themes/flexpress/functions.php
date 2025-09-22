@@ -2431,15 +2431,13 @@ function flexpress_process_registration_and_payment() {
     }
     
     // Get form data
-    $first_name = sanitize_text_field($_POST['first_name']);
-    $last_name = sanitize_text_field($_POST['last_name']);
     $email = sanitize_email($_POST['email']);
     $password = $_POST['password'];
     $selected_plan = sanitize_text_field($_POST['selected_plan']);
     $applied_promo_code = sanitize_text_field($_POST['applied_promo_code'] ?? '');
     
     // Validate required fields
-    if (empty($first_name) || empty($last_name) || empty($email) || empty($password) || empty($selected_plan)) {
+    if (empty($email) || empty($password) || empty($selected_plan)) {
         wp_send_json_error(array('message' => 'Please fill in all required fields.'));
         return;
     }
@@ -2472,16 +2470,10 @@ function flexpress_process_registration_and_payment() {
         return;
     }
     
-    // Update user meta
-    update_user_meta($user_id, 'first_name', $first_name);
-    update_user_meta($user_id, 'last_name', $last_name);
-    update_user_meta($user_id, 'display_name', $first_name . ' ' . $last_name);
-    
-    // Set custom display name for FlexPress
-    $default_display_name = trim($first_name . ' ' . $last_name);
-    if (!empty($default_display_name)) {
-        update_user_meta($user_id, 'flexpress_display_name', $default_display_name);
-    }
+    // Set display name from email prefix (part before @)
+    $email_parts = explode('@', $email);
+    $display_name = $email_parts[0];
+    update_user_meta($user_id, 'flexpress_display_name', $display_name);
     
     update_user_meta($user_id, 'selected_pricing_plan', $selected_plan);
     
@@ -5718,20 +5710,16 @@ function flexpress_get_user_display_name($user_id = null) {
         return $display_name;
     }
     
-    // Fallback to first + last name
-    $first_name = get_user_meta($user_id, 'first_name', true);
-    $last_name = get_user_meta($user_id, 'last_name', true);
-    
-    if (!empty($first_name) && !empty($last_name)) {
-        return $first_name . ' ' . $last_name;
-    }
-    
-    if (!empty($first_name)) {
-        return $first_name;
+    // Fallback to email prefix (part before @)
+    $user = get_user_by('id', $user_id);
+    if ($user && !empty($user->user_email)) {
+        $email_parts = explode('@', $user->user_email);
+        if (!empty($email_parts[0])) {
+            return $email_parts[0];
+        }
     }
     
     // Final fallback to WordPress display name
-    $user = get_user_by('id', $user_id);
     if ($user) {
         return $user->display_name;
     }
@@ -5775,28 +5763,6 @@ function flexpress_ajax_update_profile() {
     $user_id = get_current_user_id();
     $errors = array();
     $success_messages = array();
-    
-    // Validate and update first name
-    if (isset($_POST['first_name'])) {
-        $first_name = sanitize_text_field($_POST['first_name']);
-        if (strlen($first_name) > 50) {
-            $errors[] = __('First name must be 50 characters or less.', 'flexpress');
-        } else {
-            update_user_meta($user_id, 'first_name', $first_name);
-            $success_messages[] = __('First name updated.', 'flexpress');
-        }
-    }
-    
-    // Validate and update last name
-    if (isset($_POST['last_name'])) {
-        $last_name = sanitize_text_field($_POST['last_name']);
-        if (strlen($last_name) > 50) {
-            $errors[] = __('Last name must be 50 characters or less.', 'flexpress');
-        } else {
-            update_user_meta($user_id, 'last_name', $last_name);
-            $success_messages[] = __('Last name updated.', 'flexpress');
-        }
-    }
     
     // Validate and update display name
     if (isset($_POST['display_name'])) {
@@ -6401,7 +6367,6 @@ function flexpress_register_user_ajax() {
     }
     
     // Sanitize input data
-    $username = sanitize_user($_POST['username']);
     $email = sanitize_email($_POST['email']);
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
@@ -6409,7 +6374,7 @@ function flexpress_register_user_ajax() {
     $agree_terms = isset($_POST['agree_terms']) ? true : false;
     
     // Validation
-    if (empty($username) || empty($email) || empty($password)) {
+    if (empty($email) || empty($password)) {
         wp_send_json_error('All fields are required');
     }
     
@@ -6429,25 +6394,22 @@ function flexpress_register_user_ajax() {
         wp_send_json_error('Password must be at least 8 characters long');
     }
     
-    // Check if username already exists
-    if (username_exists($username)) {
-        wp_send_json_error('Username already exists. Please choose another.');
-    }
-    
     // Check if email already exists
     if (email_exists($email)) {
         wp_send_json_error('Email address already registered. Please sign in instead.');
     }
     
-    // Create user
-    $user_id = wp_create_user($username, $password, $email);
+    // Create user (use email as username)
+    $user_id = wp_create_user($email, $password, $email);
     
     if (is_wp_error($user_id)) {
         wp_send_json_error($user_id->get_error_message());
     }
     
-    // Set display name
-    update_user_meta($user_id, 'flexpress_display_name', $username);
+    // Set display name from email prefix (part before @)
+    $email_parts = explode('@', $email);
+    $display_name = $email_parts[0];
+    update_user_meta($user_id, 'flexpress_display_name', $display_name);
     
     // Store promo code if provided
     if (!empty($promo_code)) {

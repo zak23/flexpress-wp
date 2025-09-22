@@ -36,24 +36,6 @@ get_header();
                             <?php wp_nonce_field('register_user', 'register_nonce'); ?>
                             <input type="hidden" name="action" value="register_user">
 
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="first_name" class="form-label"><?php esc_html_e('First Name', 'flexpress'); ?></label>
-                                    <input type="text" class="form-control" id="first_name" name="first_name" required>
-                                    <div class="invalid-feedback">
-                                        <?php esc_html_e('Please enter your first name.', 'flexpress'); ?>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6 mb-3">
-                                    <label for="last_name" class="form-label"><?php esc_html_e('Last Name', 'flexpress'); ?></label>
-                                    <input type="text" class="form-control" id="last_name" name="last_name" required>
-                                    <div class="invalid-feedback">
-                                        <?php esc_html_e('Please enter your last name.', 'flexpress'); ?>
-                                    </div>
-                                </div>
-                            </div>
-
                             <div class="mb-3">
                                 <label for="user_email" class="form-label"><?php esc_html_e('Email Address', 'flexpress'); ?></label>
                                 <input type="email" class="form-control" id="user_email" name="user_email" required>

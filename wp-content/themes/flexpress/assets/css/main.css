@@ -3281,6 +3281,19 @@ footer.bg-black .row.footer {
     color: var(--color-text-secondary);
 }
 
+/* Dashboard Profile Alert Styles */
+.dashboard-page .alert.profile-alert {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-page .alert.profile-alert i {
+    color: white;
+}
+
 /* Dashboard Table Hover Effects */
 .dashboard-page .table tbody tr:hover {
     background-color: var(--color-surface-hover);

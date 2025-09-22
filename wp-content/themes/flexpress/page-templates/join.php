@@ -187,7 +187,7 @@ if (isset($_GET['error'])) {
                     <?php if ($is_renewal_flow): ?>
                     <div class="alert alert-info" role="alert">
                         <i class="fas fa-user-check me-2"></i>
-                        <strong>Welcome back, <?php echo esc_html($current_user->first_name ?: $current_user->display_name); ?>!</strong>
+                        <strong>Welcome back, <?php echo esc_html(function_exists('flexpress_get_user_display_name') ? flexpress_get_user_display_name($current_user->ID) : $current_user->display_name); ?>!</strong>
                             <?php if ($membership_status === 'expired'): ?>
                                 Your membership has expired. Choose a plan below to renew your access to premium content.
                             <?php else: ?>
@@ -854,8 +854,6 @@ jQuery(document).ready(function() {
                 data: {
                     action: 'flexpress_process_registration_and_payment',
                     nonce: '<?php echo wp_create_nonce('flexpress_join_form'); ?>',
-                    first_name: email.split('@')[0], // Use email prefix as first name
-                    last_name: 'User', // Default last name
                     email: email,
                     password: password,
                     selected_plan: planId,

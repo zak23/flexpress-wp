@@ -31,7 +31,7 @@ add_filter('body_class', function($classes) {
                             $avatar = get_avatar($user_id, 100, '', '', array('class' => 'rounded-circle mb-3'));
                             echo $avatar;
                             ?>
-                            <h3 class="h5 mb-1"><?php echo esc_html(get_user_meta($user_id, 'first_name', true) . ' ' . get_user_meta($user_id, 'last_name', true)); ?></h3>
+                            <h3 class="h5 mb-1"><?php echo esc_html(function_exists('flexpress_get_user_display_name') ? flexpress_get_user_display_name($user_id) : 'Member'); ?></h3>
                             <p class="text-muted mb-0"><?php echo esc_html(get_user_by('id', $user_id)->user_email); ?></p>
                         </div>
 
@@ -224,16 +224,6 @@ add_filter('body_class', function($classes) {
                                 <form method="post" id="profile-form">
                                     <?php wp_nonce_field('flexpress_dashboard_nonce', 'nonce'); ?>
                                     <input type="hidden" name="action" value="flexpress_update_profile">
-                                    
-                                    <div class="mb-3">
-                                        <label for="first_name" class="form-label"><?php esc_html_e('First Name', 'flexpress'); ?></label>
-                                        <input type="text" class="form-control" id="first_name" name="first_name" value="<?php echo esc_attr(get_user_meta($user_id, 'first_name', true)); ?>">
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label for="last_name" class="form-label"><?php esc_html_e('Last Name', 'flexpress'); ?></label>
-                                        <input type="text" class="form-control" id="last_name" name="last_name" value="<?php echo esc_attr(get_user_meta($user_id, 'last_name', true)); ?>">
-                                    </div>
                                     
                                     <div class="mb-3">
                                         <label for="display_name" class="form-label"><?php esc_html_e('Display Name', 'flexpress'); ?></label>

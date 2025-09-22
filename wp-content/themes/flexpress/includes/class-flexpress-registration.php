@@ -40,19 +40,6 @@ class FlexPress_Registration {
         ob_start();
         ?>
         <form id="flexpress-register-form" class="needs-validation" novalidate>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label for="first_name" class="form-label">First Name</label>
-                    <input type="text" class="form-control" id="first_name" name="first_name" required>
-                    <div class="invalid-feedback">Please enter your first name.</div>
-                </div>
-                <div class="col-md-6">
-                    <label for="last_name" class="form-label">Last Name</label>
-                    <input type="text" class="form-control" id="last_name" name="last_name" required>
-                    <div class="invalid-feedback">Please enter your last name.</div>
-                </div>
-            </div>
-
             <div class="mb-3">
                 <label for="email" class="form-label">Email Address</label>
                 <input type="email" class="form-control" id="email" name="email" required>
@@ -96,15 +83,13 @@ class FlexPress_Registration {
     public function handle_registration() {
         check_ajax_referer('flexpress-registration-nonce', 'nonce');
 
-        $first_name = sanitize_text_field($_POST['first_name']);
-        $last_name = sanitize_text_field($_POST['last_name']);
         $email = sanitize_email($_POST['email']);
         $password = $_POST['password'];
         $password_confirm = $_POST['password_confirm'];
         $selected_plan = sanitize_text_field($_POST['selected_plan']);
 
         // Validate input
-        if (empty($first_name) || empty($last_name) || empty($email) || empty($password)) {
+        if (empty($email) || empty($password)) {
             wp_send_json_error(array('message' => 'Please fill in all required fields.'));
         }
 
@@ -127,15 +112,10 @@ class FlexPress_Registration {
             wp_send_json_error(array('message' => $user_id->get_error_message()));
         }
 
-        // Update user meta
-        update_user_meta($user_id, 'first_name', $first_name);
-        update_user_meta($user_id, 'last_name', $last_name);
-        
-        // Set default display name (will use flexpress_get_user_display_name fallback logic)
-        $default_display_name = trim($first_name . ' ' . $last_name);
-        if (!empty($default_display_name)) {
-            update_user_meta($user_id, 'flexpress_display_name', $default_display_name);
-        }
+        // Set display name from email prefix (part before @)
+        $email_parts = explode('@', $email);
+        $display_name = $email_parts[0];
+        update_user_meta($user_id, 'flexpress_display_name', $display_name);
         
         // Store registration timestamp and IP for tracking
         update_user_meta($user_id, 'registration_date', current_time('mysql'));

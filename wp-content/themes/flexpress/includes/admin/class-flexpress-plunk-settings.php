@@ -405,6 +405,37 @@ class FlexPress_Plunk_Settings {
         <button type="button" id="test-plunk-connection" class="button button-secondary">Test Plunk Connection</button>
         <div id="plunk-test-results" style="margin-top: 10px;"></div>
         <p class="description">Test your Plunk API credentials and connection.</p>
+        <script>
+        (function($){
+            $(document).on('click', '#test-plunk-connection', function(e){
+                e.preventDefault();
+                var $btn = $(this);
+                var $results = $('#plunk-test-results');
+                var nonce = (window.flexpressPlunkAdmin && window.flexpressPlunkAdmin.nonce) ? window.flexpressPlunkAdmin.nonce : '<?php echo wp_create_nonce('flexpress_plunk_test'); ?>';
+                $btn.prop('disabled', true).text('Testing...');
+                $results.html('<p>Testing Plunk connection...</p>');
+                $.ajax({
+                    url: (typeof ajaxurl !== 'undefined') ? ajaxurl : '<?php echo admin_url('admin-ajax.php'); ?>',
+                    type: 'POST',
+                    data: { action: 'test_plunk_connection', nonce: nonce },
+                    success: function(response){
+                        if (response && response.success){
+                            $results.html('<div class="notice notice-success inline"><p>✓ ' + response.data + '</p></div>');
+                        } else {
+                            var msg = (response && response.data) ? response.data : 'Unknown error';
+                            $results.html('<div class="notice notice-error inline"><p>✗ ' + msg + '</p></div>');
+                        }
+                    },
+                    error: function(){
+                        $results.html('<div class="notice notice-error inline"><p>✗ Request failed. Please check debug.log.</p></div>');
+                    },
+                    complete: function(){
+                        $btn.prop('disabled', false).text('Test Plunk Connection');
+                    }
+                });
+            });
+        })(jQuery);
+        </script>
         <?php
     }
 

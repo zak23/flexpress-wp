@@ -69,17 +69,53 @@
   width: 200px;
 }
 
-/* Admin notices styling */
-.notice.notice-success {
-  border-left-color: #00a32a;
+/* Admin notices styling - Enhanced specificity to override WordPress defaults */
+.notice.notice-success,
+.notice.notice-success.inline,
+body .notice.notice-success,
+body .notice.notice-success.inline {
+  border-left-color: #00a32a !important;
+  background-color: #d4edda !important;
+  color: #155724 !important;
 }
 
-.notice.notice-error {
-  border-left-color: #d63638;
+.notice.notice-success p,
+.notice.notice-success.inline p,
+body .notice.notice-success p,
+body .notice.notice-success.inline p {
+  color: #155724 !important;
 }
 
-.notice.notice-warning {
-  border-left-color: #dba617;
+.notice.notice-error,
+.notice.notice-error.inline,
+body .notice.notice-error,
+body .notice.notice-error.inline {
+  border-left-color: #d63638 !important;
+  background-color: #f8d7da !important;
+  color: #721c24 !important;
+}
+
+.notice.notice-error p,
+.notice.notice-error.inline p,
+body .notice.notice-error p,
+body .notice.notice-error.inline p {
+  color: #721c24 !important;
+}
+
+.notice.notice-warning,
+.notice.notice-warning.inline,
+body .notice.notice-warning,
+body .notice.notice-warning.inline {
+  border-left-color: #dba617 !important;
+  background-color: #fff3cd !important;
+  color: #856404 !important;
+}
+
+.notice.notice-warning p,
+.notice.notice-warning.inline p,
+body .notice.notice-warning p,
+body .notice.notice-warning.inline p {
+  color: #856404 !important;
 }
 
 /* Card styling for tools */

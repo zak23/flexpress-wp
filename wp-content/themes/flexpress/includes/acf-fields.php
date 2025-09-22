@@ -213,12 +213,8 @@ if (function_exists('acf_add_local_field_group')):
         'show_in_rest' => 0,
     ));
 
-    // Check if Extras are enabled in settings
-    $options = get_option('flexpress_general_settings');
-    $extras_enabled = isset($options['extras_enabled']) ? $options['extras_enabled'] : '0';
-    
     // Only register Extras ACF fields if enabled
-    if ($extras_enabled) {
+    if (flexpress_is_extras_enabled()) {
         acf_add_local_field_group(array(
             'key' => 'group_extras_videos',
             'title' => 'Extras Videos',

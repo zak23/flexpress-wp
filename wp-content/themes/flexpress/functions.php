@@ -632,6 +632,13 @@ function flexpress_sanitize_general_settings($input) {
         $sanitized['featured_on_media'] = $sanitized_media;
     }
     
+    // Sanitize extras enabled
+    if (isset($input['extras_enabled'])) {
+        $sanitized['extras_enabled'] = '1';
+    } else {
+        $sanitized['extras_enabled'] = '0';
+    }
+    
     return $sanitized;
 }
 
@@ -651,6 +658,29 @@ function flexpress_is_featured_on_enabled() {
     $options = get_option('flexpress_general_settings', array());
     return isset($options['featured_on_enabled']) && $options['featured_on_enabled'] === '1';
 }
+
+/**
+ * Check if Extras are enabled
+ */
+function flexpress_is_extras_enabled() {
+    $options = get_option('flexpress_general_settings', array());
+    return isset($options['extras_enabled']) && $options['extras_enabled'] === '1';
+}
+
+/**
+ * Flush rewrite rules when extras setting changes
+ */
+function flexpress_flush_rewrite_rules_on_extras_change($old_value, $value, $option) {
+    if ($option === 'flexpress_general_settings') {
+        $old_extras_enabled = isset($old_value['extras_enabled']) ? $old_value['extras_enabled'] : '0';
+        $new_extras_enabled = isset($value['extras_enabled']) ? $value['extras_enabled'] : '0';
+        
+        if ($old_extras_enabled !== $new_extras_enabled) {
+            flush_rewrite_rules();
+        }
+    }
+}
+add_action('update_option_flexpress_general_settings', 'flexpress_flush_rewrite_rules_on_extras_change', 10, 3);
 
 /**
  * Get Featured On media outlets from settings
@@ -2539,8 +2569,12 @@ function flexpress_process_registration_and_payment() {
         update_user_meta($user_id, 'payment_amount', $plan['price']);
         update_user_meta($user_id, 'registration_timestamp', current_time('timestamp'));
         
+        // Log the user in automatically after successful registration
+        wp_set_current_user($user_id);
+        wp_set_auth_cookie($user_id);
+        
         wp_send_json_success(array(
-            'message' => 'Redirecting to payment processing...',
+            'message' => 'Registration successful! Redirecting to payment processing...',
             'payment_url' => $payment_url,
             'user_id' => $user_id,
             'plan_name' => $plan['name'],
@@ -3529,10 +3563,7 @@ function flexpress_display_extras_thumbnail($size = 'medium', $class = 'extras-t
  */
 function flexpress_add_extras_visibility_to_query($args) {
     // Check if extras are enabled
-    $options = get_option('flexpress_general_settings');
-    $extras_enabled = isset($options['extras_enabled']) ? $options['extras_enabled'] : '0';
-    
-    if (!$extras_enabled) {
+    if (!flexpress_is_extras_enabled()) {
         // If extras are disabled, return empty results
         $args['post__in'] = array(0);
         return $args;

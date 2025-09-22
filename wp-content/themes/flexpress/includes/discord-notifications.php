@@ -144,8 +144,8 @@ class FlexPress_Discord_Notifications {
             ];
         }
         
-        // Add expiration date for one-time subscriptions
-        if ($payload['subscriptionType'] ?? 'unknown' === 'one-time' && !empty($payload['expiresOn'])) {
+        // Add expiration date for one-time subscriptions only
+        if (($payload['subscriptionType'] ?? 'unknown') === 'one-time' && isset($payload['expiresOn']) && !empty($payload['expiresOn'])) {
             $embed['fields'][] = [
                 'name' => 'Expires',
                 'value' => date('M j, Y', strtotime($payload['expiresOn'])),
@@ -238,8 +238,8 @@ class FlexPress_Discord_Notifications {
             'timestamp' => date('c')
         ];
         
-        // Add expiration date if provided
-        if (!empty($payload['expiresOn'])) {
+        // Add expiration date for one-time subscriptions only
+        if (($payload['subscriptionType'] ?? 'unknown') === 'one-time' && isset($payload['expiresOn']) && !empty($payload['expiresOn'])) {
             $embed['fields'][] = [
                 'name' => 'Access Expires',
                 'value' => date('M j, Y', strtotime($payload['expiresOn'])),

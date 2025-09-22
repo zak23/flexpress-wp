@@ -157,11 +157,7 @@ add_action('init', 'flexpress_register_model_post_type');
  */
 function flexpress_register_extras_post_type() {
     // Check if Extras are enabled in settings
-    $options = get_option('flexpress_general_settings');
-    $extras_enabled = isset($options['extras_enabled']) ? $options['extras_enabled'] : '0';
-    
-    // Only register if enabled
-    if (!$extras_enabled) {
+    if (!flexpress_is_extras_enabled()) {
         return;
     }
     $labels = array(

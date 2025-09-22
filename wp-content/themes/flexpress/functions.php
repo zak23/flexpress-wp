@@ -6515,8 +6515,17 @@ function flexpress_ajax_reset_setup_status() {
 function flexpress_sanitize_discord_settings($input) {
     $sanitized = array();
     
-    if (isset($input['webhook_url'])) {
-        $sanitized['webhook_url'] = esc_url_raw($input['webhook_url']);
+    // Sanitize webhook URLs
+    $webhook_fields = [
+        'webhook_url',
+        'webhook_url_financial',
+        'webhook_url_contact'
+    ];
+    
+    foreach ($webhook_fields as $field) {
+        if (isset($input[$field])) {
+            $sanitized[$field] = esc_url_raw($input[$field]);
+        }
     }
     
     if (isset($input['notify_subscriptions'])) {
@@ -6805,12 +6814,15 @@ function flexpress_set_default_theme_options() {
     if (empty($discord_settings)) {
         $default_discord_settings = array(
             'webhook_url' => '',
+            'webhook_url_financial' => '',
+            'webhook_url_contact' => '',
             'notify_subscriptions' => true,
             'notify_rebills' => true,
             'notify_cancellations' => true,
             'notify_expirations' => true,
             'notify_ppv' => true,
             'notify_refunds' => true,
+            'notify_extensions' => true,
             'notify_talent_applications' => true,
             'enabled' => false
         );

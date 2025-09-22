@@ -42,8 +42,24 @@ class FlexPress_Discord_Settings {
         
         add_settings_field(
             'webhook_url',
-            'Discord Webhook URL',
+            'Default Discord Webhook URL',
             array($this, 'render_webhook_url_field'),
+            'flexpress_discord_settings',
+            'discord_config_section'
+        );
+        
+        add_settings_field(
+            'webhook_url_financial',
+            'Financial Notifications Webhook',
+            array($this, 'render_webhook_url_financial_field'),
+            'flexpress_discord_settings',
+            'discord_config_section'
+        );
+        
+        add_settings_field(
+            'webhook_url_contact',
+            'Contact Forms Webhook',
+            array($this, 'render_webhook_url_contact_field'),
             'flexpress_discord_settings',
             'discord_config_section'
         );
@@ -138,8 +154,17 @@ class FlexPress_Discord_Settings {
     public function sanitize_settings($input) {
         $sanitized = array();
         
-        if (isset($input['webhook_url'])) {
-            $sanitized['webhook_url'] = esc_url_raw($input['webhook_url']);
+        // Sanitize webhook URLs
+        $webhook_fields = [
+            'webhook_url',
+            'webhook_url_financial',
+            'webhook_url_contact'
+        ];
+        
+        foreach ($webhook_fields as $field) {
+            if (isset($input[$field])) {
+                $sanitized[$field] = esc_url_raw($input[$field]);
+            }
         }
         
         if (isset($input['notify_subscriptions'])) {
@@ -181,13 +206,20 @@ class FlexPress_Discord_Settings {
      * Render config section description
      */
     public function render_config_section() {
-        echo '<p>Configure your Discord webhook URL to receive real-time notifications for payment events and other activities.</p>';
-        echo '<p><strong>How to get a Discord webhook URL:</strong></p>';
+        echo '<p>Configure Discord webhook URLs for different types of notifications. You can use separate channels for different notification types or use the default webhook for all notifications.</p>';
+        echo '<p><strong>💡 Pro Tips:</strong></p>';
+        echo '<ul>';
+        echo '<li><strong>Create separate channels</strong> for different types of notifications (e.g., #financial-alerts, #contact-forms)</li>';
+        echo '<li><strong>Use @mentions</strong> in your Discord webhook settings to ping specific team members</li>';
+        echo '<li><strong>Set up role-based notifications</strong> so different team members get different types of alerts</li>';
+        echo '<li><strong>Test regularly</strong> to ensure notifications are working properly</li>';
+        echo '</ul>';
+        echo '<p><strong>How to get Discord webhook URLs:</strong></p>';
         echo '<ol>';
         echo '<li>Go to your Discord server settings</li>';
         echo '<li>Navigate to Integrations → Webhooks</li>';
-        echo '<li>Click "Create Webhook"</li>';
-        echo '<li>Copy the webhook URL and paste it below</li>';
+        echo '<li>Click "Create Webhook" for each channel you want to use</li>';
+        echo '<li>Copy the webhook URLs and paste them in the appropriate fields below</li>';
         echo '</ol>';
     }
     
@@ -203,7 +235,39 @@ class FlexPress_Discord_Settings {
                value="<?php echo esc_attr($webhook_url); ?>" 
                class="regular-text" 
                placeholder="https://discord.com/api/webhooks/..." />
-        <p class="description">Enter your Discord webhook URL. This should start with "https://discord.com/api/webhooks/".</p>
+        <p class="description">Default webhook URL used for all notifications if specific channel webhooks are not configured. This should start with "https://discord.com/api/webhooks/".</p>
+        <?php
+    }
+    
+    /**
+     * Render financial webhook URL field
+     */
+    public function render_webhook_url_financial_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $webhook_url = $options['webhook_url_financial'] ?? '';
+        ?>
+        <input type="url" 
+               name="flexpress_discord_settings[webhook_url_financial]" 
+               value="<?php echo esc_attr($webhook_url); ?>" 
+               class="regular-text" 
+               placeholder="https://discord.com/api/webhooks/..." />
+        <p class="description">Webhook URL for financial notifications (subscriptions, payments, refunds, chargebacks). Leave empty to use default webhook.</p>
+        <?php
+    }
+    
+    /**
+     * Render contact webhook URL field
+     */
+    public function render_webhook_url_contact_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $webhook_url = $options['webhook_url_contact'] ?? '';
+        ?>
+        <input type="url" 
+               name="flexpress_discord_settings[webhook_url_contact]" 
+               value="<?php echo esc_attr($webhook_url); ?>" 
+               class="regular-text" 
+               placeholder="https://discord.com/api/webhooks/..." />
+        <p class="description">Webhook URL for contact form notifications (talent applications, general inquiries). Leave empty to use default webhook.</p>
         <?php
     }
     

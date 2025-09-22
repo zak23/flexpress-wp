@@ -464,11 +464,23 @@ function flexpress_flowguard_handle_subscription_extend($payload) {
         update_user_meta($user_id, 'membership_expires', $payload['expiresOn']);
     }
     
+    // Prepare activity description with new date
+    $description = 'Subscription extended via Flowguard (status preserved: ' . $current_status . ')';
+    
+    // Add new date information based on subscription type
+    if ($payload['subscriptionType'] === 'recurring' && !empty($payload['nextChargeOn'])) {
+        $next_charge_date = date('M j, Y', strtotime($payload['nextChargeOn']));
+        $description .= ' - Next charge: ' . $next_charge_date;
+    } elseif ($payload['subscriptionType'] === 'one-time' && !empty($payload['expiresOn'])) {
+        $expiration_date = date('M j, Y', strtotime($payload['expiresOn']));
+        $description .= ' - New expiration: ' . $expiration_date;
+    }
+    
     // Log activity
     flexpress_flowguard_log_activity(
         $user_id,
         'flowguard_subscription_extended',
-        'Subscription extended via Flowguard (status preserved: ' . $current_status . ')',
+        $description,
         $payload
     );
     

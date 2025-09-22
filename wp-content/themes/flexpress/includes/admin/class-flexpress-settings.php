@@ -91,6 +91,16 @@ class FlexPress_Settings {
             'flexpress-turnstile-settings',
             array($this, 'render_turnstile_settings_page')
         );
+
+        // Add Plunk Email Marketing submenu
+        add_submenu_page(
+            $this->page_slug,
+            __('Plunk Email Marketing', 'flexpress'),
+            __('Plunk', 'flexpress'),
+            'manage_options',
+            'flexpress-plunk-settings',
+            array($this, 'render_plunk_settings_page')
+        );
     }
 
     /**
@@ -819,6 +829,20 @@ class FlexPress_Settings {
             $turnstile_settings->render_turnstile_settings_page();
         } else {
             echo '<div class="wrap"><h1>Turnstile Settings</h1><p>Turnstile settings class not found.</p></div>';
+        }
+    }
+
+    /**
+     * Render the Plunk settings page
+     */
+    public function render_plunk_settings_page() {
+        // This method will be handled by the FlexPress_Plunk_Settings class
+        // We just need to include the class file
+        if (class_exists('FlexPress_Plunk_Settings')) {
+            $plunk_settings = new FlexPress_Plunk_Settings();
+            $plunk_settings->render_plunk_settings_page();
+        } else {
+            echo '<div class="wrap"><h1>Plunk Settings</h1><p>Plunk settings class not found.</p></div>';
         }
     }
 }

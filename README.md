@@ -340,6 +340,157 @@ You can enable/disable Turnstile protection for each form type:
 - **User Experience**: Seamless integration without interrupting user flow
 - **Compliance**: GDPR compliant with no cookies or tracking
 
+### Plunk Email Marketing Integration
+
+FlexPress includes comprehensive Plunk email marketing integration for automated email campaigns, user segmentation, and subscription management. Plunk provides powerful email marketing automation with advanced features for content creators.
+
+#### Plunk Features
+
+- **📧 Automated User Registration**: New users are automatically added to Plunk with appropriate tags
+- **📱 Newsletter Subscription Management**: Frontend and backend subscription controls
+- **🛡️ Security Integration**: Cloudflare Turnstile and honeypot protection for all forms
+- **👥 User Segmentation**: Automatic tagging based on user behavior and membership status
+- **📊 Event Tracking**: Comprehensive activity tracking for user engagement
+- **⚙️ Admin Management**: WordPress admin interface for contact management
+- **🎯 Newsletter Modal**: Beautiful newsletter signup modal with customizable timing
+
+#### Plunk Configuration
+
+1. **Access Settings**: Go to `FlexPress Settings → Plunk`
+2. **Get Credentials**: 
+   - Sign up at [Plunk.com](https://plunk.com)
+   - Copy your API Key and Install URL from your dashboard
+3. **Configure Settings**:
+   - Paste your API Key and Install URL
+   - Enable auto-subscribe for new users
+   - Configure newsletter modal settings
+   - Set modal delay timing
+4. **Test Connection**: Use the built-in test tool to verify your setup
+
+#### Newsletter Modal Features
+
+**Automatic Display:**
+- Shows after configurable delay (1-60 seconds)
+- Beautiful gradient design matching your brand
+- Mobile-responsive layout
+- Turnstile protection integration
+
+**Customization Options:**
+- **Modal Delay**: Control when the modal appears (default: 5 seconds)
+- **Auto Subscribe**: Automatically subscribe new users to newsletter
+- **Security Protection**: Turnstile and honeypot protection enabled
+
+#### User Segmentation
+
+The system automatically segments users based on their behavior:
+
+**Registration Segmentation:**
+- **Source**: "Membership Registration"
+- **User Type**: "member"
+- **Membership Status**: "active"
+- **Signup Date**: Automatic timestamp
+
+**Newsletter Segmentation:**
+- **Source**: "Newsletter Modal"
+- **User Type**: "newsletter_subscriber"
+- **Signup Date**: Automatic timestamp
+
+#### Event Tracking
+
+Track comprehensive user behavior:
+
+- **🎬 Video Views**: Track which videos users watch
+- **💰 Purchases**: Track payment events and amounts
+- **📄 Page Views**: Track user navigation patterns
+- **📧 Newsletter Signups**: Track subscription events
+- **👤 User Registration**: Track new member signups
+
+#### Technical Implementation
+
+**API Integration:**
+- Complete Plunk API wrapper with error handling
+- Automatic retry logic for failed requests
+- Comprehensive contact management
+- Event tracking and analytics
+
+**WordPress Integration:**
+- Automatic user registration hooks
+- User deletion cleanup
+- AJAX handlers for frontend interactions
+- Shortcode support for newsletter management
+
+**Security Features:**
+- Turnstile integration for bot protection
+- Honeypot fields for spam prevention
+- Input sanitization and validation
+- Nonce verification for AJAX requests
+
+#### Helper Functions
+
+**Core Functions:**
+- `flexpress_is_plunk_enabled()` - Check if Plunk is configured
+- `flexpress_should_show_newsletter_modal()` - Check modal display settings
+- `flexpress_track_plunk_event()` - Track custom events
+- `flexpress_track_video_view()` - Track video engagement
+- `flexpress_track_purchase()` - Track purchase events
+
+**Newsletter Management:**
+- `flexpress_render_newsletter_status()` - Display subscription status
+- `flexpress_render_newsletter_modal()` - Render newsletter modal
+- `[newsletter_status]` - Shortcode for subscription management
+
+#### Admin Management
+
+**Settings Page Features:**
+- API credential configuration
+- Newsletter modal settings
+- Auto-subscribe options
+- Connection testing tools
+- User sync functionality
+
+**User Sync Tools:**
+- Bulk sync existing WordPress users
+- Automatic contact ID storage
+- Error handling and reporting
+- Progress tracking
+
+#### Newsletter Shortcode
+
+Display subscription management for logged-in users:
+
+```
+[newsletter_status]
+```
+
+**Features:**
+- Toggle switch for subscription status
+- Real-time status updates
+- AJAX-powered interactions
+- Responsive design
+
+#### Troubleshooting
+
+**Common Issues:**
+
+1. **API Connection Failed**: Verify API Key and Install URL are correct
+2. **Modal Not Showing**: Check if newsletter modal is enabled in settings
+3. **Users Not Syncing**: Ensure auto-subscribe is enabled
+4. **Events Not Tracking**: Verify API credentials and user contact IDs
+
+**Debug Information:**
+- Plunk API errors are logged to WordPress error logs
+- Use browser console to check for JavaScript errors
+- Test connection tool validates API credentials
+- User sync tool provides detailed results
+
+#### Pro Tips
+
+- **Segmentation Strategy**: Use automatic tagging for targeted campaigns
+- **Event Tracking**: Track user engagement to improve content strategy
+- **Modal Timing**: Adjust delay based on your audience behavior
+- **Security**: Always enable Turnstile protection for forms
+- **Analytics**: Use event tracking data for business insights
+
 ### Casting Section
 
 FlexPress includes a professional casting section that appears above the footer on all pages, designed to attract new talent to join the Dolls Down Under family.
@@ -707,6 +858,12 @@ docker exec -it flexpress_wordpress wp [command]
 - Enable debug mode in `.env`: `WORDPRESS_DEBUG=1`
 - Check logs: `docker-compose logs wordpress`
 - Access container: `docker exec -it flexpress_wordpress bash`
+
+### Clearing debug.log
+- Go to WordPress Admin → `FlexPress → Tools`
+- Use the "Clear debug.log" button to truncate `wp-content/debug.log`
+- The tool is nonce-protected and requires `manage_options` capability
+- Shows current file size and last modified time before clearing
 
 ## 🔒 Security Notes
 

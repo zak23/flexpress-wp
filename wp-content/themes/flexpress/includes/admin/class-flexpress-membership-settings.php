@@ -25,6 +25,7 @@ class FlexPress_Membership_Settings {
         add_action('edit_user_profile_update', array($this, 'save_verotel_user_fields'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         add_action('admin_post_sync_episode_dates', array($this, 'handle_sync_episode_dates'));
+        add_action('admin_post_flexpress_clear_debug_log', array($this, 'handle_clear_debug_log'));
         add_action('wp_ajax_delete_member_user', array($this, 'handle_delete_member_user'));
         add_action('wp_ajax_add_purchased_episode', array($this, 'handle_add_purchased_episode'));
         add_action('wp_ajax_remove_purchased_episode', array($this, 'handle_remove_purchased_episode'));
@@ -191,6 +192,28 @@ class FlexPress_Membership_Settings {
                 <?php
             }
         }
+
+        // Display notices for debug log clear action
+        if (isset($_GET['debug_cleared']) && $_GET['debug_cleared'] === '1') {
+            ?>
+            <div class="notice notice-success is-dismissible">
+                <p><?php esc_html_e('debug.log has been cleared.', 'flexpress'); ?></p>
+            </div>
+            <?php
+        } elseif (isset($_GET['debug_error'])) {
+            $error_code = sanitize_text_field($_GET['debug_error']);
+            $message = __('Failed to clear debug.log. Please check file permissions.', 'flexpress');
+            if ($error_code === 'not_found') {
+                $message = __('debug.log not found in wp-content/.', 'flexpress');
+            } elseif ($error_code === 'permission') {
+                $message = __('Insufficient permissions to clear debug.log.', 'flexpress');
+            }
+            ?>
+            <div class="notice notice-error is-dismissible">
+                <p><?php echo esc_html($message); ?></p>
+            </div>
+            <?php
+        }
         
         // Check if create test user button was clicked
         if (isset($_POST['create_test_user']) && current_user_can('create_users')) {
@@ -231,6 +254,30 @@ class FlexPress_Membership_Settings {
                     <p class="submit">
                         <?php submit_button(__('Synchronize Episode Dates', 'flexpress'), 'primary', 'sync_dates', false); ?>
                     </p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Clear debug.log Tool -->
+        <div class="card" style="margin-top: 20px;">
+            <h2 class="title"><?php esc_html_e('Clear debug.log', 'flexpress'); ?></h2>
+            <div class="inside">
+                <?php
+                $debug_log_path = WP_CONTENT_DIR . '/debug.log';
+                $debug_exists = file_exists($debug_log_path);
+                $size_text = $debug_exists ? size_format(filesize($debug_log_path)) : __('N/A', 'flexpress');
+                $modified_text = $debug_exists ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), filemtime($debug_log_path)) : __('N/A', 'flexpress');
+                ?>
+                <p><?php esc_html_e('This will truncate the WordPress debug log file at wp-content/debug.log.', 'flexpress'); ?></p>
+                <ul style="margin-left: 18px; list-style: disc;">
+                    <li><strong><?php esc_html_e('Path', 'flexpress'); ?>:</strong> <?php echo esc_html($debug_log_path); ?></li>
+                    <li><strong><?php esc_html_e('Current size', 'flexpress'); ?>:</strong> <?php echo esc_html($size_text); ?></li>
+                    <li><strong><?php esc_html_e('Last modified', 'flexpress'); ?>:</strong> <?php echo esc_html($modified_text); ?></li>
+                </ul>
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" onsubmit="return confirm('Are you sure you want to clear wp-content/debug.log? This cannot be undone.');">
+                    <?php wp_nonce_field('flexpress_clear_debug_log_action', 'flexpress_clear_debug_log_nonce'); ?>
+                    <input type="hidden" name="action" value="flexpress_clear_debug_log">
+                    <?php submit_button(__('Clear debug.log', 'flexpress'), 'delete'); ?>
                 </form>
             </div>
         </div>
@@ -278,6 +325,73 @@ class FlexPress_Membership_Settings {
             </div>
         </div>
         <?php
+    }
+
+    /**
+     * Handle Clear debug.log action
+     */
+    public function handle_clear_debug_log() {
+        // Capability check
+        if (!current_user_can('manage_options')) {
+            wp_redirect(add_query_arg(array(
+                'page' => 'flexpress-tools',
+                'debug_error' => 'permission'
+            ), admin_url('admin.php')));
+            exit;
+        }
+
+        // Nonce check
+        if (!isset($_POST['flexpress_clear_debug_log_nonce']) || !wp_verify_nonce($_POST['flexpress_clear_debug_log_nonce'], 'flexpress_clear_debug_log_action')) {
+            wp_redirect(add_query_arg(array(
+                'page' => 'flexpress-tools',
+                'debug_error' => 'permission'
+            ), admin_url('admin.php')));
+            exit;
+        }
+
+        $log_path = WP_CONTENT_DIR . '/debug.log';
+
+        if (!file_exists($log_path)) {
+            wp_redirect(add_query_arg(array(
+                'page' => 'flexpress-tools',
+                'debug_error' => 'not_found'
+            ), admin_url('admin.php')));
+            exit;
+        }
+
+        $cleared = false;
+        // Try truncate via file_put_contents
+        $result = @file_put_contents($log_path, '');
+        if ($result !== false) {
+            $cleared = true;
+        } else {
+            // Fallback to fopen with write mode (truncates)
+            $handle = @fopen($log_path, 'w');
+            if ($handle) {
+                @fclose($handle);
+                $cleared = true;
+            } else {
+                // Attempt to relax permissions and try again
+                @chmod($log_path, 0664);
+                $result_retry = @file_put_contents($log_path, '');
+                if ($result_retry !== false) {
+                    $cleared = true;
+                }
+            }
+        }
+
+        if ($cleared) {
+            wp_redirect(add_query_arg(array(
+                'page' => 'flexpress-tools',
+                'debug_cleared' => '1'
+            ), admin_url('admin.php')));
+        } else {
+            wp_redirect(add_query_arg(array(
+                'page' => 'flexpress-tools',
+                'debug_error' => 'write_failed'
+            ), admin_url('admin.php')));
+        }
+        exit;
     }
     
     /**

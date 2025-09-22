@@ -51,6 +51,11 @@ flexpress/
 - Rebuild: `docker-compose up --build -d`
 - WP-CLI: `./wp-cli.sh [command]` (e.g., `./wp-cli.sh --version`, `./wp-cli.sh help`)
 
+## Admin Tools
+- FlexPress → Tools includes:
+  - Episode Date Synchronization utilities
+  - Clear debug.log: truncates `wp-content/debug.log` with nonce + capability checks
+
 ## Theme Features & Integrations
 
 ### Core Integrations

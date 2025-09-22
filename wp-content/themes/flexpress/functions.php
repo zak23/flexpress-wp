@@ -97,6 +97,10 @@ require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-affiliate-setting
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-contact-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-turnstile-settings.php';
 require_once FLEXPRESS_PATH . '/includes/turnstile-integration.php';
+require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-plunk-settings.php';
+require_once FLEXPRESS_PATH . '/includes/class-flexpress-plunk-api.php';
+require_once FLEXPRESS_PATH . '/includes/class-flexpress-plunk-subscriber.php';
+require_once FLEXPRESS_PATH . '/includes/plunk-frontend-integration.php';
 // Upcoming episode settings removed - now uses automatic post query
 
 // FlexPress Settings menus are initialized via admin settings classes above

@@ -22,7 +22,6 @@ class FlexPress_Flowguard_Settings {
      */
     public function __construct() {
         add_action('admin_init', array($this, 'register_settings'));
-        add_action('admin_menu', array($this, 'add_submenu_page'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
     }
     

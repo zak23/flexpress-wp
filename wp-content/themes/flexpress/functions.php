@@ -134,6 +134,7 @@ require_once FLEXPRESS_PATH . '/includes/contact-form-7-templates.php';
 
 // Include Contact Form 7 Discord integration
 require_once FLEXPRESS_PATH . '/includes/contact-form-7-discord-integration.php';
+
 // Upcoming episode settings removed - now uses automatic post query
 
 // FlexPress Settings menus are initialized via admin settings classes above

@@ -72,6 +72,14 @@ class FlexPress_Discord_Settings {
             'discord_config_section'
         );
         
+        add_settings_field(
+            'test_casting_notification',
+            'Test Casting Notification',
+            array($this, 'render_test_casting_notification_field'),
+            'flexpress_discord_settings',
+            'discord_config_section'
+        );
+        
         // Notification Settings Section
         add_settings_section(
             'discord_notifications_section',
@@ -343,6 +351,19 @@ class FlexPress_Discord_Settings {
                 class="button button-secondary">Test Discord Connection</button>
         <div id="discord-test-results" style="margin-top: 10px;"></div>
         <p class="description">Test your Discord webhook connection by sending a test notification.</p>
+        <?php
+    }
+    
+    /**
+     * Render test casting notification field
+     */
+    public function render_test_casting_notification_field() {
+        ?>
+        <button type="button" 
+                onclick="testCastingNotification()" 
+                class="button button-secondary">🌟 Test Casting Notification</button>
+        <div id="casting-test-results" style="margin-top: 10px;"></div>
+        <p class="description">Send a test casting application notification to Discord.</p>
         <?php
     }
     
@@ -652,6 +673,22 @@ class FlexPress_Discord_Settings {
                 }
             });
         }
+        
+        function testCastingNotification() {
+            var resultsDiv = document.getElementById('casting-test-results');
+            resultsDiv.innerHTML = '<p>🌟 Sending test casting notification...</p>';
+            
+            jQuery.post(ajaxurl, {
+                action: 'test_casting_discord_notification',
+                nonce: '<?php echo wp_create_nonce('test_casting_discord_notification'); ?>'
+            }, function(response) {
+                if (response.success) {
+                    resultsDiv.innerHTML = '<p style="color: green;">✓ Casting notification sent successfully! Check your Discord channel for the test notification.</p>';
+                } else {
+                    resultsDiv.innerHTML = '<p style="color: red;">✗ Casting notification failed: ' + response.data + '</p>';
+                }
+            });
+        }
         </script>
         <?php
     }
@@ -787,5 +824,113 @@ function flexpress_test_discord_connection() {
         wp_send_json_success('Discord webhook test successful');
     } else {
         wp_send_json_error('Discord webhook test failed. Check your webhook URL and try again.');
+    }
+}
+
+/**
+ * Test casting Discord notification function
+ */
+function flexpress_test_casting_discord_notification_function() {
+    // Check Discord settings
+    $discord_settings = get_option('flexpress_discord_settings', []);
+    
+    if (empty($discord_settings['webhook_url'])) {
+        return false;
+    }
+    
+    // Check casting notifications setting
+    $notify_casting = $discord_settings['notify_casting_applications'] ?? true;
+    if (!$notify_casting) {
+        return false;
+    }
+    
+    // Create test casting application data
+    $test_casting_data = [
+        'name' => 'Test Applicant',
+        'email' => 'test@example.com',
+        'phone' => '+61 4XX XXX XXX',
+        'age' => '25',
+        'experience' => 'I have 2 years of experience in adult entertainment and modeling.',
+        'social_media' => 'Instagram: @testmodel, OnlyFans: testmodel',
+        'message' => 'I am very interested in joining your cast. I love the high-quality content you produce.'
+    ];
+    
+    // Initialize Discord notifications
+    $discord = new FlexPress_Discord_Notifications();
+    
+    // Create casting application embed
+    $embed = $discord->create_general_embed(
+        '🌟 Casting Application',
+        'New casting form submission received from ' . get_bloginfo('name'),
+        0xff6b35, // Orange color for casting
+        [
+            [
+                'name' => 'Name',
+                'value' => $test_casting_data['name'],
+                'inline' => true
+            ],
+            [
+                'name' => 'Email',
+                'value' => $test_casting_data['email'],
+                'inline' => true
+            ],
+            [
+                'name' => 'Age',
+                'value' => $test_casting_data['age'],
+                'inline' => true
+            ],
+            [
+                'name' => 'Phone',
+                'value' => $test_casting_data['phone'],
+                'inline' => true
+            ],
+            [
+                'name' => 'Experience',
+                'value' => $test_casting_data['experience'],
+                'inline' => false
+            ],
+            [
+                'name' => 'Social Media',
+                'value' => $test_casting_data['social_media'],
+                'inline' => false
+            ],
+            [
+                'name' => 'Message',
+                'value' => $test_casting_data['message'],
+                'inline' => false
+            ],
+            [
+                'name' => 'Submitted',
+                'value' => current_time('Y-m-d H:i:s'),
+                'inline' => true
+            ]
+        ]
+    );
+    
+    // Send notification
+    $result = $discord->send_notification($embed, '🌟 **New casting application received!**', 'contact');
+    
+    return $result;
+}
+
+// AJAX handler for testing casting Discord notification
+add_action('wp_ajax_test_casting_discord_notification', 'flexpress_test_casting_discord_notification');
+
+/**
+ * Test casting Discord notification
+ */
+function flexpress_test_casting_discord_notification() {
+    check_ajax_referer('test_casting_discord_notification', 'nonce');
+    
+    if (!current_user_can('manage_options')) {
+        wp_die('Unauthorized');
+    }
+    
+    $result = flexpress_test_casting_discord_notification_function();
+    
+    if ($result) {
+        wp_send_json_success('Casting notification test successful');
+    } else {
+        wp_send_json_error('Casting notification test failed. Check your Discord settings and try again.');
     }
 }

@@ -180,7 +180,7 @@ class FlexPress_CF7_Discord_Integration {
         // Get form-specific data
         $title = $this->get_form_title($form_type);
         $color = $this->get_form_color($form_type);
-        $fields = $this->get_form_fields($form_type, $posted_data);
+        $fields = $this->get_form_fields($form_type, $posted_data, $form_title);
         
         $description = sprintf(
             __('New %s form submission received from %s', 'flexpress'),
@@ -291,9 +291,10 @@ class FlexPress_CF7_Discord_Integration {
      * 
      * @param string $form_type Form type
      * @param array $posted_data Form data
+     * @param string $form_title Form title
      * @return array Discord embed fields
      */
-    private function get_form_fields($form_type, $posted_data) {
+    private function get_form_fields($form_type, $posted_data, $form_title = '') {
         $fields = [];
         
         // Common fields for all forms
@@ -320,23 +321,56 @@ class FlexPress_CF7_Discord_Integration {
                     $fields[] = [
                         'name' => __('Subject', 'flexpress'),
                         'value' => $posted_data['subject'],
-                        'inline' => false
+                        'inline' => true
                     ];
                 }
                 break;
                 
             case 'casting':
-                if (isset($posted_data['age'])) {
+                if (isset($posted_data['gender_identity'])) {
                     $fields[] = [
-                        'name' => __('Age', 'flexpress'),
-                        'value' => $posted_data['age'],
+                        'name' => __('Gender Identity', 'flexpress'),
+                        'value' => $posted_data['gender_identity'],
                         'inline' => true
                     ];
                 }
-                if (isset($posted_data['phone'])) {
+                if (isset($posted_data['stage_age'])) {
                     $fields[] = [
-                        'name' => __('Phone', 'flexpress'),
-                        'value' => $posted_data['phone'],
+                        'name' => __('Preferred Stage Age', 'flexpress'),
+                        'value' => $posted_data['stage_age'],
+                        'inline' => true
+                    ];
+                }
+                if (isset($posted_data['instagram']) && !empty($posted_data['instagram'])) {
+                    $fields[] = [
+                        'name' => __('Instagram', 'flexpress'),
+                        'value' => $posted_data['instagram'],
+                        'inline' => true
+                    ];
+                }
+                if (isset($posted_data['twitter']) && !empty($posted_data['twitter'])) {
+                    $fields[] = [
+                        'name' => __('Twitter', 'flexpress'),
+                        'value' => $posted_data['twitter'],
+                        'inline' => true
+                    ];
+                }
+                if (isset($posted_data['about_you'])) {
+                    $about_you = $posted_data['about_you'];
+                    // Truncate long descriptions
+                    if (strlen($about_you) > 1000) {
+                        $about_you = substr($about_you, 0, 1000) . '...';
+                    }
+                    $fields[] = [
+                        'name' => __('About You', 'flexpress'),
+                        'value' => $about_you,
+                        'inline' => false
+                    ];
+                }
+                if (isset($posted_data['agreement'])) {
+                    $fields[] = [
+                        'name' => __('Agreement', 'flexpress'),
+                        'value' => __('Confirmed', 'flexpress'),
                         'inline' => true
                     ];
                 }
@@ -373,6 +407,13 @@ class FlexPress_CF7_Discord_Integration {
                 'inline' => false
             ];
         }
+        
+        // Add form title
+        $fields[] = [
+            'name' => __('Form', 'flexpress'),
+            'value' => $form_title,
+            'inline' => true
+        ];
         
         // Add timestamp
         $fields[] = [

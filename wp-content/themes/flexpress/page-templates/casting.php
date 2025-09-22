@@ -212,8 +212,11 @@ get_header();
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-lg-10">
-                
-                <div class="card shadow-lg">
+            <div class="card-header text-center py-4">
+                        <h2 class="h2 mb-3 text-white">Ready to Get Started?</h2>
+                        <div class="lead text-white-50">Fill out our casting application form below and we'll be in touch with you shortly to discuss the next steps. We look forward to potentially working with you!</div>
+                    </div>
+                               <div class="card shadow-lg">
                   
                     <div class="card-body p-4">
                         <?php

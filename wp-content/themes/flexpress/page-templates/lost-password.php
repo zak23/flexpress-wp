@@ -12,11 +12,11 @@ if (is_user_logged_in()) {
 get_header();
 ?>
 
-<div class="site-main">
+<div class="membership-page">
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5">
-                <div class="card shadow-sm">
+                <div class="card bg-dark shadow-sm">
                     <div class="card-body p-4">
                         <div class="text-center mb-4">
                             <h1 class="h3 mb-3"><?php esc_html_e('Reset Password', 'flexpress'); ?></h1>
@@ -32,7 +32,8 @@ get_header();
                         }
 
                         // Show success message
-                        if (isset($_GET['reset']) && $_GET['reset'] === 'sent') {
+                        // WordPress core redirects with checkemail=confirm after successful request
+                        if ((isset($_GET['reset']) && $_GET['reset'] === 'sent') || (isset($_GET['checkemail']) && $_GET['checkemail'] === 'confirm')) {
                             echo '<div class="alert alert-success">';
                             echo esc_html__('Password reset instructions have been sent to your email address.', 'flexpress');
                             echo '</div>';

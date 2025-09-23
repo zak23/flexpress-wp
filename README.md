@@ -205,6 +205,32 @@ flexpress_display_cf7_form('support');
 flexpress_display_cf7_form('content_removal');
 ```
 
+### Support System Features
+
+#### Enhanced Support Form
+- **Categorized Support**: Specific categories for different types of help requests
+  - Account Help: Login issues, profile updates, account settings
+  - Billing Help: Payment methods, subscriptions, refunds
+  - Technical Support: Website issues, video playback, mobile app
+  - Content Access: Membership benefits, premium content, restrictions
+  - Password Reset, Subscription Management, Payment Issues, Video Playback, Mobile App, Other
+- **Priority System**: Four-level priority system for request prioritization
+  - Low: General question
+  - Medium: Minor issue
+  - High: Major issue
+  - Urgent: Cannot access account/content
+- **Account Context**: Username and account type fields for better support
+- **Technical Details**: Browser/device information collection for technical issues
+- **File Attachments**: Support for screenshots and relevant files
+- **Comprehensive FAQ**: Organized FAQ sections by support category
+
+#### Support Page Features
+- **Visual Categories**: Card-based support category display with icons
+- **Comprehensive FAQ**: 8+ frequently asked questions organized by category
+- **Support Hours**: Clear support availability information
+- **Direct Contact**: Direct email support option
+- **Responsive Design**: Mobile-optimized support interface
+
 ### Discord Integration Features
 
 - **Real-time Notifications**: Instant Discord alerts for all form submissions
@@ -213,6 +239,7 @@ flexpress_display_cf7_form('content_removal');
 - **Error Prevention**: Comprehensive validation to prevent Discord API errors
 - **Failure Notifications**: Optional alerts when forms fail to send
 - **Smart Routing**: Uses Contact Forms webhook or falls back to default
+- **Support Request Details**: Complete support context including category, priority, and technical info
 
 ### Technical Details
 
@@ -1497,3 +1524,25 @@ For issues or questions:
 2. Verify port availability
 3. Check environment configuration
 4. Review this documentation
+
+## 🔑 Forgot & Reset Password Pages
+
+FlexPress includes custom, theme-styled pages for the full password recovery flow.
+
+### Pages
+- Lost Password: `page-templates/lost-password.php`
+- Reset Password: `page-templates/reset-password.php`
+
+### Setup
+1. In WordPress Admin → Pages → Add New → Title: "Forgot Password" → Template: `Lost Password` → Publish.
+2. Add another page → Title: "Reset Password" → Template: `Reset Password` → Publish.
+
+### How It Works
+- Forgot submission posts to core `wp-login.php?action=lostpassword`.
+- On success, WordPress redirects with `checkemail=confirm`. The page shows a success alert.
+- The email link opens core `rp/resetpass` screens, auto-redirected by FlexPress to `/reset-password?login=...&key=...`.
+- Submitting the new password posts to `wp-login.php?action=resetpass`; FlexPress handlers validate and redirect back to `/login?password=changed`.
+
+### Styling
+- Matches membership/auth pages using `membership-page` wrapper and `card bg-dark`.
+- Uses Bootstrap validation and accessible labels.

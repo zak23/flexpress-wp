@@ -32,11 +32,11 @@ if (is_wp_error($user)) {
 get_header();
 ?>
 
-<div class="site-main">
+<div class="membership-page">
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5">
-                <div class="card shadow-sm">
+                <div class="card bg-dark shadow-sm">
                     <div class="card-body p-4">
                         <div class="text-center mb-4">
                             <h1 class="h3 mb-3"><?php esc_html_e('Create New Password', 'flexpress'); ?></h1>

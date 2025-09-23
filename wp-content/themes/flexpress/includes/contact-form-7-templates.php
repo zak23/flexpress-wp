@@ -530,13 +530,13 @@ function flexpress_create_content_removal_form() {
 </div>
 
 <div class="mb-3">
-    <div class="form-check">
-        <input type="checkbox" name="confirmation" id="confirmation" class="form-check-input" required>
-        <label class="form-check-label" for="confirmation">
+    <div class="form-check d-flex align-items-start">
+        [checkbox* confirmation id:confirmation class:form-check-input me-2 "1"]
+        <label class="form-check-label flex-grow-1" for="confirmation">
             ' . __('I confirm that all information provided is accurate and complete.', 'flexpress') . ' <span class="text-danger">*</span>
         </label>
-        <div class="invalid-feedback">' . __('You must confirm that the information is accurate.', 'flexpress') . '</div>
     </div>
+    <div class="invalid-feedback">' . __('You must confirm that the information is accurate.', 'flexpress') . '</div>
 </div>
 
 <div class="mb-3">

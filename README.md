@@ -140,6 +140,98 @@ FlexPress uses intelligent email routing with automatic domain detection:
 - **Contact Forms**: Automatically routed through SMTP2Go when sending to your domain
 - **Newsletters**: Uses Plunk integration for marketing emails
 
+## 📋 Contact Form 7 Integration
+
+FlexPress includes comprehensive Contact Form 7 templates with Discord notifications for professional contact management.
+
+### Available Forms
+
+#### 1. General Contact Form
+- **Template**: `flexpress_create_contact_form()` in `contact-form-7-templates.php`
+- **Fields**: Name, Email, Subject, Message
+- **Features**: Bootstrap styling, form validation, auto-responder emails
+- **Discord Channel**: Contact Forms webhook (blue embed)
+
+#### 2. Casting Application Form
+- **Template**: `flexpress_create_casting_form()` 
+- **Fields**: Name, Email, Gender Identity, Stage Age, Social Media, About You
+- **Features**: Age verification notice, comprehensive applicant details
+- **Discord Channel**: Contact Forms webhook (orange embed)
+
+#### 3. Support Request Form
+- **Template**: `flexpress_create_support_form()`
+- **Fields**: Name, Email, Issue Type, Priority, Subject, Message
+- **Features**: Priority levels, issue categorization
+- **Discord Channel**: Contact Forms webhook (red embed)
+
+#### 4. Content Removal Form
+- **Template**: `flexpress_create_content_removal_form()`
+- **Fields**: Name, Email, Content URL, Removal Reason, Identity Verification
+- **Features**: Legal compliance, identity verification options
+- **Discord Channel**: Contact Forms webhook (dark orange embed)
+
+### Setup Instructions
+
+#### 1. Create Contact Page
+1. Go to WordPress Admin → Pages → Add New
+2. Title: "Contact"
+3. Select Template: "Contact" (`page-templates/contact.php`)
+4. Add page content describing your contact information
+5. Publish the page
+
+#### 2. Configure Discord Notifications
+1. Go to `FlexPress → Discord Settings`
+2. Set **Contact Forms Webhook** URL for form notifications
+3. Enable notification types:
+   - ✅ **Contact Forms** - General inquiries
+   - ✅ **Casting Applications** - Talent applications
+   - ✅ **Support Requests** - Customer support
+   - ✅ **Content Removal** - Legal requests
+4. Test the connection
+
+#### 3. Display Forms
+Use the helper function to display forms anywhere:
+```php
+// Display contact form
+flexpress_display_cf7_form('contact');
+
+// Display casting form
+flexpress_display_cf7_form('casting');
+
+// Display support form  
+flexpress_display_cf7_form('support');
+
+// Display content removal form
+flexpress_display_cf7_form('content_removal');
+```
+
+### Discord Integration Features
+
+- **Real-time Notifications**: Instant Discord alerts for all form submissions
+- **Rich Embeds**: Color-coded, structured data with all form fields
+- **Data Validation**: Automatic sanitization, character limits, array handling
+- **Error Prevention**: Comprehensive validation to prevent Discord API errors
+- **Failure Notifications**: Optional alerts when forms fail to send
+- **Smart Routing**: Uses Contact Forms webhook or falls back to default
+
+### Technical Details
+
+**Integration Files:**
+- `includes/contact-form-7-templates.php` - Form templates and creation
+- `includes/contact-form-7-discord-integration.php` - Discord notifications
+- `page-templates/contact.php` - Contact page template
+
+**Form Detection:**
+- Automatically detects form type based on WordPress form IDs
+- Supports custom forms with fallback to 'general' type
+- Maintains form relationships through WordPress options
+
+**Data Processing:**
+- Array handling for checkboxes and multi-selects
+- Character truncation (1024 chars per field, 25 field limit)
+- Markdown removal to prevent Discord formatting issues
+- Timestamp addition for all submissions
+
 ## 🔧 Recent Fixes
 
 ### SMTP2Go Integration Implementation (September 2025)

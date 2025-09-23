@@ -1558,6 +1558,8 @@ function flexpress_redirect_wp_login_urls() {
         // TEMPORARY: Allow all wp-login.php access for debugging
         // Remove this after confirming admin access works
         if (strpos($_SERVER['REQUEST_URI'], 'wp-login.php') !== false) {
+            // Debug: Log that we're allowing wp-login.php access
+            error_log('FlexPress: Allowing wp-login.php access - URI: ' . $_SERVER['REQUEST_URI']);
             return;
         }
         
@@ -1601,29 +1603,39 @@ function flexpress_redirect_wp_login_urls() {
         }
     }
 }
-add_action('init', 'flexpress_redirect_wp_login_urls');
+// TEMPORARILY DISABLED - CAUSING ADMIN ACCESS ISSUES
+// add_action('wp_loaded', 'flexpress_redirect_wp_login_urls');
 
 /**
  * Override WordPress login URL to use custom login page
+ * TEMPORARILY DISABLED FOR DEBUGGING
  */
 function flexpress_custom_login_url($login_url, $redirect, $force_reauth) {
-    return home_url('/login');
+    // Debug: Log the original login URL
+    error_log('FlexPress: Original login URL: ' . $login_url);
+    return $login_url; // Return original URL instead of custom
 }
 add_filter('login_url', 'flexpress_custom_login_url', 10, 3);
 
 /**
  * Override WordPress lost password URL to use custom page
+ * TEMPORARILY DISABLED FOR DEBUGGING
  */
 function flexpress_custom_lostpassword_url($lostpassword_url, $redirect) {
-    return home_url('/lost-password');
+    // Debug: Log the original lost password URL
+    error_log('FlexPress: Original lost password URL: ' . $lostpassword_url);
+    return $lostpassword_url; // Return original URL instead of custom
 }
 add_filter('lostpassword_url', 'flexpress_custom_lostpassword_url', 10, 2);
 
 /**
  * Override WordPress registration URL to use custom page
+ * TEMPORARILY DISABLED FOR DEBUGGING
  */
 function flexpress_custom_registration_url($register_url) {
-    return home_url('/register');
+    // Debug: Log the original registration URL
+    error_log('FlexPress: Original registration URL: ' . $register_url);
+    return $register_url; // Return original URL instead of custom
 }
 add_filter('register_url', 'flexpress_custom_registration_url');
 

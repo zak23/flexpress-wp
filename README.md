@@ -1551,3 +1551,25 @@ FlexPress includes custom, theme-styled pages for the full password recovery flo
 ### Styling
 - Matches membership/auth pages using `membership-page` wrapper and `card bg-dark`.
 - Uses Bootstrap validation and accessible labels.
+
+### WordPress Branding Protection
+FlexPress automatically redirects all WordPress branded login URLs to custom pages:
+
+**Protected URLs:**
+- `wp-login.php` → `/login`
+- `wp-login.php?action=lostpassword` → `/lost-password`
+- `wp-login.php?action=resetpass` → `/reset-password` (with key/login params)
+- `wp-login.php?checkemail=confirm` → `/lost-password?checkemail=confirm`
+- `wp-login.php?action=register` → `/register`
+
+**Implementation:**
+- `flexpress_redirect_wp_login_urls()` - Redirects all wp-login.php URLs
+- `flexpress_custom_login_url()` - Overrides WordPress login URL filter
+- `flexpress_custom_lostpassword_url()` - Overrides lost password URL filter
+- `flexpress_custom_registration_url()` - Overrides registration URL filter
+
+**Benefits:**
+- Complete WordPress branding removal
+- Consistent user experience
+- All functionality preserved
+- SEO-friendly custom URLs

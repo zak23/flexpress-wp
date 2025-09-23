@@ -1502,6 +1502,85 @@ add_action('login_form_rp', 'flexpress_do_password_reset');
 add_action('login_form_resetpass', 'flexpress_do_password_reset');
 
 /**
+ * Redirect all wp-login.php URLs to custom pages to hide WordPress branding
+ */
+function flexpress_redirect_wp_login_urls() {
+    // Only redirect on frontend, not admin
+    if (is_admin()) {
+        return;
+    }
+    
+    // Check if we're on wp-login.php
+    if (strpos($_SERVER['REQUEST_URI'], 'wp-login.php') !== false) {
+        $action = isset($_GET['action']) ? $_GET['action'] : '';
+        
+        switch ($action) {
+            case 'lostpassword':
+                // Redirect to custom lost password page
+                wp_redirect(home_url('/lost-password'));
+                exit;
+                
+            case 'resetpass':
+            case 'rp':
+                // Redirect to custom reset password page with key/login params
+                if (isset($_GET['key']) && isset($_GET['login'])) {
+                    $redirect_url = home_url('/reset-password');
+                    $redirect_url = add_query_arg('key', $_GET['key'], $redirect_url);
+                    $redirect_url = add_query_arg('login', $_GET['login'], $redirect_url);
+                    wp_redirect($redirect_url);
+                } else {
+                    wp_redirect(home_url('/lost-password?error=invalidkey'));
+                }
+                exit;
+                
+            case 'checkemail':
+                // Redirect to lost password page with success message
+                wp_redirect(home_url('/lost-password?checkemail=confirm'));
+                exit;
+                
+            case 'register':
+                // Redirect to custom registration page
+                wp_redirect(home_url('/register'));
+                exit;
+                
+            case 'logout':
+                // Allow logout to proceed normally
+                return;
+                
+            default:
+                // Default login page - redirect to custom login
+                wp_redirect(home_url('/login'));
+                exit;
+        }
+    }
+}
+add_action('init', 'flexpress_redirect_wp_login_urls');
+
+/**
+ * Override WordPress login URL to use custom login page
+ */
+function flexpress_custom_login_url($login_url, $redirect, $force_reauth) {
+    return home_url('/login');
+}
+add_filter('login_url', 'flexpress_custom_login_url', 10, 3);
+
+/**
+ * Override WordPress lost password URL to use custom page
+ */
+function flexpress_custom_lostpassword_url($lostpassword_url, $redirect) {
+    return home_url('/lost-password');
+}
+add_filter('lostpassword_url', 'flexpress_custom_lostpassword_url', 10, 2);
+
+/**
+ * Override WordPress registration URL to use custom page
+ */
+function flexpress_custom_registration_url($register_url) {
+    return home_url('/register');
+}
+add_filter('register_url', 'flexpress_custom_registration_url');
+
+/**
  * Create Home page with the page-home.php template
  */
 function flexpress_create_home_page() {

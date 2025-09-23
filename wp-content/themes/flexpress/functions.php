@@ -129,8 +129,21 @@ require_once FLEXPRESS_PATH . '/includes/plunk-frontend-integration.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-google-smtp.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-google-smtp-settings.php';
 
-// Debug: Log that Google SMTP classes are loaded
+// SMTP2Go Integration
+require_once FLEXPRESS_PATH . '/includes/class-flexpress-smtp2go.php';
+require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-smtp2go-settings.php';
+
+// Debug: Log that SMTP classes are loaded
 error_log('FlexPress: Google SMTP classes loaded successfully');
+error_log('FlexPress: SMTP2Go classes loaded successfully');
+
+// Initialize SMTP2Go settings in admin
+if (is_admin()) {
+    error_log('FlexPress: Initializing SMTP2Go Settings in admin');
+    new FlexPress_SMTP2Go_Settings();
+} else {
+    error_log('FlexPress: Not in admin, skipping SMTP2Go Settings initialization');
+}
 
 // Amazon SES Integration
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-ses-settings.php';

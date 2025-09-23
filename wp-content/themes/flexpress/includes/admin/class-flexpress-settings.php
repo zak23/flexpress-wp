@@ -111,6 +111,16 @@ class FlexPress_Settings {
             'flexpress-google-smtp-settings',
             array($this, 'render_google_smtp_settings_page')
         );
+        
+        // Add SMTP2Go submenu
+        add_submenu_page(
+            $this->page_slug,
+            __('SMTP2Go', 'flexpress'),
+            __('SMTP2Go', 'flexpress'),
+            'manage_options',
+            'flexpress-smtp2go-settings',
+            array($this, 'render_smtp2go_settings_page')
+        );
 
         // Add Flowguard submenu (centralized under FlexPress)
         add_submenu_page(
@@ -972,6 +982,20 @@ class FlexPress_Settings {
             $google_smtp_settings->render_google_smtp_settings_page();
         } else {
             echo '<div class="wrap"><h1>Google SMTP Settings</h1><p>Google SMTP settings class not found.</p></div>';
+        }
+    }
+    
+    /**
+     * Render the SMTP2Go settings page
+     */
+    public function render_smtp2go_settings_page() {
+        // This method will be handled by the FlexPress_SMTP2Go_Settings class
+        // We just need to include the class file
+        if (class_exists('FlexPress_SMTP2Go_Settings')) {
+            $smtp2go_settings = new FlexPress_SMTP2Go_Settings();
+            $smtp2go_settings->render_smtp2go_settings_page();
+        } else {
+            echo '<div class="wrap"><h1>SMTP2Go Settings</h1><p>SMTP2Go settings class not found.</p></div>';
         }
     }
 }

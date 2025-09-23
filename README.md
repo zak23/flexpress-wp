@@ -88,14 +88,68 @@ FlexPress includes comprehensive Amazon SES integration for reliable email deliv
 
 For detailed setup instructions, see [Amazon SES Setup Guide](docs/AMAZON_SES_SETUP_GUIDE.md).
 
+### SMTP2Go Integration
+FlexPress includes SMTP2Go integration as the primary solution for reliable internal email delivery:
+
+- **Admin Interface**: Configure SMTP2Go settings under `FlexPress → SMTP2Go`
+- **Professional Service**: Enterprise-grade email delivery with automatic domain authentication
+- **Internal Email Focus**: Perfect for contact forms and internal communications
+- **No Domain Issues**: Handles domain authentication automatically, eliminating bounce problems
+- **Simple Setup**: Easy configuration with built-in testing functionality
+- **Smart Routing**: Automatically handles emails to your domain (`@zakspov.com`)
+
+#### Quick Setup
+1. Sign up for a free SMTP2Go account at [smtp2go.com](https://smtp2go.com)
+2. Verify your domain in the SMTP2Go dashboard
+3. Get your SMTP credentials from the dashboard
+4. Configure settings in `FlexPress → SMTP2Go`:
+   - SMTP Host: `mail.smtp2go.com`
+   - SMTP Port: `587`
+   - Encryption: `TLS`
+   - Username: Your SMTP2Go username
+   - Password: Your SMTP2Go password
+   - From Email: `zak@zakozbourne.com` (your verified domain)
+   - From Name: `Zak Ozbourne`
+   - Test Email: Your email address for testing
+   - ✅ Enable SMTP2Go
+   - ✅ Use for Internal Emails Only
+5. Test the connection using the "Send Test Email" button
+
+#### How It Works
+- **Internal Emails**: Any email sent TO `@zakspov.com` is automatically routed through SMTP2Go
+- **From Address Override**: SMTP2Go uses your configured From email (`zak@zakozbourne.com`) instead of WordPress defaults
+- **Professional Delivery**: No more bounces or spam filter issues
+- **Automatic Fallback**: If SMTP2Go fails, system falls back to Google SMTP, then Amazon SES
+
 ### Email Routing Strategy
-FlexPress uses intelligent email routing:
-- **Internal Emails** (to your domain): Uses Google SMTP for reliable delivery
-- **External Emails** (to other domains): Uses Amazon SES or default mail system
-- **Contact Forms**: Automatically routed through Google SMTP when sending to your domain
+FlexPress uses intelligent email routing with automatic domain detection:
+
+#### Internal Emails (TO @zakspov.com)
+1. **SMTP2Go** (Primary): Professional delivery with proper From address (`zak@zakozbourne.com`)
+2. **Google SMTP** (Fallback): If SMTP2Go is disabled or fails
+3. **Amazon SES** (Last Resort): If both SMTP2Go and Google SMTP fail
+
+#### External Emails (TO other domains)
+- **Amazon SES**: Handles all external email delivery
+- **Cost Efficient**: Optimized for outbound marketing and notifications
+
+#### Smart Detection Logic
+- **Domain Matching**: Automatically detects emails TO `@zakspov.com` as internal
+- **From Address Override**: SMTP2Go uses configured From email instead of WordPress defaults
+- **No Manual Configuration**: System automatically routes emails based on destination
+- **Contact Forms**: Automatically routed through SMTP2Go when sending to your domain
 - **Newsletters**: Uses Plunk integration for marketing emails
 
 ## 🔧 Recent Fixes
+
+### SMTP2Go Integration Implementation (September 2025)
+- **Added SMTP2Go Integration**: Complete SMTP2Go integration for reliable internal email delivery
+- **Smart Routing Logic**: Automatically routes emails TO `@zakspov.com` through SMTP2Go
+- **From Address Override**: SMTP2Go uses configured From email (`zak@zakozbourne.com`) instead of WordPress defaults
+- **Professional Delivery**: Eliminates bounce issues and spam filter problems for internal emails
+- **Admin Interface**: Full settings page under `FlexPress → SMTP2Go` with test functionality
+- **Fallback System**: SMTP2Go → Google SMTP → Amazon SES priority order for internal emails
+- **Domain Detection**: Fixed routing logic to handle emails TO `zakspov.com` regardless of sender domain
 
 ### Flowguard Subscription Extend Webhook Fix (January 2025)
 - Fixed critical issue where extending cancelled users incorrectly changed their status to 'active'

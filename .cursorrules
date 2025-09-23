@@ -77,6 +77,7 @@ flexpress/
 - **Advanced Custom Fields (ACF)**: Content management and admin interfaces
 - **Discord Notifications**: Multi-channel webhook system for real-time team alerts
 - **Google SMTP Integration**: Reliable email delivery for internal communications and contact forms
+- **SMTP2Go Integration**: Professional email delivery service with automatic domain authentication
 
 ### Discord Integration System
 
@@ -147,10 +148,41 @@ flexpress/
 - **Smart Routing**: "Use for Internal Emails Only" option for optimal performance
 - **Testing**: Built-in email test functionality with detailed feedback
 
+### SMTP2Go Integration System
+
+#### Professional Email Delivery
+- **Enterprise-Grade Service**: Reliable email delivery with automatic domain authentication
+- **Internal Email Routing**: Perfect for contact forms and internal communications
+- **No Domain Issues**: Handles domain authentication automatically, eliminating bounce problems
+- **Simple Setup**: Easy configuration with built-in testing functionality
+- **From Address Override**: Uses configured From email instead of WordPress defaults
+
+#### Configuration
+- **Admin Interface**: `FlexPress → SMTP2Go` settings page
+- **Default Settings**: mail.smtp2go.com:587 with TLS encryption
+- **Smart Routing**: "Use for Internal Emails Only" option for optimal performance
+- **Testing**: Built-in connection testing and email sending functionality
+- **Current Setup**: Username: `zakozbourne`, From: `zak@zakozbourne.com`, From Name: `Zak Ozbourne`
+
+#### Smart Routing Logic
+- **Domain Detection**: Automatically detects emails TO `@zakspov.com` as internal
+- **Priority Order**: SMTP2Go → Google SMTP → Amazon SES (for internal emails)
+- **From Address Override**: SMTP2Go uses `zak@zakozbourne.com` instead of WordPress defaults
+- **Automatic Fallback**: If SMTP2Go fails, falls back to Google SMTP, then Amazon SES
+- **No Manual Configuration**: System automatically routes emails based on destination
+
+#### Implementation Details
+- **Class**: `FlexPress_SMTP2Go` in `includes/class-flexpress-smtp2go.php`
+- **Settings**: `FlexPress_SMTP2Go_Settings` in `includes/admin/class-flexpress-smtp2go-settings.php`
+- **Routing Logic**: Handles emails TO `zakspov.com` regardless of sender domain
+- **Sanitization**: Uses `sanitize_text_field()` for SMTP username (not `sanitize_email()`)
+- **Debug Logging**: Comprehensive logging for troubleshooting and monitoring
+
 ### Admin Features
-- **Settings Panels**: General, Video, Membership, Flowguard, Pricing, Affiliate, Contact, Google SMTP, Upcoming Episode
+- **Settings Panels**: General, Video, Membership, Flowguard, Pricing, Affiliate, Contact, Google SMTP, SMTP2Go, Upcoming Episode
 - **Webhook Management**: Flowguard payment processing and debugging
 - **User Management**: Member profiles, purchases, activity logs
+- **Email Testing**: Built-in test functionality for Google SMTP and SMTP2Go
 - **Legal Pages**: Dynamic content generation for compliance
 - **Automatic Episode Scheduling**: WordPress scheduled posts integration
 

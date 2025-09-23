@@ -38,6 +38,12 @@ class FlexPress_SES_SMTP {
             return;
         }
         
+        // Check if SMTP2Go should handle this email instead
+        if ($this->should_smtp2go_handle_email($phpmailer)) {
+            error_log('FlexPress SES: SMTP2Go should handle this email, skipping SES');
+            return;
+        }
+        
         // Check if SES is enabled
         if (!isset($options['enable_ses']) || !$options['enable_ses']) {
             error_log('FlexPress SES: Not enabled, skipping');
@@ -119,6 +125,38 @@ class FlexPress_SES_SMTP {
             }
         }
         
+        return false;
+    }
+    
+    /**
+     * Check if SMTP2Go should handle this email
+     * 
+     * @param PHPMailer $phpmailer
+     * @return bool
+     */
+    private function should_smtp2go_handle_email($phpmailer) {
+        $smtp2go_options = get_option('flexpress_smtp2go_settings', array());
+        
+        if (!isset($smtp2go_options['enable_smtp2go']) || !$smtp2go_options['enable_smtp2go']) {
+            return false;
+        }
+        
+        if (!isset($smtp2go_options['use_for_internal_only']) || !$smtp2go_options['use_for_internal_only']) {
+            error_log('FlexPress SES: SMTP2Go handles all emails, letting it handle this one');
+            return true;
+        }
+        
+        $from_email = $phpmailer->From;
+        $from_domain = substr(strrchr($from_email, "@"), 1);
+        
+        $recipients = $phpmailer->getAllRecipientAddresses();
+        foreach (array_keys($recipients) as $email) {
+            $recipient_domain = substr(strrchr($email, "@"), 1);
+            if ($recipient_domain === $from_domain || $recipient_domain === 'zakspov.com') {
+                error_log('FlexPress SES: Internal email detected, letting SMTP2Go handle it');
+                return true;
+            }
+        }
         return false;
     }
     

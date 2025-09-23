@@ -3046,46 +3046,123 @@ footer.bg-black .row.footer {
     display: flex;
 }
 
-/* Contact Form 7 General Styling */
+/* Contact Form 7 General Styling - Dark Theme */
+.site-main .wpcf7-form {
+    background-color: var(--color-background) !important;
+    border-radius: 8px !important;
+    padding: 2rem !important;
+}
+
 .site-main .wpcf7-form .form-control {
-    background-color: var(--color-surface) !important;
-    border: 1px solid var(--color-border) !important;
-    color: var(--color-text) !important;
+    background-color: #1a1a1a !important;
+    border: 1px solid #333 !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.95rem !important;
+    transition: all 0.3s ease !important;
 }
 
 .site-main .wpcf7-form .form-control:focus {
-    background-color: var(--color-surface) !important;
+    background-color: #1a1a1a !important;
     border-color: var(--color-accent) !important;
-    color: var(--color-text) !important;
-    box-shadow: 0 0 0 0.2rem var(--color-accent-light) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 0 0.2rem rgba(255, 107, 107, 0.25) !important;
+    outline: none !important;
+}
+
+.site-main .wpcf7-form .form-control::placeholder {
+    color: #888 !important;
+    opacity: 1 !important;
 }
 
 .site-main .wpcf7-form .form-label {
-    color: var(--color-text) !important;
+    color: #ffffff !important;
+    font-weight: 500 !important;
+    margin-bottom: 0.5rem !important;
+    font-size: 0.9rem !important;
+}
+
+.site-main .wpcf7-form .text-danger {
+    color: #ff6b6b !important;
+    font-weight: 500 !important;
+}
+
+.site-main .wpcf7-form .invalid-feedback {
+    color: #ff6b6b !important;
+    font-size: 0.85rem !important;
+    margin-top: 0.25rem !important;
+}
+
+.site-main .wpcf7-form .text-muted {
+    color: #888 !important;
 }
 
 .site-main .wpcf7-form .btn-primary {
     background-color: var(--color-accent) !important;
     border-color: var(--color-accent) !important;
-    color: var(--color-background) !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+    padding: 0.75rem 2rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    transition: all 0.3s ease !important;
 }
 
 .site-main .wpcf7-form .btn-primary:hover {
     background-color: var(--color-accent-hover) !important;
     border-color: var(--color-accent-hover) !important;
-    color: var(--color-background) !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3) !important;
 }
 
-.site-main .wpcf7-form .text-danger {
-    color: var(--color-error) !important;
+.site-main .wpcf7-form .btn-primary:active {
+    transform: translateY(0) !important;
 }
 
-.site-main .wpcf7-form .invalid-feedback {
-    color: var(--color-error) !important;
+/* Contact Form 7 Row Styling */
+.site-main .wpcf7-form .row {
+    margin-bottom: 1rem !important;
 }
 
-.site-main .wpcf7-form .text-muted {
-    color: var(--color-text-secondary) !important;
+.site-main .wpcf7-form .mb-3 {
+    margin-bottom: 1.5rem !important;
+}
+
+/* Contact Form 7 Paragraph Styling */
+.site-main .wpcf7-form p {
+    margin-bottom: 0 !important;
+    color: #ffffff !important;
+}
+
+/* Contact Form 7 Field Wrapper Styling */
+.site-main .wpcf7-form .wpcf7-form-control-wrap {
+    display: block !important;
+    width: 100% !important;
+}
+
+/* Contact Form 7 Response Output Styling */
+.site-main .wpcf7-form .wpcf7-response-output {
+    background-color: #1a1a1a !important;
+    border: 1px solid #333 !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+    padding: 1rem !important;
+    margin-top: 1rem !important;
+}
+
+.site-main .wpcf7-form .wpcf7-response-output.wpcf7-mail-sent-ok {
+    background-color: rgba(40, 167, 69, 0.1) !important;
+    border-color: #28a745 !important;
+    color: #28a745 !important;
+}
+
+.site-main .wpcf7-form .wpcf7-response-output.wpcf7-validation-errors {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+    border-color: #dc3545 !important;
+    color: #dc3545 !important;
 }
 
 .site-main .page-template-casting .form-check-input {

@@ -1510,9 +1510,25 @@ function flexpress_redirect_wp_login_urls() {
         return;
     }
     
+    // Don't redirect if we're accessing wp-admin
+    if (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false) {
+        return;
+    }
+    
     // Check if we're on wp-login.php
     if (strpos($_SERVER['REQUEST_URI'], 'wp-login.php') !== false) {
         $action = isset($_GET['action']) ? $_GET['action'] : '';
+        $redirect_to = isset($_GET['redirect_to']) ? $_GET['redirect_to'] : '';
+        
+        // Allow admin login - if redirect_to contains wp-admin, don't redirect
+        if (empty($action) && strpos($redirect_to, 'wp-admin') !== false) {
+            return;
+        }
+        
+        // Allow admin logout
+        if ($action === 'logout' && strpos($redirect_to, 'wp-admin') !== false) {
+            return;
+        }
         
         switch ($action) {
             case 'lostpassword':

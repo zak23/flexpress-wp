@@ -1074,4 +1074,47 @@ if (function_exists('acf_add_local_field_group')):
         'description' => 'Custom fields for the casting page content management',
     ));
 
+    // Support Page Custom Fields
+    acf_add_local_field_group(array(
+        'key' => 'group_support_page',
+        'title' => 'Support Page Content',
+        'fields' => array(
+            // FAQ Section
+            array(
+                'key' => 'field_support_faq_title',
+                'label' => 'FAQ Section Title',
+                'name' => 'support_faq_title',
+                'type' => 'text',
+                'default_value' => 'Frequently Asked Questions',
+                'instructions' => 'Title for the FAQ section',
+            ),
+            array(
+                'key' => 'field_support_faq_items',
+                'label' => 'FAQ Items (JSON)',
+                'name' => 'support_faq_items',
+                'type' => 'textarea',
+                'instructions' => 'Enter FAQ items as JSON. Each item supports question, answer, expanded.',
+                'rows' => 10,
+                'default_value' => '[]',
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param' => 'page_template',
+                    'operator' => '==',
+                    'value' => 'page-templates/support.php',
+                ),
+            ),
+        ),
+        'menu_order' => 0,
+        'position' => 'normal',
+        'style' => 'default',
+        'label_placement' => 'top',
+        'instruction_placement' => 'label',
+        'hide_on_screen' => '',
+        'active' => true,
+        'description' => 'Custom fields for the support page content management',
+    ));
+
 endif; 

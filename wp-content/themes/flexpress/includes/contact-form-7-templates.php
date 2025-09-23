@@ -302,9 +302,14 @@ function flexpress_create_support_form() {
     }
 
     $form_content = '
+<div class="alert alert-info mb-4">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    ' . __('Please provide as much detail as possible to help us assist you quickly and effectively.', 'flexpress') . '
+</div>
+
 <div class="row">
     <div class="col-md-6 mb-3">
-        <label for="name" class="form-label">' . __('Name', 'flexpress') . ' <span class="text-danger">*</span></label>
+        <label for="name" class="form-label">' . __('Full Name', 'flexpress') . ' <span class="text-danger">*</span></label>
         [text* name id:name class:form-control placeholder "' . __('Your full name', 'flexpress') . '"]
         <div class="invalid-feedback">' . __('Please enter your name.', 'flexpress') . '</div>
     </div>
@@ -315,15 +320,27 @@ function flexpress_create_support_form() {
     </div>
 </div>
 
-<div class="mb-3">
-    <label for="issue_type" class="form-label">' . __('Issue Type', 'flexpress') . ' <span class="text-danger">*</span></label>
-    [select* issue_type id:issue_type class:form-control include_blank "' . __('Select an issue type', 'flexpress') . '" "' . __('Technical Support', 'flexpress') . '" "' . __('Account Issues', 'flexpress') . '" "' . __('Billing Questions', 'flexpress') . '" "' . __('Content Access', 'flexpress') . '" "' . __('Other', 'flexpress') . '"]
-    <div class="invalid-feedback">' . __('Please select an issue type.', 'flexpress') . '</div>
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label for="username" class="form-label">' . __('Username (if applicable)', 'flexpress') . '</label>
+        [text username id:username class:form-control placeholder "' . __('Your account username', 'flexpress') . '"]
+    </div>
+    <div class="col-md-6 mb-3">
+        <label for="account_type" class="form-label">' . __('Account Type', 'flexpress') . '</label>
+        [select account_type id:account_type class:form-control include_blank "' . __('Select account type', 'flexpress') . '" "' . __('Free Member', 'flexpress') . '" "' . __('Premium Member', 'flexpress') . '" "' . __('VIP Member', 'flexpress') . '" "' . __('Not a member', 'flexpress') . '"]
+    </div>
 </div>
 
 <div class="mb-3">
-    <label for="priority" class="form-label">' . __('Priority', 'flexpress') . '</label>
-    [select priority id:priority class:form-control "' . __('Low', 'flexpress') . '" "' . __('Medium', 'flexpress') . '" "' . __('High', 'flexpress') . '" "' . __('Urgent', 'flexpress') . '"]
+    <label for="support_category" class="form-label">' . __('Support Category', 'flexpress') . ' <span class="text-danger">*</span></label>
+    [select* support_category id:support_category class:form-control include_blank "' . __('Select a support category', 'flexpress') . '" "' . __('Account Help', 'flexpress') . '" "' . __('Billing Help', 'flexpress') . '" "' . __('Technical Support', 'flexpress') . '" "' . __('Content Access', 'flexpress') . '" "' . __('Password Reset', 'flexpress') . '" "' . __('Subscription Management', 'flexpress') . '" "' . __('Payment Issues', 'flexpress') . '" "' . __('Video Playback', 'flexpress') . '" "' . __('Mobile App', 'flexpress') . '" "' . __('Other', 'flexpress') . '"]
+    <div class="invalid-feedback">' . __('Please select a support category.', 'flexpress') . '</div>
+</div>
+
+<div class="mb-3">
+    <label for="priority" class="form-label">' . __('Priority Level', 'flexpress') . '</label>
+    [select priority id:priority class:form-control "' . __('Low - General question', 'flexpress') . '" "' . __('Medium - Minor issue', 'flexpress') . '" "' . __('High - Major issue', 'flexpress') . '" "' . __('Urgent - Cannot access account/content', 'flexpress') . '"]
+    <small class="form-text text-muted">' . __('Help us prioritize your request based on urgency.', 'flexpress') . '</small>
 </div>
 
 <div class="mb-3">
@@ -333,9 +350,21 @@ function flexpress_create_support_form() {
 </div>
 
 <div class="mb-3">
-    <label for="message" class="form-label">' . __('Message', 'flexpress') . ' <span class="text-danger">*</span></label>
-    [textarea* message id:message class:form-control rows:5 placeholder "' . __('Please provide detailed information about your issue...', 'flexpress') . '"]
-    <div class="invalid-feedback">' . __('Please enter your message.', 'flexpress') . '</div>
+    <label for="message" class="form-label">' . __('Detailed Description', 'flexpress') . ' <span class="text-danger">*</span></label>
+    [textarea* message id:message class:form-control rows:6 placeholder "' . __('Please provide detailed information about your issue, including any error messages, steps to reproduce the problem, and what you were trying to do when the issue occurred...', 'flexpress') . '"]
+    <div class="invalid-feedback">' . __('Please enter a detailed description.', 'flexpress') . '</div>
+</div>
+
+<div class="mb-3">
+    <label for="browser_info" class="form-label">' . __('Browser & Device Info', 'flexpress') . '</label>
+    [text browser_info id:browser_info class:form-control placeholder "' . __('e.g., Chrome 120 on Windows 11, Safari on iPhone 15', 'flexpress') . '"]
+    <small class="form-text text-muted">' . __('Helpful for technical issues - include browser, operating system, and device type.', 'flexpress') . '</small>
+</div>
+
+<div class="mb-3">
+    <label for="attachments" class="form-label">' . __('Screenshots or Files', 'flexpress') . '</label>
+    [file attachments id:attachments class:form-control accept:image/*,.pdf,.txt]
+    <small class="form-text text-muted">' . __('Upload screenshots, error messages, or relevant files (images, PDFs, text files only).', 'flexpress') . '</small>
 </div>
 
 <div class="mb-3">
@@ -348,15 +377,23 @@ function flexpress_create_support_form() {
 <p><strong>' . __('Customer Details:', 'flexpress') . '</strong></p>
 <p><strong>' . __('Name:', 'flexpress') . '</strong> [name]</p>
 <p><strong>' . __('Email:', 'flexpress') . '</strong> [email]</p>
-<p><strong>' . __('Issue Type:', 'flexpress') . '</strong> [issue_type]</p>
+<p><strong>' . __('Username:', 'flexpress') . '</strong> [username]</p>
+<p><strong>' . __('Account Type:', 'flexpress') . '</strong> [account_type]</p>
+
+<p><strong>' . __('Support Request Details:', 'flexpress') . '</strong></p>
+<p><strong>' . __('Category:', 'flexpress') . '</strong> [support_category]</p>
 <p><strong>' . __('Priority:', 'flexpress') . '</strong> [priority]</p>
 <p><strong>' . __('Subject:', 'flexpress') . '</strong> [subject]</p>
 
-<p><strong>' . __('Message:', 'flexpress') . '</strong></p>
+<p><strong>' . __('Description:', 'flexpress') . '</strong></p>
 <p>[message]</p>
 
+<p><strong>' . __('Technical Information:', 'flexpress') . '</strong></p>
+<p><strong>' . __('Browser & Device:', 'flexpress') . '</strong> [browser_info]</p>
+<p><strong>' . __('Attachments:', 'flexpress') . '</strong> [attachments]</p>
+
 <hr>
-<p><em>' . __('This support request was submitted from', 'flexpress') . ' ' . get_bloginfo('name') . '</em></p>';
+<p><em>' . __('This support request was submitted from', 'flexpress') . ' ' . get_bloginfo('name') . ' ' . __('on', 'flexpress') . ' ' . date('Y-m-d H:i:s') . '</em></p>';
 
     $mail_2_template = '
 <p>' . __('Hello [name],', 'flexpress') . '</p>
@@ -364,14 +401,16 @@ function flexpress_create_support_form() {
 <p>' . __('Thank you for contacting our support team. We have received your request and will respond as soon as possible.', 'flexpress') . '</p>
 
 <p><strong>' . __('Your request details:', 'flexpress') . '</strong></p>
-<p><strong>' . __('Issue Type:', 'flexpress') . '</strong> [issue_type]</p>
+<p><strong>' . __('Category:', 'flexpress') . '</strong> [support_category]</p>
 <p><strong>' . __('Priority:', 'flexpress') . '</strong> [priority]</p>
 <p><strong>' . __('Subject:', 'flexpress') . '</strong> [subject]</p>
 
 <p><strong>' . __('Your message:', 'flexpress') . '</strong></p>
 <p>[message]</p>
 
-<p>' . __('We typically respond within 24-48 hours during business days.', 'flexpress') . '</p>
+<p>' . __('We typically respond within 24-48 hours during business days. For urgent issues, we may respond sooner.', 'flexpress') . '</p>
+
+<p>' . __('If you have any additional information or questions, please reply to this email.', 'flexpress') . '</p>
 
 <hr>
 <p>' . __('Best regards,', 'flexpress') . '<br>

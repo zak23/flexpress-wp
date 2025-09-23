@@ -255,7 +255,7 @@ get_header();
 .membership-page .alert-success {
     background-color: rgba(40, 167, 69, 0.1);
     border-color: rgba(40, 167, 69, 0.3);
-    color: #28a745;
+    color: white;
 }
 
 .membership-page .alert-danger {

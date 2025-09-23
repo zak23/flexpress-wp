@@ -350,6 +350,13 @@ class FlexPress_CF7_Discord_Integration {
             ];
         }
         
+        // Add timestamp to all forms
+        $fields[] = [
+            'name' => __('Submitted', 'flexpress'),
+            'value' => current_time('Y-m-d H:i:s'),
+            'inline' => true
+        ];
+        
         // Form-specific fields
         switch ($form_type) {
             case 'contact':
@@ -408,17 +415,59 @@ class FlexPress_CF7_Discord_Integration {
                 break;
                 
             case 'support':
-                if (isset($posted_data['issue_type'])) {
+                if (isset($posted_data['username']) && !empty($posted_data['username'])) {
                     $fields[] = [
-                        'name' => __('Issue Type', 'flexpress'),
-                        'value' => $sanitize_field_value($posted_data['issue_type']),
+                        'name' => __('Username', 'flexpress'),
+                        'value' => $sanitize_field_value($posted_data['username']),
                         'inline' => true
                     ];
                 }
-                if (isset($posted_data['priority'])) {
+                if (isset($posted_data['account_type']) && !empty($posted_data['account_type'])) {
+                    $fields[] = [
+                        'name' => __('Account Type', 'flexpress'),
+                        'value' => $sanitize_field_value($posted_data['account_type']),
+                        'inline' => true
+                    ];
+                }
+                if (isset($posted_data['support_category'])) {
+                    $fields[] = [
+                        'name' => __('Support Category', 'flexpress'),
+                        'value' => $sanitize_field_value($posted_data['support_category']),
+                        'inline' => true
+                    ];
+                }
+                if (isset($posted_data['priority']) && !empty($posted_data['priority'])) {
                     $fields[] = [
                         'name' => __('Priority', 'flexpress'),
                         'value' => $sanitize_field_value($posted_data['priority']),
+                        'inline' => true
+                    ];
+                }
+                if (isset($posted_data['subject'])) {
+                    $fields[] = [
+                        'name' => __('Subject', 'flexpress'),
+                        'value' => $sanitize_field_value($posted_data['subject']),
+                        'inline' => false
+                    ];
+                }
+                if (isset($posted_data['message'])) {
+                    $fields[] = [
+                        'name' => __('Description', 'flexpress'),
+                        'value' => $sanitize_field_value($posted_data['message']),
+                        'inline' => false
+                    ];
+                }
+                if (isset($posted_data['browser_info']) && !empty($posted_data['browser_info'])) {
+                    $fields[] = [
+                        'name' => __('Browser & Device', 'flexpress'),
+                        'value' => $sanitize_field_value($posted_data['browser_info']),
+                        'inline' => false
+                    ];
+                }
+                if (isset($posted_data['attachments']) && !empty($posted_data['attachments'])) {
+                    $fields[] = [
+                        'name' => __('Attachments', 'flexpress'),
+                        'value' => __('Files attached', 'flexpress'),
                         'inline' => true
                     ];
                 }

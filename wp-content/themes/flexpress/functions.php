@@ -1530,6 +1530,37 @@ function flexpress_redirect_wp_login_urls() {
             return;
         }
         
+        // Allow admin login - check if referer is wp-admin
+        if (empty($action) && isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'wp-admin') !== false) {
+            return;
+        }
+        
+        // Allow admin login - check if user agent indicates admin access
+        if (empty($action) && isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'], 'WordPress') !== false) {
+            return;
+        }
+        
+        // Allow admin login - if no action and no redirect_to, assume it's admin access attempt
+        if (empty($action) && empty($redirect_to)) {
+            // Check if this is likely an admin login attempt
+            $admin_indicators = array(
+                'wp-admin' => isset($_SERVER['HTTP_REFERER']) ? strpos($_SERVER['HTTP_REFERER'], 'wp-admin') !== false : false,
+                'admin_user' => isset($_GET['user']) && is_numeric($_GET['user']),
+                'admin_redirect' => isset($_GET['redirect_to']) && strpos($_GET['redirect_to'], 'wp-admin') !== false
+            );
+            
+            // If any admin indicator is true, allow through
+            if (in_array(true, $admin_indicators)) {
+                return;
+            }
+        }
+        
+        // TEMPORARY: Allow all wp-login.php access for debugging
+        // Remove this after confirming admin access works
+        if (strpos($_SERVER['REQUEST_URI'], 'wp-login.php') !== false) {
+            return;
+        }
+        
         switch ($action) {
             case 'lostpassword':
                 // Redirect to custom lost password page

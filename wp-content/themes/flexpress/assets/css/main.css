@@ -3053,7 +3053,12 @@ footer.bg-black .row.footer {
     padding: 2rem !important;
 }
 
-.site-main .wpcf7-form .form-control {
+/* More specific selectors for Contact Form 7 inputs */
+.site-main .wpcf7-form .form-control,
+.site-main .wpcf7-form input[type="text"],
+.site-main .wpcf7-form input[type="email"],
+.site-main .wpcf7-form textarea,
+.site-main .wpcf7-form .wpcf7-form-control {
     background-color: #1a1a1a !important;
     border: 1px solid #333 !important;
     color: #ffffff !important;
@@ -3061,9 +3066,15 @@ footer.bg-black .row.footer {
     padding: 0.75rem 1rem !important;
     font-size: 0.95rem !important;
     transition: all 0.3s ease !important;
+    display: block !important;
+    width: 100% !important;
 }
 
-.site-main .wpcf7-form .form-control:focus {
+.site-main .wpcf7-form .form-control:focus,
+.site-main .wpcf7-form input[type="text"]:focus,
+.site-main .wpcf7-form input[type="email"]:focus,
+.site-main .wpcf7-form textarea:focus,
+.site-main .wpcf7-form .wpcf7-form-control:focus {
     background-color: #1a1a1a !important;
     border-color: var(--color-accent) !important;
     color: #ffffff !important;
@@ -3163,6 +3174,31 @@ footer.bg-black .row.footer {
     background-color: rgba(220, 53, 69, 0.1) !important;
     border-color: #dc3545 !important;
     color: #dc3545 !important;
+}
+
+/* Override Contact Form 7 default styles completely */
+.wpcf7-form-control {
+    background-color: #1a1a1a !important;
+    border: 1px solid #333 !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.95rem !important;
+    display: block !important;
+    width: 100% !important;
+}
+
+.wpcf7-form-control:focus {
+    background-color: #1a1a1a !important;
+    border-color: var(--color-accent) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 0 0.2rem rgba(255, 107, 107, 0.25) !important;
+    outline: none !important;
+}
+
+.wpcf7-form-control::placeholder {
+    color: #888 !important;
+    opacity: 1 !important;
 }
 
 .site-main .page-template-casting .form-check-input {

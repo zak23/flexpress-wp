@@ -1553,23 +1553,30 @@ FlexPress includes custom, theme-styled pages for the full password recovery flo
 - Uses Bootstrap validation and accessible labels.
 
 ### WordPress Branding Protection
-FlexPress automatically redirects all WordPress branded login URLs to custom pages:
+FlexPress automatically redirects WordPress branded URLs to custom pages while preserving admin access:
 
 **Protected URLs:**
-- `wp-login.php` → `/login`
+- `wp-login.php` → `/login` (unless redirecting to wp-admin)
 - `wp-login.php?action=lostpassword` → `/lost-password`
 - `wp-login.php?action=resetpass` → `/reset-password` (with key/login params)
 - `wp-login.php?checkemail=confirm` → `/lost-password?checkemail=confirm`
 - `wp-login.php?action=register` → `/register`
+- `wp-admin/` → `/login` (for non-admin users only)
+
+**Smart Admin Detection:**
+- **Admin Users**: Can access `wp-admin/` and `wp-login.php` normally
+- **Non-Admin Users**: Redirected to custom login page
+- **Capability Check**: Uses `current_user_can('manage_options')` to detect admin users
 
 **Implementation:**
-- `flexpress_redirect_wp_login_urls()` - Redirects all wp-login.php URLs
-- `flexpress_custom_login_url()` - Overrides WordPress login URL filter
+- `flexpress_redirect_wp_admin_to_login()` - Redirects wp-admin for non-admin users
+- `flexpress_custom_login_url()` - Overrides WordPress login URL filter (preserves admin access)
 - `flexpress_custom_lostpassword_url()` - Overrides lost password URL filter
 - `flexpress_custom_registration_url()` - Overrides registration URL filter
 
 **Benefits:**
-- Complete WordPress branding removal
-- Consistent user experience
-- All functionality preserved
+- Complete WordPress branding removal for frontend users
+- Admin access preserved and functional
+- Automatic user capability detection
 - SEO-friendly custom URLs
+- No manual configuration required

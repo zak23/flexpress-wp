@@ -1603,39 +1603,58 @@ function flexpress_redirect_wp_login_urls() {
         }
     }
 }
-// TEMPORARILY DISABLED - CAUSING ADMIN ACCESS ISSUES
-// add_action('wp_loaded', 'flexpress_redirect_wp_login_urls');
+/**
+ * Redirect wp-admin to custom login for non-admin users
+ * This allows admin users to access wp-admin normally while redirecting others to custom login
+ */
+function flexpress_redirect_wp_admin_to_login() {
+    // Only redirect on frontend, not admin
+    if (is_admin()) {
+        return;
+    }
+    
+    // Check if we're accessing wp-admin
+    if (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false) {
+        // If user is logged in and has admin capabilities, allow access
+        if (is_user_logged_in() && current_user_can('manage_options')) {
+            return; // Allow admin access
+        }
+        
+        // For non-admin users, redirect to custom login
+        wp_redirect(home_url('/login'));
+        exit;
+    }
+}
+add_action('init', 'flexpress_redirect_wp_admin_to_login');
 
 /**
  * Override WordPress login URL to use custom login page
- * TEMPORARILY DISABLED FOR DEBUGGING
+ * Only redirect if not accessing admin area
  */
 function flexpress_custom_login_url($login_url, $redirect, $force_reauth) {
-    // Debug: Log the original login URL
-    error_log('FlexPress: Original login URL: ' . $login_url);
-    return $login_url; // Return original URL instead of custom
+    // If redirecting to admin area, use original URL
+    if (strpos($redirect, 'wp-admin') !== false) {
+        return $login_url;
+    }
+    
+    // For frontend login, use custom page
+    return home_url('/login');
 }
 add_filter('login_url', 'flexpress_custom_login_url', 10, 3);
 
 /**
  * Override WordPress lost password URL to use custom page
- * TEMPORARILY DISABLED FOR DEBUGGING
  */
 function flexpress_custom_lostpassword_url($lostpassword_url, $redirect) {
-    // Debug: Log the original lost password URL
-    error_log('FlexPress: Original lost password URL: ' . $lostpassword_url);
-    return $lostpassword_url; // Return original URL instead of custom
+    return home_url('/lost-password');
 }
 add_filter('lostpassword_url', 'flexpress_custom_lostpassword_url', 10, 2);
 
 /**
  * Override WordPress registration URL to use custom page
- * TEMPORARILY DISABLED FOR DEBUGGING
  */
 function flexpress_custom_registration_url($register_url) {
-    // Debug: Log the original registration URL
-    error_log('FlexPress: Original registration URL: ' . $register_url);
-    return $register_url; // Return original URL instead of custom
+    return home_url('/register');
 }
 add_filter('register_url', 'flexpress_custom_registration_url');
 

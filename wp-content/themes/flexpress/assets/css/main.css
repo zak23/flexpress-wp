@@ -3044,10 +3044,48 @@ footer.bg-black .row.footer {
 
 .site-main .page-template-casting .form-check p {
     display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    margin: 0;
-    padding: 0;
+}
+
+/* Contact Form 7 General Styling */
+.site-main .wpcf7-form .form-control {
+    background-color: var(--color-surface) !important;
+    border: 1px solid var(--color-border) !important;
+    color: var(--color-text) !important;
+}
+
+.site-main .wpcf7-form .form-control:focus {
+    background-color: var(--color-surface) !important;
+    border-color: var(--color-accent) !important;
+    color: var(--color-text) !important;
+    box-shadow: 0 0 0 0.2rem var(--color-accent-light) !important;
+}
+
+.site-main .wpcf7-form .form-label {
+    color: var(--color-text) !important;
+}
+
+.site-main .wpcf7-form .btn-primary {
+    background-color: var(--color-accent) !important;
+    border-color: var(--color-accent) !important;
+    color: var(--color-background) !important;
+}
+
+.site-main .wpcf7-form .btn-primary:hover {
+    background-color: var(--color-accent-hover) !important;
+    border-color: var(--color-accent-hover) !important;
+    color: var(--color-background) !important;
+}
+
+.site-main .wpcf7-form .text-danger {
+    color: var(--color-error) !important;
+}
+
+.site-main .wpcf7-form .invalid-feedback {
+    color: var(--color-error) !important;
+}
+
+.site-main .wpcf7-form .text-muted {
+    color: var(--color-text-secondary) !important;
 }
 
 .site-main .page-template-casting .form-check-input {

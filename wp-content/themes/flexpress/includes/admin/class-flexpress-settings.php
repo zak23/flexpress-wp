@@ -102,6 +102,16 @@ class FlexPress_Settings {
             array($this, 'render_plunk_settings_page')
         );
 
+        // Add Google SMTP submenu
+        add_submenu_page(
+            $this->page_slug,
+            __('Google SMTP', 'flexpress'),
+            __('Google SMTP', 'flexpress'),
+            'manage_options',
+            'flexpress-google-smtp-settings',
+            array($this, 'render_google_smtp_settings_page')
+        );
+
         // Add Flowguard submenu (centralized under FlexPress)
         add_submenu_page(
             $this->page_slug,
@@ -948,6 +958,20 @@ class FlexPress_Settings {
             $plunk_settings->render_plunk_settings_page();
         } else {
             echo '<div class="wrap"><h1>Plunk Settings</h1><p>Plunk settings class not found.</p></div>';
+        }
+    }
+
+    /**
+     * Render the Google SMTP settings page
+     */
+    public function render_google_smtp_settings_page() {
+        // This method will be handled by the FlexPress_Google_SMTP_Settings class
+        // We just need to include the class file
+        if (class_exists('FlexPress_Google_SMTP_Settings')) {
+            $google_smtp_settings = new FlexPress_Google_SMTP_Settings();
+            $google_smtp_settings->render_google_smtp_settings_page();
+        } else {
+            echo '<div class="wrap"><h1>Google SMTP Settings</h1><p>Google SMTP settings class not found.</p></div>';
         }
     }
 }

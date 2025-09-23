@@ -125,6 +125,13 @@ require_once FLEXPRESS_PATH . '/includes/class-flexpress-plunk-api.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-plunk-subscriber.php';
 require_once FLEXPRESS_PATH . '/includes/plunk-frontend-integration.php';
 
+// Google SMTP Integration
+require_once FLEXPRESS_PATH . '/includes/class-flexpress-google-smtp.php';
+require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-google-smtp-settings.php';
+
+// Debug: Log that Google SMTP classes are loaded
+error_log('FlexPress: Google SMTP classes loaded successfully');
+
 // Amazon SES Integration
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-ses-settings.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-ses-smtp.php';

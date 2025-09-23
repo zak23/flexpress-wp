@@ -75,6 +75,42 @@ flexpress/
 - **BunnyCDN Stream**: Video hosting, streaming, and thumbnail generation
 - **BunnyCDN Storage**: Image galleries and file management
 - **Advanced Custom Fields (ACF)**: Content management and admin interfaces
+- **Discord Notifications**: Multi-channel webhook system for real-time team alerts
+- **Google SMTP Integration**: Reliable email delivery for internal communications and contact forms
+
+### Discord Integration System
+
+#### Multi-Channel Webhook Architecture
+- **Default Webhook**: Fallback for all notifications (`webhook_url`)
+- **Financial Webhook**: Payment/subscription events (`webhook_url_financial`)
+- **Contact Webhook**: Form submissions and talent applications (`webhook_url_contact`)
+
+#### Critical Implementation Rules
+- **Data Validation**: ALL Discord data must be validated before sending to prevent 400 errors
+- **Array Handling**: Contact Form 7 arrays MUST be converted to strings using `implode()` before `strlen()` operations
+- **Character Limits**: Field values truncated to 1024 chars, titles to 256 chars, descriptions to 4096 chars
+- **Field Limits**: Maximum 25 fields per Discord embed
+- **Markdown Removal**: Strip `<`, `>`, `` ` ``, `*`, `_`, `~` from field values
+- **Empty Value Handling**: Replace empty values with "Not provided" text
+
+#### Discord Settings Management
+- **Primary Settings Class**: `class-flexpress-settings.php` (NOT `class-flexpress-discord-settings.php`)
+- **Registration Pattern**: All webhook fields registered in `flexpress_discord_settings` option group
+- **Sanitization**: `flexpress_sanitize_discord_settings()` handles all webhook URL validation
+- **Default Values**: Empty strings for all webhook URLs in `flexpress_set_default_theme_options()`
+
+#### Contact Form 7 Integration Rules
+- **Casting Form Fields**: Include ALL fields (name, email, gender_identity, stage_age, instagram, twitter, about_you, agreement)
+- **Array Detection**: Use `is_array()` check before string operations
+- **Sanitization Function**: `$sanitize_field_value` helper handles arrays, markdown removal, truncation
+- **Form Title**: Always include form title in Discord notification fields
+- **Timestamp**: Add submission timestamp as final field
+
+#### Error Handling & Debugging
+- **Enhanced Logging**: Include Discord response body and full payload in error logs
+- **Status Code Tracking**: Log HTTP status codes for debugging
+- **Payload Validation**: Log complete payload structure for troubleshooting
+- **Channel Type Logging**: Track which webhook URL is being used for each notification
 
 ### Content Management
 - **Episodes**: Video content with access control (free/PPV/membership/mixed)
@@ -97,8 +133,22 @@ flexpress/
 - **Activity Logging**: Comprehensive user activity tracking
 - **Affiliate System**: Commission tracking and management
 
+### Google SMTP Integration System
+
+#### Smart Email Routing
+- **Internal Email Detection**: Automatically routes emails to your domain through Google SMTP
+- **Contact Form Support**: Seamlessly handles Contact Form 7 submissions to your domain
+- **App Password Authentication**: Secure Google Workspace integration with 2FA support
+- **Bounce Prevention**: Eliminates Amazon SES delivery issues to your own domain
+
+#### Configuration
+- **Admin Interface**: `FlexPress → Google SMTP` settings page
+- **Default Settings**: smtp.gmail.com:587 with TLS encryption
+- **Smart Routing**: "Use for Internal Emails Only" option for optimal performance
+- **Testing**: Built-in email test functionality with detailed feedback
+
 ### Admin Features
-- **Settings Panels**: General, Video, Membership, Flowguard, Pricing, Affiliate, Contact, Upcoming Episode
+- **Settings Panels**: General, Video, Membership, Flowguard, Pricing, Affiliate, Contact, Google SMTP, Upcoming Episode
 - **Webhook Management**: Flowguard payment processing and debugging
 - **User Management**: Member profiles, purchases, activity logs
 - **Legal Pages**: Dynamic content generation for compliance

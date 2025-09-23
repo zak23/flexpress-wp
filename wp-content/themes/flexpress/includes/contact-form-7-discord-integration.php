@@ -297,11 +297,36 @@ class FlexPress_CF7_Discord_Integration {
     private function get_form_fields($form_type, $posted_data, $form_title = '') {
         $fields = [];
         
+        // Helper function to sanitize field values
+        $sanitize_field_value = function($value) {
+            if (empty($value)) {
+                return __('Not provided', 'flexpress');
+            }
+            
+            // Handle arrays (like checkboxes, multi-selects)
+            if (is_array($value)) {
+                $value = implode(', ', array_filter($value));
+            }
+            
+            // Convert to string if not already
+            $value = (string) $value;
+            
+            // Remove any potential Discord markdown that could cause issues
+            $value = str_replace(['<', '>', '`', '*', '_', '~'], '', $value);
+            
+            // Truncate to Discord's 1024 character limit
+            if (strlen($value) > 1024) {
+                $value = substr($value, 0, 1021) . '...';
+            }
+            
+            return $value;
+        };
+        
         // Common fields for all forms
         if (isset($posted_data['name'])) {
             $fields[] = [
                 'name' => __('Name', 'flexpress'),
-                'value' => $posted_data['name'],
+                'value' => $sanitize_field_value($posted_data['name']),
                 'inline' => true
             ];
         }
@@ -309,7 +334,7 @@ class FlexPress_CF7_Discord_Integration {
         if (isset($posted_data['email'])) {
             $fields[] = [
                 'name' => __('Email', 'flexpress'),
-                'value' => $posted_data['email'],
+                'value' => $sanitize_field_value($posted_data['email']),
                 'inline' => true
             ];
         }
@@ -320,7 +345,7 @@ class FlexPress_CF7_Discord_Integration {
                 if (isset($posted_data['subject'])) {
                     $fields[] = [
                         'name' => __('Subject', 'flexpress'),
-                        'value' => $posted_data['subject'],
+                        'value' => $sanitize_field_value($posted_data['subject']),
                         'inline' => true
                     ];
                 }
@@ -330,40 +355,35 @@ class FlexPress_CF7_Discord_Integration {
                 if (isset($posted_data['gender_identity'])) {
                     $fields[] = [
                         'name' => __('Gender Identity', 'flexpress'),
-                        'value' => $posted_data['gender_identity'],
+                        'value' => $sanitize_field_value($posted_data['gender_identity']),
                         'inline' => true
                     ];
                 }
                 if (isset($posted_data['stage_age'])) {
                     $fields[] = [
                         'name' => __('Preferred Stage Age', 'flexpress'),
-                        'value' => $posted_data['stage_age'],
+                        'value' => $sanitize_field_value($posted_data['stage_age']),
                         'inline' => true
                     ];
                 }
                 if (isset($posted_data['instagram']) && !empty($posted_data['instagram'])) {
                     $fields[] = [
                         'name' => __('Instagram', 'flexpress'),
-                        'value' => $posted_data['instagram'],
+                        'value' => $sanitize_field_value($posted_data['instagram']),
                         'inline' => true
                     ];
                 }
                 if (isset($posted_data['twitter']) && !empty($posted_data['twitter'])) {
                     $fields[] = [
                         'name' => __('Twitter', 'flexpress'),
-                        'value' => $posted_data['twitter'],
+                        'value' => $sanitize_field_value($posted_data['twitter']),
                         'inline' => true
                     ];
                 }
                 if (isset($posted_data['about_you'])) {
-                    $about_you = $posted_data['about_you'];
-                    // Truncate long descriptions
-                    if (strlen($about_you) > 1000) {
-                        $about_you = substr($about_you, 0, 1000) . '...';
-                    }
                     $fields[] = [
                         'name' => __('About You', 'flexpress'),
-                        'value' => $about_you,
+                        'value' => $sanitize_field_value($posted_data['about_you']),
                         'inline' => false
                     ];
                 }
@@ -380,14 +400,14 @@ class FlexPress_CF7_Discord_Integration {
                 if (isset($posted_data['issue_type'])) {
                     $fields[] = [
                         'name' => __('Issue Type', 'flexpress'),
-                        'value' => $posted_data['issue_type'],
+                        'value' => $sanitize_field_value($posted_data['issue_type']),
                         'inline' => true
                     ];
                 }
                 if (isset($posted_data['priority'])) {
                     $fields[] = [
                         'name' => __('Priority', 'flexpress'),
-                        'value' => $posted_data['priority'],
+                        'value' => $sanitize_field_value($posted_data['priority']),
                         'inline' => true
                     ];
                 }
@@ -396,24 +416,21 @@ class FlexPress_CF7_Discord_Integration {
         
         // Add message field if present
         if (isset($posted_data['message'])) {
-            $message = $posted_data['message'];
-            // Truncate long messages
-            if (strlen($message) > 1000) {
-                $message = substr($message, 0, 1000) . '...';
-            }
             $fields[] = [
                 'name' => __('Message', 'flexpress'),
-                'value' => $message,
+                'value' => $sanitize_field_value($posted_data['message']),
                 'inline' => false
             ];
         }
         
         // Add form title
-        $fields[] = [
-            'name' => __('Form', 'flexpress'),
-            'value' => $form_title,
-            'inline' => true
-        ];
+        if (!empty($form_title)) {
+            $fields[] = [
+                'name' => __('Form', 'flexpress'),
+                'value' => $sanitize_field_value($form_title),
+                'inline' => true
+            ];
+        }
         
         // Add timestamp
         $fields[] = [
@@ -421,6 +438,16 @@ class FlexPress_CF7_Discord_Integration {
             'value' => current_time('Y-m-d H:i:s'),
             'inline' => true
         ];
+        
+        // Ensure we don't exceed Discord's 25 field limit
+        if (count($fields) > 25) {
+            $fields = array_slice($fields, 0, 25);
+            $fields[24] = [
+                'name' => __('Note', 'flexpress'),
+                'value' => __('Some fields were truncated due to Discord limits', 'flexpress'),
+                'inline' => false
+            ];
+        }
         
         return $fields;
     }

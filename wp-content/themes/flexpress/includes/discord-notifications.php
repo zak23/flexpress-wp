@@ -66,6 +66,9 @@ class FlexPress_Discord_Notifications {
             return false;
         }
         
+        // Validate embed data before sending
+        $embed = $this->validate_embed_data($embed);
+        
         $payload = [
             'content' => $content,
             'embeds' => [$embed]
@@ -86,12 +89,68 @@ class FlexPress_Discord_Notifications {
         }
         
         $status_code = wp_remote_retrieve_response_code($response);
+        $response_body = wp_remote_retrieve_body($response);
+        
         if ($status_code >= 200 && $status_code < 300) {
             return true;
         }
         
+        // Enhanced error logging for debugging
         error_log('Discord notification failed with status: ' . $status_code);
+        error_log('Discord response body: ' . $response_body);
+        error_log('Discord payload: ' . json_encode($payload));
+        
         return false;
+    }
+    
+    /**
+     * Validate embed data to prevent Discord 400 errors
+     * 
+     * @param array $embed Discord embed data
+     * @return array Validated embed data
+     */
+    private function validate_embed_data($embed) {
+        // Ensure title is not too long (256 char limit)
+        if (isset($embed['title']) && strlen($embed['title']) > 256) {
+            $embed['title'] = substr($embed['title'], 0, 253) . '...';
+        }
+        
+        // Ensure description is not too long (4096 char limit)
+        if (isset($embed['description']) && strlen($embed['description']) > 4096) {
+            $embed['description'] = substr($embed['description'], 0, 4093) . '...';
+        }
+        
+        // Validate fields
+        if (isset($embed['fields']) && is_array($embed['fields'])) {
+            $validated_fields = [];
+            foreach ($embed['fields'] as $field) {
+                // Ensure field name is not too long (256 char limit)
+                if (isset($field['name']) && strlen($field['name']) > 256) {
+                    $field['name'] = substr($field['name'], 0, 253) . '...';
+                }
+                
+                // Ensure field value is not too long (1024 char limit)
+                if (isset($field['value']) && strlen($field['value']) > 1024) {
+                    $field['value'] = substr($field['value'], 0, 1021) . '...';
+                }
+                
+                $validated_fields[] = $field;
+            }
+            
+            // Limit to 25 fields max
+            if (count($validated_fields) > 25) {
+                $validated_fields = array_slice($validated_fields, 0, 25);
+            }
+            
+            $embed['fields'] = $validated_fields;
+        }
+        
+        // Ensure footer text is not too long (2048 char limit)
+        if (isset($embed['footer']['text']) && strlen($embed['footer']['text']) > 2048) {
+            $embed['footer']['text'] = substr($embed['footer']['text'], 0, 2045) . '...';
+        }
+        
+        return $embed;
     }
     
     /**

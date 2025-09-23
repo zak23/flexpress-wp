@@ -47,6 +47,29 @@ flexpress/
 
 ## 📧 Email Configuration
 
+### Google SMTP Integration
+FlexPress includes Google SMTP integration for reliable email delivery, especially for internal emails:
+
+- **Admin Interface**: Configure Google SMTP settings under `FlexPress → Google SMTP`
+- **Smart Routing**: Automatically uses Google SMTP for emails to your own domain (e.g., contact@zakspov.com)
+- **App Password Support**: Secure authentication using Google App Passwords
+- **Internal Email Focus**: Perfect solution for contact forms and internal communications
+- **No SES Bounce Issues**: Avoids Amazon SES delivery problems to your own domain
+- **Email Testing**: Built-in test email functionality
+
+#### Quick Setup
+1. Enable 2-Factor Authentication on your Google account
+2. Generate an App Password in Google Account Settings → Security → App passwords
+3. Configure settings in `FlexPress → Google SMTP`:
+   - SMTP Host: `smtp.gmail.com`
+   - SMTP Port: `587`
+   - Encryption: `TLS`
+   - Username: Your Google Workspace email (e.g., `noreply@zakspov.com`)
+   - Password: Your 16-character App Password
+   - From Email: `noreply@zakspov.com`
+   - Enable "Use for Internal Emails Only" (recommended)
+4. Test email delivery using the built-in test function
+
 ### Amazon SES Integration
 FlexPress includes comprehensive Amazon SES integration for reliable email delivery:
 
@@ -64,6 +87,13 @@ FlexPress includes comprehensive Amazon SES integration for reliable email deliv
 4. Test email delivery using the built-in test function
 
 For detailed setup instructions, see [Amazon SES Setup Guide](docs/AMAZON_SES_SETUP_GUIDE.md).
+
+### Email Routing Strategy
+FlexPress uses intelligent email routing:
+- **Internal Emails** (to your domain): Uses Google SMTP for reliable delivery
+- **External Emails** (to other domains): Uses Amazon SES or default mail system
+- **Contact Forms**: Automatically routed through Google SMTP when sending to your domain
+- **Newsletters**: Uses Plunk integration for marketing emails
 
 ## 🔧 Recent Fixes
 
@@ -293,18 +323,30 @@ The integration creates three database tables:
 
 ### Discord Notifications System
 
-FlexPress includes a comprehensive Discord notification system that provides real-time alerts for all critical payment events and activities.
+FlexPress includes a comprehensive Discord notification system that provides real-time alerts for all critical payment events and activities with **multi-channel webhook support**.
 
 #### Discord Integration Features
 
+- **Multi-Channel Webhooks**: Separate webhooks for different notification types
 - **Real-Time Notifications**: Instant Discord alerts for all payment events
 - **Rich Embeds**: Beautiful, detailed notifications with color coding
+- **Comprehensive Form Data**: Complete casting application details in Discord
+- **Data Validation**: Bulletproof against Discord 400 errors
 - **Customizable Events**: Choose which events trigger notifications
 - **Team Collaboration**: Keep your team informed of all activities
 - **Easy Setup**: Simple webhook configuration with test functionality
 
+#### Multi-Channel Webhook System
+
+FlexPress supports **3 webhook categories** for organized notifications:
+
+1. **🔔 Default Webhook** - Fallback for all notifications
+2. **💰 Financial Notifications** - All payment/subscription related events
+3. **📝 Contact Forms** - Talent applications and contact form submissions
+
 #### Supported Notification Events
 
+**Financial Notifications (💰 Channel):**
 - **🎉 New Member Signups** - When someone subscribes to your site
 - **💰 Subscription Rebills** - Successful recurring payments
 - **❌ Subscription Cancellations** - When members cancel
@@ -312,20 +354,25 @@ FlexPress includes a comprehensive Discord notification system that provides rea
 - **🔄 Subscription Extensions** - When memberships are extended
 - **🎬 PPV Purchases** - Pay-per-view episode purchases
 - **⚠️ Refunds & Chargebacks** - Payment issues and disputes
-- **🌟 Talent Applications** - New performer applications
+
+**Contact Forms (📝 Channel):**
+- **🌟 Talent Applications** - Complete casting application details
+- **📧 Contact Form Submissions** - General inquiries
+- **🆘 Support Requests** - Customer support tickets
 
 #### Discord Setup Instructions
 
-1. **Create Discord Webhook**:
+1. **Create Discord Webhooks**:
    - Go to your Discord server → Server Settings → Integrations
-   - Click "Create Webhook" in the Webhooks section
-   - Choose a channel for notifications (e.g., #payments, #notifications)
-   - Copy the webhook URL
+   - Click "Create Webhook" for each channel you want to use
+   - Recommended channels: `#financial-alerts`, `#contact-forms`
+   - Copy the webhook URLs
 
 2. **Configure FlexPress**:
    - Go to `FlexPress Settings → Discord`
-   - Paste your Discord webhook URL
-   - Choose which events to notify about
+   - **Default Discord Webhook URL** - Fallback for all notifications
+   - **Financial Notifications Webhook** - For payment/subscription events
+   - **Contact Forms Webhook** - For talent applications and contact forms
    - Test the connection to verify setup
 
 3. **Customize Notifications**:
@@ -429,6 +476,38 @@ Next Charge: Mar 15, 2025
 - **Role Mentions**: Use @mentions in webhook settings to ping specific team members
 - **Regular Testing**: Test notifications regularly to ensure they're working properly
 - **Team Coordination**: Set up role-based notifications for different team members
+
+#### Troubleshooting Discord Issues
+
+**Common Issues Fixed During Implementation:**
+
+1. **Discord 400 "Bad Request" Errors**:
+   - **Cause**: Data exceeding Discord's character limits or invalid formatting
+   - **Solution**: Implemented comprehensive data validation and sanitization
+   - **Features**: Automatic field truncation, markdown removal, array handling
+
+2. **PHP Fatal Error: strlen() on Array**:
+   - **Cause**: Contact Form 7 sending array data (checkboxes, multi-selects)
+   - **Solution**: Added array detection and implode() conversion to strings
+   - **Location**: `contact-form-7-discord-integration.php` sanitization function
+
+3. **Missing Webhook Fields in Admin**:
+   - **Cause**: Settings registered in wrong class file
+   - **Solution**: Updated `class-flexpress-settings.php` to register all webhook fields
+   - **Result**: Now shows Default, Financial, and Contact webhook fields
+
+4. **Incomplete Form Data in Discord**:
+   - **Cause**: Limited field mapping in casting form integration
+   - **Solution**: Added all casting form fields (gender_identity, stage_age, social media, etc.)
+   - **Result**: Complete casting application details now sent to Discord
+
+**Data Validation Features:**
+- Field values truncated to 1024 characters (Discord limit)
+- Markdown characters removed to prevent formatting issues
+- Arrays converted to comma-separated strings
+- Empty values replaced with "Not provided"
+- Maximum 25 fields per embed (Discord limit)
+- Enhanced error logging with response body and payload details
 
 #### Troubleshooting
 

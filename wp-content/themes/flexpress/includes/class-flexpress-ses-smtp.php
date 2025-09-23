@@ -29,10 +29,22 @@ class FlexPress_SES_SMTP {
     public function configure_smtp($phpmailer) {
         $options = get_option('flexpress_ses_settings', array());
         
-        // Check if SES is enabled
-        if (!isset($options['enable_ses']) || !$options['enable_ses']) {
+        // Debug logging
+        error_log('FlexPress SES: configure_smtp called');
+        
+        // Check if Google SMTP should handle this email instead
+        if ($this->should_google_smtp_handle_email($phpmailer)) {
+            error_log('FlexPress SES: Google SMTP should handle this email, skipping SES');
             return;
         }
+        
+        // Check if SES is enabled
+        if (!isset($options['enable_ses']) || !$options['enable_ses']) {
+            error_log('FlexPress SES: Not enabled, skipping');
+            return;
+        }
+        
+        error_log('FlexPress SES: Proceeding with SES configuration');
         
         // Get configuration from environment variables or database
         $config = $this->get_ses_config($options);
@@ -75,6 +87,39 @@ class FlexPress_SES_SMTP {
         
         // Log SMTP configuration
         error_log('FlexPress SES: SMTP configured for ' . $from_email . ' via ' . $config['smtp_host']);
+    }
+    
+    /**
+     * Check if Google SMTP should handle this email instead of SES
+     */
+    private function should_google_smtp_handle_email($phpmailer) {
+        $google_options = get_option('flexpress_google_smtp_settings', array());
+        
+        // Check if Google SMTP is enabled
+        if (!isset($google_options['enable_google_smtp']) || !$google_options['enable_google_smtp']) {
+            return false;
+        }
+        
+        // If Google SMTP is set to handle all emails, let it handle this one
+        if (!isset($google_options['use_for_internal_only']) || !$google_options['use_for_internal_only']) {
+            error_log('FlexPress SES: Google SMTP handles all emails, letting it handle this one');
+            return true;
+        }
+        
+        // Check if this is an internal email (same domain)
+        $from_email = $phpmailer->From;
+        $from_domain = substr(strrchr($from_email, "@"), 1);
+        
+        $recipients = $phpmailer->getAllRecipientAddresses();
+        foreach (array_keys($recipients) as $email) {
+            $recipient_domain = substr(strrchr($email, "@"), 1);
+            if ($recipient_domain === $from_domain) {
+                error_log('FlexPress SES: Internal email detected, letting Google SMTP handle it');
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**

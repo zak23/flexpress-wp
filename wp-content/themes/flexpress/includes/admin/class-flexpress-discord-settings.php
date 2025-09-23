@@ -178,6 +178,14 @@ class FlexPress_Discord_Settings {
         );
         
         add_settings_field(
+            'notify_content_removal',
+            'Content Removal Requests',
+            array($this, 'render_notify_content_removal_field'),
+            'flexpress_discord_settings',
+            'discord_notifications_section'
+        );
+        
+        add_settings_field(
             'notify_general_forms',
             'General Forms',
             array($this, 'render_notify_general_forms_field'),
@@ -259,6 +267,10 @@ class FlexPress_Discord_Settings {
         
         if (isset($input['notify_support_requests'])) {
             $sanitized['notify_support_requests'] = (bool) $input['notify_support_requests'];
+        }
+        
+        if (isset($input['notify_content_removal'])) {
+            $sanitized['notify_content_removal'] = (bool) $input['notify_content_removal'];
         }
         
         if (isset($input['notify_general_forms'])) {
@@ -573,6 +585,24 @@ class FlexPress_Discord_Settings {
     }
     
     /**
+     * Render notify content removal field
+     */
+    public function render_notify_content_removal_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $notify_content_removal = $options['notify_content_removal'] ?? true;
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="flexpress_discord_settings[notify_content_removal]" 
+                   value="1" 
+                   <?php checked($notify_content_removal); ?> />
+            Send notifications for content removal requests
+        </label>
+        <p class="description">⚠️ Notifications include content URL, removal reason, and identity verification details.</p>
+        <?php
+    }
+    
+    /**
      * Render notify general forms field
      */
     public function render_notify_general_forms_field() {
@@ -719,7 +749,7 @@ class FlexPress_Discord_Settings {
                     <td>
                         <?php
                         $enabled_count = 0;
-                        $total_count = 8;
+                        $total_count = 9;
                         
                         if ($options['notify_subscriptions'] ?? true) $enabled_count++;
                         if ($options['notify_rebills'] ?? true) $enabled_count++;
@@ -732,6 +762,7 @@ class FlexPress_Discord_Settings {
                         if ($options['notify_contact_forms'] ?? true) $enabled_count++;
                         if ($options['notify_casting_applications'] ?? true) $enabled_count++;
                         if ($options['notify_support_requests'] ?? true) $enabled_count++;
+                        if ($options['notify_content_removal'] ?? true) $enabled_count++;
                         if ($options['notify_general_forms'] ?? true) $enabled_count++;
                         if ($options['notify_form_failures'] ?? false) $enabled_count++;
                         

@@ -86,6 +86,7 @@ class FlexPress_CF7_Discord_Integration {
         $contact_form_id = get_option('flexpress_contact_form_id');
         $casting_form_id = get_option('flexpress_casting_form_id');
         $support_form_id = get_option('flexpress_support_form_id');
+        $content_removal_form_id = get_option('flexpress_content_removal_form_id');
         
         if ($form_id == $contact_form_id) {
             return 'contact';
@@ -93,6 +94,8 @@ class FlexPress_CF7_Discord_Integration {
             return 'casting';
         } elseif ($form_id == $support_form_id) {
             return 'support';
+        } elseif ($form_id == $content_removal_form_id) {
+            return 'content_removal';
         } else {
             return 'general';
         }
@@ -161,6 +164,8 @@ class FlexPress_CF7_Discord_Integration {
                 return $discord_settings['notify_casting_applications'] ?? true;
             case 'support':
                 return $discord_settings['notify_support_requests'] ?? true;
+            case 'content_removal':
+                return $discord_settings['notify_content_removal'] ?? true;
             default:
                 return $discord_settings['notify_general_forms'] ?? true;
         }
@@ -243,6 +248,8 @@ class FlexPress_CF7_Discord_Integration {
                 return '🌟 **New casting application received!**';
             case 'support':
                 return '🆘 **New support request submitted!**';
+            case 'content_removal':
+                return '⚠️ **New content removal request submitted!**';
             default:
                 return '📝 **New form submission received!**';
         }
@@ -262,6 +269,8 @@ class FlexPress_CF7_Discord_Integration {
                 return __('🌟 Casting Application', 'flexpress');
             case 'support':
                 return __('🆘 Support Request', 'flexpress');
+            case 'content_removal':
+                return __('⚠️ Content Removal Request', 'flexpress');
             default:
                 return __('📝 Form Submission', 'flexpress');
         }
@@ -281,6 +290,8 @@ class FlexPress_CF7_Discord_Integration {
                 return 0xff6b35; // Orange
             case 'support':
                 return 0xff0000; // Red
+            case 'content_removal':
+                return 0xff8c00; // Dark Orange
             default:
                 return 0x00ff00; // Green
         }
@@ -408,6 +419,44 @@ class FlexPress_CF7_Discord_Integration {
                     $fields[] = [
                         'name' => __('Priority', 'flexpress'),
                         'value' => $sanitize_field_value($posted_data['priority']),
+                        'inline' => true
+                    ];
+                }
+                break;
+                
+            case 'content_removal':
+                if (isset($posted_data['content_url'])) {
+                    $fields[] = [
+                        'name' => __('Content URL', 'flexpress'),
+                        'value' => $sanitize_field_value($posted_data['content_url']),
+                        'inline' => false
+                    ];
+                }
+                if (isset($posted_data['removal_reason'])) {
+                    $fields[] = [
+                        'name' => __('Reason for Removal', 'flexpress'),
+                        'value' => $sanitize_field_value($posted_data['removal_reason']),
+                        'inline' => true
+                    ];
+                }
+                if (isset($posted_data['identity_verification']) && !empty($posted_data['identity_verification'])) {
+                    $fields[] = [
+                        'name' => __('Identity Verification', 'flexpress'),
+                        'value' => $sanitize_field_value($posted_data['identity_verification']),
+                        'inline' => false
+                    ];
+                }
+                if (isset($posted_data['additional_details']) && !empty($posted_data['additional_details'])) {
+                    $fields[] = [
+                        'name' => __('Additional Details', 'flexpress'),
+                        'value' => $sanitize_field_value($posted_data['additional_details']),
+                        'inline' => false
+                    ];
+                }
+                if (isset($posted_data['confirmation'])) {
+                    $fields[] = [
+                        'name' => __('Confirmation', 'flexpress'),
+                        'value' => __('Confirmed', 'flexpress'),
                         'inline' => true
                     ];
                 }

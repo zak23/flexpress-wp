@@ -29,6 +29,9 @@ function flexpress_create_cf7_forms() {
     
     // Create Support Form
     flexpress_create_support_form();
+    
+    // Create Content Removal Form
+    flexpress_create_content_removal_form();
 }
 
 /**
@@ -428,6 +431,8 @@ function flexpress_get_cf7_form_id($type) {
             return get_option('flexpress_casting_form_id');
         case 'support':
             return get_option('flexpress_support_form_id');
+        case 'content_removal':
+            return get_option('flexpress_content_removal_form_id');
         default:
             return false;
     }
@@ -451,6 +456,9 @@ function flexpress_display_cf7_form($type, $args = array()) {
             case 'support':
                 $form_id = flexpress_create_support_form();
                 break;
+            case 'content_removal':
+                $form_id = flexpress_create_content_removal_form();
+                break;
         }
     }
     
@@ -464,6 +472,161 @@ function flexpress_display_cf7_form($type, $args = array()) {
         echo '<p>' . esc_html__('Form could not be loaded. Please contact the administrator.', 'flexpress') . '</p>';
         echo '</div>';
     }
+}
+
+/**
+ * Create the content removal form
+ */
+function flexpress_create_content_removal_form() {
+    $form_id = get_option('flexpress_content_removal_form_id');
+    
+    // Check if form already exists
+    if ($form_id && get_post($form_id)) {
+        return $form_id;
+    }
+
+    $form_content = '
+<div class="alert alert-warning mb-4">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    ' . __('We take all content removal requests very seriously. Please provide accurate information to help us process your request efficiently.', 'flexpress') . '
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label for="name" class="form-label">' . __('Full Name', 'flexpress') . ' <span class="text-danger">*</span></label>
+        [text* name id:name class:form-control placeholder "' . __('Enter your full name', 'flexpress') . '"]
+        <div class="invalid-feedback">' . __('Please enter your full name.', 'flexpress') . '</div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label for="email" class="form-label">' . __('Email Address', 'flexpress') . ' <span class="text-danger">*</span></label>
+        [email* email id:email class:form-control placeholder "' . __('your@email.com', 'flexpress') . '"]
+        <div class="invalid-feedback">' . __('Please enter a valid email address.', 'flexpress') . '</div>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label for="content_url" class="form-label">' . __('Content URL', 'flexpress') . ' <span class="text-danger">*</span></label>
+    [url* content_url id:content_url class:form-control placeholder "' . __('https://example.com/content-to-remove', 'flexpress') . '"]
+    <div class="invalid-feedback">' . __('Please enter a valid URL to the content.', 'flexpress') . '</div>
+    <small class="form-text text-muted">' . __('Please provide the direct URL to the specific content you want removed.', 'flexpress') . '</small>
+</div>
+
+<div class="mb-3">
+    <label for="removal_reason" class="form-label">' . __('Reason for Removal', 'flexpress') . ' <span class="text-danger">*</span></label>
+    [select* removal_reason id:removal_reason class:form-control include_blank "' . __('Please select a reason', 'flexpress') . '" "' . __('Non-consensual content', 'flexpress') . '" "' . __('Copyright infringement', 'flexpress') . '" "' . __('Privacy concern', 'flexpress') . '" "' . __('Personal information exposed', 'flexpress') . '" "' . __('Revenge porn/blackmail', 'flexpress') . '" "' . __('Underage content', 'flexpress') . '" "' . __('Other', 'flexpress') . '"]
+    <div class="invalid-feedback">' . __('Please select a reason for removal.', 'flexpress') . '</div>
+</div>
+
+<div class="mb-3">
+    <label for="identity_verification" class="form-label">' . __('Identity Verification', 'flexpress') . '</label>
+    [textarea identity_verification id:identity_verification class:form-control rows:3 placeholder "' . __('If you are the owner/subject of the content, please provide information to verify your identity. We may contact you for additional verification.', 'flexpress') . '"]
+    <small class="form-text text-muted">' . __('Optional: Provide details to help us verify your identity if you are the content owner/subject.', 'flexpress') . '</small>
+</div>
+
+<div class="mb-3">
+    <label for="additional_details" class="form-label">' . __('Additional Details', 'flexpress') . '</label>
+    [textarea additional_details id:additional_details class:form-control rows:4 placeholder "' . __('Please provide any additional information that may help us process your request...', 'flexpress') . '"]
+    <small class="form-text text-muted">' . __('Optional: Any additional context or information that may be relevant to your request.', 'flexpress') . '</small>
+</div>
+
+<div class="mb-3">
+    <div class="form-check">
+        <input type="checkbox" name="confirmation" id="confirmation" class="form-check-input" required>
+        <label class="form-check-label" for="confirmation">
+            ' . __('I confirm that all information provided is accurate and complete.', 'flexpress') . ' <span class="text-danger">*</span>
+        </label>
+        <div class="invalid-feedback">' . __('You must confirm that the information is accurate.', 'flexpress') . '</div>
+    </div>
+</div>
+
+<div class="mb-3">
+    [submit class:btn class:btn-warning "' . __('Submit Request', 'flexpress') . '"]
+</div>';
+
+    $mail_template = '
+<p><strong>' . __('Content Removal Request Received', 'flexpress') . '</strong></p>
+
+<p><strong>' . __('Requestor Details:', 'flexpress') . '</strong></p>
+<p><strong>' . __('Name:', 'flexpress') . '</strong> [name]</p>
+<p><strong>' . __('Email:', 'flexpress') . '</strong> [email]</p>
+
+<p><strong>' . __('Content Details:', 'flexpress') . '</strong></p>
+<p><strong>' . __('Content URL:', 'flexpress') . '</strong> [content_url]</p>
+<p><strong>' . __('Reason for Removal:', 'flexpress') . '</strong> [removal_reason]</p>
+
+<p><strong>' . __('Identity Verification:', 'flexpress') . '</strong></p>
+<p>[identity_verification]</p>
+
+<p><strong>' . __('Additional Details:', 'flexpress') . '</strong></p>
+<p>[additional_details]</p>
+
+<p><strong>' . __('Confirmation:', 'flexpress') . '</strong> ' . __('Confirmed', 'flexpress') . '</p>
+
+<hr>
+<p><em>' . __('This content removal request was submitted from', 'flexpress') . ' ' . get_bloginfo('name') . '</em></p>';
+
+    $mail_2_template = '
+<p>' . __('Hello [name],', 'flexpress') . '</p>
+
+<p>' . __('Thank you for submitting your content removal request. We take all such requests very seriously and will review your submission promptly.', 'flexpress') . '</p>
+
+<p><strong>' . __('Your request details:', 'flexpress') . '</strong></p>
+<p><strong>' . __('Content URL:', 'flexpress') . '</strong> [content_url]</p>
+<p><strong>' . __('Reason:', 'flexpress') . '</strong> [removal_reason]</p>
+
+<p>' . __('Our legal and compliance team will carefully review your request and respond within the following timeframes:', 'flexpress') . '</p>
+<ul>
+    <li>' . __('Non-consensual use of an image and/or illegal content: 24 hours', 'flexpress') . '</li>
+    <li>' . __('All other requests: 7 business days', 'flexpress') . '</li>
+</ul>
+
+<p>' . __('If we need additional information, we will contact you directly.', 'flexpress') . '</p>
+
+<hr>
+<p>' . __('Best regards,', 'flexpress') . '<br>
+' . __('Legal & Compliance Team', 'flexpress') . '<br>
+' . get_bloginfo('name') . '</p>';
+
+    $form_data = array(
+        'post_title' => 'FlexPress Content Removal Request',
+        'post_content' => $form_content,
+        'post_status' => 'publish',
+        'post_type' => 'wpcf7_contact_form',
+        'meta_input' => array(
+            '_form' => $form_content,
+            '_mail' => array(
+                'active' => true,
+                'subject' => sprintf(__('Content Removal Request: %s', 'flexpress'), '[removal_reason]'),
+                'sender' => '[name] <[email]>',
+                'body' => $mail_template,
+                'recipient' => flexpress_get_contact_email('contact'),
+                'additional_headers' => 'Reply-To: [email]',
+                'attachments' => '',
+                'use_html' => true,
+                'exclude_blank' => false
+            ),
+            '_mail_2' => array(
+                'active' => true,
+                'subject' => sprintf(__('Content Removal Request Received - %s', 'flexpress'), get_bloginfo('name')),
+                'sender' => get_bloginfo('name') . ' <' . flexpress_get_contact_email('contact') . '>',
+                'body' => $mail_2_template,
+                'recipient' => '[email]',
+                'additional_headers' => '',
+                'attachments' => '',
+                'use_html' => true,
+                'exclude_blank' => false
+            )
+        )
+    );
+
+    $form_id = wp_insert_post($form_data);
+    
+    if ($form_id && !is_wp_error($form_id)) {
+        update_option('flexpress_content_removal_form_id', $form_id);
+        return $form_id;
+    }
+    
+    return false;
 }
 
 // Initialize forms when Contact Form 7 is active

@@ -5771,18 +5771,27 @@ add_action('wp_ajax_nopriv_load_more_models', 'flexpress_load_more_models');
 function flexpress_get_homepage_models($count = 8, $featured_only = false)
 {
     $meta_query = array(
+        'relation' => 'OR',
         array(
             'key' => 'model_hide_on_homepage',
             'value' => '1',
             'compare' => '!='
+        ),
+        array(
+            'key' => 'model_hide_on_homepage',
+            'compare' => 'NOT EXISTS'
         )
     );
 
     if ($featured_only) {
-        $meta_query[] = array(
-            'key' => 'model_featured',
-            'value' => '1',
-            'compare' => '='
+        $meta_query = array(
+            'relation' => 'AND',
+            $meta_query,
+            array(
+                'key' => 'model_featured',
+                'value' => '1',
+                'compare' => '='
+            )
         );
     }
 
@@ -5818,9 +5827,16 @@ function flexpress_get_models_by_gender($gender, $count = -1)
                 'compare' => '='
             ),
             array(
-                'key' => 'model_hide_on_homepage',
-                'value' => '1',
-                'compare' => '!='
+                'relation' => 'OR',
+                array(
+                    'key' => 'model_hide_on_homepage',
+                    'value' => '1',
+                    'compare' => '!='
+                ),
+                array(
+                    'key' => 'model_hide_on_homepage',
+                    'compare' => 'NOT EXISTS'
+                )
             )
         ),
         'orderby' => 'menu_order title',

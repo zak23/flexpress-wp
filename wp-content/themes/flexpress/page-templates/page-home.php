@@ -114,9 +114,16 @@ $hero_episode = new WP_Query($hero_args);
                         'compare' => '='
                     ),
                     array(
-                        'key' => 'model_hide_on_homepage',
-                        'value' => '1',
-                        'compare' => '!='
+                        'relation' => 'OR',
+                        array(
+                            'key' => 'model_hide_on_homepage',
+                            'value' => '1',
+                            'compare' => '!='
+                        ),
+                        array(
+                            'key' => 'model_hide_on_homepage',
+                            'compare' => 'NOT EXISTS'
+                        )
                     )
                 ),
                 'orderby' => 'title',
@@ -203,10 +210,15 @@ $hero_episode = new WP_Query($hero_args);
                 'post_type' => 'model',
                 'posts_per_page' => 12,
                 'meta_query' => array(
+                    'relation' => 'OR',
                     array(
                         'key' => 'model_hide_on_homepage',
                         'value' => '1',
                         'compare' => '!='
+                    ),
+                    array(
+                        'key' => 'model_hide_on_homepage',
+                        'compare' => 'NOT EXISTS'
                     )
                 ),
                 'orderby' => 'date',

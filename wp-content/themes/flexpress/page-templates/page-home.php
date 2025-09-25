@@ -47,7 +47,8 @@ $hero_episode = new WP_Query($hero_args);
     endif; 
     ?>
 
-
+    <!-- Promo Video Section -->
+    <?php get_template_part('template-parts/promo-video-section'); ?>
 
     <div class="container py-5">
         <!-- Featured Videos Grid -->

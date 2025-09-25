@@ -1523,6 +1523,41 @@ docker exec -it flexpress_wordpress wp [command]
   - Handles different duration units (days, weeks, months, years) with proper conversion
   - Includes trial price calculation when applicable
 
+## 🎬 Promo Video Section
+
+FlexPress includes a professional promo video section on the home page for showcasing tour videos, showreels, or promotional content.
+
+### Features
+- **BunnyCDN Integration**: Seamlessly integrates with existing BunnyCDN video infrastructure
+- **ACF Configuration**: Easy content management through Advanced Custom Fields
+- **Responsive Design**: Optimized for all device sizes with mobile-first approach
+- **Professional Styling**: Modern dark theme with gradient backgrounds and smooth animations
+- **Automatic Fallbacks**: Graceful handling when video is unavailable
+- **Customizable Content**: Title, subtitle, and call-to-action button fully configurable
+
+### Setup
+1. **Configure ACF Fields**: Edit the Home page in WordPress Admin
+2. **Set Video ID**: Enter your BunnyCDN video ID in the "Promo Video ID" field
+3. **Customize Content**: 
+   - Set custom title (default: "Welcome to Our Platform")
+   - Add subtitle text (default: "Experience premium content like never before")
+   - Configure CTA button text and URL (default: "Get Started Now" → "/register")
+4. **Video Display**: The section automatically generates secure BunnyCDN URLs with token authentication
+
+### Technical Implementation
+- **Template**: `template-parts/promo-video-section.php`
+- **ACF Fields**: `group_home_page` field group with 5 configurable fields
+- **BunnyCDN Integration**: Uses existing `flexpress_get_bunnycdn_video_url()` function
+- **Styling**: Responsive CSS with hover effects and professional gradients
+- **Fallback**: SVG placeholder when video unavailable
+
+### ACF Fields
+- `home_promo_video_id` - BunnyCDN video ID (required)
+- `home_promo_video_title` - Section title
+- `home_promo_video_subtitle` - Descriptive text below video
+- `home_promo_video_button_text` - CTA button text
+- `home_promo_video_button_url` - CTA button destination URL
+
 ## 🆘 Support
 
 For issues or questions:

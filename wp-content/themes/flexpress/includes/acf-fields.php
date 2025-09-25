@@ -1117,4 +1117,70 @@ if (function_exists('acf_add_local_field_group')):
         'description' => 'Custom fields for the support page content management',
     ));
 
+    // Home Page Custom Fields
+    acf_add_local_field_group(array(
+        'key' => 'group_home_page',
+        'title' => 'Home Page Content',
+        'fields' => array(
+            // Promo Video Section
+            array(
+                'key' => 'field_home_promo_video_id',
+                'label' => 'Promo Video ID',
+                'name' => 'home_promo_video_id',
+                'type' => 'text',
+                'instructions' => 'Enter the BunnyCDN video ID for the promo/tour video',
+                'placeholder' => 'e.g., abc123def456',
+            ),
+            array(
+                'key' => 'field_home_promo_video_title',
+                'label' => 'Promo Video Title',
+                'name' => 'home_promo_video_title',
+                'type' => 'text',
+                'default_value' => 'Welcome to Our Platform',
+                'instructions' => 'Title displayed above the promo video',
+            ),
+            array(
+                'key' => 'field_home_promo_video_subtitle',
+                'label' => 'Promo Video Subtitle',
+                'name' => 'home_promo_video_subtitle',
+                'type' => 'textarea',
+                'default_value' => 'Experience premium content like never before',
+                'instructions' => 'Subtitle text displayed below the promo video',
+            ),
+            array(
+                'key' => 'field_home_promo_video_button_text',
+                'label' => 'CTA Button Text',
+                'name' => 'home_promo_video_button_text',
+                'type' => 'text',
+                'default_value' => 'Get Started Now',
+                'instructions' => 'Text for the call-to-action button below the video',
+            ),
+            array(
+                'key' => 'field_home_promo_video_button_url',
+                'label' => 'CTA Button URL',
+                'name' => 'home_promo_video_button_url',
+                'type' => 'text',
+                'default_value' => '/register',
+                'instructions' => 'URL for the call-to-action button (can be relative like /register or full URL)',
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param' => 'page_template',
+                    'operator' => '==',
+                    'value' => 'page-templates/page-home.php',
+                ),
+            ),
+        ),
+        'menu_order' => 0,
+        'position' => 'normal',
+        'style' => 'default',
+        'label_placement' => 'top',
+        'instruction_placement' => 'label',
+        'hide_on_screen' => '',
+        'active' => true,
+        'description' => 'Custom fields for the home page promo video section',
+    ));
+
 endif; 

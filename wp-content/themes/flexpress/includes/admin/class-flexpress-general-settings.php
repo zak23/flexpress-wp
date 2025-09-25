@@ -502,7 +502,7 @@ class FlexPress_General_Settings
                 <?php foreach ($awards_list as $index => $award): ?>
                     <div class="award-item" data-index="<?php echo $index; ?>">
                         <div class="award-item-header">
-                            <h4><?php printf(esc_html__('Award %d', 'flexpress'), $index + 1); ?></h4>
+                            <h4><?php printf(esc_html__('Award %d', 'flexpress') ?: 'Award %d', $index + 1); ?></h4>
                             <button type="button" class="button button-secondary remove-award" data-index="<?php echo $index; ?>">
                                 <?php esc_html_e('Remove', 'flexpress'); ?>
                             </button>
@@ -836,7 +836,7 @@ class FlexPress_General_Settings
         <div id="featured-on-media-container">
             <?php foreach ($media_outlets as $index => $outlet): ?>
                 <div class="featured-on-media-item" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; background: #f9f9f9;">
-                    <h4><?php echo sprintf(__('Media Outlet %d', 'flexpress'), $index + 1); ?></h4>
+                    <h4><?php echo sprintf(__('Media Outlet %d', 'flexpress') ?: 'Media Outlet %d', $index + 1); ?></h4>
 
                     <table class="form-table">
                         <tr>
@@ -1101,17 +1101,23 @@ class FlexPress_General_Settings
      */
     public function render_casting_image_field()
     {
+        error_log('FlexPress General Settings: render_casting_image_field called');
         $options = get_option('flexpress_general_settings');
         $casting_image_id = isset($options['casting_image']) ? $options['casting_image'] : '';
+
+        error_log('FlexPress General Settings: Current casting image ID from options: ' . $casting_image_id);
 
         // Display the current image if it exists
         if (!empty($casting_image_id)) {
             $image_url = wp_get_attachment_image_url($casting_image_id, 'medium');
+            error_log('FlexPress General Settings: Image URL for ID ' . $casting_image_id . ': ' . ($image_url ? $image_url : 'No URL found'));
             if ($image_url) {
                 echo '<div class="flexpress-casting-image-preview">';
                 echo '<img src="' . esc_url($image_url) . '" style="max-width: 300px; height: auto; margin-bottom: 10px;" />';
                 echo '</div>';
             }
+        } else {
+            error_log('FlexPress General Settings: No casting image ID found, will show upload button');
         }
     ?>
         <input type="hidden" name="flexpress_general_settings[casting_image]" id="flexpress_casting_image" value="<?php echo esc_attr($casting_image_id); ?>" />

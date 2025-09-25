@@ -1569,6 +1569,118 @@ FlexPress includes a professional promo video section on the home page for showc
 - `home_promo_video_button_text` - CTA button text
 - `home_promo_video_button_url` - CTA button destination URL
 
+## 👥 Model Management System
+
+### Overview
+FlexPress includes a comprehensive model management system with advanced content control and homepage visibility options.
+
+### Model Features
+
+#### ACF Fields Configuration
+Models include extensive custom fields for complete profile management:
+
+**Basic Information:**
+- About/Biography (required)
+- Gender (Female, Male, Trans, Non-Binary, Other)
+- Date of Birth
+- Height
+- Measurements
+
+**Images:**
+- Hero Landscape Image (1920x600px recommended)
+- Profile Image (separate from featured image)
+
+**Social Media:**
+- Instagram, Twitter, TikTok, OnlyFans links
+- Custom social media fields
+
+**Display Settings:**
+- **Hide on Homepage**: Toggle to exclude model from homepage sections
+- **Featured Model**: Mark for special highlighting and homepage featured section
+
+#### Homepage Visibility Control
+The "Hide on Homepage" checkbox provides granular control over model display:
+
+**How It Works:**
+- **Default State**: Models are visible on homepage by default (`hide_on_homepage = 0`)
+- **Hidden State**: When checked (`hide_on_homepage = 1`), model is excluded from:
+  - Featured Models section
+  - All Models section
+- **Archive Pages**: Hidden models still appear on dedicated model archive pages
+
+**Technical Implementation:**
+```php
+// Featured Models Query
+$models_args = array(
+    'post_type' => 'model',
+    'posts_per_page' => 6,
+    'meta_query' => array(
+        'relation' => 'AND',
+        array(
+            'key' => 'model_featured',
+            'value' => '1',
+            'compare' => '='
+        ),
+        array(
+            'key' => 'model_hide_on_homepage',
+            'value' => '1',
+            'compare' => '!='
+        )
+    ),
+    'orderby' => 'title',
+    'order' => 'ASC'
+);
+
+// All Models Query
+$all_models_args = array(
+    'post_type' => 'model',
+    'posts_per_page' => 12,
+    'meta_query' => array(
+        array(
+            'key' => 'model_hide_on_homepage',
+            'value' => '1',
+            'compare' => '!='
+        )
+    ),
+    'orderby' => 'date',
+    'order' => 'DESC'
+);
+```
+
+#### Homepage Model Sections
+
+**1. Featured Models Section**
+- Displays models with `model_featured = 1` AND `model_hide_on_homepage != 1`
+- Shows up to 6 models
+- Ordered alphabetically by title
+
+**2. All Models Section**
+- Displays all models except those with `model_hide_on_homepage = 1`
+- Shows up to 12 models
+- Ordered by creation date (newest first)
+- Includes "See More Models" link to archive page
+
+#### Usage Examples
+
+**Hide a Model from Homepage:**
+1. Edit the model post
+2. Navigate to "Display Settings" tab
+3. Check "Hide on Homepage"
+4. Save changes
+5. Model will no longer appear in homepage sections
+
+**Show Only Featured Models on Homepage:**
+1. Set "Hide on Homepage" for non-featured models
+2. Keep "Featured Model" checked for desired models
+3. Only featured models will appear in homepage sections
+
+#### Admin Management
+- **ACF Field Group**: `group_model_details`
+- **Field Key**: `field_model_hide_on_homepage`
+- **Field Name**: `model_hide_on_homepage`
+- **Default Value**: `0` (visible by default)
+- **UI**: Toggle switch with "Yes/No" labels
+
 ## 🆘 Support
 
 For issues or questions:

@@ -48,8 +48,6 @@ $hero_episode = new WP_Query($hero_args);
     endif;
     ?>
 
-
-
     <div class="container py-5">
         <!-- Featured Videos Grid -->
         <div class="featured-videos-section mb-5">
@@ -109,10 +107,16 @@ $hero_episode = new WP_Query($hero_args);
                 'post_type' => 'model',
                 'posts_per_page' => 6,
                 'meta_query' => array(
+                    'relation' => 'AND',
                     array(
                         'key' => 'model_featured',
                         'value' => '1',
                         'compare' => '='
+                    ),
+                    array(
+                        'key' => 'model_hide_on_homepage',
+                        'value' => '1',
+                        'compare' => '!='
                     )
                 ),
                 'orderby' => 'title',
@@ -142,9 +146,7 @@ $hero_episode = new WP_Query($hero_args);
             <?php endif; ?>
         </div>
 
-
-
-        <!-- Upcoming Episode -->
+        <!-- Join Now CTA -->
         <?php get_template_part('template-parts/join-now-cta'); ?>
 
         <!-- Recent Videos Grid -->
@@ -200,6 +202,13 @@ $hero_episode = new WP_Query($hero_args);
             $all_models_args = array(
                 'post_type' => 'model',
                 'posts_per_page' => 12,
+                'meta_query' => array(
+                    array(
+                        'key' => 'model_hide_on_homepage',
+                        'value' => '1',
+                        'compare' => '!='
+                    )
+                ),
                 'orderby' => 'date',
                 'order' => 'DESC'
             );
@@ -234,8 +243,6 @@ $hero_episode = new WP_Query($hero_args);
 
     <!-- Upcoming Episode -->
     <?php get_template_part('template-parts/upcoming-episode'); ?>
-
-
 
     <!-- Featured On Section -->
     <?php get_template_part('template-parts/featured-on'); ?>

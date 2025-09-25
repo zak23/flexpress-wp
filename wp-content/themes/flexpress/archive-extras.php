@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The template for displaying extras archives - Vixen.com Style with Sidebar Filters
  *
@@ -68,7 +69,7 @@ if (!empty($filter_type) && !empty($filter_value)) {
                 )
             );
             break;
-            
+
         case 'model':
             $extras_args['meta_query'][] = array(
                 'key' => 'featured_models',
@@ -76,7 +77,7 @@ if (!empty($filter_type) && !empty($filter_value)) {
                 'compare' => 'LIKE'
             );
             break;
-            
+
         case 'content_type':
             $extras_args['meta_query'][] = array(
                 'key' => 'content_type',
@@ -84,15 +85,15 @@ if (!empty($filter_type) && !empty($filter_value)) {
                 'compare' => '='
             );
             break;
-            
+
         case 'alpha':
             // Filter by starting letter and sort alphabetically
             $extras_args['orderby'] = 'title';
             $extras_args['order'] = 'ASC';
             unset($extras_args['meta_key']);
-            
+
             // Add a filter to only show posts starting with the selected letter
-            add_filter('posts_where', function($where) use ($filter_value) {
+            add_filter('posts_where', function ($where) use ($filter_value) {
                 global $wpdb;
                 $where .= $wpdb->prepare(" AND {$wpdb->posts}.post_title LIKE %s", $filter_value . '%');
                 return $where;
@@ -138,88 +139,88 @@ $extras_query = new WP_Query($extras_args);
                     $total_pages = $extras_query->max_num_pages;
                     if ($total_pages > 1):
                     ?>
-                    <nav class="pagination-nav mt-5">
-                        <div class="pagination-wrapper text-center">
-                            <?php
-                            // Custom pagination similar to Vixen.com
-                            $current_page = max(1, $paged);
-                            $pagination_args = array(
-                                'base' => str_replace(999999999, '%#%', esc_url(get_pagenum_link(999999999))),
-                                'format' => '?paged=%#%',
-                                'current' => $current_page,
-                                'total' => $total_pages,
-                                'prev_text' => __('Back', 'flexpress'),
-                                'next_text' => __('Next', 'flexpress'),
-                                'type' => 'array',
-                                'show_all' => false,
-                                'end_size' => 1,
-                                'mid_size' => 2,
-                                'before_page_number' => '',
-                                'after_page_number' => ''
-                            );
+                        <nav class="pagination-nav mt-5">
+                            <div class="pagination-wrapper text-center">
+                                <?php
+                                // Custom pagination similar to Vixen.com
+                                $current_page = max(1, $paged);
+                                $pagination_args = array(
+                                    'base' => str_replace(999999999, '%#%', esc_url(get_pagenum_link(999999999))),
+                                    'format' => '?paged=%#%',
+                                    'current' => $current_page,
+                                    'total' => $total_pages,
+                                    'prev_text' => __('Back', 'flexpress'),
+                                    'next_text' => __('Next', 'flexpress'),
+                                    'type' => 'array',
+                                    'show_all' => false,
+                                    'end_size' => 1,
+                                    'mid_size' => 2,
+                                    'before_page_number' => '',
+                                    'after_page_number' => ''
+                                );
 
-                            $pagination_links = paginate_links($pagination_args);
-                            
-                            if ($pagination_links):
-                            ?>
-                                <ul class="pagination justify-content-center">
-                                    <!-- First -->
-                                    <?php if ($current_page > 1): ?>
-                                    <li class="page-item">
-                                        <a class="page-link" href="<?php echo esc_url(get_pagenum_link(1)); ?>">
-                                            <?php esc_html_e('First', 'flexpress'); ?>
-                                        </a>
-                                    </li>
-                                    <?php endif; ?>
-                                    
-                                    <!-- Previous -->
-                                    <?php if ($current_page > 1): ?>
-                                    <li class="page-item">
-                                        <a class="page-link" href="<?php echo esc_url(get_pagenum_link($current_page - 1)); ?>">
-                                            <?php esc_html_e('Back', 'flexpress'); ?>
-                                        </a>
-                                    </li>
-                                    <?php endif; ?>
-                                    
-                                    <!-- Page Numbers -->
-                                    <?php
-                                    foreach ($pagination_links as $link) {
-                                        if (strpos($link, 'current') !== false) {
-                                            echo '<li class="page-item active">' . str_replace('<span', '<span class="page-link"', $link) . '</li>';
-                                        } else {
-                                            echo '<li class="page-item">' . str_replace('<a', '<a class="page-link"', $link) . '</li>';
+                                $pagination_links = paginate_links($pagination_args);
+
+                                if ($pagination_links):
+                                ?>
+                                    <ul class="pagination justify-content-center">
+                                        <!-- First -->
+                                        <?php if ($current_page > 1): ?>
+                                            <li class="page-item">
+                                                <a class="page-link" href="<?php echo esc_url(get_pagenum_link(1)); ?>">
+                                                    <?php esc_html_e('First', 'flexpress'); ?>
+                                                </a>
+                                            </li>
+                                        <?php endif; ?>
+
+                                        <!-- Previous -->
+                                        <?php if ($current_page > 1): ?>
+                                            <li class="page-item">
+                                                <a class="page-link" href="<?php echo esc_url(get_pagenum_link($current_page - 1)); ?>">
+                                                    <?php esc_html_e('Back', 'flexpress'); ?>
+                                                </a>
+                                            </li>
+                                        <?php endif; ?>
+
+                                        <!-- Page Numbers -->
+                                        <?php
+                                        foreach ($pagination_links as $link) {
+                                            if (strpos($link, 'current') !== false) {
+                                                echo '<li class="page-item active">' . str_replace('<span', '<span class="page-link"', $link) . '</li>';
+                                            } else {
+                                                echo '<li class="page-item">' . str_replace('<a', '<a class="page-link"', $link) . '</li>';
+                                            }
                                         }
-                                    }
-                                    ?>
-                                    
-                                    <!-- Next -->
-                                    <?php if ($current_page < $total_pages): ?>
-                                    <li class="page-item">
-                                        <a class="page-link" href="<?php echo esc_url(get_pagenum_link($current_page + 1)); ?>">
-                                            <?php esc_html_e('Next', 'flexpress'); ?>
-                                        </a>
-                                    </li>
-                                    <?php endif; ?>
-                                    
-                                    <!-- Last -->
-                                    <?php if ($current_page < $total_pages): ?>
-                                    <li class="page-item">
-                                        <a class="page-link" href="<?php echo esc_url(get_pagenum_link($total_pages)); ?>">
-                                            <?php esc_html_e('Last', 'flexpress'); ?>
-                                        </a>
-                                    </li>
-                                    <?php endif; ?>
-                                </ul>
-                                
-                                <!-- Page info like Vixen -->
-                                <div class="pagination-info mt-3">
-                                    <span class="text-muted">
-                                        <?php echo esc_html($current_page); ?> of <?php echo esc_html($total_pages); ?>
-                                    </span>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    </nav>
+                                        ?>
+
+                                        <!-- Next -->
+                                        <?php if ($current_page < $total_pages): ?>
+                                            <li class="page-item">
+                                                <a class="page-link" href="<?php echo esc_url(get_pagenum_link($current_page + 1)); ?>">
+                                                    <?php esc_html_e('Next', 'flexpress'); ?>
+                                                </a>
+                                            </li>
+                                        <?php endif; ?>
+
+                                        <!-- Last -->
+                                        <?php if ($current_page < $total_pages): ?>
+                                            <li class="page-item">
+                                                <a class="page-link" href="<?php echo esc_url(get_pagenum_link($total_pages)); ?>">
+                                                    <?php esc_html_e('Last', 'flexpress'); ?>
+                                                </a>
+                                            </li>
+                                        <?php endif; ?>
+                                    </ul>
+
+                                    <!-- Page info like Vixen -->
+                                    <div class="pagination-info mt-3">
+                                        <span class="text-muted">
+                                            <?php echo esc_html($current_page); ?> of <?php echo esc_html($total_pages); ?>
+                                        </span>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </nav>
                     <?php endif; ?>
 
                 <?php else: ?>
@@ -249,12 +250,12 @@ $extras_query = new WP_Query($extras_args);
                             <div class="mb-3">
                                 <h6 class="fw-bold text-uppercase mb-2"><?php esc_html_e('Sort By', 'flexpress'); ?></h6>
                                 <div class="d-flex gap-2">
-                                    <a href="<?php echo esc_url(add_query_arg('sort', 'newest')); ?>" 
-                                       class="btn btn-sm <?php echo ($sort === 'newest') ? 'btn-primary' : 'btn-outline-secondary'; ?> flex-fill">
+                                    <a href="<?php echo esc_url(add_query_arg('sort', 'newest')); ?>"
+                                        class="btn btn-sm <?php echo ($sort === 'newest') ? 'btn-primary' : 'btn-outline-secondary'; ?> flex-fill">
                                         <?php esc_html_e('Newest', 'flexpress'); ?>
                                     </a>
-                                    <a href="<?php echo esc_url(add_query_arg('sort', 'oldest')); ?>" 
-                                       class="btn btn-sm <?php echo ($sort === 'oldest') ? 'btn-primary' : 'btn-outline-secondary'; ?> flex-fill">
+                                    <a href="<?php echo esc_url(add_query_arg('sort', 'oldest')); ?>"
+                                        class="btn btn-sm <?php echo ($sort === 'oldest') ? 'btn-primary' : 'btn-outline-secondary'; ?> flex-fill">
                                         <?php esc_html_e('Oldest', 'flexpress'); ?>
                                     </a>
                                 </div>
@@ -263,7 +264,7 @@ $extras_query = new WP_Query($extras_args);
                             <!-- Filter By Dropdown -->
                             <div class="mb-4">
                                 <h6 class="fw-bold text-uppercase mb-3"><?php esc_html_e('Filter By', 'flexpress'); ?></h6>
-                                
+
                                 <div class="mb-3">
                                     <select id="filter-type-select" class="form-select">
                                         <option value="category" <?php echo ($filter_type === 'category' || empty($filter_type)) ? 'selected' : ''; ?>><?php esc_html_e('Category', 'flexpress'); ?></option>
@@ -285,16 +286,16 @@ $extras_query = new WP_Query($extras_args);
                                         'orderby' => 'name',
                                         'order' => 'ASC'
                                     ));
-                                    
+
                                     if (!empty($extras_tags) && !is_wp_error($extras_tags)):
                                         foreach ($extras_tags as $tag):
                                     ?>
-                                        <a href="<?php echo esc_url(add_query_arg(array('filter_type' => 'category', 'filter_value' => $tag->slug))); ?>" 
-                                           class="filter-item <?php echo ($filter_type === 'category' && $filter_value === $tag->slug) ? 'active' : ''; ?>">
-                                            <?php echo esc_html($tag->name); ?> 
-                                            <span class="filter-count">(<?php echo $tag->count; ?>)</span>
-                                        </a>
-                                    <?php 
+                                            <a href="<?php echo esc_url(add_query_arg(array('filter_type' => 'category', 'filter_value' => $tag->slug))); ?>"
+                                                class="filter-item <?php echo ($filter_type === 'category' && $filter_value === $tag->slug) ? 'active' : ''; ?>">
+                                                <?php echo esc_html($tag->name); ?>
+                                                <span class="filter-count">(<?php echo $tag->count; ?>)</span>
+                                            </a>
+                                    <?php
                                         endforeach;
                                     endif;
                                     ?>
@@ -317,11 +318,11 @@ $extras_query = new WP_Query($extras_args);
                                         'extended_cuts' => 'Extended Cuts',
                                         'other' => 'Other'
                                     );
-                                    
+
                                     foreach ($content_types as $type_key => $type_label):
                                     ?>
-                                        <a href="<?php echo esc_url(add_query_arg(array('filter_type' => 'content_type', 'filter_value' => $type_key))); ?>" 
-                                           class="filter-item <?php echo ($filter_type === 'content_type' && $filter_value === $type_key) ? 'active' : ''; ?>">
+                                        <a href="<?php echo esc_url(add_query_arg(array('filter_type' => 'content_type', 'filter_value' => $type_key))); ?>"
+                                            class="filter-item <?php echo ($filter_type === 'content_type' && $filter_value === $type_key) ? 'active' : ''; ?>">
                                             <?php echo esc_html($type_label); ?>
                                         </a>
                                     <?php endforeach; ?>
@@ -343,8 +344,8 @@ $extras_query = new WP_Query($extras_args);
                                     </div>
                                     <?php if (!empty($models)): ?>
                                         <?php foreach ($models as $model): ?>
-                                            <a href="<?php echo esc_url(add_query_arg(array('filter_type' => 'model', 'filter_value' => $model->ID))); ?>" 
-                                               class="filter-item <?php echo ($filter_type === 'model' && $filter_value == $model->ID) ? 'active' : ''; ?>">
+                                            <a href="<?php echo esc_url(add_query_arg(array('filter_type' => 'model', 'filter_value' => $model->ID))); ?>"
+                                                class="filter-item <?php echo ($filter_type === 'model' && $filter_value == $model->ID) ? 'active' : ''; ?>">
                                                 <?php echo esc_html($model->post_title); ?>
                                             </a>
                                         <?php endforeach; ?>
@@ -358,12 +359,12 @@ $extras_query = new WP_Query($extras_args);
                                         <?php esc_html_e('A - Z', 'flexpress'); ?>
                                     </div>
                                     <div class="alphabet-grid">
-                                        <?php 
+                                        <?php
                                         $letters = range('A', 'Z');
                                         foreach ($letters as $letter):
                                         ?>
-                                            <a href="<?php echo esc_url(add_query_arg(array('filter_type' => 'alpha', 'filter_value' => $letter))); ?>" 
-                                               class="alphabet-item <?php echo ($filter_type === 'alpha' && $filter_value === $letter) ? 'active' : ''; ?>">
+                                            <a href="<?php echo esc_url(add_query_arg(array('filter_type' => 'alpha', 'filter_value' => $letter))); ?>"
+                                                class="alphabet-item <?php echo ($filter_type === 'alpha' && $filter_value === $letter) ? 'active' : ''; ?>">
                                                 <?php echo esc_html($letter); ?>
                                             </a>
                                         <?php endforeach; ?>
@@ -372,20 +373,20 @@ $extras_query = new WP_Query($extras_args);
 
                                 <!-- Clear Filter -->
                                 <?php if (!empty($filter_type)): ?>
-                                <div class="filter-section mt-4">
-                                    <a href="<?php echo esc_url(remove_query_arg(array('filter_type', 'filter_value', 'sort'))); ?>" 
-                                       class="btn btn-outline-secondary w-100">
-                                        <i class="fas fa-times me-2"></i>
-                                        <?php esc_html_e('Clear All Filters', 'flexpress'); ?>
-                                    </a>
-                                </div>
+                                    <div class="filter-section mt-4">
+                                        <a href="<?php echo esc_url(remove_query_arg(array('filter_type', 'filter_value', 'sort'))); ?>"
+                                            class="btn btn-outline-secondary w-100">
+                                            <i class="fas fa-times me-2"></i>
+                                            <?php esc_html_e('Clear All Filters', 'flexpress'); ?>
+                                        </a>
+                                    </div>
                                 <?php endif; ?>
                             </div>
 
                             <!-- Active Filters Display -->
                             <?php
                             $active_filters = array();
-                            
+
                             if (!empty($filter_type) && !empty($filter_value)) {
                                 switch ($filter_type) {
                                     case 'category':
@@ -394,7 +395,7 @@ $extras_query = new WP_Query($extras_args);
                                             $active_filters[] = 'Tag: ' . $tag_term->name;
                                         }
                                         break;
-                                        
+
                                     case 'content_type':
                                         $content_types = array(
                                             'behind_scenes' => 'Behind the Scenes',
@@ -410,103 +411,105 @@ $extras_query = new WP_Query($extras_args);
                                             $active_filters[] = 'Type: ' . $content_types[$filter_value];
                                         }
                                         break;
-                                        
+
                                     case 'model':
                                         $model_post = get_post($filter_value);
                                         if ($model_post) {
                                             $active_filters[] = 'Model: ' . $model_post->post_title;
                                         }
                                         break;
-                                        
+
                                     case 'alpha':
                                         $active_filters[] = 'Letter: ' . strtoupper($filter_value);
                                         break;
                                 }
                             }
-                            
+
                             if (!empty($active_filters)):
                             ?>
-                            <div class="mt-4 pt-4 border-top">
-                                <h6 class="fw-bold mb-3"><?php esc_html_e('Active Filter', 'flexpress'); ?></h6>
-                                <?php foreach ($active_filters as $filter): ?>
-                                    <span class="badge bg-primary me-2 mb-2"><?php echo esc_html($filter); ?></span>
-                                <?php endforeach; ?>
-                            </div>
+                                <div class="mt-4 pt-4 border-top">
+                                    <h6 class="fw-bold mb-3"><?php esc_html_e('Active Filter', 'flexpress'); ?></h6>
+                                    <?php foreach ($active_filters as $filter): ?>
+                                        <span class="badge bg-primary me-2 mb-2"><?php echo esc_html($filter); ?></span>
+                                    <?php endforeach; ?>
+                                </div>
                             <?php endif; ?>
-                            
+
 
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- Join Now CTA -->
+        <?php get_template_part('template-parts/join-now-cta'); ?>
     </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const filterSelect = document.getElementById('filter-type-select');
-    const categoryFilters = document.getElementById('category-filters');
-    const contentTypeFilters = document.getElementById('content-type-filters');
-    const modelFilters = document.getElementById('model-filters');
-    const toggleButton = document.getElementById('toggle-filters');
-    const toggleText = document.getElementById('filter-toggle-text');
-    const sidebarCol = document.getElementById('sidebar-col');
-    const mainContentCol = document.getElementById('main-content-col');
-    const extrasGridItems = document.querySelectorAll('.extras-grid-item');
-    
-    let filtersVisible = true;
-    
-    // Filter dropdown functionality
-    if (filterSelect) {
-        filterSelect.addEventListener('change', function() {
-            const selectedValue = this.value;
-            
-            // Hide all filter sections
-            categoryFilters.style.display = 'none';
-            contentTypeFilters.style.display = 'none';
-            modelFilters.style.display = 'none';
-            
-            // Show the selected filter section
-            if (selectedValue === 'category') {
-                categoryFilters.style.display = 'block';
-            } else if (selectedValue === 'content_type') {
-                contentTypeFilters.style.display = 'block';
-            } else if (selectedValue === 'model') {
-                modelFilters.style.display = 'block';
-            }
-        });
-    }
-    
-    // Toggle filters functionality
-    if (toggleButton) {
-        toggleButton.addEventListener('click', function() {
-            filtersVisible = !filtersVisible;
-            
-            if (filtersVisible) {
-                // Show filters - 8/4 layout, 2 videos per row
-                sidebarCol.style.display = 'block';
-                mainContentCol.classList.remove('col-lg-12');
-                mainContentCol.classList.add('col-lg-8');
-                extrasGridItems.forEach(item => {
-                    item.classList.remove('col-lg-4');
-                    item.classList.add('col-6');
-                });
-                toggleText.textContent = '<?php esc_html_e('Hide Filters', 'flexpress'); ?>';
-            } else {
-                // Hide filters - 12 column layout, 3 videos per row
-                sidebarCol.style.display = 'none';
-                mainContentCol.classList.remove('col-lg-8');
-                mainContentCol.classList.add('col-lg-12');
-                extrasGridItems.forEach(item => {
-                    item.classList.remove('col-6');
-                    item.classList.add('col-lg-4');
-                });
-                toggleText.textContent = '<?php esc_html_e('Show Filters', 'flexpress'); ?>';
-            }
-        });
-    }
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterSelect = document.getElementById('filter-type-select');
+        const categoryFilters = document.getElementById('category-filters');
+        const contentTypeFilters = document.getElementById('content-type-filters');
+        const modelFilters = document.getElementById('model-filters');
+        const toggleButton = document.getElementById('toggle-filters');
+        const toggleText = document.getElementById('filter-toggle-text');
+        const sidebarCol = document.getElementById('sidebar-col');
+        const mainContentCol = document.getElementById('main-content-col');
+        const extrasGridItems = document.querySelectorAll('.extras-grid-item');
+
+        let filtersVisible = true;
+
+        // Filter dropdown functionality
+        if (filterSelect) {
+            filterSelect.addEventListener('change', function() {
+                const selectedValue = this.value;
+
+                // Hide all filter sections
+                categoryFilters.style.display = 'none';
+                contentTypeFilters.style.display = 'none';
+                modelFilters.style.display = 'none';
+
+                // Show the selected filter section
+                if (selectedValue === 'category') {
+                    categoryFilters.style.display = 'block';
+                } else if (selectedValue === 'content_type') {
+                    contentTypeFilters.style.display = 'block';
+                } else if (selectedValue === 'model') {
+                    modelFilters.style.display = 'block';
+                }
+            });
+        }
+
+        // Toggle filters functionality
+        if (toggleButton) {
+            toggleButton.addEventListener('click', function() {
+                filtersVisible = !filtersVisible;
+
+                if (filtersVisible) {
+                    // Show filters - 8/4 layout, 2 videos per row
+                    sidebarCol.style.display = 'block';
+                    mainContentCol.classList.remove('col-lg-12');
+                    mainContentCol.classList.add('col-lg-8');
+                    extrasGridItems.forEach(item => {
+                        item.classList.remove('col-lg-4');
+                        item.classList.add('col-6');
+                    });
+                    toggleText.textContent = '<?php esc_html_e('Hide Filters', 'flexpress'); ?>';
+                } else {
+                    // Hide filters - 12 column layout, 3 videos per row
+                    sidebarCol.style.display = 'none';
+                    mainContentCol.classList.remove('col-lg-8');
+                    mainContentCol.classList.add('col-lg-12');
+                    extrasGridItems.forEach(item => {
+                        item.classList.remove('col-6');
+                        item.classList.add('col-lg-4');
+                    });
+                    toggleText.textContent = '<?php esc_html_e('Show Filters', 'flexpress'); ?>';
+                }
+            });
+        }
+    });
 </script>
 
 <?php

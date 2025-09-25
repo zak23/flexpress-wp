@@ -5772,9 +5772,9 @@ function flexpress_get_homepage_models($count = 8, $featured_only = false)
 {
     $meta_query = array(
         array(
-            'key' => 'model_show_on_homepage',
+            'key' => 'model_hide_on_homepage',
             'value' => '1',
-            'compare' => '='
+            'compare' => '!='
         )
     );
 
@@ -5818,9 +5818,9 @@ function flexpress_get_models_by_gender($gender, $count = -1)
                 'compare' => '='
             ),
             array(
-                'key' => 'model_show_on_homepage',
+                'key' => 'model_hide_on_homepage',
                 'value' => '1',
-                'compare' => '='
+                'compare' => '!='
             )
         ),
         'orderby' => 'menu_order title',

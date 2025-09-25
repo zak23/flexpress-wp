@@ -5,17 +5,20 @@ A modern WordPress website running in Docker containers with MySQL database and 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Docker and Docker Compose installed
 - Ports 8085 and 8086 available
 
 ### Installation
 
 1. **Clone and navigate to the project:**
+
    ```bash
    cd /home/zak/projects/flexpress
    ```
 
 2. **Start the containers:**
+
    ```bash
    docker-compose up -d
    ```
@@ -39,15 +42,16 @@ flexpress/
 
 ## 🐳 Docker Services
 
-| Service | Container | Port | Description |
-|---------|-----------|------|-------------|
-| WordPress | flexpress_wordpress | 8085 | Main WordPress application |
-| MySQL | flexpress_mysql | 3306 (internal) | Database server |
-| phpMyAdmin | flexpress_phpmyadmin | 8086 | Database administration |
+| Service    | Container            | Port            | Description                |
+| ---------- | -------------------- | --------------- | -------------------------- |
+| WordPress  | flexpress_wordpress  | 8085            | Main WordPress application |
+| MySQL      | flexpress_mysql      | 3306 (internal) | Database server            |
+| phpMyAdmin | flexpress_phpmyadmin | 8086            | Database administration    |
 
 ## 📧 Email Configuration
 
 ### Google SMTP Integration
+
 FlexPress includes Google SMTP integration for reliable email delivery, especially for internal emails:
 
 - **Admin Interface**: Configure Google SMTP settings under `FlexPress → Google SMTP`
@@ -58,6 +62,7 @@ FlexPress includes Google SMTP integration for reliable email delivery, especial
 - **Email Testing**: Built-in test email functionality
 
 #### Quick Setup
+
 1. Enable 2-Factor Authentication on your Google account
 2. Generate an App Password in Google Account Settings → Security → App passwords
 3. Configure settings in `FlexPress → Google SMTP`:
@@ -71,6 +76,7 @@ FlexPress includes Google SMTP integration for reliable email delivery, especial
 4. Test email delivery using the built-in test function
 
 ### Amazon SES Integration
+
 FlexPress includes comprehensive Amazon SES integration for reliable email delivery:
 
 - **Admin Interface**: Configure SES settings under `FlexPress → Amazon SES`
@@ -81,6 +87,7 @@ FlexPress includes comprehensive Amazon SES integration for reliable email deliv
 - **Security**: Support for both database and environment variable credential storage
 
 #### Quick Setup
+
 1. Set up Amazon SES in AWS console
 2. Verify your domain and create SMTP credentials
 3. Configure settings in `FlexPress → Amazon SES`
@@ -89,6 +96,7 @@ FlexPress includes comprehensive Amazon SES integration for reliable email deliv
 For detailed setup instructions, see [Amazon SES Setup Guide](docs/AMAZON_SES_SETUP_GUIDE.md).
 
 ### SMTP2Go Integration
+
 FlexPress includes SMTP2Go integration as the primary solution for reliable internal email delivery:
 
 - **Admin Interface**: Configure SMTP2Go settings under `FlexPress → SMTP2Go`
@@ -99,6 +107,7 @@ FlexPress includes SMTP2Go integration as the primary solution for reliable inte
 - **Smart Routing**: Automatically handles emails to your domain (`@zakspov.com`)
 
 #### Quick Setup
+
 1. Sign up for a free SMTP2Go account at [smtp2go.com](https://smtp2go.com)
 2. Verify your domain in the SMTP2Go dashboard
 3. Get your SMTP credentials from the dashboard
@@ -116,24 +125,29 @@ FlexPress includes SMTP2Go integration as the primary solution for reliable inte
 5. Test the connection using the "Send Test Email" button
 
 #### How It Works
+
 - **Internal Emails**: Any email sent TO `@zakspov.com` is automatically routed through SMTP2Go
 - **From Address Override**: SMTP2Go uses your configured From email (`zak@zakozbourne.com`) instead of WordPress defaults
 - **Professional Delivery**: No more bounces or spam filter issues
 - **Automatic Fallback**: If SMTP2Go fails, system falls back to Google SMTP, then Amazon SES
 
 ### Email Routing Strategy
+
 FlexPress uses intelligent email routing with automatic domain detection:
 
 #### Internal Emails (TO @zakspov.com)
+
 1. **SMTP2Go** (Primary): Professional delivery with proper From address (`zak@zakozbourne.com`)
 2. **Google SMTP** (Fallback): If SMTP2Go is disabled or fails
 3. **Amazon SES** (Last Resort): If both SMTP2Go and Google SMTP fail
 
 #### External Emails (TO other domains)
+
 - **Amazon SES**: Handles all external email delivery
 - **Cost Efficient**: Optimized for outbound marketing and notifications
 
 #### Smart Detection Logic
+
 - **Domain Matching**: Automatically detects emails TO `@zakspov.com` as internal
 - **From Address Override**: SMTP2Go uses configured From email instead of WordPress defaults
 - **No Manual Configuration**: System automatically routes emails based on destination
@@ -147,24 +161,28 @@ FlexPress includes comprehensive Contact Form 7 templates with Discord notificat
 ### Available Forms
 
 #### 1. General Contact Form
+
 - **Template**: `flexpress_create_contact_form()` in `contact-form-7-templates.php`
 - **Fields**: Name, Email, Subject, Message
 - **Features**: Bootstrap styling, form validation, auto-responder emails
 - **Discord Channel**: Contact Forms webhook (blue embed)
 
 #### 2. Casting Application Form
-- **Template**: `flexpress_create_casting_form()` 
+
+- **Template**: `flexpress_create_casting_form()`
 - **Fields**: Name, Email, Gender Identity, Stage Age, Social Media, About You
 - **Features**: Age verification notice, comprehensive applicant details
 - **Discord Channel**: Contact Forms webhook (orange embed)
 
 #### 3. Support Request Form
+
 - **Template**: `flexpress_create_support_form()`
 - **Fields**: Name, Email, Issue Type, Priority, Subject, Message
 - **Features**: Priority levels, issue categorization
 - **Discord Channel**: Contact Forms webhook (red embed)
 
 #### 4. Content Removal Form
+
 - **Template**: `flexpress_create_content_removal_form()`
 - **Fields**: Name, Email, Content URL, Removal Reason, Identity Verification
 - **Features**: Legal compliance, identity verification options
@@ -173,6 +191,7 @@ FlexPress includes comprehensive Contact Form 7 templates with Discord notificat
 ### Setup Instructions
 
 #### 1. Create Contact Page
+
 1. Go to WordPress Admin → Pages → Add New
 2. Title: "Contact"
 3. Select Template: "Contact" (`page-templates/contact.php`)
@@ -180,6 +199,7 @@ FlexPress includes comprehensive Contact Form 7 templates with Discord notificat
 5. Publish the page
 
 #### 2. Configure Discord Notifications
+
 1. Go to `FlexPress → Discord Settings`
 2. Set **Contact Forms Webhook** URL for form notifications
 3. Enable notification types:
@@ -190,7 +210,9 @@ FlexPress includes comprehensive Contact Form 7 templates with Discord notificat
 4. Test the connection
 
 #### 3. Display Forms
+
 Use the helper function to display forms anywhere:
+
 ```php
 // Display contact form
 flexpress_display_cf7_form('contact');
@@ -198,7 +220,7 @@ flexpress_display_cf7_form('contact');
 // Display casting form
 flexpress_display_cf7_form('casting');
 
-// Display support form  
+// Display support form
 flexpress_display_cf7_form('support');
 
 // Display content removal form
@@ -208,6 +230,7 @@ flexpress_display_cf7_form('content_removal');
 ### Support System Features
 
 #### Enhanced Support Form
+
 - **Categorized Support**: Specific categories for different types of help requests
   - Account Help: Login issues, profile updates, account settings
   - Billing Help: Payment methods, subscriptions, refunds
@@ -225,6 +248,7 @@ flexpress_display_cf7_form('content_removal');
 - **Comprehensive FAQ**: Organized FAQ sections by support category
 
 #### Support Page Features
+
 - **Visual Categories**: Card-based support category display with icons
 - **Comprehensive FAQ**: 8+ frequently asked questions organized by category
 - **Support Hours**: Clear support availability information
@@ -244,16 +268,19 @@ flexpress_display_cf7_form('content_removal');
 ### Technical Details
 
 **Integration Files:**
+
 - `includes/contact-form-7-templates.php` - Form templates and creation
 - `includes/contact-form-7-discord-integration.php` - Discord notifications
 - `page-templates/contact.php` - Contact page template
 
 **Form Detection:**
+
 - Automatically detects form type based on WordPress form IDs
 - Supports custom forms with fallback to 'general' type
 - Maintains form relationships through WordPress options
 
 **Data Processing:**
+
 - Array handling for checkboxes and multi-selects
 - Character truncation (1024 chars per field, 25 field limit)
 - Markdown removal to prevent Discord formatting issues
@@ -262,6 +289,7 @@ flexpress_display_cf7_form('content_removal');
 ## 🔧 Recent Fixes
 
 ### SMTP2Go Integration Implementation (September 2025)
+
 - **Added SMTP2Go Integration**: Complete SMTP2Go integration for reliable internal email delivery
 - **Smart Routing Logic**: Automatically routes emails TO `@zakspov.com` through SMTP2Go
 - **From Address Override**: SMTP2Go uses configured From email (`zak@zakozbourne.com`) instead of WordPress defaults
@@ -271,12 +299,14 @@ flexpress_display_cf7_form('content_removal');
 - **Domain Detection**: Fixed routing logic to handle emails TO `zakspov.com` regardless of sender domain
 
 ### Authentication Alert Contrast Fix (September 2025)
+
 - ✅ **RESOLVED**: Fixed readability issue where success alerts on auth pages (login/forgot/reset) displayed green text on green backgrounds
 - Standardized `.membership-page .alert-success` to use white text for proper contrast across all authentication pages
 - Updated inline styles in `page-templates/login.php`; global theme styles already ensure white text elsewhere via `assets/css/main.css`
 - **Tested and confirmed working**: Success alerts now display with proper white text contrast on green backgrounds
 
 ### Flowguard Subscription Extend Webhook Fix (January 2025)
+
 - Fixed critical issue where extending cancelled users incorrectly changed their status to 'active'
 - Changes:
   - Modified `flexpress_flowguard_handle_subscription_extend()` to preserve current user status
@@ -285,6 +315,7 @@ flexpress_display_cf7_form('content_removal');
 - Impact: Cancelled users remain cancelled when extended, only their access dates are updated appropriately.
 
 ### Newsletter Modal Turnstile Fix (September 2025)
+
 - Resolved console error: `Uncaught TurnstileError: [Cloudflare Turnstile] Could not find widget.` when subscribing from the newsletter modal
 - Changes:
   - Turnstile widget now uses required `cf-turnstile` class and fixed id `newsletter-turnstile`
@@ -294,11 +325,13 @@ flexpress_display_cf7_form('content_removal');
 - Impact: Newsletter subscribe flow works reliably with Turnstile protection.
 
 ### Newsletter Modal Dismissal Persistence (September 2025)
+
 - Added localStorage persistence to prevent the newsletter modal from reappearing after the user closes it
 - Uses key `flexpress_newsletter_modal_dismissed` set to `true` on modal hide
 - Auto-show is gated by this flag; users won’t be spammed with repeated prompts
 
 ### Admin Menu Consolidation (September 2025)
+
 - Consolidated all settings under the single top-level menu: `FlexPress`
 - Removed duplicate/standalone menus:
   - Turnstile: now only under `FlexPress → Turnstile`
@@ -326,20 +359,23 @@ FlexPress
 ```
 
 ### Site URL Configuration (September 2025)
+
 - **URL Standardization**: Standardized WordPress site URL to lowercase `https://zakspov.com` following best practices
 - **Database Update**: Modified `wp_options` table to set both `siteurl` and `home` options to standardized URL
 - **Documentation Update**: Updated README.md and .cursorrules to reflect correct URL structure
-- **Configuration**: 
+- **Configuration**:
   - Live Site: `https://zakspov.com` (production site)
   - Test Site: `https://zakspov.com` (development data only)
 - **Impact**: All WordPress-generated URLs now use the standardized lowercase domain structure
 
 **Files Modified:**
+
 - Database: `wp_options` table (`siteurl` and `home` options)
 - `README.md` - Updated all URL references
 - `.cursorrules` - Updated project configuration
 
 ### Age Verification Modal (September 2025)
+
 - **SEO-Compliant Implementation**: Modal positioned in footer to avoid H3 interference with main content H1s
 - **localStorage Persistence**: Users only see the modal once per browser session
 - **Dynamic Styling**: Uses theme accent colors with automatic text color contrast
@@ -350,20 +386,23 @@ FlexPress
 - **Legal Compliance**: Includes required age verification text for adult content sites
 
 **Files Added:**
+
 - `assets/css/age-verification.css` - Modal styling with accent color theming
 - `assets/js/age-verification.js` - Modal functionality and localStorage management
 - Modal HTML integrated into `footer.php` for SEO compliance
 
 **Usage:**
+
 - Modal appears automatically on first visit
 - Users can reset verification status via browser console: `flexpressAgeVerification.reset()`
 - Check verification status: `flexpressAgeVerification.status()`
 - Configure exit URL in WordPress Admin → FlexPress Settings → General → "Age Verification Exit URL"
 
 ### Join Page Continue Button (September 2025)
+
 - **Issue**: Continue button on join page was not responding to clicks
 - **Root Cause**: JavaScript selector mismatch (`join-continue-btn` vs `membership-continue-btn`)
-- **Solution**: 
+- **Solution**:
   - Fixed JavaScript selector to match button ID
   - Implemented registration functionality using existing `flexpress_process_registration_and_payment` AJAX handler
   - Implemented login functionality using existing `flexpress_ajax_login` AJAX handler
@@ -372,9 +411,10 @@ FlexPress
 - **Result**: Continue button now properly processes user registration/login and redirects to payment page
 
 ### Payment Success Login Flow (September 2025)
+
 - **Issue**: Users redirected to `/payment-success/` after payment were not logged in, causing redirect to login page
 - **Root Cause**: Payment-success page lacked login check and auto-login capability
-- **Solution**: 
+- **Solution**:
   - Added login check to payment-success page with auto-login for valid user_id parameters
   - Updated JavaScript redirects in flowguard.js and payment.php to include user_id
   - Payment-success page now handles both logged-in and non-logged-in scenarios gracefully
@@ -382,6 +422,7 @@ FlexPress
 - **Result**: Smooth payment flow without jarring redirects to login page after successful payment
 
 ### Enhanced 404 Page (January 2025)
+
 - **Dark Theme Integration**: Fully styled to match FlexPress dark aesthetic with CSS variables
 - **Animated Error Display**: Large "404" text with pulsing glow animation and decorative underline
 - **Comprehensive Navigation**: Multiple action cards for episodes, models, join, contact, and homepage
@@ -392,12 +433,14 @@ FlexPress
 - **Theme Consistency**: Uses FlexPress CSS variables, accent colors, and design patterns
 
 **Implementation:**
+
 - Enhanced `page-templates/404.php` with comprehensive layout and functionality
 - Added 404 page styles to `assets/css/main.css` (following theme convention)
 - Integrated with existing FlexPress design system and color variables
 - Includes recent episodes query with proper date formatting and timezone handling
 
 **Features:**
+
 - Animated 404 number with glow effects
 - Search form with accent color theming
 - 5 navigation cards (Episodes, Join, Models, Help, Home)
@@ -410,15 +453,17 @@ FlexPress
 The WordPress site is configured to handle large file uploads:
 
 - **Upload Max Filesize:** 64MB
-- **Post Max Size:** 64MB  
+- **Post Max Size:** 64MB
 - **Memory Limit:** 512MB
 - **Max Execution Time:** 300 seconds
 
 These limits are configured in:
+
 - `Dockerfile` - PHP configuration via `/usr/local/etc/php/conf.d/uploads.ini`
 - `wp-content/themes/flexpress/functions.php` - WordPress-specific limits
 
 To modify upload limits, update both the Dockerfile and rebuild the container:
+
 ```bash
 docker-compose down
 docker-compose up --build -d
@@ -455,6 +500,7 @@ FlexPress now uses **Flowguard** as the primary payment processing system, repla
 #### Webhook Endpoint
 
 Flowguard webhooks are automatically handled at:
+
 ```
 /wp-admin/admin-ajax.php?action=flowguard_webhook
 ```
@@ -466,6 +512,7 @@ FlexPress now includes an enhanced reference system that stores meaningful user 
 **Reference Formats**:
 
 **Subscription References**: `uid123_affAFF12345_promoWELCOME_srcgoogle_planpremium_monthly_reg12345678`
+
 - `uid123` - User ID
 - `affAFF12345` - Affiliate code (truncated to 8 chars, or `affnone` if no affiliate)
 - `promoWELCOME` - Promo code (truncated to 8 chars, or `promonone` if no promo)
@@ -474,6 +521,7 @@ FlexPress now includes an enhanced reference system that stores meaningful user 
 - `reg12345678` - Registration timestamp (last 8 digits)
 
 **PPV/Unlock References**: `ppv_ep123_uid456_affAFF12345_promoWELCOME_srcgoogle_ts12345678`
+
 - `ppv` - PPV identifier
 - `ep123` - Episode ID
 - `uid456` - User ID
@@ -485,6 +533,7 @@ FlexPress now includes an enhanced reference system that stores meaningful user 
 **Empty Field Handling**: When fields are empty, the system uses placeholder values (`none`) to maintain consistent reference structure and enable proper parsing.
 
 **Benefits**:
+
 - **User Tracking**: Easily identify users from payment references
 - **Affiliate Attribution**: Track which affiliates referred users
 - **Promo Analytics**: Monitor promo code usage and effectiveness
@@ -496,6 +545,7 @@ FlexPress now includes an enhanced reference system that stores meaningful user 
 #### Database Tables
 
 The integration creates three database tables:
+
 - `wp_flexpress_flowguard_webhooks` - Webhook event logging
 - `wp_flexpress_flowguard_transactions` - Transaction records
 - `wp_flexpress_flowguard_sessions` - Payment session tracking
@@ -526,6 +576,7 @@ FlexPress supports **3 webhook categories** for organized notifications:
 #### Supported Notification Events
 
 **Financial Notifications (💰 Channel):**
+
 - **🎉 New Member Signups** - When someone subscribes to your site
 - **💰 Subscription Rebills** - Successful recurring payments
 - **❌ Subscription Cancellations** - When members cancel
@@ -535,6 +586,7 @@ FlexPress supports **3 webhook categories** for organized notifications:
 - **⚠️ Refunds & Chargebacks** - Payment issues and disputes
 
 **Contact Forms (📝 Channel):**
+
 - **🌟 Talent Applications** - Complete casting application details
 - **📧 Contact Form Submissions** - General inquiries
 - **🆘 Support Requests** - Customer support tickets
@@ -542,12 +594,14 @@ FlexPress supports **3 webhook categories** for organized notifications:
 #### Discord Setup Instructions
 
 1. **Create Discord Webhooks**:
+
    - Go to your Discord server → Server Settings → Integrations
    - Click "Create Webhook" for each channel you want to use
    - Recommended channels: `#financial-alerts`, `#contact-forms`
    - Copy the webhook URLs
 
 2. **Configure FlexPress**:
+
    - Go to `FlexPress Settings → Discord`
    - **Default Discord Webhook URL** - Fallback for all notifications
    - **Financial Notifications Webhook** - For payment/subscription events
@@ -564,6 +618,7 @@ FlexPress supports **3 webhook categories** for organized notifications:
 All Discord notifications follow a consistent data structure for easy tracking and management:
 
 **Standard Field Order:**
+
 1. **Username** - User's display name
 2. **User ID** - WordPress user ID (for tracking)
 3. **Email** - User's email address (subscription events only)
@@ -575,6 +630,7 @@ All Discord notifications follow a consistent data structure for easy tracking a
 #### Notification Examples
 
 **🎉 New Member Signup:**
+
 ```
 🎉 New Member Signup!
 Username: John Doe
@@ -588,6 +644,7 @@ Next Charge: Jan 15, 2025
 ```
 
 **💰 Subscription Rebill:**
+
 ```
 💰 Subscription Rebill Success
 Username: John Doe
@@ -599,6 +656,7 @@ Next Charge: Feb 15, 2025
 ```
 
 **🎬 PPV Purchase:**
+
 ```
 🎬 PPV Purchase Approved
 Username: John Doe
@@ -610,6 +668,7 @@ Episode Link: View Episode
 ```
 
 **❌ Subscription Cancelled:**
+
 ```
 ❌ Subscription Cancelled
 Username: John Doe
@@ -619,6 +678,7 @@ Sale ID: 987654321
 ```
 
 **⚠️ Refund/Chargeback:**
+
 ```
 ⚠️ Chargeback Processed
 Username: John Doe
@@ -629,6 +689,7 @@ Order Type: Subscription
 ```
 
 **⏰ Subscription Expired:**
+
 ```
 ⏰ Subscription Expired
 Username: John Doe
@@ -638,6 +699,7 @@ Subscription Type: Recurring
 ```
 
 **🔄 Subscription Extended:**
+
 ```
 🔄 Subscription Extended
 Username: John Doe
@@ -661,16 +723,19 @@ Next Charge: Mar 15, 2025
 **Common Issues Fixed During Implementation:**
 
 1. **Discord 400 "Bad Request" Errors**:
+
    - **Cause**: Data exceeding Discord's character limits or invalid formatting
    - **Solution**: Implemented comprehensive data validation and sanitization
    - **Features**: Automatic field truncation, markdown removal, array handling
 
 2. **PHP Fatal Error: strlen() on Array**:
+
    - **Cause**: Contact Form 7 sending array data (checkboxes, multi-selects)
    - **Solution**: Added array detection and implode() conversion to strings
    - **Location**: `contact-form-7-discord-integration.php` sanitization function
 
 3. **Missing Webhook Fields in Admin**:
+
    - **Cause**: Settings registered in wrong class file
    - **Solution**: Updated `class-flexpress-settings.php` to register all webhook fields
    - **Result**: Now shows Default, Financial, and Contact webhook fields
@@ -681,6 +746,7 @@ Next Charge: Mar 15, 2025
    - **Result**: Complete casting application details now sent to Discord
 
 **Data Validation Features:**
+
 - Field values truncated to 1024 characters (Discord limit)
 - Markdown characters removed to prevent formatting issues
 - Arrays converted to comma-separated strings
@@ -723,7 +789,7 @@ Turnstile protects the following form types:
 #### Turnstile Configuration
 
 1. **Access Settings**: Go to `FlexPress Settings → Turnstile`
-2. **Get Keys**: 
+2. **Get Keys**:
    - Visit [Cloudflare Dashboard](https://dash.cloudflare.com/) → Turnstile → Add Site
    - Enter your domain and choose widget mode
    - Copy your Site Key and Secret Key
@@ -749,11 +815,13 @@ Troubleshooting:
 #### Widget Customization
 
 **Theme Options:**
+
 - **Auto**: Automatically matches your site's theme
 - **Light**: Light theme for light backgrounds
 - **Dark**: Dark theme for dark backgrounds
 
 **Size Options:**
+
 - **Normal**: Standard size widget
 - **Compact**: Smaller, less intrusive widget
 
@@ -769,16 +837,19 @@ You can enable/disable Turnstile protection for each form type:
 #### Technical Implementation
 
 **Frontend Integration:**
+
 - Automatically loads Cloudflare Turnstile script when enabled
 - Adds Turnstile widget to protected forms
 - Includes callback functions for token handling
 
 **Server-Side Validation:**
+
 - Validates Turnstile responses against Cloudflare API
 - Prevents form submission if validation fails
 - Logs validation errors for debugging
 
 **Helper Functions:**
+
 - `flexpress_is_turnstile_enabled()` - Check if Turnstile is configured
 - `flexpress_should_protect_contact_forms()` - Check contact form protection
 - `flexpress_should_protect_comment_forms()` - Check comment form protection
@@ -796,6 +867,7 @@ You can enable/disable Turnstile protection for each form type:
 4. **Theme Issues**: Try switching between Auto/Light/Dark themes
 
 **Debug Information:**
+
 - Turnstile validation errors are logged to WordPress error logs
 - Use browser console to check for JavaScript errors
 - Test connection tool validates both keys simultaneously
@@ -825,9 +897,9 @@ FlexPress includes comprehensive Plunk email marketing integration for automated
 #### Plunk Configuration
 
 1. **Access Settings**: Go to `FlexPress Settings → Plunk`
-2. **Get Credentials**: 
+2. **Get Credentials**:
    - Sign up at [Plunk.com](https://plunk.com)
-   - Copy your **Public API Key (pk_...)**, **Secret API Key (sk_...)**, and **Install URL**
+   - Copy your **Public API Key (pk\_...)**, **Secret API Key (sk\_...)**, and **Install URL**
 3. **Configure Settings**:
    - Paste your Public API Key, Secret API Key, and Install URL
    - Enable auto-subscribe for new users
@@ -847,12 +919,14 @@ FlexPress includes comprehensive Plunk email marketing integration for automated
 #### Newsletter Modal Features
 
 **Automatic Display:**
+
 - Shows after configurable delay (1-60 seconds)
 - Beautiful gradient design matching your brand
 - Mobile-responsive layout
 - Turnstile protection integration
 
 **Customization Options:**
+
 - **Modal Delay**: Control when the modal appears (default: 5 seconds)
 - **Auto Subscribe**: Automatically subscribe new users to newsletter
 - **Security Protection**: Turnstile and honeypot protection enabled
@@ -862,12 +936,14 @@ FlexPress includes comprehensive Plunk email marketing integration for automated
 The system automatically segments users based on their behavior:
 
 **Registration Segmentation:**
+
 - **Source**: "Membership Registration"
 - **User Type**: "member"
 - **Membership Status**: "active"
 - **Signup Date**: Automatic timestamp
 
 **Newsletter Segmentation:**
+
 - **Source**: "Newsletter Modal"
 - **User Type**: "newsletter_subscriber"
 - **Signup Date**: Automatic timestamp
@@ -885,18 +961,21 @@ Track comprehensive user behavior:
 #### Technical Implementation
 
 **API Integration:**
+
 - Complete Plunk API wrapper with error handling
 - Automatic retry logic for failed requests
 - Comprehensive contact management
 - Event tracking and analytics
 
 **WordPress Integration:**
+
 - Automatic user registration hooks
 - User deletion cleanup
 - AJAX handlers for frontend interactions
 - Shortcode support for newsletter management
 
 **Security Features:**
+
 - Turnstile integration for bot protection
 - Honeypot fields for spam prevention
 - Input sanitization and validation
@@ -905,6 +984,7 @@ Track comprehensive user behavior:
 #### Helper Functions
 
 **Core Functions:**
+
 - `flexpress_is_plunk_enabled()` - Check if Plunk is configured
 - `flexpress_should_show_newsletter_modal()` - Check modal display settings
 - `flexpress_track_plunk_event()` - Track custom events
@@ -912,6 +992,7 @@ Track comprehensive user behavior:
 - `flexpress_track_purchase()` - Track purchase events
 
 **Newsletter Management:**
+
 - `flexpress_render_newsletter_status()` - Display subscription status
 - `flexpress_render_newsletter_modal()` - Render newsletter modal
 - `[newsletter_status]` - Shortcode for subscription management
@@ -919,6 +1000,7 @@ Track comprehensive user behavior:
 #### Admin Management
 
 **Settings Page Features:**
+
 - API credential configuration
 - Newsletter modal settings
 - Auto-subscribe options
@@ -926,6 +1008,7 @@ Track comprehensive user behavior:
 - User sync functionality
 
 **User Sync Tools:**
+
 - Bulk sync existing WordPress users
 - Automatic contact ID storage
 - Error handling and reporting
@@ -940,6 +1023,7 @@ Display subscription management for logged-in users:
 ```
 
 **Features:**
+
 - Toggle switch for subscription status
 - Real-time status updates
 - AJAX-powered interactions
@@ -955,6 +1039,7 @@ Display subscription management for logged-in users:
 4. **Events Not Tracking**: Verify API credentials and user contact IDs
 
 **Debug Information:**
+
 - Plunk API errors are logged to WordPress error logs
 - Use browser console to check for JavaScript errors
 - Test connection tool validates API credentials
@@ -1063,6 +1148,7 @@ The Awards section can be fully managed through the WordPress admin:
 **Admin Location**: FlexPress Settings → General → Awards & Recognition
 
 **Helper Functions Available**:
+
 - `flexpress_is_awards_section_enabled()` - Check if section is enabled
 - `flexpress_get_awards_title()` - Get section title
 - `flexpress_get_awards_list()` - Get array of all awards
@@ -1162,9 +1248,11 @@ The casting section image can be managed through **FlexPress Settings → Genera
 ## 🎬 Upcoming Episode System
 
 ### Overview
+
 The FlexPress theme includes an automatic upcoming episode system that displays the next scheduled episode with countdown timers, teaser videos, and hero-style design.
 
 ### Features
+
 - **Automatic Detection**: Automatically finds the next scheduled episode
 - **Countdown Timer**: Real-time countdown to episode release
 - **Teaser Video Support**: Optional video preview with autoplay
@@ -1173,7 +1261,9 @@ The FlexPress theme includes an automatic upcoming episode system that displays 
 - **Smart Display**: Only shows if there's a scheduled episode
 
 ### How It Works
+
 The system automatically:
+
 1. **Queries for scheduled episodes** (`post_status => 'future'`)
 2. **Gets the next upcoming episode** (ordered by date ASC)
 3. **Displays countdown timer** to the release date
@@ -1183,11 +1273,13 @@ The system automatically:
 ### Technical Implementation
 
 #### Integration
+
 - **Homepage**: Automatically displays in `page-templates/page-home.php`
 - **Styling**: All CSS in `main.css` (lines 5680-6120)
 - **JavaScript**: Inline countdown timer and video autoplay
 
 #### Key Features
+
 - **Automatic Post Query**: Uses `WP_Query` with `post_status => 'future'`
 - **Video Autoplay**: Teaser videos autoplay after 3 seconds with intersection observer
 - **Responsive Timers**: Timer layout adapts to screen size
@@ -1195,6 +1287,7 @@ The system automatically:
 - **Performance**: Lazy loading for videos and optimized CSS
 
 #### CSS Classes
+
 - `.upcoming-episode-section`: Main container
 - `.hero-section`: Hero-style wrapper
 - `.countdown-timer`: Countdown timer container
@@ -1204,13 +1297,16 @@ The system automatically:
 ### Usage
 
 #### Automatic Display
+
 Simply **schedule an episode** in WordPress admin:
+
 1. Create a new episode post
 2. Set the **publish date** to a future date/time
 3. Add **preview video** and **featured models** if desired
 4. The upcoming episode will automatically appear on your homepage
 
 #### Manual Display
+
 You can also include the upcoming episode anywhere using the template part:
 
 ```php
@@ -1218,6 +1314,7 @@ You can also include the upcoming episode anywhere using the template part:
 ```
 
 **Use Cases:**
+
 - **Homepage**: Already included automatically
 - **Episodes Page**: Add to `page-templates/episodes.php`
 - **Custom Pages**: Include in any template
@@ -1225,6 +1322,7 @@ You can also include the upcoming episode anywhere using the template part:
 - **Shortcode**: Wrap in a shortcode function
 
 **Example Usage:**
+
 ```php
 // In any template file
 <?php get_template_part('template-parts/upcoming-episode'); ?>
@@ -1246,14 +1344,17 @@ add_shortcode('upcoming_episode', 'upcoming_episode_shortcode');
 ```
 
 ### Styling Customization
+
 The upcoming episode system uses CSS custom properties and can be customized by overriding the styles in your child theme or via the WordPress customizer.
 
 ## 🔒 Hidden Episode System
 
 ### Overview
+
 The FlexPress theme includes a comprehensive episode visibility system that allows content creators to hide episodes from public view, requiring user registration to access previews and content.
 
 ### Features
+
 - **ACF Integration**: Simple checkbox field in episode editor
 - **Automatic Filtering**: All episode queries automatically exclude hidden episodes for non-logged-in users
 - **Search Protection**: Hidden episodes are excluded from search results for public users
@@ -1261,7 +1362,9 @@ The FlexPress theme includes a comprehensive episode visibility system that allo
 - **Helper Functions**: Comprehensive utility functions for visibility checking
 
 ### How It Works
+
 The system automatically:
+
 1. **Checks user login status** on all episode displays
 2. **Filters episode queries** to exclude hidden episodes for public users
 3. **Protects individual episodes** with redirect to login page
@@ -1271,6 +1374,7 @@ The system automatically:
 ### Technical Implementation
 
 #### ACF Field Configuration
+
 - **Field Name**: `hidden_from_public`
 - **Field Type**: True/False (checkbox)
 - **Default Value**: `false` (public)
@@ -1278,6 +1382,7 @@ The system automatically:
 - **Instructions**: "Check this box to hide this episode from non-logged-in users. Only registered users will be able to see previews and access this content."
 
 #### Helper Functions
+
 Located in `includes/episode-visibility-helpers.php`:
 
 ```php
@@ -1304,34 +1409,41 @@ flexpress_display_episode_visibility_notice($context)
 ```
 
 #### Query Filtering
+
 All episode queries automatically apply visibility filtering:
 
 **Homepage Queries:**
+
 - Hero episode section
 - Featured episodes grid
 - Recent episodes grid
 
 **Archive Pages:**
+
 - Episode archive (`archive-episode.php`)
 - Episodes page (`page-templates/episodes.php`)
 - Episode grid template (`template-parts/episode-grid.php`)
 
 **Search Results:**
+
 - Main search query filtering via `pre_get_posts` hook
 - Search page template filtering
 
 **Individual Episodes:**
+
 - Single episode template (`single-episode.php`) with redirect protection
 
 ### Usage
 
 #### Setting Episode Visibility
+
 1. **Edit an episode** in WordPress admin
 2. **Scroll to Episode Videos section**
 3. **Check "Hidden from Public"** checkbox
 4. **Save the episode**
 
 #### For Developers
+
 Use helper functions to check visibility:
 
 ```php
@@ -1354,6 +1466,7 @@ $visible_count = flexpress_get_visible_episodes_count();
 ```
 
 #### Display Visibility Notice
+
 Show a notice to non-logged-in users about hidden content:
 
 ```php
@@ -1362,12 +1475,14 @@ flexpress_display_episode_visibility_notice('homepage');
 ```
 
 ### Security Features
+
 - **Query-Level Protection**: Hidden episodes never appear in public queries
 - **Direct Access Protection**: Attempting to access hidden episodes redirects to login
 - **Search Protection**: Hidden episodes excluded from search results
 - **Template-Level Checks**: Additional validation in template files
 
 ### User Experience
+
 - **Seamless for Logged-in Users**: All episodes visible regardless of setting
 - **Clear Messaging**: Non-logged-in users see registration prompts
 - **No Broken Links**: Hidden episodes don't appear in navigation or search
@@ -1376,12 +1491,15 @@ flexpress_display_episode_visibility_notice('homepage');
 ## ⚙️ Configuration
 
 ### Environment Variables
+
 Edit `.env` file to customize:
+
 - Database credentials
 - WordPress debug settings
 - Port configurations
 
 ### WordPress Customization
+
 - Themes: `wp-content/themes/`
 - Plugins: `wp-content/plugins/`
 - Uploads: `wp-content/uploads/`
@@ -1459,20 +1577,24 @@ docker exec -it flexpress_wordpress wp [command]
 ## 🔧 Troubleshooting
 
 ### Port Conflicts
+
 - If port 8085 is occupied, change `SERVER_PORT` in `.env`
 - Update docker-compose.yml ports mapping accordingly
 
 ### Database Issues
+
 - Check container logs: `docker-compose logs db`
 - Access phpMyAdmin at http://localhost:8086
 - Default credentials in `.env` file
 
 ### WordPress Issues
+
 - Enable debug mode in `.env`: `WORDPRESS_DEBUG=1`
 - Check logs: `docker-compose logs wordpress`
 - Access container: `docker exec -it flexpress_wordpress bash`
 
 ### Clearing debug.log
+
 - Go to WordPress Admin → `FlexPress → Tools`
 - Use the "Clear debug.log" button to truncate `wp-content/debug.log`
 - The tool is nonce-protected and requires `manage_options` capability
@@ -1497,6 +1619,7 @@ docker exec -it flexpress_wordpress wp [command]
 ## 🔧 Recent Updates
 
 ### January 2025
+
 - **Enhanced Model Archive Filtering System**: Added comprehensive Vixen.com-style filtering to model archive pages
   - **Sidebar Filters**: Toggle-able sidebar with sorting and filtering options
   - **Sorting Options**: Newest, Oldest, and Alphabetical (A-Z) sorting
@@ -1518,13 +1641,15 @@ docker exec -it flexpress_wordpress wp [command]
   - Clarified admin interface descriptions to distinguish between plan types
 
 ### September 2025
+
 - **Enhanced Color Contrast System**: Fixed readability issues with light accent colors by implementing automatic text color detection
+
   - Added `flexpress_get_contrast_text_color()` function that calculates luminance to determine optimal text color
   - Updated admin color picker with real-time preview that automatically adjusts text color (black for light backgrounds, white for dark backgrounds)
   - Enhanced CSS generation to include `--color-accent-text` variable for consistent contrast across the theme
   - Updated button styles to automatically use appropriate text color based on accent color luminance
   - Solves the issue where light colors like yellow made white text unreadable on buttons
-  - Uses industry-standard luminance formula (0.299*R + 0.587*G + 0.114*B) for accurate contrast calculation
+  - Uses industry-standard luminance formula (0.299*R + 0.587*G + 0.114\*B) for accurate contrast calculation
 
 - **Fixed Daily Pricing Calculations**: Corrected membership page to show accurate daily rates instead of full plan prices
   - Added `flexpress_calculate_daily_rate()` function to properly convert plan prices to daily rates
@@ -1539,6 +1664,7 @@ docker exec -it flexpress_wordpress wp [command]
 FlexPress includes a professional promo video section on the home page for showcasing tour videos, showreels, or promotional content.
 
 ### Features
+
 - **BunnyCDN Integration**: Seamlessly integrates with existing BunnyCDN video infrastructure
 - **ACF Configuration**: Easy content management through Advanced Custom Fields
 - **Responsive Design**: Optimized for all device sizes with mobile-first approach
@@ -1547,15 +1673,17 @@ FlexPress includes a professional promo video section on the home page for showc
 - **Customizable Content**: Title, subtitle, and call-to-action button fully configurable
 
 ### Setup
+
 1. **Configure ACF Fields**: Edit the Home page in WordPress Admin
 2. **Set Video ID**: Enter your BunnyCDN video ID in the "Promo Video ID" field
-3. **Customize Content**: 
+3. **Customize Content**:
    - Set custom title (default: "Welcome to Our Platform")
    - Add subtitle text (default: "Experience premium content like never before")
    - Configure CTA button text and URL (default: "Get Started Now" → "/register")
 4. **Video Display**: The section automatically generates secure BunnyCDN URLs with token authentication
 
 ### Technical Implementation
+
 - **Template**: `template-parts/promo-video-section.php`
 - **ACF Fields**: `group_home_page` field group with 5 configurable fields
 - **BunnyCDN Integration**: Uses existing `flexpress_get_bunnycdn_video_url()` function
@@ -1563,6 +1691,7 @@ FlexPress includes a professional promo video section on the home page for showc
 - **Fallback**: SVG placeholder when video unavailable
 
 ### ACF Fields
+
 - `home_promo_video_id` - BunnyCDN video ID (required)
 - `home_promo_video_title` - Section title
 - `home_promo_video_subtitle` - Descriptive text below video
@@ -1572,14 +1701,17 @@ FlexPress includes a professional promo video section on the home page for showc
 ## 👥 Model Management System
 
 ### Overview
+
 FlexPress includes a comprehensive model management system with advanced content control and homepage visibility options.
 
 ### Model Features
 
 #### ACF Fields Configuration
+
 Models include extensive custom fields for complete profile management:
 
 **Basic Information:**
+
 - About/Biography (required)
 - Gender (Female, Male, Trans, Non-Binary, Other)
 - Date of Birth
@@ -1587,21 +1719,26 @@ Models include extensive custom fields for complete profile management:
 - Measurements
 
 **Images:**
+
 - Hero Landscape Image (1920x600px recommended)
 - Profile Image (separate from featured image)
 
 **Social Media:**
+
 - Instagram, Twitter, TikTok, OnlyFans links
 - Custom social media fields
 
 **Display Settings:**
+
 - **Hide on Homepage**: Toggle to exclude model from homepage sections
 - **Featured Model**: Mark for special highlighting and homepage featured section
 
 #### Homepage Visibility Control
+
 The "Hide on Homepage" checkbox provides granular control over model display:
 
 **How It Works:**
+
 - **Default State**: Models are visible on homepage by default (`hide_on_homepage = 0`)
 - **Hidden State**: When checked (`hide_on_homepage = 1`), model is excluded from:
   - Featured Models section
@@ -1609,6 +1746,7 @@ The "Hide on Homepage" checkbox provides granular control over model display:
 - **Archive Pages**: Hidden models still appear on dedicated model archive pages
 
 **Technical Implementation:**
+
 ```php
 // Featured Models Query
 $models_args = array(
@@ -1650,11 +1788,13 @@ $all_models_args = array(
 #### Homepage Model Sections
 
 **1. Featured Models Section**
+
 - Displays models with `model_featured = 1` AND `model_hide_on_homepage != 1`
 - Shows up to 6 models
 - Ordered alphabetically by title
 
 **2. All Models Section**
+
 - Displays all models except those with `model_hide_on_homepage = 1`
 - Shows up to 12 models
 - Ordered by creation date (newest first)
@@ -1663,6 +1803,7 @@ $all_models_args = array(
 #### Usage Examples
 
 **Hide a Model from Homepage:**
+
 1. Edit the model post
 2. Navigate to "Display Settings" tab
 3. Check "Hide on Homepage"
@@ -1670,11 +1811,13 @@ $all_models_args = array(
 5. Model will no longer appear in homepage sections
 
 **Show Only Featured Models on Homepage:**
+
 1. Set "Hide on Homepage" for non-featured models
 2. Keep "Featured Model" checked for desired models
 3. Only featured models will appear in homepage sections
 
 #### Admin Management
+
 - **ACF Field Group**: `group_model_details`
 - **Field Key**: `field_model_hide_on_homepage`
 - **Field Name**: `model_hide_on_homepage`
@@ -1684,6 +1827,7 @@ $all_models_args = array(
 ## 🆘 Support
 
 For issues or questions:
+
 1. Check Docker container logs
 2. Verify port availability
 3. Check environment configuration
@@ -1694,27 +1838,33 @@ For issues or questions:
 FlexPress includes custom, theme-styled pages for the full password recovery flow.
 
 ### Pages
+
 - Lost Password: `page-templates/lost-password.php`
 - Reset Password: `page-templates/reset-password.php`
 
 ### Setup
+
 1. In WordPress Admin → Pages → Add New → Title: "Forgot Password" → Template: `Lost Password` → Publish.
 2. Add another page → Title: "Reset Password" → Template: `Reset Password` → Publish.
 
 ### How It Works
+
 - Forgot submission posts to core `wp-login.php?action=lostpassword`.
 - On success, WordPress redirects with `checkemail=confirm`. The page shows a success alert.
 - The email link opens core `rp/resetpass` screens, auto-redirected by FlexPress to `/reset-password?login=...&key=...`.
 - Submitting the new password posts to `wp-login.php?action=resetpass`; FlexPress handlers validate and redirect back to `/login?password=changed`.
 
 ### Styling
+
 - Matches membership/auth pages using `membership-page` wrapper and `card bg-dark`.
 - Uses Bootstrap validation and accessible labels.
 
 ### WordPress Branding Protection
+
 FlexPress automatically redirects WordPress branded URLs to custom pages while preserving admin access:
 
 **Protected URLs:**
+
 - `wp-login.php` → `/login` (unless redirecting to wp-admin)
 - `wp-login.php?action=lostpassword` → `/lost-password`
 - `wp-login.php?action=resetpass` → `/reset-password` (with key/login params)
@@ -1723,17 +1873,20 @@ FlexPress automatically redirects WordPress branded URLs to custom pages while p
 - `wp-admin/` → `/login` (for non-admin users only)
 
 **Smart Admin Detection:**
+
 - **Admin Users**: Can access `wp-admin/` and `wp-login.php` normally
 - **Non-Admin Users**: Redirected to custom login page
 - **Capability Check**: Uses `current_user_can('manage_options')` to detect admin users
 
 **Implementation:**
+
 - `flexpress_redirect_wp_admin_to_login()` - Redirects wp-admin for non-admin users
 - `flexpress_custom_login_url()` - Overrides WordPress login URL filter (preserves admin access)
 - `flexpress_custom_lostpassword_url()` - Overrides lost password URL filter
 - `flexpress_custom_registration_url()` - Overrides registration URL filter
 
 **Benefits:**
+
 - Complete WordPress branding removal for frontend users
 - Admin access preserved and functional
 - Automatic user capability detection

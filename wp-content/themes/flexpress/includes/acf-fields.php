@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Advanced Custom Fields Configuration
  */
@@ -218,222 +219,222 @@ if (function_exists('acf_add_local_field_group')):
         acf_add_local_field_group(array(
             'key' => 'group_extras_videos',
             'title' => 'Extras Videos',
-        'fields' => array(
-            array(
-                'key' => 'field_extras_preview_video',
-                'label' => 'Preview Video',
-                'name' => 'preview_video',
-                'type' => 'text',
-                'instructions' => 'Enter the BunnyCDN Stream video ID for the preview (15-30 seconds)',
-                'required' => 1,
-                'wrapper' => array(
-                    'width' => '',
-                    'class' => '',
-                    'id' => '',
-                ),
-            ),
-            array(
-                'key' => 'field_extras_trailer_video',
-                'label' => 'Trailer Video',
-                'name' => 'trailer_video',
-                'type' => 'text',
-                'instructions' => 'Enter the BunnyCDN Stream video ID for the trailer (60-120 seconds)',
-                'required' => 1,
-                'wrapper' => array(
-                    'width' => '',
-                    'class' => '',
-                    'id' => '',
-                ),
-            ),
-            array(
-                'key' => 'field_extras_full_video',
-                'label' => 'Full Video',
-                'name' => 'full_video',
-                'type' => 'text',
-                'instructions' => 'Enter the BunnyCDN Stream video ID for the full extra content',
-                'required' => 1,
-                'wrapper' => array(
-                    'width' => '',
-                    'class' => '',
-                    'id' => '',
-                ),
-            ),
-            array(
-                'key' => 'field_extras_duration',
-                'label' => 'Content Duration',
-                'name' => 'extras_duration',
-                'type' => 'text',
-                'instructions' => 'Duration in minutes (automatically retrieved from BunnyCDN if left empty)',
-                'required' => 0,
-                'wrapper' => array(
-                    'width' => '',
-                    'class' => '',
-                    'id' => '',
-                ),
-            ),
-            array(
-                'key' => 'field_extras_access_type',
-                'label' => 'Access Type',
-                'name' => 'access_type',
-                'type' => 'select',
-                'instructions' => 'Choose how users can access this extra content',
-                'required' => 1,
-                'default_value' => 'membership',
-                'choices' => array(
-                    'free' => 'Free for Everyone',
-                    'ppv_only' => 'Pay-Per-View Only (No Membership Access)',
-                    'membership' => 'Membership Access + PPV Option',
-                    'mixed' => 'Members Get Discount + PPV for Non-Members',
-                ),
-                'allow_null' => 0,
-                'multiple' => 0,
-                'ui' => 1,
-                'return_format' => 'value',
-                'wrapper' => array(
-                    'width' => '',
-                    'class' => 'access-type-field',
-                    'id' => '',
-                ),
-            ),
-            array(
-                'key' => 'field_extras_price',
-                'label' => 'PPV Price',
-                'name' => 'extras_price',
-                'type' => 'number',
-                'instructions' => 'Enter the price for non-members (leave empty for free content)',
-                'required' => 0,
-                'wrapper' => array(
-                    'width' => '',
-                    'class' => '',
-                    'id' => '',
-                ),
-            ),
-            array(
-                'key' => 'field_extras_member_discount',
-                'label' => 'Member Discount (%)',
-                'name' => 'member_discount',
-                'type' => 'number',
-                'instructions' => 'Discount percentage for active members (only applies to "mixed" access type)',
-                'required' => 0,
-                'conditional_logic' => array(
-                    array(
-                        array(
-                            'field' => 'field_extras_access_type',
-                            'operator' => '==',
-                            'value' => 'mixed',
-                        ),
+            'fields' => array(
+                array(
+                    'key' => 'field_extras_preview_video',
+                    'label' => 'Preview Video',
+                    'name' => 'preview_video',
+                    'type' => 'text',
+                    'instructions' => 'Enter the BunnyCDN Stream video ID for the preview (15-30 seconds)',
+                    'required' => 1,
+                    'wrapper' => array(
+                        'width' => '',
+                        'class' => '',
+                        'id' => '',
                     ),
                 ),
-                'min' => 0,
-                'max' => 100,
-                'wrapper' => array(
-                    'width' => '',
-                    'class' => '',
-                    'id' => '',
-                ),
-            ),
-            array(
-                'key' => 'field_extras_release_date',
-                'label' => 'Release Date',
-                'name' => 'release_date',
-                'type' => 'date_time_picker',
-                'instructions' => 'Select when this extra content should be released',
-                'required' => 1,
-                'wrapper' => array(
-                    'width' => '',
-                    'class' => '',
-                    'id' => '',
-                ),
-            ),
-            array(
-                'key' => 'field_extras_is_featured',
-                'label' => 'Featured Extra',
-                'name' => 'is_featured',
-                'type' => 'true_false',
-                'instructions' => 'Check this box to mark this extra content as featured',
-                'default_value' => 0,
-                'ui' => 1,
-                'wrapper' => array(
-                    'width' => '',
-                    'class' => '',
-                    'id' => '',
-                ),
-            ),
-            array(
-                'key' => 'field_extras_featured_models',
-                'label' => 'Featured Models',
-                'name' => 'featured_models',
-                'type' => 'relationship',
-                'instructions' => 'Select the models featured in this extra content',
-                'required' => 0,
-                'conditional_logic' => 0,
-                'wrapper' => array(
-                    'width' => '',
-                    'class' => '',
-                    'id' => '',
-                ),
-                'post_type' => array(
-                    0 => 'model',
-                ),
-                'taxonomy' => '',
-                'filters' => array(
-                    0 => 'search',
-                ),
-                'elements' => array(
-                    0 => 'featured_image',
-                ),
-                'min' => '',
-                'max' => '',
-                'return_format' => 'object',
-            ),
-            array(
-                'key' => 'field_extras_content_type',
-                'label' => 'Content Type',
-                'name' => 'content_type',
-                'type' => 'select',
-                'instructions' => 'Select the type of extra content this is',
-                'required' => 0,
-                'default_value' => 'behind_scenes',
-                'choices' => array(
-                    'behind_scenes' => 'Behind the Scenes',
-                    'bloopers' => 'Bloopers',
-                    'interviews' => 'Interviews',
-                    'photo_shoots' => 'Photo Shoots',
-                    'making_of' => 'Making Of',
-                    'deleted_scenes' => 'Deleted Scenes',
-                    'extended_cuts' => 'Extended Cuts',
-                    'other' => 'Other',
-                ),
-                'allow_null' => 0,
-                'multiple' => 0,
-                'ui' => 1,
-                'return_format' => 'value',
-                'wrapper' => array(
-                    'width' => '',
-                    'class' => '',
-                    'id' => '',
-                ),
-            ),
-        ),
-        'location' => array(
-            array(
                 array(
-                    'param' => 'post_type',
-                    'operator' => '==',
-                    'value' => 'extras',
+                    'key' => 'field_extras_trailer_video',
+                    'label' => 'Trailer Video',
+                    'name' => 'trailer_video',
+                    'type' => 'text',
+                    'instructions' => 'Enter the BunnyCDN Stream video ID for the trailer (60-120 seconds)',
+                    'required' => 1,
+                    'wrapper' => array(
+                        'width' => '',
+                        'class' => '',
+                        'id' => '',
+                    ),
+                ),
+                array(
+                    'key' => 'field_extras_full_video',
+                    'label' => 'Full Video',
+                    'name' => 'full_video',
+                    'type' => 'text',
+                    'instructions' => 'Enter the BunnyCDN Stream video ID for the full extra content',
+                    'required' => 1,
+                    'wrapper' => array(
+                        'width' => '',
+                        'class' => '',
+                        'id' => '',
+                    ),
+                ),
+                array(
+                    'key' => 'field_extras_duration',
+                    'label' => 'Content Duration',
+                    'name' => 'extras_duration',
+                    'type' => 'text',
+                    'instructions' => 'Duration in minutes (automatically retrieved from BunnyCDN if left empty)',
+                    'required' => 0,
+                    'wrapper' => array(
+                        'width' => '',
+                        'class' => '',
+                        'id' => '',
+                    ),
+                ),
+                array(
+                    'key' => 'field_extras_access_type',
+                    'label' => 'Access Type',
+                    'name' => 'access_type',
+                    'type' => 'select',
+                    'instructions' => 'Choose how users can access this extra content',
+                    'required' => 1,
+                    'default_value' => 'membership',
+                    'choices' => array(
+                        'free' => 'Free for Everyone',
+                        'ppv_only' => 'Pay-Per-View Only (No Membership Access)',
+                        'membership' => 'Membership Access + PPV Option',
+                        'mixed' => 'Members Get Discount + PPV for Non-Members',
+                    ),
+                    'allow_null' => 0,
+                    'multiple' => 0,
+                    'ui' => 1,
+                    'return_format' => 'value',
+                    'wrapper' => array(
+                        'width' => '',
+                        'class' => 'access-type-field',
+                        'id' => '',
+                    ),
+                ),
+                array(
+                    'key' => 'field_extras_price',
+                    'label' => 'PPV Price',
+                    'name' => 'extras_price',
+                    'type' => 'number',
+                    'instructions' => 'Enter the price for non-members (leave empty for free content)',
+                    'required' => 0,
+                    'wrapper' => array(
+                        'width' => '',
+                        'class' => '',
+                        'id' => '',
+                    ),
+                ),
+                array(
+                    'key' => 'field_extras_member_discount',
+                    'label' => 'Member Discount (%)',
+                    'name' => 'member_discount',
+                    'type' => 'number',
+                    'instructions' => 'Discount percentage for active members (only applies to "mixed" access type)',
+                    'required' => 0,
+                    'conditional_logic' => array(
+                        array(
+                            array(
+                                'field' => 'field_extras_access_type',
+                                'operator' => '==',
+                                'value' => 'mixed',
+                            ),
+                        ),
+                    ),
+                    'min' => 0,
+                    'max' => 100,
+                    'wrapper' => array(
+                        'width' => '',
+                        'class' => '',
+                        'id' => '',
+                    ),
+                ),
+                array(
+                    'key' => 'field_extras_release_date',
+                    'label' => 'Release Date',
+                    'name' => 'release_date',
+                    'type' => 'date_time_picker',
+                    'instructions' => 'Select when this extra content should be released',
+                    'required' => 1,
+                    'wrapper' => array(
+                        'width' => '',
+                        'class' => '',
+                        'id' => '',
+                    ),
+                ),
+                array(
+                    'key' => 'field_extras_is_featured',
+                    'label' => 'Featured Extra',
+                    'name' => 'is_featured',
+                    'type' => 'true_false',
+                    'instructions' => 'Check this box to mark this extra content as featured',
+                    'default_value' => 0,
+                    'ui' => 1,
+                    'wrapper' => array(
+                        'width' => '',
+                        'class' => '',
+                        'id' => '',
+                    ),
+                ),
+                array(
+                    'key' => 'field_extras_featured_models',
+                    'label' => 'Featured Models',
+                    'name' => 'featured_models',
+                    'type' => 'relationship',
+                    'instructions' => 'Select the models featured in this extra content',
+                    'required' => 0,
+                    'conditional_logic' => 0,
+                    'wrapper' => array(
+                        'width' => '',
+                        'class' => '',
+                        'id' => '',
+                    ),
+                    'post_type' => array(
+                        0 => 'model',
+                    ),
+                    'taxonomy' => '',
+                    'filters' => array(
+                        0 => 'search',
+                    ),
+                    'elements' => array(
+                        0 => 'featured_image',
+                    ),
+                    'min' => '',
+                    'max' => '',
+                    'return_format' => 'object',
+                ),
+                array(
+                    'key' => 'field_extras_content_type',
+                    'label' => 'Content Type',
+                    'name' => 'content_type',
+                    'type' => 'select',
+                    'instructions' => 'Select the type of extra content this is',
+                    'required' => 0,
+                    'default_value' => 'behind_scenes',
+                    'choices' => array(
+                        'behind_scenes' => 'Behind the Scenes',
+                        'bloopers' => 'Bloopers',
+                        'interviews' => 'Interviews',
+                        'photo_shoots' => 'Photo Shoots',
+                        'making_of' => 'Making Of',
+                        'deleted_scenes' => 'Deleted Scenes',
+                        'extended_cuts' => 'Extended Cuts',
+                        'other' => 'Other',
+                    ),
+                    'allow_null' => 0,
+                    'multiple' => 0,
+                    'ui' => 1,
+                    'return_format' => 'value',
+                    'wrapper' => array(
+                        'width' => '',
+                        'class' => '',
+                        'id' => '',
+                    ),
                 ),
             ),
-        ),
-        'menu_order' => 0,
-        'position' => 'normal',
-        'style' => 'default',
-        'label_placement' => 'top',
-        'instruction_placement' => 'label',
-        'hide_on_screen' => '',
-        'active' => true,
-        'description' => '',
-        'show_in_rest' => 0,
-    ));
+            'location' => array(
+                array(
+                    array(
+                        'param' => 'post_type',
+                        'operator' => '==',
+                        'value' => 'extras',
+                    ),
+                ),
+            ),
+            'menu_order' => 0,
+            'position' => 'normal',
+            'style' => 'default',
+            'label_placement' => 'top',
+            'instruction_placement' => 'label',
+            'hide_on_screen' => '',
+            'active' => true,
+            'description' => '',
+            'show_in_rest' => 0,
+        ));
     } // End Extras conditional block
 
     acf_add_local_field_group(array(
@@ -541,7 +542,7 @@ if (function_exists('acf_add_local_field_group')):
                 ),
                 'placeholder' => '34-26-36',
             ),
-            
+
             // Images Tab
             array(
                 'key' => 'field_model_images_tab',
@@ -591,7 +592,7 @@ if (function_exists('acf_add_local_field_group')):
                 'preview_size' => 'medium',
                 'library' => 'all',
             ),
-            
+
             // Social Media Tab
             array(
                 'key' => 'field_model_social_tab',
@@ -703,7 +704,7 @@ if (function_exists('acf_add_local_field_group')):
                     ),
                 ),
             ),
-            
+
             // Display Settings Tab
             array(
                 'key' => 'field_model_display_tab',
@@ -814,7 +815,7 @@ if (function_exists('acf_add_local_field_group')):
         'show_in_rest' => 0,
     ));
 
-endif; 
+endif;
 
 /**
  * Legal Pages ACF Fields
@@ -991,7 +992,7 @@ if (function_exists('acf_add_local_field_group')):
                 'default_value' => 'Be part of Australia\'s most exciting adult entertainment production',
                 'instructions' => 'Subtitle text for the casting page header',
             ),
-            
+
             // Text Block Section
             array(
                 'key' => 'field_casting_text_block',
@@ -1008,7 +1009,7 @@ if (function_exists('acf_add_local_field_group')):
 <p>We\'re looking for models with natural allure that commands attention. Models of all shapes, sizes, backgrounds, and ethnicities are welcome. What we value most is AUTHENTICITY.</p>
 <p>With numerous casting applications daily, ensure yours stands out! If you\'re interested in collaborating with the best and gaining significant exposure, apply here:</p>',
             ),
-            
+
             // FAQ Section
             array(
                 'key' => 'field_casting_faq_title',
@@ -1027,7 +1028,7 @@ if (function_exists('acf_add_local_field_group')):
                 'rows' => 10,
                 'default_value' => '[]',
             ),
-            
+
             // Requirements Section
             array(
                 'key' => 'field_casting_requirements_title',
@@ -1183,4 +1184,4 @@ if (function_exists('acf_add_local_field_group')):
         'description' => 'Custom fields for the home page promo video section',
     ));
 
-endif; 
+endif;

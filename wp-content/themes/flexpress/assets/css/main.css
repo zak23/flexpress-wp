@@ -7328,3 +7328,19 @@ body.page-template-casting .site-main .alert-info {
         font-size: 1rem;
     }
 }
+
+/* Episode Tag Links */
+.episode-tags {
+    color: #6c757d;
+}
+
+.episode-tags .tag-link {
+    color: #ffffff;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.episode-tags .tag-link:hover {
+    color: var(--accent-color);
+    text-decoration: underline;
+}

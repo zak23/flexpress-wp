@@ -3470,6 +3470,9 @@ function flexpress_get_episode_access_summary($episode_id = null)
     $price = get_field('episode_price', $episode_id);
     $member_discount = get_field('member_discount', $episode_id) ?: 0;
 
+    // Check if user has active or cancelled membership
+    $has_membership = function_exists('flexpress_has_active_membership') && flexpress_has_active_membership();
+
     switch ($access_type) {
         case 'free':
             return 'Free';
@@ -3478,20 +3481,27 @@ function flexpress_get_episode_access_summary($episode_id = null)
             return $price ? '$' . number_format($price, 2) . ' (PPV Only)' : 'PPV Only';
 
         case 'membership':
-            if ($price) {
+            if ($has_membership) {
+                return ''; // No pricing display for members
+            } elseif ($price) {
                 return 'Included in Membership<br />' .
                     '$' . number_format($price, 2) . ' for Non-Members';
             } else {
                 return 'Members Only';
             }
         case 'mixed':
-            if ($price && $member_discount > 0) {
-                $discounted_price = $price * (1 - ($member_discount / 100));
-                return '$' . number_format($discounted_price, 2) . ' for Members<br>$' . number_format($price, 2) . ' for Non-Members';
-            } else if ($price) {
-                return '$' . number_format($price, 2) . ' for Everyone';
+            if ($has_membership) {
+                return ''; // No pricing display for members
             } else {
-                return 'Available for Purchase';
+                // For non-members, show both prices
+                if ($price && $member_discount > 0) {
+                    $discounted_price = $price * (1 - ($member_discount / 100));
+                    return '$' . number_format($discounted_price, 2) . ' for Members<br>$' . number_format($price, 2) . ' for Non-Members';
+                } else if ($price) {
+                    return '$' . number_format($price, 2) . ' for Everyone';
+                } else {
+                    return 'Available for Purchase';
+                }
             }
 
         default:

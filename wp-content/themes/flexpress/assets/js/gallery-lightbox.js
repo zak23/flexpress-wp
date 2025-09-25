@@ -75,6 +75,13 @@
                         break;
                 }
             });
+            
+            // Handle window resize
+            $(window).on('resize', () => {
+                if (this.isOpen) {
+                    this.fitImageToViewport();
+                }
+            });
         }
         
         openLightbox(clickedElement) {
@@ -119,13 +126,59 @@
             
             const image = this.images[this.currentIndex];
             
-            this.image.attr('src', image.src).attr('alt', image.alt);
+            // Add loading state
+            this.image.addClass('loading');
+            
+            // Create new image to preload
+            const img = new Image();
+            img.onload = () => {
+                this.image.attr('src', image.src).attr('alt', image.alt);
+                this.image.removeClass('loading');
+                
+                // Ensure image fits within viewport
+                this.fitImageToViewport();
+            };
+            img.onerror = () => {
+                this.image.removeClass('loading');
+                console.error('Failed to load image:', image.src);
+            };
+            img.src = image.src;
+            
             this.caption.text(image.caption);
             this.counter.text(`${this.currentIndex + 1} / ${this.images.length}`);
             
             // Update navigation button states
             this.lightbox.find('.lightbox-prev').prop('disabled', this.currentIndex === 0);
             this.lightbox.find('.lightbox-next').prop('disabled', this.currentIndex === this.images.length - 1);
+        }
+        
+        fitImageToViewport() {
+            const $img = this.image;
+            const $content = this.lightbox.find('.lightbox-content');
+            
+            // Reset any previous sizing
+            $img.css({
+                'max-width': '',
+                'max-height': '',
+                'width': '',
+                'height': ''
+            });
+            
+            // Get viewport dimensions
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            // Calculate available space (accounting for padding and caption)
+            const availableWidth = Math.min(viewportWidth * 0.9, $content.width());
+            const availableHeight = Math.min(viewportHeight * 0.9, $content.height()) - 60; // Account for caption
+            
+            // Set max dimensions
+            $img.css({
+                'max-width': availableWidth + 'px',
+                'max-height': availableHeight + 'px',
+                'width': 'auto',
+                'height': 'auto'
+            });
         }
         
         previousImage() {

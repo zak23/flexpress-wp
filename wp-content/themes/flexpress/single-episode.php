@@ -285,10 +285,32 @@ while (have_posts()):
 
                         <?php if (has_tag()): ?>
                             <div class="episode-tags mt-4">
-                                <?php the_tags('<i class="fas fa-tags me-2"></i>', ', '); ?>
+                                <i class="fas fa-tags me-2"></i>
+                                <?php
+                                $tags = get_the_tags();
+                                if ($tags) {
+                                    $tag_links = array();
+                                    foreach ($tags as $tag) {
+                                        $tag_url = add_query_arg(array(
+                                            'filter_type' => 'category',
+                                            'filter_value' => $tag->slug
+                                        ), home_url('/episodes/'));
+                                        $tag_links[] = '<a href="' . esc_url($tag_url) . '" class="tag-link">' . esc_html($tag->name) . '</a>';
+                                    }
+                                    echo implode(', ', $tag_links);
+                                }
+                                ?>
                             </div>
                         <?php endif; ?>
                     </div>
+                    <!-- Centered "Join Now" button here, only when not logged in -->
+                    <?php if (!is_user_logged_in()): ?>
+                        <div class="text-center mb-4">
+                            <a href="<?php echo esc_url(home_url('/join')); ?>" class="btn btn-primary">
+                                <?php esc_html_e('Join Now', 'flexpress'); ?>
+                            </a>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="col-lg-4">
@@ -303,11 +325,16 @@ while (have_posts()):
                                     </h5>
 
                                     <!-- Access Type Badge -->
-                                    <div class="access-type-badge mb-3 text-center">
-                                        <span class="badge bg-dark text-white fs-6 px-3 py-2 border border-secondary">
-                                            <?php echo wp_kses(flexpress_get_episode_access_summary(get_the_ID()), array('br' => array())); ?>
-                                        </span>
-                                    </div>
+                                    <?php
+                                    $access_summary = flexpress_get_episode_access_summary(get_the_ID());
+                                    if (!empty($access_summary)):
+                                    ?>
+                                        <div class="access-type-badge mb-3 text-center">
+                                            <span class="badge bg-dark text-white fs-6 px-3 py-2 border border-secondary">
+                                                <?php echo wp_kses($access_summary, array('br' => array())); ?>
+                                            </span>
+                                        </div>
+                                    <?php endif; ?>
 
                                     <!-- Purchase Reason -->
                                     <?php if (!empty($access_info['purchase_reason'])): ?>

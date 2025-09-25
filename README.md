@@ -288,6 +288,15 @@ flexpress_display_cf7_form('content_removal');
 
 ## 🔧 Recent Fixes
 
+### Model Hide on Homepage Query Fix (September 2025)
+
+- ✅ **RESOLVED**: Fixed issue where models disappeared from homepage after implementing "Hide on Homepage" feature
+- **Root Cause**: WordPress meta queries with `!=` don't include posts with empty meta fields
+- **Solution**: Updated all model queries to use `NOT EXISTS` for empty meta fields
+- **Impact**: Models now display correctly on homepage by default, hide feature works as intended
+- **Files Updated**: `page-templates/page-home.php`, `functions.php` helper functions
+- **Query Logic**: Now properly handles empty, 0, and 1 values for `model_hide_on_homepage` field
+
 ### SMTP2Go Integration Implementation (September 2025)
 
 - **Added SMTP2Go Integration**: Complete SMTP2Go integration for reliable internal email delivery
@@ -1739,11 +1748,12 @@ The "Hide on Homepage" checkbox provides granular control over model display:
 
 **How It Works:**
 
-- **Default State**: Models are visible on homepage by default (`hide_on_homepage = 0`)
+- **Default State**: Models are visible on homepage by default (empty or `hide_on_homepage = 0`)
 - **Hidden State**: When checked (`hide_on_homepage = 1`), model is excluded from:
   - Featured Models section
   - All Models section
 - **Archive Pages**: Hidden models still appear on dedicated model archive pages
+- **Query Logic**: Uses `NOT EXISTS` to handle empty meta fields properly
 
 **Technical Implementation:**
 
@@ -1760,9 +1770,16 @@ $models_args = array(
             'compare' => '='
         ),
         array(
-            'key' => 'model_hide_on_homepage',
-            'value' => '1',
-            'compare' => '!='
+            'relation' => 'OR',
+            array(
+                'key' => 'model_hide_on_homepage',
+                'value' => '1',
+                'compare' => '!='
+            ),
+            array(
+                'key' => 'model_hide_on_homepage',
+                'compare' => 'NOT EXISTS'
+            )
         )
     ),
     'orderby' => 'title',
@@ -1774,10 +1791,15 @@ $all_models_args = array(
     'post_type' => 'model',
     'posts_per_page' => 12,
     'meta_query' => array(
+        'relation' => 'OR',
         array(
             'key' => 'model_hide_on_homepage',
             'value' => '1',
             'compare' => '!='
+        ),
+        array(
+            'key' => 'model_hide_on_homepage',
+            'compare' => 'NOT EXISTS'
         )
     ),
     'orderby' => 'date',

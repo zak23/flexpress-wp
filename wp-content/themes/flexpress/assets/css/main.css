@@ -7089,6 +7089,15 @@ body.page-template-casting .site-main .alert-info {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+.promo-video-link {
+    display: block;
+    text-decoration: none;
+}
+
+.promo-video-link:hover {
+    text-decoration: none;
+}
+
 .promo-video-wrapper {
     position: relative;
     z-index: 2;
@@ -7097,6 +7106,7 @@ body.page-template-casting .site-main .alert-info {
     overflow: hidden;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     background: var(--color-card-background);
+    transition: box-shadow 0.3s ease;
 }
 
 .promo-video-container {
@@ -7133,34 +7143,7 @@ body.page-template-casting .site-main .alert-info {
 }
 
 .promo-play-button {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 80px;
-    height: 80px;
-    background: rgba(0, 0, 0, 0.7);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    z-index: 3;
-    pointer-events: none;
-    visibility: hidden;
-}
-
-.promo-play-button i {
-    color: white;
-    font-size: 24px;
-    margin-left: 4px; /* Slight offset for play icon */
-}
-
-.promo-video-container:hover .promo-play-button {
-    opacity: 1;
-    visibility: visible;
-    transform: translate(-50%, -50%) scale(1.1);
+    display: none;
 }
 
 .promo-video-container.video-loading .promo-thumbnail {

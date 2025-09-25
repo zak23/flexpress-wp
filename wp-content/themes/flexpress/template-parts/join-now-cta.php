@@ -13,20 +13,14 @@ $cta_image_url = 'https://zakspov.com/wp-content/uploads/2025/06/002-Zak_Mercede
 $site_name = get_bloginfo('name');
 ?>
 
-<section class="join-now-cta">
-    <div class="container-fluid">
-        <div class="row g-0">
+
+        <div class="row g-0 join-now-cta">
             <!-- Image Column -->
             <div class="col-md-12 col-lg-6">
                 <div class="cta-image-container">
                     <img src="<?php echo esc_url($cta_image_url); ?>" 
                          alt="<?php echo esc_attr(sprintf(__('Join %s for Exclusive Content', 'flexpress'), $site_name)); ?>" 
                          class="cta-image">
-                    <div class="cta-image-overlay">
-                        <div class="play-button-overlay">
-                            <i class="fas fa-play"></i>
-                        </div>
-                    </div>
                 </div>
             </div>
             
@@ -88,5 +82,4 @@ $site_name = get_bloginfo('name');
                 </div>
             </div>
         </div>
-    </div>
-</section>
+

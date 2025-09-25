@@ -99,22 +99,7 @@
                 });
             }
 
-            // Handle hover effects
-            const playButton = container.querySelector('.promo-play-button');
-            
-            if (playButton) {
-                container.addEventListener('mouseenter', () => {
-                    playButton.style.opacity = '1';
-                    playButton.style.visibility = 'visible';
-                    playButton.style.transform = 'translate(-50%, -50%) scale(1.1)';
-                });
-
-                container.addEventListener('mouseleave', () => {
-                    playButton.style.opacity = '0';
-                    playButton.style.visibility = 'hidden';
-                    playButton.style.transform = 'translate(-50%, -50%) scale(1)';
-                });
-            }
+            // No play button hover effects needed - entire video is clickable
         },
 
         // Initialize mobile menu

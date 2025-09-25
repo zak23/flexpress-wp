@@ -44,46 +44,48 @@ if (empty($poster_url)) {
 }
 ?>
 
-<div class="promo-video-section mb-5">
-    <div class="container">
-        <div class="row">
+
+
+        <div class="row promo-video-section mb-5">
             <div class="col-12">
                 <?php if (!empty($promo_title)): ?>
-                    <div class="promo-video-header text-center mb-4">
+                    <!-- <div class="promo-video-header text-center mb-4">
                         <h2 class="promo-video-title"><?php echo esc_html($promo_title); ?></h2>
-                    </div>
+                    </div> -->
                 <?php endif; ?>
                 
-                <div class="promo-video-wrapper">
-                    <div class="promo-video-container" id="promoVideo">
-                        <?php if ($poster_url): ?>
-                        <!-- Initial thumbnail -->
-                        <div class="promo-thumbnail" style="background-image: url('<?php echo esc_url($poster_url); ?>')"></div>
-                        <?php endif; ?>
-                        
-                        <!-- Video element (hidden initially) -->
-                        <?php if ($promo_video_id && $bunnycdn_url && $token): ?>
-                        <video class="promo-video" 
-                               muted 
-                               loop 
-                               playsinline 
-                               preload="metadata"
-                               style="display: none;">
-                            <source src="https://<?php echo esc_attr($bunnycdn_url); ?>/<?php echo esc_attr($promo_video_id); ?>/play_720p.mp4?token=<?php echo esc_attr($token); ?>&expires=<?php echo esc_attr($expires); ?>" type="video/mp4">
-                        </video>
-                        <?php endif; ?>
-                        
-                        <!-- Play button (shows on hover) -->
-                        <div class="promo-play-button">
-                            <i class="fa-solid fa-play"></i>
+                <a href="<?php echo esc_url($button_url); ?>" class="promo-video-link">
+                    <div class="promo-video-wrapper">
+                        <div class="promo-video-container" id="promoVideo">
+                            <?php if ($poster_url): ?>
+                            <!-- Initial thumbnail -->
+                            <div class="promo-thumbnail" style="background-image: url('<?php echo esc_url($poster_url); ?>')"></div>
+                            <?php endif; ?>
+                            
+                            <!-- Video element (hidden initially) -->
+                            <?php if ($promo_video_id && $bunnycdn_url && $token): ?>
+                            <video class="promo-video" 
+                                   muted 
+                                   loop 
+                                   playsinline 
+                                   preload="metadata"
+                                   style="display: none;">
+                                <source src="https://<?php echo esc_attr($bunnycdn_url); ?>/<?php echo esc_attr($promo_video_id); ?>/play_720p.mp4?token=<?php echo esc_attr($token); ?>&expires=<?php echo esc_attr($expires); ?>" type="video/mp4">
+                            </video>
+                            <?php endif; ?>
+                            
+                            <!-- Play button (shows on hover) -->
+                            <div class="promo-play-button">
+                                <i class="fa-solid fa-play"></i>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </a>
                 
                 <?php if (!empty($promo_subtitle)): ?>
-                    <div class="promo-video-subtitle text-center mt-4 mb-4">
+                    <!-- <div class="promo-video-subtitle text-center mt-4 mb-4">
                         <p class="lead"><?php echo esc_html($promo_subtitle); ?></p>
-                    </div>
+                    </div> -->
                 <?php endif; ?>
                 
                 <?php if (!empty($button_text) && !empty($button_url)): ?>
@@ -95,5 +97,5 @@ if (empty($poster_url)) {
                 <?php endif; ?>
             </div>
         </div>
-    </div>
-</div>
+
+

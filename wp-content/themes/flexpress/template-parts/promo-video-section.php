@@ -17,10 +17,19 @@ if (empty($promo_video_id)) {
     return;
 }
 
-// Get BunnyCDN video URL
-$video_url = '';
-if (function_exists('flexpress_get_bunnycdn_video_url')) {
-    $video_url = flexpress_get_bunnycdn_video_url($promo_video_id, 'preview');
+// Get BunnyCDN settings for direct video
+$video_settings = get_option('flexpress_video_settings', array());
+$library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
+$bunnycdn_url = isset($video_settings['bunnycdn_url']) ? $video_settings['bunnycdn_url'] : '';
+$token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
+
+// Generate token and expiration for BunnyCDN video
+$expires = time() + 3600; // 1 hour expiry
+$token = '';
+
+if (!empty($token_key)) {
+    // BunnyCDN token generation - format: hash('sha256', $token_key . $video_id . $expires)
+    $token = hash('sha256', $token_key . $promo_video_id . $expires);
 }
 
 // Get thumbnail for poster from BunnyCDN Stream
@@ -35,7 +44,7 @@ if (empty($poster_url)) {
 }
 ?>
 
-<div class="promo-video-section">
+<div class="promo-video-section mb-5">
     <div class="container">
         <div class="row">
             <div class="col-12">
@@ -46,23 +55,27 @@ if (empty($poster_url)) {
                 <?php endif; ?>
                 
                 <div class="promo-video-wrapper">
-                    <div id="promoVideoCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
-                        <div class="carousel-inner">
-                            <div class="carousel-item active">
-                                <?php if (!empty($video_url)): ?>
-                                    <video class="img-fluid promo-video" autoplay loop muted poster="<?php echo esc_url($poster_url); ?>">
-                                        <source src="<?php echo esc_url($video_url); ?>" type="video/mp4">
-                                        Your browser does not support the video tag.
-                                    </video>
-                                <?php else: ?>
-                                    <div class="promo-video-placeholder">
-                                        <div class="placeholder-content">
-                                            <i class="fas fa-video fa-3x mb-3"></i>
-                                            <p><?php esc_html_e('Video not available', 'flexpress'); ?></p>
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
+                    <div class="promo-video-container" id="promoVideo">
+                        <?php if ($poster_url): ?>
+                        <!-- Initial thumbnail -->
+                        <div class="promo-thumbnail" style="background-image: url('<?php echo esc_url($poster_url); ?>')"></div>
+                        <?php endif; ?>
+                        
+                        <!-- Video element (hidden initially) -->
+                        <?php if ($promo_video_id && $bunnycdn_url && $token): ?>
+                        <video class="promo-video" 
+                               muted 
+                               loop 
+                               playsinline 
+                               preload="metadata"
+                               style="display: none;">
+                            <source src="https://<?php echo esc_attr($bunnycdn_url); ?>/<?php echo esc_attr($promo_video_id); ?>/play_720p.mp4?token=<?php echo esc_attr($token); ?>&expires=<?php echo esc_attr($expires); ?>" type="video/mp4">
+                        </video>
+                        <?php endif; ?>
+                        
+                        <!-- Play button (shows on hover) -->
+                        <div class="promo-play-button">
+                            <i class="fa-solid fa-play"></i>
                         </div>
                     </div>
                 </div>

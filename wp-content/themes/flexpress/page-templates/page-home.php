@@ -47,8 +47,7 @@ $hero_episode = new WP_Query($hero_args);
     endif; 
     ?>
 
-    <!-- Promo Video Section -->
-    <?php get_template_part('template-parts/promo-video-section'); ?>
+
 
     <div class="container py-5">
         <!-- Featured Videos Grid -->
@@ -98,6 +97,9 @@ $hero_episode = new WP_Query($hero_args);
             <?php endif; ?>
         </div>
 
+                    <!-- Promo Video Section -->
+    <?php get_template_part('template-parts/promo-video-section'); ?>
+    
         <!-- Featured Models -->
         <div class="featured-models-section mb-5">
             <h2 class="section-title"><?php esc_html_e('Featured Models', 'flexpress'); ?></h2>
@@ -138,6 +140,8 @@ $hero_episode = new WP_Query($hero_args);
                 </div>
             <?php endif; ?>
         </div>
+
+
 
           <!-- Upcoming Episode -->
     <?php get_template_part('template-parts/join-now-cta'); ?>

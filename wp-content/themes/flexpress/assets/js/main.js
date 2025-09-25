@@ -9,6 +9,7 @@
         // Initialize the application
         init: function() {
             this.initHeroVideo();
+            this.initPromoVideo();
             this.initMobileMenu();
             this.setupEventHandlers();
         },
@@ -49,6 +50,71 @@
         // Initialize hero video (disabled - using new hero-video.js)
         initHeroVideo: function() {
             // Disabled - hero video functionality moved to hero-video.js
+        },
+
+        // Initialize promo video
+        initPromoVideo: function() {
+            const container = document.getElementById('promoVideo');
+            if (!container) return;
+
+            const thumbnail = container.querySelector('.promo-thumbnail');
+            const video = container.querySelector('.promo-video');
+            
+            if (!video || !thumbnail) return;
+
+            // Preload the video
+            video.load();
+
+            // After 3 seconds, fade out thumbnail and start video
+            setTimeout(() => {
+                // Ensure video is ready to play
+                if (video.readyState >= 3) {
+                    startVideoTransition();
+                } else {
+                    // Wait for video to be ready
+                    video.addEventListener('canplay', startVideoTransition, { once: true });
+                }
+            }, 3000);
+
+            function startVideoTransition() {
+                // Show video behind thumbnail
+                video.style.display = 'block';
+                video.style.opacity = '0';
+                
+                // Start playing
+                video.play().then(() => {
+                    // Fade out thumbnail, fade in video
+                    requestAnimationFrame(() => {
+                        thumbnail.style.opacity = '0';
+                        video.style.opacity = '1';
+                        
+                        // Remove thumbnail after transition
+                        setTimeout(() => {
+                            thumbnail.style.display = 'none';
+                        }, 1000); // Match CSS transition duration
+                    });
+                }).catch(() => {
+                    // If autoplay fails, keep thumbnail visible
+                    return;
+                });
+            }
+
+            // Handle hover effects
+            const playButton = container.querySelector('.promo-play-button');
+            
+            if (playButton) {
+                container.addEventListener('mouseenter', () => {
+                    playButton.style.opacity = '1';
+                    playButton.style.visibility = 'visible';
+                    playButton.style.transform = 'translate(-50%, -50%) scale(1.1)';
+                });
+
+                container.addEventListener('mouseleave', () => {
+                    playButton.style.opacity = '0';
+                    playButton.style.visibility = 'hidden';
+                    playButton.style.transform = 'translate(-50%, -50%) scale(1)';
+                });
+            }
         },
 
         // Initialize mobile menu

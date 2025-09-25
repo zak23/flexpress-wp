@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Template Name: Home Page
  */
@@ -30,21 +31,21 @@ $hero_episode = new WP_Query($hero_args);
 
 <main class="site-main">
     <!-- Recent Video - Hero Section -->
-    <?php if ($hero_episode->have_posts()): 
+    <?php if ($hero_episode->have_posts()):
         $hero_episode->the_post();
     ?>
-    <div class="hero-section-wrapper">
-        <div class="container">
-            <div class="row">
-                <div class="col-12">
-                    <?php get_template_part('template-parts/content', 'hero-video'); ?>
+        <div class="hero-section-wrapper">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <?php get_template_part('template-parts/content', 'hero-video'); ?>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <?php 
+    <?php
         wp_reset_postdata();
-    endif; 
+    endif;
     ?>
 
 
@@ -74,12 +75,12 @@ $hero_episode = new WP_Query($hero_args);
                 'meta_key' => 'release_date',
                 'order' => 'DESC'
             );
-            
+
             // Apply episode visibility filtering
             $featured_args = flexpress_add_episode_visibility_to_query($featured_args);
-            
+
             $featured_episodes = new WP_Query($featured_args);
-            
+
             if ($featured_episodes->have_posts()):
             ?>
                 <div class="video-grid featured-grid">
@@ -97,9 +98,9 @@ $hero_episode = new WP_Query($hero_args);
             <?php endif; ?>
         </div>
 
-                    <!-- Promo Video Section -->
-    <?php get_template_part('template-parts/promo-video-section'); ?>
-    
+        <!-- Promo Video Section -->
+        <?php get_template_part('template-parts/promo-video-section'); ?>
+
         <!-- Featured Models -->
         <div class="featured-models-section mb-5">
             <h2 class="section-title"><?php esc_html_e('Featured Models', 'flexpress'); ?></h2>
@@ -117,9 +118,9 @@ $hero_episode = new WP_Query($hero_args);
                 'orderby' => 'title',
                 'order' => 'ASC'
             );
-            
+
             $featured_models = new WP_Query($models_args);
-            
+
             if ($featured_models->have_posts()):
             ?>
                 <div class="models-grid">
@@ -143,8 +144,8 @@ $hero_episode = new WP_Query($hero_args);
 
 
 
-          <!-- Upcoming Episode -->
-    <?php get_template_part('template-parts/join-now-cta'); ?>
+        <!-- Upcoming Episode -->
+        <?php get_template_part('template-parts/join-now-cta'); ?>
 
         <!-- Recent Videos Grid -->
         <div class="recent-videos-section mb-5">
@@ -165,12 +166,12 @@ $hero_episode = new WP_Query($hero_args);
                 'meta_key' => 'release_date',
                 'order' => 'DESC'
             );
-            
+
             // Apply episode visibility filtering
             $recent_args = flexpress_add_episode_visibility_to_query($recent_args);
-            
+
             $recent_episodes = new WP_Query($recent_args);
-            
+
             if ($recent_episodes->have_posts()):
             ?>
                 <div class="video-grid recent-grid">
@@ -181,7 +182,7 @@ $hero_episode = new WP_Query($hero_args);
                     wp_reset_postdata();
                     ?>
                 </div>
-                
+
                 <div class="text-center mt-4">
                     <a href="<?php echo esc_url(get_post_type_archive_link('episode')); ?>" class="btn btn-outline-primary btn-lg"><?php esc_html_e('Show All Episodes', 'flexpress'); ?></a>
                 </div>
@@ -202,9 +203,9 @@ $hero_episode = new WP_Query($hero_args);
                 'orderby' => 'date',
                 'order' => 'DESC'
             );
-            
+
             $all_models = new WP_Query($all_models_args);
-            
+
             if ($all_models->have_posts()):
             ?>
                 <div class="models-grid all-models">
@@ -219,7 +220,7 @@ $hero_episode = new WP_Query($hero_args);
                     wp_reset_postdata();
                     ?>
                 </div>
-                
+
                 <div class="text-center mt-4">
                     <a href="<?php echo esc_url(get_post_type_archive_link('model')); ?>" class="btn btn-outline-primary btn-lg"><?php esc_html_e('See More Models', 'flexpress'); ?></a>
                 </div>
@@ -234,11 +235,16 @@ $hero_episode = new WP_Query($hero_args);
     <!-- Upcoming Episode -->
     <?php get_template_part('template-parts/upcoming-episode'); ?>
 
-    <!-- Awards and Nominations -->
-    <?php get_template_part('template-parts/awards-nominations'); ?>
+
 
     <!-- Featured On Section -->
     <?php get_template_part('template-parts/featured-on'); ?>
+
+    <!-- Awards and Nominations -->
+    <?php get_template_part('template-parts/awards-nominations'); ?>
+
+    <!-- Casting Section -->
+    <?php get_template_part('template-parts/casting-section'); ?>
 </main>
 
 <?php

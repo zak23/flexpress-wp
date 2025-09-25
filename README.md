@@ -1133,6 +1133,17 @@ The Featured On section can be managed through **FlexPress Settings → General 
 - **Remove Functionality**: Each outlet can be individually removed
 - **Default Content**: Includes Aus Adult News as default when no outlets are configured
 
+### Casting Section Image Management
+
+The casting section image can be managed through **FlexPress Settings → General → Casting Section**:
+
+- **Image Upload**: Upload a custom image for the casting section via WordPress media library
+- **Universal Display**: The uploaded image displays on both the homepage and casting page
+- **Fallback Support**: Default SVG placeholder displays when no custom image is uploaded
+- **Recommended Size**: 600x400px for optimal display
+- **Image Preview**: See uploaded image in admin interface before saving
+- **Remove Functionality**: Option to remove the uploaded image and revert to default placeholder
+
 #### Image Management Features
 
 - **WordPress Media Library Integration**: Upload logos directly through WordPress media library

@@ -6342,7 +6342,7 @@ body.page-template-casting .site-main .alert-info {
 }
 
 .award-image-subtle {
-    max-width: 80px;
+    max-width: 120px;
     height: auto;
     filter: grayscale(100%) brightness(0.8);
     transition: all 0.2s ease;
@@ -6352,13 +6352,63 @@ body.page-template-casting .site-main .alert-info {
     filter: grayscale(0%) brightness(1);
 }
 
-/* Multiple awards spacing */
-.awards-logos .award-link-subtle:not(:last-child) {
-    margin-right: 1rem;
+/* Award item structure */
+.award-item {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.awards-logos .award-link-subtle:last-child {
+.award-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.award-title {
+    color: #888;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.75rem;
+    text-align: center;
+    line-height: 1.3;
+    max-width: 140px;
+    word-wrap: break-word;
+}
+
+.award-item:hover .award-title {
+    color: #ccc;
+    font-weight: 600;
+}
+
+/* Multiple awards spacing */
+.awards-logos .award-item:not(:last-child) {
+    margin-right: 1.5rem;
+}
+
+.awards-logos .award-item:last-child {
     margin-right: 0;
+}
+
+/* Awards section overall improvements */
+.awards-nominations-section {
+    background: transparent;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2rem 0;
+}
+
+.awards-logos {
+    gap: 1rem;
 }
 
 /* Responsive Design */
@@ -6370,10 +6420,22 @@ body.page-template-casting .site-main .alert-info {
     
     .awards-logos {
         justify-content: center !important;
+        gap: 0.75rem;
     }
     
     .award-image-subtle {
-        max-width: 60px;
+        max-width: 90px;
+    }
+    
+    .award-title {
+        font-size: 0.7rem;
+        max-width: 100px;
+    }
+    
+    .award-item {
+        padding: 0.75rem;
+        margin-right: 0.5rem !important;
+        margin-bottom: 1rem !important;
     }
 }
 
@@ -6383,7 +6445,22 @@ body.page-template-casting .site-main .alert-info {
     }
     
     .award-image-subtle {
-        max-width: 50px;
+        max-width: 70px;
+    }
+    
+    .award-title {
+        font-size: 0.65rem;
+        max-width: 80px;
+    }
+    
+    .award-item {
+        padding: 0.5rem;
+        margin-right: 0.25rem !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    .awards-nominations-section {
+        padding: 1.5rem 0;
     }
 }
 

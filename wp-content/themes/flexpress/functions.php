@@ -145,6 +145,12 @@ if (is_admin()) {
     error_log('FlexPress: Not in admin, skipping SMTP2Go Settings initialization');
 }
 
+// Initialize General Settings in admin
+if (is_admin()) {
+    error_log('FlexPress: Initializing General Settings in admin');
+    new FlexPress_General_Settings();
+}
+
 // Amazon SES Integration
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-ses-settings.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-ses-smtp.php';

@@ -144,10 +144,8 @@ class FlexPress_Settings {
      * Register settings
      */
     public function register_settings() {
-        // Register the general settings option
-        register_setting('flexpress_general_settings', 'flexpress_general_settings', array(
-            'sanitize_callback' => 'flexpress_sanitize_general_settings'
-        ));
+        // General settings are handled by FlexPress_General_Settings class
+        // No need to register them here to avoid conflicts
         
         // Register auto-setup settings
         register_setting('flexpress_auto_setup_settings', 'flexpress_disable_auto_setup');

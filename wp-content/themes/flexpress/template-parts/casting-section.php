@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Template part for displaying the casting section
  *
@@ -19,7 +20,7 @@ if (!defined('ABSPATH')) {
                 <p class="casting-subtitle lead">We're always looking for new talent to join the team</p>
             </div>
         </div>
-        
+
         <div class="row justify-content-center">
             <div class="col-lg-10">
                 <div class="casting-content-container bg-dark rounded-3 p-4 shadow-lg">
@@ -27,16 +28,24 @@ if (!defined('ABSPATH')) {
                         <!-- Large Image on the Left -->
                         <div class="col-md-6 mb-4 mb-md-0">
                             <div class="casting-image">
-                                <?php if (has_post_thumbnail()) : ?>
-                                    <?php the_post_thumbnail('large', array(
+                                <?php
+                                // Get casting image from theme options or use default
+                                $general_settings = get_option('flexpress_general_settings', array());
+                                $casting_image_id = isset($general_settings['casting_image']) ? $general_settings['casting_image'] : '';
+
+                                if ($casting_image_id) {
+                                    echo wp_get_attachment_image($casting_image_id, 'large', false, array(
                                         'alt' => esc_attr__('Join Our Cast', 'flexpress'),
                                         'class' => 'img-fluid rounded-3 shadow'
-                                    )); ?>
-                 
-                                <?php endif; ?>
+                                    ));
+                                } else {
+                                    // Fallback to a default image or placeholder
+                                    echo '<img src="' . get_template_directory_uri() . '/assets/images/casting-default.svg" alt="' . esc_attr__('Join Our Cast', 'flexpress') . '" class="img-fluid rounded-3 shadow">';
+                                }
+                                ?>
                             </div>
                         </div>
-                        
+
                         <!-- Benefits on the Right -->
                         <div class="col-md-6">
                             <div class="casting-benefits">
@@ -44,10 +53,6 @@ if (!defined('ABSPATH')) {
                                     <li class="casting-benefit-item">
                                         <i class="fas fa-film casting-benefit-icon"></i>
                                         <span class="casting-benefit-text">Professional production environment</span>
-                                    </li>
-                                    <li class="casting-benefit-item">
-                                        <i class="fas fa-dollar-sign casting-benefit-icon"></i>
-                                        <span class="casting-benefit-text">Competitive rates</span>
                                     </li>
                                     <li class="casting-benefit-item">
                                         <i class="fas fa-calendar-alt casting-benefit-icon"></i>
@@ -60,10 +65,6 @@ if (!defined('ABSPATH')) {
                                     <li class="casting-benefit-item">
                                         <i class="fas fa-camera casting-benefit-icon"></i>
                                         <span class="casting-benefit-text">Professional photography included</span>
-                                    </li>
-                                    <li class="casting-benefit-item">
-                                        <i class="fas fa-magic casting-benefit-icon"></i>
-                                        <span class="casting-benefit-text">Hair and makeup provided</span>
                                     </li>
                                     <li class="casting-benefit-item">
                                         <i class="fas fa-file-signature casting-benefit-icon"></i>
@@ -82,7 +83,7 @@ if (!defined('ABSPATH')) {
                                         <span class="casting-benefit-text">Industry-standard contracts</span>
                                     </li>
                                 </ul>
-                                
+
                                 <div class="text-center mt-4">
                                     <a href="/casting" class="btn casting-apply-btn btn-lg">Apply Now</a>
                                 </div>

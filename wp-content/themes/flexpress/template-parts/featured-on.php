@@ -22,7 +22,7 @@ if (empty($featured_media)) {
     <div class="container">
         <div class="row">
             <div class="col-12">
-                <h2 class="section-title text-center mb-5"><?php esc_html_e('Featured On', 'flexpress'); ?></h2>
+                <h2 class="section-title"><?php esc_html_e('Featured On', 'flexpress'); ?></h2>
                 
                 <div class="media-slider-wrapper">
                     <div class="media-slider" id="mediaSlider">

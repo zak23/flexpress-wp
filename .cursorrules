@@ -247,3 +247,63 @@ flexpress/
 - The admin Test Connection button uses AJAX to call WordPress `admin-ajax.php` with a nonce.
 - The tool now reports success if the Cloudflare API is reachable and returns JSON, even when validation errors occur due to a missing user token (e.g., `missing-input-response`).
 - If the API is unreachable, a clear error is shown instead of "undefined".
+
+## WordPress Development Environment
+
+### IDE Configuration
+- **WordPress Stubs**: Use `wordpress-stubs.php` for function recognition
+- **PHP CodeSniffer**: WordPress coding standards via composer
+- **IntelliSense**: Configured for WordPress functions and classes
+- **Linting**: WordPress-specific rules and best practices
+
+### Code Quality Standards
+- **WordPress Coding Standards**: Follow WPCS guidelines
+- **Security**: Sanitize all inputs, escape all outputs
+- **Performance**: Optimize database queries, use caching
+- **Accessibility**: WCAG 2.1 AA compliance
+- **SEO**: Semantic HTML, proper meta tags
+
+### Development Workflow
+1. **Feature Development**: Create in theme directory
+2. **Testing**: Test in Docker environment
+3. **Code Review**: Use PHPCS for standards compliance
+4. **Documentation**: Update README.md and inline comments
+5. **Deployment**: Commit with descriptive messages
+
+### Common WordPress Functions
+- **Template Functions**: `get_header()`, `get_footer()`, `get_template_part()`
+- **Data Functions**: `get_option()`, `get_post_meta()`, `get_user_meta()`
+- **Security Functions**: `esc_html()`, `esc_attr()`, `esc_url()`, `wp_nonce_field()`
+- **Admin Functions**: `add_menu_page()`, `register_setting()`, `add_settings_field()`
+- **Query Functions**: `WP_Query`, `wp_reset_postdata()`, `have_posts()`
+
+### Theme Structure
+- **Template Hierarchy**: Follow WordPress template hierarchy
+- **Hooks & Filters**: Use WordPress action and filter system
+- **Custom Post Types**: Register with proper capabilities
+- **Taxonomies**: Create custom taxonomies for content organization
+- **Widgets**: Develop custom widgets for admin interface
+- **Shortcodes**: Create reusable content shortcodes
+
+### Performance Optimization
+- **Database Queries**: Minimize queries, use transients
+- **Asset Loading**: Enqueue scripts/styles properly
+- **Caching**: Implement object caching where appropriate
+- **Images**: Optimize images, use responsive images
+- **CDN**: Leverage BunnyCDN for static assets
+
+### Security Best Practices
+- **Input Validation**: Validate all user inputs
+- **Output Escaping**: Escape all output data
+- **Nonces**: Use WordPress nonces for forms
+- **Capabilities**: Check user capabilities before actions
+- **SQL Injection**: Use prepared statements
+- **XSS Prevention**: Escape output, validate input
+
+### Testing Strategy
+- **Unit Tests**: Test individual functions
+- **Integration Tests**: Test WordPress integration
+- **Browser Tests**: Test frontend functionality
+- **Performance Tests**: Monitor page load times
+- **Security Tests**: Scan for vulnerabilities
+- **Accessibility Tests**: Ensure WCAG compliance

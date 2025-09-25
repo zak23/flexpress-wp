@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<ruleset name="FlexPress Theme">
+    <description>PHP CodeSniffer configuration for FlexPress WordPress Theme</description>
+    
+    <!-- What to scan -->
+    <file>wp-content/themes/flexpress</file>
+    
+    <!-- How to scan -->
+    <arg name="colors"/>
+    <arg name="parallel" value="50"/>
+    <arg value="p"/>
+    
+    <!-- Rules: Check PHP version compatibility -->
+    <config name="testVersion" value="7.4-"/>
+    
+    <!-- Rules: WordPress Coding Standards -->
+    <rule ref="WordPress"/>
+    
+    <!-- Rules: WordPress Extra -->
+    <rule ref="WordPress-Extra"/>
+    
+    <!-- Rules: WordPress VIP -->
+    <rule ref="WordPress-VIP-Go"/>
+    
+    <!-- Rules: PHP Compatibility -->
+    <rule ref="PHPCompatibilityWP"/>
+    
+    <!-- Exclude some rules for theme development -->
+    <rule ref="WordPress.Files.FileName">
+        <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+    </rule>
+    
+    <!-- Exclude some VIP rules that are too strict for themes -->
+    <rule ref="WordPress-VIP-Go">
+        <exclude name="WordPressVIPMinimum.Functions.RestrictedFunctions"/>
+        <exclude name="WordPressVIPMinimum.Variables.RestrictedVariables"/>
+    </rule>
+    
+    <!-- Exclude some WordPress rules that are too strict -->
+    <rule ref="WordPress">
+        <exclude name="WordPress.PHP.YodaConditions"/>
+        <exclude name="WordPress.NamingConventions.ValidFunctionName"/>
+        <exclude name="WordPress.Files.FileName"/>
+    </rule>
+    
+    <!-- Exclude some WordPress Extra rules -->
+    <rule ref="WordPress-Extra">
+        <exclude name="WordPress-Extra.ControlStructures.UseAlternativeControlStructureSyntax"/>
+    </rule>
+    
+    <!-- Exclude some PHP Compatibility rules -->
+    <rule ref="PHPCompatibilityWP">
+        <exclude name="PHPCompatibility.PHP.NewFunctions"/>
+    </rule>
+</ruleset>

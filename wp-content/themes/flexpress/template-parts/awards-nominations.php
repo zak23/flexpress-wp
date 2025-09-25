@@ -17,26 +17,33 @@ $awards_data = flexpress_get_awards_data();
 <section class="awards-nominations-section py-4">
     <div class="container">
         <div class="row align-items-center">
-            <div class="col-md-3">
-                <h3 class="awards-subtitle mb-0"><?php echo esc_html($awards_data['title']); ?></h3>
-            </div>
-            <div class="col-md-9">
-                <div class="awards-logos d-flex flex-wrap align-items-center justify-content-md-end">
+        <h2 class="section-title"><?php esc_html_e('Awards & Recognition', 'flexpress'); ?></h2>
+           
+            <div class="col-12">
+                <div class="awards-logos d-flex flex-wrap align-items-start justify-content-md-end">
                     <?php foreach ($awards_data['awards'] as $award): ?>
                         <?php if (!empty($award['logo_url'])): ?>
-                            <?php if (!empty($award['link'])): ?>
-                                <a href="<?php echo esc_url($award['link']); ?>" target="_blank" class="award-link-subtle me-3 mb-2">
-                                    <img src="<?php echo esc_url($award['logo_url']); ?>" 
-                                         class="award-image-subtle" 
-                                         alt="<?php echo esc_attr($award['alt']); ?>">
-                                </a>
-                            <?php else: ?>
-                                <div class="award-link-subtle me-3 mb-2">
-                                    <img src="<?php echo esc_url($award['logo_url']); ?>" 
-                                         class="award-image-subtle" 
-                                         alt="<?php echo esc_attr($award['alt']); ?>">
-                                </div>
-                            <?php endif; ?>
+                            <div class="award-item me-4 mb-3">
+                                <?php if (!empty($award['link'])): ?>
+                                    <a href="<?php echo esc_url($award['link']); ?>" target="_blank" class="award-link-subtle">
+                                        <img src="<?php echo esc_url($award['logo_url']); ?>" 
+                                             class="award-image-subtle" 
+                                             alt="<?php echo esc_attr($award['alt']); ?>">
+                                        <?php if (!empty($award['title'])): ?>
+                                            <div class="award-title"><?php echo esc_html($award['title']); ?></div>
+                                        <?php endif; ?>
+                                    </a>
+                                <?php else: ?>
+                                    <div class="award-link-subtle">
+                                        <img src="<?php echo esc_url($award['logo_url']); ?>" 
+                                             class="award-image-subtle" 
+                                             alt="<?php echo esc_attr($award['alt']); ?>">
+                                        <?php if (!empty($award['title'])): ?>
+                                            <div class="award-title"><?php echo esc_html($award['title']); ?></div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         <?php endif; ?>
                     <?php endforeach; ?>
                 </div>

@@ -61,6 +61,8 @@ package-lock.json
 yarn.lock
 
 # Composer dependencies (for theme development)
+vendor/
+composer.lock
 wp-content/themes/flexpress/vendor/
 wp-content/themes/flexpress/composer.lock
 
@@ -74,9 +76,11 @@ wp-content/themes/flexpress/assets/build/
 # ==============================================
 # IDE & EDITOR FILES
 # ==============================================
-# VS Code
-.vscode/
-*.code-workspace
+# VS Code (exclude most settings, keep essential ones)
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/*.code-workspace
 
 # PhpStorm/IntelliJ
 .idea/
@@ -207,6 +211,10 @@ coverage.xml
 *.coverage
 .nyc_output
 
+# WordPress development stubs (generated files)
+wordpress-stubs.php
+woocommerce-stubs.php
+
 # ==============================================
 # CACHE & TEMPORARY DIRECTORIES
 # ==============================================
@@ -253,3 +261,10 @@ docs/build/
 !.wakatime-project
 !phpcs.xml
 !phpstan.neon
+!composer.json
+!check-code.sh
+
+# Keep VS Code configuration for team consistency
+!.vscode/extensions.json
+!.vscode/php.json
+check-code.sh

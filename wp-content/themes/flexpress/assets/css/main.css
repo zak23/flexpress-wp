@@ -2625,7 +2625,6 @@ footer.bg-black .row.footer {
 .dashboard-page {
     background-color: var(--color-background);
     color: var(--color-text);
-    min-height: 100vh;
 }
 
 .dashboard-page .container-fluid {

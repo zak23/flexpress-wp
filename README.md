@@ -271,9 +271,10 @@ flexpress_display_cf7_form('content_removal');
 - **Domain Detection**: Fixed routing logic to handle emails TO `zakspov.com` regardless of sender domain
 
 ### Authentication Alert Contrast Fix (September 2025)
-- Resolved readability issue where success alerts on auth pages (login/forgot/reset) could display green text on green backgrounds under certain theme combinations
-- Standardized `.membership-page .alert-success` to use white text for proper contrast
+- ✅ **RESOLVED**: Fixed readability issue where success alerts on auth pages (login/forgot/reset) displayed green text on green backgrounds
+- Standardized `.membership-page .alert-success` to use white text for proper contrast across all authentication pages
 - Updated inline styles in `page-templates/login.php`; global theme styles already ensure white text elsewhere via `assets/css/main.css`
+- **Tested and confirmed working**: Success alerts now display with proper white text contrast on green backgrounds
 
 ### Flowguard Subscription Extend Webhook Fix (January 2025)
 - Fixed critical issue where extending cancelled users incorrectly changed their status to 'active'

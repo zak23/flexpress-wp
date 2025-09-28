@@ -643,6 +643,79 @@ add_filter('body_class', function ($classes) {
     </div>
 </div>
 
+<style>
+    /* Enhanced Toggle Switch Styling */
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 32px;
+        margin-right: 15px;
+    }
+    
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #dc3545;
+        transition: all 0.3s ease;
+        border-radius: 32px;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 24px;
+        width: 24px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: all 0.3s ease;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    input:checked + .toggle-slider {
+        background-color: #28a745;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    input:checked + .toggle-slider:before {
+        transform: translateX(28px);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    
+    .toggle-slider:hover {
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 0 8px rgba(0,0,0,0.15);
+    }
+    
+    input:checked + .toggle-slider:hover {
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 0 8px rgba(40, 167, 69, 0.3);
+    }
+    
+    /* Disabled state */
+    .toggle-switch input:disabled + .toggle-slider {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    /* Focus state for accessibility */
+    .toggle-switch input:focus + .toggle-slider {
+        outline: 2px solid #007bff;
+        outline-offset: 2px;
+    }
+</style>
+
 <script>
     jQuery(document).ready(function($) {
         // Profile form submission
@@ -781,7 +854,8 @@ add_filter('body_class', function ($classes) {
                         $statusDescription.text(isChecked ? 'You will receive our newsletter' : 'You will not receive our newsletter');
 
                         // Show success message
-                        $('.newsletter-status').before('<div class="alert alert-success newsletter-alert"><i class="bi bi-check-circle me-2"></i>' + response.data + '</div>');
+                        const successMessage = typeof response.data === 'string' ? response.data : (response.data.message || 'Newsletter subscription updated successfully!');
+                        $('.newsletter-status').before('<div class="alert alert-success newsletter-alert text-dark"><i class="bi bi-check-circle me-2"></i>' + successMessage + '</div>');
 
                         // Reload page after 2 seconds to update subscription info
                         setTimeout(function() {
@@ -793,7 +867,8 @@ add_filter('body_class', function ($classes) {
                         $statusText.text(!isChecked ? 'Subscribed' : 'Not Subscribed');
                         $statusDescription.text(!isChecked ? 'You will receive our newsletter' : 'You will not receive our newsletter');
 
-                        $('.newsletter-status').before('<div class="alert alert-danger newsletter-alert"><i class="bi bi-exclamation-circle me-2"></i>' + response.data + '</div>');
+                        const errorMessage = typeof response.data === 'string' ? response.data : (response.data.message || 'An error occurred while updating your newsletter preferences.');
+                        $('.newsletter-status').before('<div class="alert alert-danger newsletter-alert"><i class="bi bi-exclamation-circle me-2"></i>' + errorMessage + '</div>');
                     }
                 },
                 error: function(xhr, status, error) {

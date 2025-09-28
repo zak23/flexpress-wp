@@ -82,6 +82,15 @@ class FlexPress_General_Settings
             'flexpress_logo_section'
         );
 
+        // Add secondary logo field for different color conditions
+        add_settings_field(
+            'flexpress_secondary_logo',
+            __('Upload Secondary Logo', 'flexpress'),
+            array($this, 'render_secondary_logo_field'),
+            'flexpress_general_settings',
+            'flexpress_logo_section'
+        );
+
         // Add Color Settings section
         add_settings_section(
             'flexpress_color_section',
@@ -247,7 +256,7 @@ class FlexPress_General_Settings
      */
     public function render_logo_section_description()
     {
-        echo '<p>' . esc_html__('Upload a custom logo for your FlexPress site.', 'flexpress') . '</p>';
+        echo '<p>' . esc_html__('Upload custom logos for your FlexPress site. You can upload a primary logo and an optional secondary logo for different color conditions (e.g., light logo for dark backgrounds).', 'flexpress') . '</p>';
     }
 
     /**
@@ -418,6 +427,89 @@ class FlexPress_General_Settings
                     e.preventDefault();
                     $('#flexpress_custom_logo').val('');
                     $('.flexpress-logo-preview').remove();
+                    $(this).remove();
+                });
+            });
+        </script>
+    <?php
+    }
+
+    /**
+     * Render secondary logo field for different color conditions
+     */
+    public function render_secondary_logo_field()
+    {
+        $options = get_option('flexpress_general_settings');
+        $secondary_logo_id = isset($options['secondary_logo']) ? $options['secondary_logo'] : '';
+
+        // Display the current secondary logo if it exists
+        if (!empty($secondary_logo_id)) {
+            $logo_url = wp_get_attachment_image_url($secondary_logo_id, 'medium');
+            if ($logo_url) {
+                echo '<div class="flexpress-secondary-logo-preview">';
+                echo '<img src="' . esc_url($logo_url) . '" style="max-width: 300px; height: auto; margin-bottom: 10px;" />';
+                echo '</div>';
+            }
+        }
+    ?>
+        <input type="hidden" name="flexpress_general_settings[secondary_logo]" id="flexpress_secondary_logo" value="<?php echo esc_attr($secondary_logo_id); ?>" />
+        <input type="button" class="button button-secondary" id="flexpress_upload_secondary_logo_button" value="<?php esc_attr_e('Upload Secondary Logo', 'flexpress'); ?>" />
+        <?php if (!empty($secondary_logo_id)) : ?>
+            <input type="button" class="button button-secondary" id="flexpress_remove_secondary_logo_button" value="<?php esc_attr_e('Remove Secondary Logo', 'flexpress'); ?>" />
+        <?php endif; ?>
+        <p class="description"><?php esc_html_e('Upload a secondary logo for different color conditions (e.g., light logo for dark backgrounds, dark logo for light backgrounds). This logo will be used when the system detects different color scheme preferences. Recommended size: 300x80px.', 'flexpress'); ?></p>
+
+        <script type="text/javascript">
+            jQuery(document).ready(function($) {
+                // Media uploader for secondary logo
+                var secondaryMediaUploader;
+
+                $('#flexpress_upload_secondary_logo_button').on('click', function(e) {
+                    e.preventDefault();
+
+                    // If the media uploader already exists, open it
+                    if (secondaryMediaUploader) {
+                        secondaryMediaUploader.open();
+                        return;
+                    }
+
+                    // Create the media uploader
+                    secondaryMediaUploader = wp.media({
+                        title: '<?php esc_html_e('Select or Upload Secondary Logo', 'flexpress'); ?>',
+                        button: {
+                            text: '<?php esc_html_e('Use this image as secondary logo', 'flexpress'); ?>'
+                        },
+                        multiple: false
+                    });
+
+                    // When an image is selected, run a callback
+                    secondaryMediaUploader.on('select', function() {
+                        var attachment = secondaryMediaUploader.state().get('selection').first().toJSON();
+                        $('#flexpress_secondary_logo').val(attachment.id);
+
+                        // Update preview
+                        if (attachment.url) {
+                            if ($('.flexpress-secondary-logo-preview').length === 0) {
+                                $('<div class="flexpress-secondary-logo-preview"><img style="max-width: 300px; height: auto; margin-bottom: 10px;" /></div>').insertBefore('#flexpress_upload_secondary_logo_button');
+                            }
+                            $('.flexpress-secondary-logo-preview img').attr('src', attachment.url);
+
+                            // Show remove button if not already visible
+                            if ($('#flexpress_remove_secondary_logo_button').length === 0) {
+                                $('<input type="button" class="button button-secondary" id="flexpress_remove_secondary_logo_button" value="<?php esc_attr_e('Remove Secondary Logo', 'flexpress'); ?>" />').insertAfter('#flexpress_upload_secondary_logo_button');
+                            }
+                        }
+                    });
+
+                    // Open the media uploader
+                    secondaryMediaUploader.open();
+                });
+
+                // Handle remove button for secondary logo
+                $(document).on('click', '#flexpress_remove_secondary_logo_button', function(e) {
+                    e.preventDefault();
+                    $('#flexpress_secondary_logo').val('');
+                    $('.flexpress-secondary-logo-preview').remove();
                     $(this).remove();
                 });
             });

@@ -119,10 +119,30 @@ function flexpress_render_newsletter_modal() {
         }
 
         // Show modal after delay if not previously dismissed
+        // Wait for age verification to complete first
         if (!hasDismissedNewsletterModal()) {
-            setTimeout(function() {
+            function showNewsletterModal() {
                 $('#newsletterModal').modal('show');
-            }, <?php echo $modal_delay * 1000; ?>);
+            }
+            
+            // Check if age verification is already completed
+            var ageVerified = false;
+            try {
+                ageVerified = localStorage.getItem('flexpress_age_verified') === 'true';
+            } catch (e) {
+                // If localStorage is not available, assume age verification is needed
+                ageVerified = false;
+            }
+            
+            if (ageVerified) {
+                // Age already verified, show newsletter modal after delay
+                setTimeout(showNewsletterModal, <?php echo $modal_delay * 1000; ?>);
+            } else {
+                // Wait for age verification to complete
+                document.addEventListener('flexpress:ageVerified', function() {
+                    setTimeout(showNewsletterModal, <?php echo $modal_delay * 1000; ?>);
+                }, { once: true });
+            }
         }
 
         // When modal fully hides (any dismissal path), remember preference

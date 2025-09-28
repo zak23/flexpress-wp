@@ -4845,13 +4845,22 @@ add_action('admin_post_flexpress_force_auto_setup', 'flexpress_handle_force_auto
  * Checks FlexPress settings first, then falls back to WordPress customizer
  * 
  * @param string $size Image size (default: 'full')
+ * @param string $type Logo type: 'primary' or 'secondary' (default: 'primary')
  * @return array|false Array with logo data or false if no logo
  */
-function flexpress_get_custom_logo($size = 'full')
+function flexpress_get_custom_logo($size = 'full', $type = 'primary')
 {
     // Check for FlexPress custom logo first
     $flexpress_settings = get_option('flexpress_general_settings', array());
-    $flexpress_logo_id = isset($flexpress_settings['custom_logo']) ? $flexpress_settings['custom_logo'] : '';
+    
+    // Determine which logo to use based on type
+    if ($type === 'secondary') {
+        $flexpress_logo_id = isset($flexpress_settings['secondary_logo']) ? $flexpress_settings['secondary_logo'] : '';
+        $logo_source = 'flexpress_secondary';
+    } else {
+        $flexpress_logo_id = isset($flexpress_settings['custom_logo']) ? $flexpress_settings['custom_logo'] : '';
+        $logo_source = 'flexpress';
+    }
 
     if (!empty($flexpress_logo_id)) {
         $logo = wp_get_attachment_image_src($flexpress_logo_id, $size);
@@ -4860,12 +4869,17 @@ function flexpress_get_custom_logo($size = 'full')
                 'url' => $logo[0],
                 'width' => $logo[1],
                 'height' => $logo[2],
-                'source' => 'flexpress'
+                'source' => $logo_source
             );
         }
     }
 
-    // Fallback to WordPress customizer logo
+    // For secondary logo, don't fall back to WordPress customizer
+    if ($type === 'secondary') {
+        return false;
+    }
+
+    // Fallback to WordPress customizer logo (only for primary)
     if (has_custom_logo()) {
         $custom_logo_id = get_theme_mod('custom_logo');
         $logo = wp_get_attachment_image_src($custom_logo_id, $size);
@@ -4885,6 +4899,7 @@ function flexpress_get_custom_logo($size = 'full')
 /**
  * Display the FlexPress custom logo
  * Shows logo if available, otherwise shows site title
+ * Automatically switches between primary and secondary logos based on color scheme preferences
  * 
  * @param array $args Display arguments
  */
@@ -4894,20 +4909,53 @@ function flexpress_display_logo($args = array())
         'class' => 'img-fluid pt-4',
         'alt' => get_bloginfo('name'),
         'title_class' => 'text-white pt-4',
-        'title_tag' => 'h2'
+        'title_tag' => 'h2',
+        'force_type' => null // 'primary' or 'secondary' to force a specific logo type
     );
 
     $args = wp_parse_args($args, $defaults);
 
-    $logo = flexpress_get_custom_logo();
+    // Get both logos if they exist
+    $primary_logo = flexpress_get_custom_logo('full', 'primary');
+    $secondary_logo = flexpress_get_custom_logo('full', 'secondary');
+
+    // If forcing a specific type, use that logo
+    if ($args['force_type'] && $args['force_type'] === 'secondary' && $secondary_logo) {
+        $logo = $secondary_logo;
+    } elseif ($args['force_type'] && $args['force_type'] === 'primary' && $primary_logo) {
+        $logo = $primary_logo;
+    } else {
+        // Default to primary logo
+        $logo = $primary_logo;
+    }
 
     if ($logo) {
-        printf(
-            '<img src="%s" class="%s" alt="%s">',
-            esc_url($logo['url']),
-            esc_attr($args['class']),
-            esc_attr($args['alt'])
-        );
+        // If we have both logos, output both with CSS classes for switching
+        if ($primary_logo && $secondary_logo && !$args['force_type']) {
+            printf(
+                '<div class="flexpress-logo-container">%s%s</div>',
+                sprintf(
+                    '<img src="%s" class="%s flexpress-logo-primary" alt="%s">',
+                    esc_url($primary_logo['url']),
+                    esc_attr($args['class']),
+                    esc_attr($args['alt'])
+                ),
+                sprintf(
+                    '<img src="%s" class="%s flexpress-logo-secondary" alt="%s">',
+                    esc_url($secondary_logo['url']),
+                    esc_attr($args['class']),
+                    esc_attr($args['alt'])
+                )
+            );
+        } else {
+            // Single logo or forced type
+            printf(
+                '<img src="%s" class="%s" alt="%s">',
+                esc_url($logo['url']),
+                esc_attr($args['class']),
+                esc_attr($args['alt'])
+            );
+        }
     } else {
         printf(
             '<%s class="%s">%s</%s>',

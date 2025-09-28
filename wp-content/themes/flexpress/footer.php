@@ -174,13 +174,13 @@
     <div class="age-verification-modal-content">
         <div class="age-verification-modal-body">
             <?php
-            // Get the custom logo or fallback to site title
-            $logo_data = flexpress_get_custom_logo();
-            if ($logo_data && isset($logo_data['url'])) {
-                echo '<img src="' . esc_url($logo_data['url']) . '" alt="' . esc_attr(get_bloginfo('name')) . '" class="age-verification-modal-logo">';
-            } else {
-                echo '<div class="age-verification-modal-logo" style="background: var(--color-text); color: var(--color-accent); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 24px;">' . esc_html(get_bloginfo('name')) . '</div>';
-            }
+            // Use the new logo display system with appropriate classes for the modal
+            flexpress_display_logo(array(
+                'class' => 'age-verification-modal-logo',
+                'alt' => get_bloginfo('name'),
+                'title_class' => 'age-verification-modal-logo',
+                'title_tag' => 'div'
+            ));
             ?>
             <h3 class="age-verification-modal-title">Age Verification Required</h3>
             <p class="age-verification-modal-text">

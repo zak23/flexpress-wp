@@ -7344,3 +7344,69 @@ body.page-template-casting .site-main .alert-info {
     color: var(--accent-color);
     text-decoration: underline;
 }
+
+/* ========================================
+   FLEXPRESS LOGO SWITCHING SYSTEM
+   ======================================== */
+
+/* Logo container for dual logo support */
+.flexpress-logo-container {
+    position: relative;
+    display: inline-block;
+}
+
+/* Hide secondary logo by default */
+.flexpress-logo-secondary {
+    display: none;
+}
+
+/* Show secondary logo for dark color scheme preference */
+@media (prefers-color-scheme: dark) {
+    .flexpress-logo-primary {
+        display: none;
+    }
+    
+    .flexpress-logo-secondary {
+        display: block;
+    }
+}
+
+/* Show secondary logo for light color scheme preference */
+@media (prefers-color-scheme: light) {
+    .flexpress-logo-primary {
+        display: block;
+    }
+    
+    .flexpress-logo-secondary {
+        display: none;
+    }
+}
+
+/* Force primary logo visibility when no secondary logo exists */
+.flexpress-logo-container:not(:has(.flexpress-logo-secondary)) .flexpress-logo-primary {
+    display: block !important;
+}
+
+/* Responsive logo sizing */
+.flexpress-logo-container img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Navbar logo specific adjustments */
+.navbar-brand .flexpress-logo-container img {
+    max-height: 60px;
+    width: auto;
+}
+
+/* Age verification modal logo adjustments */
+.age-verification-modal-logo {
+    max-height: 80px;
+    width: auto;
+}
+
+/* Footer logo adjustments */
+.footer-logo .flexpress-logo-container img {
+    max-height: 50px;
+    width: auto;
+}

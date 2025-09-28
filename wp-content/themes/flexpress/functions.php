@@ -613,6 +613,11 @@ function flexpress_sanitize_general_settings($input)
         $sanitized['custom_logo'] = absint($input['custom_logo']);
     }
 
+    // Sanitize secondary logo
+    if (isset($input['secondary_logo'])) {
+        $sanitized['secondary_logo'] = absint($input['secondary_logo']);
+    }
+
     // Sanitize accent color - ensure it's a valid hex color
     if (isset($input['accent_color'])) {
         $color = sanitize_hex_color($input['accent_color']);

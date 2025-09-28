@@ -76,6 +76,14 @@ flexpress/
 | phpMyAdmin | flexpress_phpmyadmin | 8086            | Database administration    |
 | Redis      | flexpress_redis      | 6379 (internal) | Object cache server        |
 
+### 🚀 Technology Stack
+
+- **WordPress**: 6.8.2 (Latest stable version)
+- **PHP**: 8.3.26 (Latest stable version with performance improvements)
+- **MySQL**: 8.0 (Latest stable version)
+- **Redis**: 7-alpine (Object caching and session storage)
+- **Apache**: 2.4 (Web server with optimized configuration)
+
 ## ⚡ Performance & Caching
 
 ### Comprehensive Caching Setup

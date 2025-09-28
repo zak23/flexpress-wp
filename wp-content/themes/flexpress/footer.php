@@ -174,13 +174,31 @@
     <div class="age-verification-modal-content">
         <div class="age-verification-modal-body">
             <?php
-            // Use the new logo display system with appropriate classes for the modal
-            flexpress_display_logo(array(
-                'class' => 'age-verification-modal-logo',
-                'alt' => get_bloginfo('name'),
-                'title_class' => 'age-verification-modal-logo',
-                'title_tag' => 'div'
-            ));
+            // Try secondary logo first, fall back to primary logo if not set
+            $secondary_logo = flexpress_get_custom_logo('full', 'secondary');
+            $primary_logo = flexpress_get_custom_logo('full', 'primary');
+            
+            if ($secondary_logo) {
+                // Use secondary logo for age verification modal
+                printf(
+                    '<img src="%s" class="age-verification-modal-logo" alt="%s">',
+                    esc_url($secondary_logo['url']),
+                    esc_attr(get_bloginfo('name'))
+                );
+            } elseif ($primary_logo) {
+                // Fall back to primary logo if secondary not set
+                printf(
+                    '<img src="%s" class="age-verification-modal-logo" alt="%s">',
+                    esc_url($primary_logo['url']),
+                    esc_attr(get_bloginfo('name'))
+                );
+            } else {
+                // Fall back to site title if no logos are set
+                printf(
+                    '<div class="age-verification-modal-logo" style="background: var(--color-text); color: var(--color-accent); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 24px;">%s</div>',
+                    esc_html(get_bloginfo('name'))
+                );
+            }
             ?>
             <h3 class="age-verification-modal-title">Age Verification Required</h3>
             <p class="age-verification-modal-text">

@@ -49,6 +49,10 @@ add_filter('body_class', function ($classes) {
                                 <i class="bi bi-credit-card me-2"></i>
                                 <?php esc_html_e('Billing', 'flexpress'); ?>
                             </a>
+                            <a href="#newsletter" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                                <i class="bi bi-envelope me-2"></i>
+                                <?php esc_html_e('Newsletter', 'flexpress'); ?>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -513,6 +517,126 @@ add_filter('body_class', function ($classes) {
                             </div>
                         </div>
                     </div>
+
+                    <!-- Newsletter -->
+                    <div class="tab-pane fade" id="newsletter">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="h5 mb-0"><?php esc_html_e('Newsletter Preferences', 'flexpress'); ?></h2>
+                            </div>
+                            <div class="card-body">
+                                <?php
+                                // Check if Plunk is enabled
+                                if (!flexpress_is_plunk_enabled()):
+                                ?>
+                                    <div class="alert alert-warning">
+                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                        <strong><?php esc_html_e('Newsletter Service Unavailable', 'flexpress'); ?></strong>
+                                        <?php esc_html_e('Newsletter management is currently not available. Please contact support if you need assistance.', 'flexpress'); ?>
+                                    </div>
+                                <?php else:
+                                    $user = wp_get_current_user();
+                                    $plunk_subscriber = new FlexPress_Plunk_Subscriber();
+                                    $contact = $plunk_subscriber->get_user_contact_data($user->ID);
+
+                                    $is_subscribed = false;
+                                    $subscription_date = '';
+                                    $last_email_date = '';
+
+                                    if (!is_wp_error($contact) && isset($contact['subscribed'])) {
+                                        $is_subscribed = $contact['subscribed'];
+                                        if (isset($contact['created_at'])) {
+                                            $subscription_date = $contact['created_at'];
+                                        }
+                                        if (isset($contact['last_email_at'])) {
+                                            $last_email_date = $contact['last_email_at'];
+                                        }
+                                    }
+                                ?>
+                                    <div class="newsletter-status mb-4">
+                                        <h3 class="h6 mb-3"><?php esc_html_e('Current Status', 'flexpress'); ?></h3>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-center mb-3">
+                                                    <div class="newsletter-toggle me-3">
+                                                        <label class="toggle-switch">
+                                                            <input type="checkbox"
+                                                                id="newsletter-toggle"
+                                                                <?php echo $is_subscribed ? 'checked' : ''; ?>>
+                                                            <span class="toggle-slider round"></span>
+                                                        </label>
+                                                    </div>
+                                                    <div>
+                                                        <strong class="status-text">
+                                                            <?php echo $is_subscribed ? esc_html__('Subscribed', 'flexpress') : esc_html__('Not Subscribed', 'flexpress'); ?>
+                                                        </strong>
+                                                        <div class="text-muted small">
+                                                            <?php echo $is_subscribed ? esc_html__('You will receive our newsletter', 'flexpress') : esc_html__('You will not receive our newsletter', 'flexpress'); ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <?php if ($is_subscribed && $subscription_date): ?>
+                                                    <p class="mb-1">
+                                                        <strong><?php esc_html_e('Subscribed Since:', 'flexpress'); ?></strong>
+                                                        <?php
+                                                        $utc_timestamp = strtotime($subscription_date);
+                                                        $site_time = $utc_timestamp + (get_option('gmt_offset') * HOUR_IN_SECONDS);
+                                                        echo esc_html(date_i18n(get_option('date_format'), $site_time));
+                                                        ?>
+                                                    </p>
+                                                <?php endif; ?>
+
+                                                <?php if ($is_subscribed && $last_email_date): ?>
+                                                    <p class="mb-1">
+                                                        <strong><?php esc_html_e('Last Email Received:', 'flexpress'); ?></strong>
+                                                        <?php
+                                                        $utc_timestamp = strtotime($last_email_date);
+                                                        $site_time = $utc_timestamp + (get_option('gmt_offset') * HOUR_IN_SECONDS);
+                                                        echo esc_html(date_i18n(get_option('date_format'), $site_time));
+                                                        ?>
+                                                    </p>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="newsletter-info">
+                                        <h3 class="h6 mb-3"><?php esc_html_e('About Our Newsletter', 'flexpress'); ?></h3>
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <ul class="list-unstyled">
+                                                    <li class="mb-2">
+                                                        <i class="bi bi-check-circle text-success me-2"></i>
+                                                        <?php esc_html_e('Get notified when new episodes are released', 'flexpress'); ?>
+                                                    </li>
+                                                    <li class="mb-2">
+                                                        <i class="bi bi-check-circle text-success me-2"></i>
+                                                        <?php esc_html_e('Exclusive behind-the-scenes content', 'flexpress'); ?>
+                                                    </li>
+                                                    <li class="mb-2">
+                                                        <i class="bi bi-check-circle text-success me-2"></i>
+                                                        <?php esc_html_e('Special offers and promotions', 'flexpress'); ?>
+                                                    </li>
+                                                    <li class="mb-2">
+                                                        <i class="bi bi-check-circle text-success me-2"></i>
+                                                        <?php esc_html_e('Model spotlights and interviews', 'flexpress'); ?>
+                                                    </li>
+                                                </ul>
+
+                                                <div class="alert alert-info">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    <strong><?php esc_html_e('Privacy Notice:', 'flexpress'); ?></strong>
+                                                    <?php esc_html_e('We respect your privacy and will never share your email address with third parties. You can unsubscribe at any time.', 'flexpress'); ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -623,6 +747,73 @@ add_filter('body_class', function ($classes) {
                     $('html, body').animate({
                         scrollTop: $('.flowguard-alert').offset().top - 100
                     }, 500);
+                }
+            });
+        });
+
+        // Newsletter toggle functionality
+        $('#newsletter-toggle').on('change', function() {
+            const isChecked = $(this).is(':checked');
+            const action = isChecked ? 'subscribe' : 'unsubscribe';
+            const $toggle = $(this);
+            const $statusText = $('.status-text');
+            const $statusDescription = $('.status-text').next('.text-muted');
+
+            // Show loading state
+            $toggle.prop('disabled', true);
+            $statusText.text(isChecked ? 'Subscribing...' : 'Unsubscribing...');
+
+            // Clear any existing alerts
+            $('.alert.newsletter-alert').remove();
+
+            $.ajax({
+                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                type: 'POST',
+                data: {
+                    action: 'plunk_toggle_subscription',
+                    action_type: action,
+                    nonce: '<?php echo wp_create_nonce('plunk_toggle_subscription'); ?>'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Update status text
+                        $statusText.text(isChecked ? 'Subscribed' : 'Not Subscribed');
+                        $statusDescription.text(isChecked ? 'You will receive our newsletter' : 'You will not receive our newsletter');
+
+                        // Show success message
+                        $('.newsletter-status').before('<div class="alert alert-success newsletter-alert"><i class="bi bi-check-circle me-2"></i>' + response.data + '</div>');
+
+                        // Reload page after 2 seconds to update subscription info
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        // Show error message and revert toggle
+                        $toggle.prop('checked', !isChecked);
+                        $statusText.text(!isChecked ? 'Subscribed' : 'Not Subscribed');
+                        $statusDescription.text(!isChecked ? 'You will receive our newsletter' : 'You will not receive our newsletter');
+
+                        $('.newsletter-status').before('<div class="alert alert-danger newsletter-alert"><i class="bi bi-exclamation-circle me-2"></i>' + response.data + '</div>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // Revert toggle on error
+                    $toggle.prop('checked', !isChecked);
+                    $statusText.text(!isChecked ? 'Subscribed' : 'Not Subscribed');
+                    $statusDescription.text(!isChecked ? 'You will receive our newsletter' : 'You will not receive our newsletter');
+
+                    $('.newsletter-status').before('<div class="alert alert-danger newsletter-alert"><i class="bi bi-exclamation-circle me-2"></i><?php esc_html_e('An error occurred while updating your newsletter preferences. Please try again.', 'flexpress'); ?></div>');
+                },
+                complete: function() {
+                    // Re-enable toggle
+                    $toggle.prop('disabled', false);
+
+                    // Scroll to alerts if they exist
+                    if ($('.newsletter-alert').length) {
+                        $('html, body').animate({
+                            scrollTop: $('.newsletter-alert').offset().top - 100
+                        }, 500);
+                    }
                 }
             });
         });

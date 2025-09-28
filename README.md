@@ -11,21 +11,45 @@ A modern WordPress website running in Docker containers with MySQL database and 
 
 ### Installation
 
+#### Option 1: Automated Deployment
+
+```bash
+# Clone the project
+git clone <repository-url> /path/to/flexpress
+cd /path/to/flexpress
+
+# Run automated deployment script
+./deploy.sh
+```
+
+#### Option 2: Manual Deployment
+
 1. **Clone and navigate to the project:**
 
    ```bash
-   cd /home/zak/projects/flexpress
+   cd /path/to/flexpress
    ```
 
-2. **Start the containers:**
+2. **Configure environment:**
+
+   ```bash
+   cp .env.example .env
+   # Edit .env with your settings
+   ```
+
+3. **Start the containers:**
 
    ```bash
    docker-compose up -d
    ```
 
-3. **Access your WordPress site:**
-   - WordPress: https://zakspov.com
+4. **Access your WordPress site:**
+   - WordPress: http://localhost:8085
    - phpMyAdmin: http://localhost:8086
+
+### Multi-Site Deployment
+
+FlexPress is fully containerized and ready for deployment to multiple sites. See [DOCKER_DEPLOYMENT_GUIDE.md](docs/DOCKER_DEPLOYMENT_GUIDE.md) for complete deployment instructions.
 
 ## 📁 Project Structure
 
@@ -34,9 +58,12 @@ flexpress/
 ├── docker-compose.yml    # Docker services configuration
 ├── Dockerfile           # Custom WordPress image
 ├── apache-config.conf   # Apache virtual host config
+├── Caddyfile            # Caddy reverse proxy configuration
+├── deploy.sh            # Automated deployment script
 ├── .env                 # Environment variables
 ├── .env.example         # Environment template
 ├── wp-content/          # WordPress themes, plugins, uploads
+├── docs/                # Comprehensive documentation
 └── README.md            # This file
 ```
 
@@ -47,6 +74,50 @@ flexpress/
 | WordPress  | flexpress_wordpress  | 8085            | Main WordPress application |
 | MySQL      | flexpress_mysql      | 3306 (internal) | Database server            |
 | phpMyAdmin | flexpress_phpmyadmin | 8086            | Database administration    |
+| Redis      | flexpress_redis      | 6379 (internal) | Object cache server        |
+
+## ⚡ Performance & Caching
+
+### Comprehensive Caching Setup
+
+FlexPress implements a multi-layer caching strategy to ensure optimal performance and WordPress caching detection:
+
+#### 🚀 Caching Layers
+
+1. **Caddy Reverse Proxy** - Adds HTTP caching headers
+2. **Apache Configuration** - Server-level caching directives
+3. **WordPress Headers** - PHP-level caching headers
+4. **Redis Object Cache** - Persistent in-memory object caching
+5. **BunnyCDN Integration** - CDN caching for media assets
+
+#### 📊 Cache Configuration
+
+- **Static Assets**: 1 year cache (CSS, JS, images, fonts)
+- **HTML Pages**: 1 hour cache (dynamic content)
+- **Object Cache**: Persistent Redis caching (database queries, objects)
+- **Video Content**: Token-based authentication with 1-hour expiry
+- **Thumbnails**: 12-hour cache (configurable)
+
+#### 🔍 WordPress Detection
+
+WordPress now properly detects caching with these headers:
+
+- ✅ `Cache-Control` - Controls caching behavior
+- ✅ `Expires` - Expiration date for cached content
+- ✅ `ETag` - Entity tag for cache validation
+- ✅ `Last-Modified` - Last modification time
+- ✅ `Age` - Age of cached content
+- ✅ `X-Cache-Enabled` - Custom cache status header
+
+#### 📈 Performance Results
+
+- **Server Response Time**: 258ms (optimized)
+- **Cache Headers**: All required headers present
+- **Object Cache**: Redis persistent caching active
+- **Static Assets**: Long-term caching enabled
+- **Bandwidth**: Reduced through proper caching
+
+For detailed caching configuration, see [CACHING_CONFIGURATION.md](docs/CACHING_CONFIGURATION.md) and [REDIS_OBJECT_CACHE.md](docs/REDIS_OBJECT_CACHE.md).
 
 ## 📧 Email Configuration
 

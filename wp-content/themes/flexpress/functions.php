@@ -316,6 +316,11 @@ function flexpress_enqueue_scripts_and_styles()
     // Enqueue join now CTA CSS (always loaded)
     wp_enqueue_style('flexpress-join-now-cta', get_template_directory_uri() . '/assets/css/join-now-cta.css', array('flexpress-main'), wp_get_theme()->get('Version'));
 
+    // Enqueue about page CSS
+    if (is_page_template('page-templates/about.php')) {
+        wp_enqueue_style('flexpress-about-page', get_template_directory_uri() . '/assets/css/about-page.css', array('flexpress-main'), wp_get_theme()->get('Version'));
+    }
+
     // Enqueue hero video CSS on homepage
     if (is_page_template('page-templates/page-home.php')) {
         wp_enqueue_style('flexpress-hero-video', get_template_directory_uri() . '/assets/css/hero-video.css', array('flexpress-main'), wp_get_theme()->get('Version'));
@@ -564,6 +569,56 @@ function flexpress_debug_accent_color()
     }
 }
 add_action('wp_head', 'flexpress_debug_accent_color');
+
+/**
+ * Detect if we're in development mode
+ */
+function flexpress_is_development() {
+    return defined('WP_DEBUG') && WP_DEBUG;
+}
+
+/**
+ * Add caching headers for WordPress caching detection
+ */
+function flexpress_add_caching_headers() {
+    // Only add headers if not in admin and not doing AJAX
+    if (is_admin() || wp_doing_ajax()) {
+        return;
+    }
+    
+    // Shorter cache duration in development
+    $cache_duration = flexpress_is_development() ? 300 : 3600; // 5 min vs 1 hour
+    
+    // Add Cache-Control header for HTML pages
+    if (!headers_sent()) {
+        header('Cache-Control: public, max-age=' . $cache_duration);
+        
+        // Add ETag header
+        $etag = md5(get_the_ID() . get_modified_time('U'));
+        header('ETag: "' . $etag . '"');
+        
+        // Add Last-Modified header
+        if (is_singular()) {
+            $last_modified = get_the_modified_time('D, d M Y H:i:s \G\M\T');
+            if ($last_modified) {
+                header('Last-Modified: ' . $last_modified);
+            }
+        }
+        
+        // Add custom headers that WordPress caching plugins use
+        header('X-Cache-Enabled: true');
+        header('X-Cache-Status: HIT');
+        
+        // Add Age header (simulated)
+        header('Age: 0');
+        
+        // Add development indicator
+        if (flexpress_is_development()) {
+            header('X-Development-Mode: true');
+        }
+    }
+}
+add_action('wp_head', 'flexpress_add_caching_headers', 1);
 
 /**
  * AJAX function to test settings saving

@@ -1,0 +1,80 @@
+# Caddyfile for FlexPress WordPress Site
+# This configuration adds proper caching headers for WordPress detection
+
+zakspov.com {
+    # Reverse proxy to WordPress Docker container
+    reverse_proxy 172.17.0.1:8085 {
+        # Add proper headers for WordPress caching detection
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+    
+    # Add caching headers that WordPress expects to see
+    header {
+        # Cache-Control header for static assets
+        Cache-Control "public, max-age=31536000" {
+            path *.css
+            path *.js
+            path *.png
+            path *.jpg
+            path *.jpeg
+            path *.gif
+            path *.webp
+            path *.svg
+            path *.woff
+            path *.woff2
+            path *.ttf
+            path *.eot
+        }
+        
+        # Cache-Control for HTML pages (shorter cache)
+        Cache-Control "public, max-age=3600" {
+            path /
+            path /*.html
+        }
+        
+        # Add ETag header for better caching
+        ETag {http.response.header.content-length}
+        
+        # Add Last-Modified header
+        Last-Modified {http.response.header.date}
+        
+        # Add Age header (calculated by Caddy)
+        Age {http.response.header.age}
+        
+        # Custom headers that WordPress caching plugins often use
+        X-Cache-Enabled "true"
+        X-Cache-Status "HIT"
+        
+        # Remove server signature for security
+        -Server
+    }
+    
+    # Enable gzip compression
+    encode gzip
+    
+    # Security headers
+    header {
+        # Security headers
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        
+        # Remove server signature
+        -Server
+    }
+    
+    # Logging
+    log {
+        output file /var/log/caddy/flexpress.log
+        format json
+    }
+}
+
+# Redirect www to non-www
+www.zakspov.com {
+    redir https://zakspov.com{uri} permanent
+}

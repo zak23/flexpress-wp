@@ -32,6 +32,7 @@ Do all pupeteer tests on the test site.
 - Main service: `wordpress` (custom build)
 - Database: `mysql:8.0`
 - Admin: `phpmyadmin/phpmyadmin`
+- Object Cache: `redis:7-alpine`
 - Network: `flexpress_network`
 
 ## Development Guidelines
@@ -329,8 +330,9 @@ flexpress/
 ### Performance Optimization
 
 - **Database Queries**: Minimize queries, use transients
+- **Object Caching**: Redis persistent cache for database objects
 - **Asset Loading**: Enqueue scripts/styles properly
-- **Caching**: Implement object caching where appropriate
+- **Page Caching**: HTTP headers and Apache caching directives
 - **Images**: Optimize images, use responsive images
 - **CDN**: Leverage BunnyCDN for static assets
 

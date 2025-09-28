@@ -1184,4 +1184,328 @@ if (function_exists('acf_add_local_field_group')):
         'description' => 'Custom fields for the home page promo video section',
     ));
 
+    // About Page Custom Fields
+    acf_add_local_field_group(array(
+        'key' => 'group_about_page',
+        'title' => 'About Page Content',
+        'fields' => array(
+            // Hero Section
+            array(
+                'key' => 'field_about_hero_title',
+                'label' => 'Hero Title',
+                'name' => 'about_hero_title',
+                'type' => 'text',
+                'default_value' => 'About Us',
+                'instructions' => 'Main title for the about page hero section',
+            ),
+            array(
+                'key' => 'field_about_hero_subtitle',
+                'label' => 'Hero Subtitle',
+                'name' => 'about_hero_subtitle',
+                'type' => 'textarea',
+                'default_value' => 'Learn more about our story, mission, and the people behind our success.',
+                'instructions' => 'Subtitle text displayed below the hero title',
+            ),
+            array(
+                'key' => 'field_about_hero_image',
+                'label' => 'Hero Background Image',
+                'name' => 'about_hero_image',
+                'type' => 'image',
+                'instructions' => 'Optional background image for the hero section',
+                'return_format' => 'url',
+                'preview_size' => 'medium',
+            ),
+            
+            // Mission Statement Section
+            array(
+                'key' => 'field_about_mission_title',
+                'label' => 'Mission Title',
+                'name' => 'about_mission_title',
+                'type' => 'text',
+                'default_value' => 'Our Mission',
+                'instructions' => 'Title for the mission statement section',
+            ),
+            array(
+                'key' => 'field_about_mission_content',
+                'label' => 'Mission Statement',
+                'name' => 'about_mission_content',
+                'type' => 'textarea',
+                'default_value' => 'To provide high-quality, engaging content that inspires and educates our audience while maintaining the highest standards of creativity and professionalism.',
+                'instructions' => 'Main mission statement content',
+            ),
+            array(
+                'key' => 'field_about_mission_icon',
+                'label' => 'Mission Icon',
+                'name' => 'about_mission_icon',
+                'type' => 'text',
+                'default_value' => 'bullseye',
+                'instructions' => 'Bootstrap icon class name (without bi- prefix)',
+            ),
+            
+            // Story Section
+            array(
+                'key' => 'field_about_story_title',
+                'label' => 'Story Title',
+                'name' => 'about_story_title',
+                'type' => 'text',
+                'default_value' => 'Our Story',
+                'instructions' => 'Title for the company story section',
+            ),
+            array(
+                'key' => 'field_about_story_content',
+                'label' => 'Story Content',
+                'name' => 'about_story_content',
+                'type' => 'wysiwyg',
+                'instructions' => 'Tell your company story with rich text formatting',
+                'toolbar' => 'basic',
+                'media_upload' => 0,
+            ),
+            array(
+                'key' => 'field_about_story_image',
+                'label' => 'Story Image',
+                'name' => 'about_story_image',
+                'type' => 'image',
+                'instructions' => 'Optional image to accompany the story',
+                'return_format' => 'url',
+                'preview_size' => 'medium',
+            ),
+            
+            // Team Section
+            array(
+                'key' => 'field_about_team_title',
+                'label' => 'Team Section Title',
+                'name' => 'about_team_title',
+                'type' => 'text',
+                'default_value' => 'Meet Our Team',
+                'instructions' => 'Title for the team section',
+            ),
+            array(
+                'key' => 'field_about_team_subtitle',
+                'label' => 'Team Section Subtitle',
+                'name' => 'about_team_subtitle',
+                'type' => 'text',
+                'default_value' => 'The talented individuals behind our success',
+                'instructions' => 'Subtitle for the team section',
+            ),
+            array(
+                'key' => 'field_about_team_members',
+                'label' => 'Team Members',
+                'name' => 'about_team_members',
+                'type' => 'repeater',
+                'instructions' => 'Add team members to display on the about page',
+                'layout' => 'table',
+                'button_label' => 'Add Team Member',
+                'sub_fields' => array(
+                    array(
+                        'key' => 'field_team_member_name',
+                        'label' => 'Name',
+                        'name' => 'name',
+                        'type' => 'text',
+                        'required' => 1,
+                    ),
+                    array(
+                        'key' => 'field_team_member_position',
+                        'label' => 'Position',
+                        'name' => 'position',
+                        'type' => 'text',
+                        'required' => 1,
+                    ),
+                    array(
+                        'key' => 'field_team_member_bio',
+                        'label' => 'Bio',
+                        'name' => 'bio',
+                        'type' => 'textarea',
+                        'instructions' => 'Brief bio about the team member',
+                    ),
+                    array(
+                        'key' => 'field_team_member_image',
+                        'label' => 'Photo',
+                        'name' => 'image',
+                        'type' => 'image',
+                        'return_format' => 'url',
+                        'preview_size' => 'thumbnail',
+                    ),
+                    array(
+                        'key' => 'field_team_member_email',
+                        'label' => 'Email',
+                        'name' => 'email',
+                        'type' => 'email',
+                    ),
+                    array(
+                        'key' => 'field_team_member_linkedin',
+                        'label' => 'LinkedIn URL',
+                        'name' => 'linkedin',
+                        'type' => 'url',
+                    ),
+                    array(
+                        'key' => 'field_team_member_twitter',
+                        'label' => 'Twitter URL',
+                        'name' => 'twitter',
+                        'type' => 'url',
+                    ),
+                    array(
+                        'key' => 'field_team_member_instagram',
+                        'label' => 'Instagram URL',
+                        'name' => 'instagram',
+                        'type' => 'url',
+                    ),
+                ),
+            ),
+            
+            // Values Section
+            array(
+                'key' => 'field_about_values_title',
+                'label' => 'Values Section Title',
+                'name' => 'about_values_title',
+                'type' => 'text',
+                'default_value' => 'Our Values',
+                'instructions' => 'Title for the values section',
+            ),
+            array(
+                'key' => 'field_about_values_subtitle',
+                'label' => 'Values Section Subtitle',
+                'name' => 'about_values_subtitle',
+                'type' => 'text',
+                'default_value' => 'The principles that guide everything we do',
+                'instructions' => 'Subtitle for the values section',
+            ),
+            array(
+                'key' => 'field_about_values',
+                'label' => 'Company Values',
+                'name' => 'about_values',
+                'type' => 'repeater',
+                'instructions' => 'Add company values to display on the about page',
+                'layout' => 'table',
+                'button_label' => 'Add Value',
+                'sub_fields' => array(
+                    array(
+                        'key' => 'field_value_title',
+                        'label' => 'Value Title',
+                        'name' => 'title',
+                        'type' => 'text',
+                        'required' => 1,
+                    ),
+                    array(
+                        'key' => 'field_value_description',
+                        'label' => 'Description',
+                        'name' => 'description',
+                        'type' => 'textarea',
+                        'required' => 1,
+                    ),
+                    array(
+                        'key' => 'field_value_icon',
+                        'label' => 'Icon',
+                        'name' => 'icon',
+                        'type' => 'text',
+                        'default_value' => 'heart',
+                        'instructions' => 'Bootstrap icon class name (without bi- prefix)',
+                    ),
+                ),
+            ),
+            
+            // Statistics Section
+            array(
+                'key' => 'field_about_stats_title',
+                'label' => 'Statistics Section Title',
+                'name' => 'about_stats_title',
+                'type' => 'text',
+                'default_value' => 'By the Numbers',
+                'instructions' => 'Title for the statistics section',
+            ),
+            array(
+                'key' => 'field_about_stats',
+                'label' => 'Statistics',
+                'name' => 'about_stats',
+                'type' => 'repeater',
+                'instructions' => 'Add key statistics to highlight on the about page',
+                'layout' => 'table',
+                'button_label' => 'Add Statistic',
+                'sub_fields' => array(
+                    array(
+                        'key' => 'field_stat_number',
+                        'label' => 'Number',
+                        'name' => 'number',
+                        'type' => 'number',
+                        'required' => 1,
+                    ),
+                    array(
+                        'key' => 'field_stat_label',
+                        'label' => 'Label',
+                        'name' => 'label',
+                        'type' => 'text',
+                        'required' => 1,
+                    ),
+                    array(
+                        'key' => 'field_stat_description',
+                        'label' => 'Description',
+                        'name' => 'description',
+                        'type' => 'text',
+                        'instructions' => 'Optional additional context',
+                    ),
+                ),
+            ),
+            
+            // Call to Action Section
+            array(
+                'key' => 'field_about_cta_title',
+                'label' => 'CTA Title',
+                'name' => 'about_cta_title',
+                'type' => 'text',
+                'default_value' => 'Join Our Community',
+                'instructions' => 'Title for the call-to-action section',
+            ),
+            array(
+                'key' => 'field_about_cta_content',
+                'label' => 'CTA Content',
+                'name' => 'about_cta_content',
+                'type' => 'textarea',
+                'default_value' => 'Be part of our growing community and get access to exclusive content, special offers, and more.',
+                'instructions' => 'Content for the call-to-action section',
+            ),
+            array(
+                'key' => 'field_about_cta_button_text',
+                'label' => 'CTA Button Text',
+                'name' => 'about_cta_button_text',
+                'type' => 'text',
+                'default_value' => 'Get Started',
+                'instructions' => 'Text for the call-to-action button',
+            ),
+            array(
+                'key' => 'field_about_cta_button_url',
+                'label' => 'CTA Button URL',
+                'name' => 'about_cta_button_url',
+                'type' => 'text',
+                'default_value' => '/join',
+                'instructions' => 'URL for the call-to-action button',
+            ),
+            
+            // SEO Fields
+            array(
+                'key' => 'field_about_meta_description',
+                'label' => 'Meta Description',
+                'name' => 'about_meta_description',
+                'type' => 'textarea',
+                'instructions' => 'SEO meta description for the about page',
+                'maxlength' => 160,
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param' => 'page_template',
+                    'operator' => '==',
+                    'value' => 'page-templates/about.php',
+                ),
+            ),
+        ),
+        'menu_order' => 0,
+        'position' => 'normal',
+        'style' => 'default',
+        'label_placement' => 'top',
+        'instruction_placement' => 'label',
+        'hide_on_screen' => '',
+        'active' => true,
+        'description' => 'Custom fields for the about page content management',
+    ));
+
 endif;

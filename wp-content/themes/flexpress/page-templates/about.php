@@ -4,115 +4,226 @@
  */
 
 get_header();
+
+// Get ACF fields
+$hero_title = get_field('about_hero_title') ?: get_the_title();
+$hero_subtitle = get_field('about_hero_subtitle');
+$hero_image = get_field('about_hero_image');
+
+$mission_title = get_field('about_mission_title');
+$mission_content = get_field('about_mission_content');
+$mission_icon = get_field('about_mission_icon') ?: 'bullseye';
+
+$story_title = get_field('about_story_title');
+$story_content = get_field('about_story_content');
+$story_image = get_field('about_story_image');
+
+$team_title = get_field('about_team_title');
+$team_subtitle = get_field('about_team_subtitle');
+$team_members = get_field('about_team_members');
+
+$values_title = get_field('about_values_title');
+$values_subtitle = get_field('about_values_subtitle');
+$values = get_field('about_values');
+
+$stats_title = get_field('about_stats_title');
+$stats = get_field('about_stats');
+
+$cta_title = get_field('about_cta_title');
+$cta_content = get_field('about_cta_content');
+$cta_button_text = get_field('about_cta_button_text');
+$cta_button_url = get_field('about_cta_button_url');
+
+// Set meta description for SEO
+$meta_description = get_field('about_meta_description');
+if ($meta_description) {
+    echo '<meta name="description" content="' . esc_attr($meta_description) . '">';
+}
 ?>
 
-<div class="site-main">
-    <div class="container py-5">
-        <!-- Hero Section -->
-        <div class="text-center mb-5">
-            <h1 class="display-4 mb-4"><?php the_title(); ?></h1>
-            <p class="lead text-muted mb-4"><?php the_content(); ?></p>
+<main class="site-main">
+    <!-- Hero Section -->
+    <section class="about-hero-section" <?php if ($hero_image): ?>style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('<?php echo esc_url($hero_image); ?>');"<?php endif; ?>>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h1 class="about-hero-title"><?php echo esc_html($hero_title); ?></h1>
+                    <?php if ($hero_subtitle): ?>
+                        <p class="about-hero-subtitle"><?php echo esc_html($hero_subtitle); ?></p>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
+    </section>
 
-        <!-- Mission Statement -->
-        <div class="row justify-content-center mb-5">
-            <div class="col-lg-8">
-                <div class="card shadow-sm">
-                    <div class="card-body p-4">
-                        <div class="text-center">
-                            <i class="bi bi-bullseye display-4 text-primary mb-3"></i>
-                            <h2 class="h3 mb-4"><?php esc_html_e('Our Mission', 'flexpress'); ?></h2>
-                            <p class="lead mb-0">
-                                <?php echo esc_html(get_theme_mod('about_mission', 'To provide high-quality, engaging content that inspires and educates our audience.')); ?>
-                            </p>
+    <div class="container py-5">
+        <!-- Mission Statement Section -->
+        <?php if ($mission_title && $mission_content): ?>
+        <section class="about-mission-section mb-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="about-card">
+                        <div class="about-card-body text-center">
+                            <div class="about-icon-wrapper mb-4">
+                                <i class="bi bi-<?php echo esc_attr($mission_icon); ?> about-section-icon"></i>
+                            </div>
+                            <h2 class="about-section-title"><?php echo esc_html($mission_title); ?></h2>
+                            <p class="about-mission-text"><?php echo esc_html($mission_content); ?></p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
+        <?php endif; ?>
+
+        <!-- Story Section -->
+        <?php if ($story_title && $story_content): ?>
+        <section class="about-story-section mb-5">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h2 class="about-section-title mb-4"><?php echo esc_html($story_title); ?></h2>
+                    <div class="about-story-content">
+                        <?php echo wp_kses_post($story_content); ?>
+                    </div>
+                </div>
+                <?php if ($story_image): ?>
+                <div class="col-lg-6">
+                    <div class="about-story-image-wrapper">
+                        <img src="<?php echo esc_url($story_image); ?>" alt="<?php echo esc_attr($story_title); ?>" class="about-story-image">
+                    </div>
+                </div>
+                <?php endif; ?>
+            </div>
+        </section>
+        <?php endif; ?>
+
+        <!-- Statistics Section -->
+        <?php if ($stats_title && $stats): ?>
+        <section class="about-stats-section mb-5">
+            <div class="text-center mb-5">
+                <h2 class="about-section-title"><?php echo esc_html($stats_title); ?></h2>
+            </div>
+            <div class="row">
+                <?php foreach ($stats as $stat): ?>
+                <div class="col-md-3 col-sm-6 mb-4">
+                    <div class="about-stat-card text-center">
+                        <div class="about-stat-number"><?php echo esc_html($stat['number']); ?></div>
+                        <div class="about-stat-label"><?php echo esc_html($stat['label']); ?></div>
+                        <?php if ($stat['description']): ?>
+                            <div class="about-stat-description"><?php echo esc_html($stat['description']); ?></div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </section>
+        <?php endif; ?>
+
+        <!-- Values Section -->
+        <?php if ($values_title && $values): ?>
+        <section class="about-values-section mb-5">
+            <div class="text-center mb-5">
+                <h2 class="about-section-title"><?php echo esc_html($values_title); ?></h2>
+                <?php if ($values_subtitle): ?>
+                    <p class="about-section-subtitle"><?php echo esc_html($values_subtitle); ?></p>
+                <?php endif; ?>
+            </div>
+            <div class="row">
+                <?php foreach ($values as $value): ?>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="about-card h-100">
+                        <div class="about-card-body text-center">
+                            <div class="about-icon-wrapper mb-3">
+                                <i class="bi bi-<?php echo esc_attr($value['icon']); ?> about-value-icon"></i>
+                            </div>
+                            <h3 class="about-value-title"><?php echo esc_html($value['title']); ?></h3>
+                            <p class="about-value-description"><?php echo esc_html($value['description']); ?></p>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </section>
+        <?php endif; ?>
 
         <!-- Team Section -->
-        <div class="row mb-5">
-            <div class="col-12 text-center mb-4">
-                <h2 class="h3"><?php esc_html_e('Our Team', 'flexpress'); ?></h2>
-                <p class="text-muted"><?php esc_html_e('Meet the people behind our success', 'flexpress'); ?></p>
+        <?php if ($team_title && $team_members): ?>
+        <section class="about-team-section mb-5">
+            <div class="text-center mb-5">
+                <h2 class="about-section-title"><?php echo esc_html($team_title); ?></h2>
+                <?php if ($team_subtitle): ?>
+                    <p class="about-section-subtitle"><?php echo esc_html($team_subtitle); ?></p>
+                <?php endif; ?>
             </div>
-
-            <?php
-            $team_members = get_theme_mod('about_team_members', array());
-            if (!empty($team_members)):
-                foreach ($team_members as $member):
-            ?>
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100">
-                        <?php if (!empty($member['image'])): ?>
-                            <img src="<?php echo esc_url($member['image']); ?>" class="card-img-top" alt="<?php echo esc_attr($member['name']); ?>">
+            <div class="row">
+                <?php foreach ($team_members as $member): ?>
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="about-card h-100">
+                        <?php if ($member['image']): ?>
+                            <div class="about-team-image-wrapper">
+                                <img src="<?php echo esc_url($member['image']); ?>" alt="<?php echo esc_attr($member['name']); ?>" class="about-team-image">
+                            </div>
                         <?php endif; ?>
-                        <div class="card-body text-center">
-                            <h3 class="h5 mb-1"><?php echo esc_html($member['name']); ?></h3>
-                            <p class="text-muted mb-3"><?php echo esc_html($member['position']); ?></p>
-                            <p class="card-text"><?php echo esc_html($member['bio']); ?></p>
-                            <?php if (!empty($member['social_links'])): ?>
-                                <div class="social-links">
-                                    <?php foreach ($member['social_links'] as $platform => $url): ?>
-                                        <a href="<?php echo esc_url($url); ?>" class="btn btn-outline-primary btn-sm me-2" target="_blank" rel="noopener noreferrer">
-                                            <i class="bi bi-<?php echo esc_attr($platform); ?>"></i>
-                                        </a>
-                                    <?php endforeach; ?>
-                                </div>
+                        <div class="about-card-body text-center">
+                            <h3 class="about-team-name"><?php echo esc_html($member['name']); ?></h3>
+                            <p class="about-team-position"><?php echo esc_html($member['position']); ?></p>
+                            <?php if ($member['bio']): ?>
+                                <p class="about-team-bio"><?php echo esc_html($member['bio']); ?></p>
+                            <?php endif; ?>
+                            
+                            <!-- Social Links -->
+                            <div class="about-team-social">
+                                <?php if ($member['email']): ?>
+                                    <a href="mailto:<?php echo esc_attr($member['email']); ?>" class="about-social-link" title="Email">
+                                        <i class="bi bi-envelope"></i>
+                                    </a>
+                                <?php endif; ?>
+                                <?php if ($member['linkedin']): ?>
+                                    <a href="<?php echo esc_url($member['linkedin']); ?>" class="about-social-link" title="LinkedIn" target="_blank" rel="noopener noreferrer">
+                                        <i class="bi bi-linkedin"></i>
+                                    </a>
+                                <?php endif; ?>
+                                <?php if ($member['twitter']): ?>
+                                    <a href="<?php echo esc_url($member['twitter']); ?>" class="about-social-link" title="Twitter" target="_blank" rel="noopener noreferrer">
+                                        <i class="bi bi-twitter"></i>
+                                    </a>
+                                <?php endif; ?>
+                                <?php if ($member['instagram']): ?>
+                                    <a href="<?php echo esc_url($member['instagram']); ?>" class="about-social-link" title="Instagram" target="_blank" rel="noopener noreferrer">
+                                        <i class="bi bi-instagram"></i>
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </section>
+        <?php endif; ?>
+
+        <!-- Call to Action Section -->
+        <?php if ($cta_title && $cta_content): ?>
+        <section class="about-cta-section">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <div class="about-cta-card">
+                        <div class="about-cta-body">
+                            <h2 class="about-cta-title"><?php echo esc_html($cta_title); ?></h2>
+                            <p class="about-cta-content"><?php echo esc_html($cta_content); ?></p>
+                            <?php if ($cta_button_text && $cta_button_url): ?>
+                                <a href="<?php echo esc_url($cta_button_url); ?>" class="btn btn-primary btn-lg about-cta-button">
+                                    <?php echo esc_html($cta_button_text); ?>
+                                </a>
                             <?php endif; ?>
                         </div>
                     </div>
                 </div>
-            <?php
-                endforeach;
-            endif;
-            ?>
-        </div>
-
-        <!-- Values Section -->
-        <div class="row mb-5">
-            <div class="col-12 text-center mb-4">
-                <h2 class="h3"><?php esc_html_e('Our Values', 'flexpress'); ?></h2>
-                <p class="text-muted"><?php esc_html_e('What we stand for', 'flexpress'); ?></p>
             </div>
-
-            <?php
-            $values = get_theme_mod('about_values', array());
-            if (!empty($values)):
-                foreach ($values as $value):
-            ?>
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100">
-                        <div class="card-body text-center">
-                            <i class="bi bi-<?php echo esc_attr($value['icon']); ?> display-4 text-primary mb-3"></i>
-                            <h3 class="h5 mb-3"><?php echo esc_html($value['title']); ?></h3>
-                            <p class="card-text"><?php echo esc_html($value['description']); ?></p>
-                        </div>
-                    </div>
-                </div>
-            <?php
-                endforeach;
-            endif;
-            ?>
-        </div>
-
-        <!-- Call to Action -->
-        <div class="row justify-content-center">
-            <div class="col-lg-8 text-center">
-                <div class="card bg-primary text-white">
-                    <div class="card-body p-5">
-                        <h2 class="h3 mb-4"><?php esc_html_e('Join Our Community', 'flexpress'); ?></h2>
-                        <p class="lead mb-4"><?php esc_html_e('Be part of our growing community and get access to exclusive content.', 'flexpress'); ?></p>
-                        <a href="<?php echo esc_url(home_url('/join')); ?>" class="btn btn-light btn-lg">
-                            <?php esc_html_e('Sign Up Now', 'flexpress'); ?>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </section>
+        <?php endif; ?>
     </div>
-</div>
+</main>
 
 <?php
-get_footer(); 
+get_footer();

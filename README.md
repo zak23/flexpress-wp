@@ -391,6 +391,8 @@ FlexPress
 - **Accessibility Features**: Keyboard navigation support (ESC to exit, Enter to confirm)
 - **Responsive Design**: Mobile-optimized layout with proper touch targets
 - **Custom Logo Integration**: Automatically displays site logo or falls back to site title
+- **Secondary Logo Support**: Upload a secondary logo for different color conditions (e.g., light logo for dark backgrounds, dark logo for light backgrounds)
+- **Automatic Logo Switching**: CSS media queries automatically switch between primary and secondary logos based on user's color scheme preference (`prefers-color-scheme: dark/light`)
 - **Configurable Exit URL**: Admin can set custom exit URL in FlexPress Settings → General
 - **Legal Compliance**: Includes required age verification text for adult content sites
 
@@ -406,6 +408,41 @@ FlexPress
 - Users can reset verification status via browser console: `flexpressAgeVerification.reset()`
 - Check verification status: `flexpressAgeVerification.status()`
 - Configure exit URL in WordPress Admin → FlexPress Settings → General → "Age Verification Exit URL"
+
+### Dual Logo System (September 2025)
+
+- **Primary Logo**: Main logo displayed by default
+- **Secondary Logo**: Alternative logo for different color conditions (e.g., light logo for dark backgrounds)
+- **Automatic Switching**: CSS media queries automatically switch logos based on user's color scheme preference
+- **Admin Interface**: Upload both logos via `FlexPress Settings → General → Custom Logo`
+- **Responsive Design**: Logos automatically resize for different screen sizes and contexts
+
+**Technical Implementation:**
+
+- **PHP Functions**: 
+  - `flexpress_get_custom_logo($size, $type)` - Retrieves primary or secondary logo
+  - `flexpress_display_logo($args)` - Displays appropriate logo with CSS switching
+- **CSS Classes**: 
+  - `.flexpress-logo-container` - Container for dual logo system
+  - `.flexpress-logo-primary` - Primary logo styling
+  - `.flexpress-logo-secondary` - Secondary logo styling
+- **Media Queries**: 
+  - `@media (prefers-color-scheme: dark)` - Shows secondary logo
+  - `@media (prefers-color-scheme: light)` - Shows primary logo
+
+**Usage:**
+
+1. **Upload Logos**: Go to `FlexPress Settings → General → Custom Logo`
+2. **Primary Logo**: Upload your main logo (recommended size: 300x80px)
+3. **Secondary Logo**: Upload alternative logo for different color conditions
+4. **Automatic Display**: System automatically switches logos based on user preferences
+
+**Files Modified:**
+
+- `includes/admin/class-flexpress-general-settings.php` - Added secondary logo upload field
+- `functions.php` - Enhanced logo functions with dual logo support
+- `assets/css/main.css` - Added CSS for automatic logo switching
+- `footer.php` - Updated age verification modal to use new logo system
 
 ### Join Page Continue Button (September 2025)
 

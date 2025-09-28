@@ -419,14 +419,14 @@ FlexPress
 
 **Technical Implementation:**
 
-- **PHP Functions**: 
+- **PHP Functions**:
   - `flexpress_get_custom_logo($size, $type)` - Retrieves primary or secondary logo
   - `flexpress_display_logo($args)` - Displays appropriate logo with CSS switching
-- **CSS Classes**: 
+- **CSS Classes**:
   - `.flexpress-logo-container` - Container for dual logo system
   - `.flexpress-logo-primary` - Primary logo styling
   - `.flexpress-logo-secondary` - Secondary logo styling
-- **Media Queries**: 
+- **Media Queries**:
   - `@media (prefers-color-scheme: dark)` - Shows secondary logo
   - `@media (prefers-color-scheme: light)` - Shows primary logo
 

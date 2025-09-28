@@ -138,9 +138,14 @@
     }
 }
 
-/* Prevent body scroll when modal is open */
+/* Prevent body scroll and add blur effect when modal is open */
 body.age-verification-modal-open {
     overflow: hidden;
+}
+
+body.age-verification-modal-open #page {
+    filter: blur(5px);
+    transition: filter var(--transition-normal);
 }
 
 /* Animation for modal entrance */

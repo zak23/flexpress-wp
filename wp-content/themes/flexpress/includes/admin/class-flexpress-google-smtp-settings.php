@@ -328,7 +328,7 @@ class FlexPress_Google_SMTP_Settings {
                value="<?php echo esc_attr($smtp_username); ?>" 
                class="regular-text" 
                placeholder="your-email@gmail.com" />
-        <p class="description">Your Google Workspace email address (e.g., noreply@zakspov.com)</p>
+        <p class="description">Your Google Workspace email address (e.g., noreply@<?php echo parse_url(home_url(), PHP_URL_HOST); ?>)</p>
         <?php
     }
     
@@ -359,7 +359,7 @@ class FlexPress_Google_SMTP_Settings {
                name="flexpress_google_smtp_settings[from_email]" 
                value="<?php echo esc_attr($from_email); ?>" 
                class="regular-text" 
-               placeholder="noreply@zakspov.com" />
+               placeholder="noreply@<?php echo parse_url(home_url(), PHP_URL_HOST); ?>" />
         <p class="description">Email address that will appear as the sender. Should match your Google Workspace domain.</p>
         <?php
     }
@@ -376,7 +376,7 @@ class FlexPress_Google_SMTP_Settings {
                value="<?php echo esc_attr($from_name); ?>" 
                class="regular-text" 
                placeholder="<?php echo esc_attr(get_bloginfo('name')); ?>" />
-        <p class="description">Display name for the sender (e.g., "Zak's POV" or "FlexPress Support")</p>
+        <p class="description">Display name for the sender (e.g., "<?php echo get_bloginfo('name'); ?>" or "FlexPress Support")</p>
         <?php
     }
     
@@ -394,7 +394,7 @@ class FlexPress_Google_SMTP_Settings {
                    <?php checked($use_for_internal_only); ?> />
             Use Google SMTP only for emails to your own domain
         </label>
-        <p class="description">When enabled, Google SMTP will only be used for emails sent to addresses on your domain (e.g., contact@zakspov.com). External emails will use the default mail system or Amazon SES.</p>
+        <p class="description">When enabled, Google SMTP will only be used for emails sent to addresses on your domain (e.g., contact@<?php echo parse_url(home_url(), PHP_URL_HOST); ?>). External emails will use the default mail system or Amazon SES.</p>
         <?php
     }
     

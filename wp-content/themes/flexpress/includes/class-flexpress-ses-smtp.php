@@ -150,9 +150,10 @@ class FlexPress_SES_SMTP {
         $from_domain = substr(strrchr($from_email, "@"), 1);
         
         $recipients = $phpmailer->getAllRecipientAddresses();
+        $site_domain = parse_url(home_url(), PHP_URL_HOST);
         foreach (array_keys($recipients) as $email) {
             $recipient_domain = substr(strrchr($email, "@"), 1);
-            if ($recipient_domain === $from_domain || $recipient_domain === 'zakspov.com') {
+            if ($recipient_domain === $from_domain || $recipient_domain === $site_domain) {
                 error_log('FlexPress SES: Internal email detected, letting SMTP2Go handle it');
                 return true;
             }

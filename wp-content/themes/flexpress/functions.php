@@ -2525,6 +2525,44 @@ function flexpress_update_post_date_from_acf($value, $post_id, $field)
 add_filter('acf/update_value/name=release_date', 'flexpress_update_post_date_from_acf', 10, 3);
 
 /**
+ * Automatically set featured image when model profile image is uploaded
+ * 
+ * @param mixed $value The field value
+ * @param int $post_id The post ID
+ * @param array $field The field array
+ * @return mixed The field value
+ */
+function flexpress_set_featured_image_from_profile_image($value, $post_id, $field)
+{
+    // Only proceed if this is the model_profile_image field and we have a post ID
+    if ($field['name'] === 'model_profile_image' && $post_id && !empty($value)) {
+        // Get the post
+        $post = get_post($post_id);
+
+        // Only proceed if this is a model post type
+        if ($post && $post->post_type === 'model') {
+            // If value is an array (ACF image field format), get the ID
+            if (is_array($value) && isset($value['ID'])) {
+                $attachment_id = $value['ID'];
+            } elseif (is_numeric($value)) {
+                $attachment_id = $value;
+            } else {
+                return $value; // Invalid format
+            }
+
+            // Set as featured image
+            set_post_thumbnail($post_id, $attachment_id);
+            
+            // Log the action
+            error_log("FlexPress: Set featured image for model {$post_id} from profile image {$attachment_id}");
+        }
+    }
+
+    return $value;
+}
+add_filter('acf/update_value/name=model_profile_image', 'flexpress_set_featured_image_from_profile_image', 10, 3);
+
+/**
  * Start output buffering to prevent headers already sent errors
  */
 function flexpress_start_output_buffering()

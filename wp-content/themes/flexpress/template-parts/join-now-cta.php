@@ -12,8 +12,8 @@ if (function_exists('flexpress_has_active_membership') && flexpress_has_active_m
     return;
 }
 
-// Hard set the CTA image URL
-$cta_image_url = 'https://zakspov.com/wp-content/uploads/2025/06/002-Zak_Mercedes-Green-scaled.jpg';
+// Get CTA image URL - try to use a configurable option first, then fallback to default
+$cta_image_url = get_theme_mod('join_cta_image_url', home_url('/wp-content/uploads/2025/06/002-Zak_Mercedes-Green-scaled.jpg'));
 
 // Get site name for dynamic content
 $site_name = get_bloginfo('name');

@@ -12,6 +12,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 ## 🌟 Core Features
 
 ### 💳 Payment Processing
+
 - **Flowguard Integration**: Modern payment processing with embedded forms
 - **Remember Card Feature**: Secure card storage for faster future payments
 - **Comprehensive Validation System**: Real-time field validation with user-friendly error messages
@@ -34,6 +35,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Payment Integration**: Seamless integration with Flowguard payment processing
 
 ### 🎥 Video Management
+
 - **BunnyCDN Stream Integration**: Secure video hosting and streaming
 - **Thumbnail Generation**: Automatic video previews
 - **Access Control**: Free, PPV, membership, and mixed access types
@@ -41,15 +43,18 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Multiple Video Types**: Full episodes, trailers, and previews
 
 ### 🖼️ Gallery System
+
 - **BunnyCDN Storage Integration**: Image hosting and optimization
 - **Automatic Thumbnail Generation**: Center-cropped square thumbnails
 - **Episode Galleries**: Attach image galleries to video content
 - **Drag & Drop Upload**: Admin interface for easy image management
+- **Model Profile Images**: Automatic featured image setting when profile image is uploaded
 - **Lightbox Viewer**: Professional gallery display
 - **Responsive Grid**: Mobile-optimized image layouts
 - **Thumbnail Optimization**: Configurable thumbnail sizes (100-800px)
 
 ### 👥 Membership System
+
 - **Custom Registration**: Advanced signup forms with validation
 - **User Dashboard**: Member portal with purchase history
 - **Activity Logging**: Comprehensive user interaction tracking
@@ -59,6 +64,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Enhanced User Experience**: Improved membership page with clear navigation options
 
 ### 🎨 Modern Interface
+
 - **Dark Theme Design**: Vixen.com-inspired professional aesthetics
 - **Responsive Layout**: Mobile-first responsive design
 - **Interactive Elements**: Hover effects and smooth animations
@@ -72,6 +78,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 ## 🔧 Technical Integrations
 
 ### Flowguard Payment System
+
 - **Modern Payment Processing**: Embedded payment forms with no redirects
 - **Remember Card Feature**: Secure card storage for faster future payments
 - **JWT Authentication**: Secure API communication with signature validation
@@ -82,6 +89,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Security**: PCI DSS compliance with 3D Secure support
 
 ### Verotel FlexPay (Legacy)
+
 - **Merchant Integration**: Complete payment gateway setup
 - **Webhook Handling**: Real-time payment processing
 - **Security**: Signature validation and secure transactions
@@ -89,6 +97,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Debug Tools**: Admin interface for webhook monitoring
 
 ### BunnyCDN Services
+
 - **Stream API**: Video hosting and delivery
 - **Storage API**: Image and file management
 - **Thumbnail API**: Automatic video preview generation
@@ -96,6 +105,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **CDN Optimization**: Global content distribution
 
 ### Promo Codes System
+
 - **Dedicated Management**: Separate from affiliate codes with its own admin interface
 - **Multiple Discount Types**: Percentage discounts, fixed amount discounts, and free trial periods
 - **Usage Controls**: Total usage limits and per-user usage limits
@@ -108,6 +118,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Admin Dashboard**: Complete management interface with bulk operations
 
 ### WordPress Integration
+
 - **Custom Post Types**: Episodes, Extras, and Models
 - **Advanced Custom Fields (ACF)**: Content management
 - **User Roles**: Member and admin capabilities
@@ -155,6 +166,7 @@ wp-content/themes/flexpress/
 ## 🚀 Installation & Setup
 
 ### Requirements
+
 - **WordPress**: 6.0 or higher
 - **PHP**: 8.0 or higher
 - **MySQL**: 5.7 or higher
@@ -162,6 +174,7 @@ wp-content/themes/flexpress/
 - **Verotel Account**: FlexPay merchant setup
 
 ### Installation Steps
+
 1. **Upload Theme**: Place in `wp-content/themes/flexpress/`
 2. **Activate Theme**: Enable in WordPress admin
 3. **Configure Settings**: Complete integration setup
@@ -169,6 +182,7 @@ wp-content/themes/flexpress/
 5. **Test Payments**: Verify Verotel integration
 
 ### Configuration Checklist
+
 - [ ] **BunnyCDN Stream**: Library ID, API Key, Token Key
 - [ ] **BunnyCDN Storage**: Storage zone configuration
 - [ ] **Verotel FlexPay**: Merchant ID, Shop ID, Signature Key
@@ -183,13 +197,15 @@ wp-content/themes/flexpress/
 ## 🎟️ Promo Codes System
 
 ### Admin Management
+
 Access the promo codes management interface at **FlexPress Settings → Promo Codes** in the WordPress admin.
 
 #### Creating Promo Codes
+
 1. **Code**: Unique identifier (e.g., "SAVE20", "WELCOME10")
 2. **Name**: Display name for the promotion
 3. **Description**: Detailed description of the offer
-4. **Discount Type**: 
+4. **Discount Type**:
    - **Percentage**: Percentage discount (e.g., 20% off)
    - **Fixed**: Fixed amount discount (e.g., $10 off)
    - **Free Trial**: Free trial period (e.g., 7 days free)
@@ -198,6 +214,7 @@ Access the promo codes management interface at **FlexPress Settings → Promo Co
 7. **Plan Restrictions**: Apply to specific subscription plans
 
 #### Usage Tracking
+
 - Real-time usage statistics
 - User-specific usage tracking
 - Revenue impact analysis
@@ -206,7 +223,9 @@ Access the promo codes management interface at **FlexPress Settings → Promo Co
 ### Frontend Integration
 
 #### Payment Form Integration
+
 Promo codes are automatically integrated into payment forms with:
+
 - Real-time validation
 - Instant discount calculation
 - Error handling and user feedback
@@ -215,27 +234,33 @@ Promo codes are automatically integrated into payment forms with:
 #### Shortcodes
 
 **Display Active Promo Codes**
+
 ```
 [flexpress_promo_codes limit="5" show_expiry="true" style="cards"]
 ```
+
 - `limit`: Number of codes to display
 - `show_expiry`: Show expiration dates
 - `show_usage`: Show usage statistics
 - `style`: Display style (cards, list, table)
 
 **Promo Code Application Form**
+
 ```
 [flexpress_promo_form plan_id="monthly" amount="29.99" button_text="Apply Code"]
 ```
+
 - `plan_id`: Target subscription plan
 - `amount`: Order amount for validation
 - `button_text`: Custom button text
 - `placeholder`: Input placeholder text
 
 **Promo Banner**
+
 ```
 [flexpress_promo_banner code="WELCOME20" title="Welcome Offer" description="Get 20% off your first month"]
 ```
+
 - `code`: Promo code to display
 - `title`: Banner title
 - `description`: Offer description
@@ -247,28 +272,31 @@ Promo codes are automatically integrated into payment forms with:
 ### API Integration
 
 #### Validation Endpoint
+
 ```javascript
 // Apply promo code
 fetch(ajaxurl, {
-    method: 'POST',
-    body: new URLSearchParams({
-        action: 'apply_promo_code',
-        code: 'SAVE20',
-        plan_id: 'monthly',
-        amount: 29.99
-    })
+  method: "POST",
+  body: new URLSearchParams({
+    action: "apply_promo_code",
+    code: "SAVE20",
+    plan_id: "monthly",
+    amount: 29.99,
+  }),
 })
-.then(response => response.json())
-.then(data => {
+  .then((response) => response.json())
+  .then((data) => {
     if (data.success) {
-        console.log('Discount:', data.data.discount_amount);
-        console.log('Final Amount:', data.data.final_amount);
+      console.log("Discount:", data.data.discount_amount);
+      console.log("Final Amount:", data.data.final_amount);
     }
-});
+  });
 ```
 
 #### Usage Recording
+
 Promo code usage is automatically recorded when:
+
 - Payment is successfully processed
 - User applies a valid promo code
 - Transaction is completed
@@ -276,19 +304,23 @@ Promo code usage is automatically recorded when:
 ### Pricing System Integration
 
 #### Dual Promo Code Support
+
 The system supports both legacy and centralized promo codes:
 
 **Legacy System (Existing):**
+
 - Plan-specific promo codes stored in pricing plan settings
 - Codes unlock hidden "promo-only" plans
 - Example: `WELCOME20` unlocks special pricing plans
 
 **Centralized System (New):**
+
 - Centralized promo codes with discount calculations
 - Apply discounts to any pricing plan
 - Example: `SUMMER2024` applies 20% discount to all plans
 
 #### Enhanced Validation
+
 ```php
 // Validate promo code with both systems
 $result = flexpress_validate_enhanced_promo_code('SAVE20', 'monthly', 29.99);
@@ -301,12 +333,14 @@ if ($result['success']) {
 ```
 
 #### Pricing Page Integration
+
 - Automatic promo code input field on pricing/join pages
 - Real-time discount calculation and display
 - Visual indicators for discounted plans
 - Support for both discount types and plan unlocking
 
 #### Usage Tracking
+
 ```php
 // Track enhanced promo usage
 flexpress_track_enhanced_promo_usage(
@@ -325,6 +359,7 @@ flexpress_track_enhanced_promo_usage(
 ## 📋 Content Management
 
 ### Episodes
+
 - **Video Content**: Full episodes, trailers, previews
 - **Access Types**: Free, PPV-only, membership, mixed pricing
 - **Model Relationships**: Link performers to episodes
@@ -333,6 +368,7 @@ flexpress_track_enhanced_promo_usage(
 - **Category System**: Tags and filtering
 
 ### Extras/BTS Content
+
 - **Behind-the-Scenes Content**: Bloopers, interviews, photo shoots, making-of content
 - **Content Types**: Categorized extras (Behind the Scenes, Bloopers, Interviews, Photo Shoots, Making Of, Deleted Scenes, Extended Cuts, Other)
 - **Access Control**: Same access types as episodes (Free, PPV-only, membership, mixed pricing)
@@ -345,6 +381,7 @@ flexpress_track_enhanced_promo_usage(
 - **Gallery Support**: Some extras can be galleries-only content
 
 ### Models
+
 - **Profile Pages**: Individual performer showcases
 - **Image Galleries**: Photo collections
 - **Episode Listings**: Related content display
@@ -352,6 +389,7 @@ flexpress_track_enhanced_promo_usage(
 - **Biography Management**: Detailed performer information
 
 ### Galleries
+
 - **Episode Attachment**: Link image sets to videos
 - **Upload Interface**: Admin drag-and-drop tools
 - **Image Optimization**: Automatic resizing
@@ -363,9 +401,11 @@ flexpress_track_enhanced_promo_usage(
 ## 🖼️ Gallery Thumbnail Generation
 
 ### Overview
+
 The FlexPress theme automatically generates square thumbnails for all gallery images uploaded to BunnyCDN Storage. This ensures consistent, optimized thumbnails for gallery displays while maintaining the original high-resolution images.
 
 ### How It Works
+
 1. **Upload Process**: When images are uploaded via the episode gallery interface
 2. **Automatic Processing**: Images are automatically center-cropped to square format
 3. **Size Optimization**: Thumbnails are resized to the configured dimensions
@@ -373,6 +413,7 @@ The FlexPress theme automatically generates square thumbnails for all gallery im
 5. **Folder Structure**: Thumbnails are stored in a `/thumbs/` subfolder
 
 ### Configuration
+
 - **Thumbnail Size**: Configurable from 100px to 800px (default: 300px)
 - **Gallery Columns**: Configurable grid layout (default: 5 columns)
 - **Format**: All thumbnails are saved as JPEG for optimal compression
@@ -380,6 +421,7 @@ The FlexPress theme automatically generates square thumbnails for all gallery im
 - **Crop Method**: Center-crop ensures the most important part of the image is preserved
 
 ### File Structure
+
 ```
 episodes/galleries/[episode_id]/
 ├── image-abc123-1234567890.jpg          # Original image
@@ -388,11 +430,14 @@ episodes/galleries/[episode_id]/
 ```
 
 ### Admin Settings
+
 Navigate to **FlexPress Settings → Video** to configure:
+
 - **Gallery Thumbnail Size**: Set the pixel dimensions for square thumbnails
 - **BunnyCDN Storage Settings**: Configure storage zone and API credentials
 
 ### Benefits
+
 - **Performance**: Faster loading with optimized thumbnail sizes
 - **Consistency**: Uniform square thumbnails across all galleries
 - **Bandwidth**: Reduced data usage for thumbnail displays
@@ -401,14 +446,18 @@ Navigate to **FlexPress Settings → Video** to configure:
 - **Smart Display**: Gallery sections only appear when images are present
 
 ### Conditional Display
+
 The gallery section on episode pages uses intelligent display logic:
+
 - **No Images**: Gallery section is completely hidden
 - **With Images**: Gallery section displays with proper heading and grid
 - **Helper Function**: `flexpress_has_episode_gallery()` available for theme customization
 - **Performance**: Avoids unnecessary HTML output when no gallery exists
 
 ### Preview Mode for Locked Episodes
+
 When episodes are not unlocked, the gallery implements a preview mode to encourage purchases:
+
 - **Access Control Integration**: Automatically detects episode access status
 - **5-Image Preview**: Shows only first 5 images for locked episodes with 6+ images
 - **Clickable CTA Overlay**: 5th image displays "+X" overlay that links to join page
@@ -418,21 +467,24 @@ When episodes are not unlocked, the gallery implements a preview mode to encoura
 - **Responsive CTA**: Hover effects and sizing adapt to all screen sizes
 
 ### Template Integration
+
 ```php
 <?php if (function_exists('flexpress_has_episode_gallery') && flexpress_has_episode_gallery()): ?>
     <div class="episode-gallery-section">
         <h2><?php esc_html_e('Episode Gallery', 'flexpress'); ?></h2>
-        <?php 
+        <?php
         // Pass access information for preview mode
         $access_info = flexpress_check_episode_access();
-        flexpress_display_episode_gallery(null, null, $access_info['has_access']); 
+        flexpress_display_episode_gallery(null, null, $access_info['has_access']);
         ?>
     </div>
 <?php endif; ?>
 ```
 
 #### Preview Mode Integration
+
 The gallery automatically switches to preview mode based on episode access:
+
 ```php
 // Gallery function signature with access parameter
 flexpress_display_episode_gallery($post_id = null, $columns = null, $has_access = null)
@@ -444,16 +496,19 @@ flexpress_display_episode_gallery(123, 5, true); // Force full access
 ```
 
 #### Conversion Funnel
+
 The gallery preview creates a seamless conversion path with smart user-state routing:
 
 **Not Logged In Users:**
+
 1. **Content Discovery**: User finds interesting episode
-2. **Preview Tease**: First 4 images show content quality  
+2. **Preview Tease**: First 4 images show content quality
 3. **CTA Trigger**: "+28 LOGIN TO UNLOCK" overlay
 4. **Authentication**: Click redirects to login with return URL
 5. **Access**: User returns and sees appropriate unlock options
 
 **Logged In Users:**
+
 1. **Content Discovery**: User views episode gallery
 2. **Preview Tease**: First 4 images demonstrate quality
 3. **Smart CTA**: "+28 CLICK TO UNLOCK" (purchase) or "+28 GET MEMBERSHIP"
@@ -461,6 +516,7 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 5. **Satisfaction**: Immediate access to all gallery content
 
 **Access Control Integration:**
+
 - Automatically detects user authentication state
 - Matches episode access control logic exactly
 - Routes to login, purchase, or membership as appropriate
@@ -471,6 +527,7 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 ## ⚙️ Admin Features
 
 ### Settings Panels
+
 - **General**: Logo, colors, basic configuration
 - **Video**: BunnyCDN Stream integration
 - **Membership**: User management and access control
@@ -480,6 +537,7 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 - **Contact & Social**: Business information and social media
 
 ### Management Tools
+
 - **Member Dashboard**: User activity and purchase tracking
 - **Episode Sync**: BunnyCDN content synchronization
 - **Webhook Diagnostics**: Payment processing monitoring
@@ -487,7 +545,9 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 - **Activity Logs**: Comprehensive audit trails
 
 ### Legal Compliance
-- **Dynamic Legal Pages**: Auto-generated compliance content
+
+- **Dynamic Legal Pages**: Auto-generated compliance content with site-specific information
+- **Site Name Integration**: All legal documentation uses dynamic site name instead of hardcoded values
 - **2257 Compliance**: Age verification requirements
 - **Privacy Policy**: GDPR-compliant privacy documentation
 - **Terms & Conditions**: Service agreement templates
@@ -498,6 +558,7 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 ## 🤝 Affiliate System
 
 ### Core Features
+
 - **Module Toggle**: Enable/disable entire affiliate system from admin settings
 - **Affiliate Applications**: Public application form with admin approval workflow
 - **Commission Tracking**: Automatic commission calculation and tracking
@@ -507,6 +568,7 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 - **Real-time Analytics**: Live statistics and performance tracking
 
 ### Commission Structure
+
 - **Initial Sales**: Configurable percentage (default 25%)
 - **Recurring Payments**: Lower rate for rebills (default 10%)
 - **Unlock Purchases**: Special rate for PPV content (default 15%)
@@ -514,6 +576,7 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 - **Promo Code Pricing**: Custom pricing overrides per promotional code
 
 ### Database Schema
+
 - **wp_flexpress_affiliates**: Core affiliate data and statistics
 - **wp_flexpress_affiliate_promo_codes**: Promo code management
 - **wp_flexpress_affiliate_clicks**: Click tracking and attribution
@@ -521,6 +584,7 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 - **wp_flexpress_affiliate_payouts**: Payout management
 
 ### Integration Points
+
 - **Flowguard Webhooks**: Automatic commission processing on payment events
 - **Cookie Tracking**: 30-day attribution window with secure cookie management
 - **User Management**: WordPress user system integration
@@ -536,12 +600,14 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 - **Fee Management**: Transparent fee structure with automatic deduction
 
 ### Frontend Components
+
 - **Application Form**: `[affiliate_application_form]` shortcode
 - **Affiliate Dashboard**: `[affiliate_dashboard]` shortcode
 - **Stats Widget**: `[affiliate_stats]` shortcode
 - **Referral Links**: `[affiliate_referral_link]` shortcode
 
 ### Security Features
+
 - **Input Sanitization**: All user input properly sanitized
 - **CSRF Protection**: Nonce verification on all forms
 - **Access Controls**: Role-based permissions
@@ -553,12 +619,14 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 ## 🎯 Target Use Cases
 
 ### Adult Content Platforms
+
 - **Premium Video Sites**: Subscription and PPV content
 - **Model Portfolios**: Performer showcase websites
 - **Member Communities**: Exclusive content access
 - **Pay-Per-View Events**: Individual content purchases
 
 ### General Content Creators
+
 - **Educational Platforms**: Course and tutorial sites
 - **Entertainment Content**: Premium media delivery
 - **Fitness Programs**: Workout and nutrition content
@@ -569,18 +637,21 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 ## 🎨 Design Guidelines
 
 ### Visual Style
+
 - **Dark Theme**: Black background with white text
 - **Minimalist Aesthetic**: Clean, professional design
 - **Video-Focused**: Content takes center stage
 - **Responsive**: Mobile-first responsive design
 
 ### Layout Patterns
+
 - **Grid Systems**: CSS Grid for flexible layouts
 - **Card Design**: Consistent card-based components
 - **Hover Effects**: Smooth transitions and animations
 - **Typography**: Uppercase titles with proper spacing
 
 ### Color System
+
 - **Primary**: Black (#000000) and White (#ffffff)
 - **Accent**: Customizable accent color (default: #ff6b35)
 - **Grays**: Various shades for hierarchy and contrast
@@ -591,17 +662,20 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 ## 🔧 Development
 
 ### Code Standards
+
 - **PHP**: 4 spaces, 120 character limit, single quotes
 - **CSS**: 2 spaces, 80 character limit, double quotes
 - **JavaScript**: 2 spaces, 100 character limit, single quotes
 
 ### File Organization
+
 - **Modular Structure**: Separate files for each feature
 - **Class-Based**: Object-oriented PHP development
 - **Template Hierarchy**: WordPress template standards
 - **Asset Management**: Organized CSS and JavaScript
 
 ### Best Practices
+
 - **No Inline Styles**: CSS classes and external stylesheets
 - **Organized Imports**: Proper dependency management
 - **Documentation**: Comprehensive code comments
@@ -613,18 +687,21 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 ## 🛠️ Maintenance
 
 ### Regular Updates
+
 - **WordPress Core**: Keep WordPress updated
 - **Dependencies**: Update ACF and other plugins
 - **Security**: Monitor and patch vulnerabilities
 - **Performance**: Optimize database and assets
 
 ### Monitoring
+
 - **Webhook Status**: Monitor payment processing
 - **Video Delivery**: Check BunnyCDN performance
 - **User Activity**: Review activity logs
 - **Error Logs**: Monitor for PHP and JavaScript errors
 
 ### Backup Strategy
+
 - **Database**: Regular database backups
 - **Media Files**: BunnyCDN redundancy
 - **Theme Files**: Version control with Git
@@ -635,6 +712,7 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 ## 📞 Support & Documentation
 
 ### Additional Documentation
+
 - **GALLERY_SYSTEM_IMPLEMENTATION.md**: Detailed gallery system guide
 - **LEGAL_PAGES_SETUP.md**: Legal page configuration
 - **SINGLE_MODEL_FEATURES.md**: Model profile functionality
@@ -644,6 +722,7 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 ### Recent Updates (January 2025)
 
 #### Membership Page Enhancements
+
 - **Smart Dashboard Redirects**: Active and cancelled members are automatically redirected to their dashboard when accessing the membership page
 - **Enhanced Navigation**: Added prominent "Go to Dashboard" buttons for better user experience
 - **Improved Styling**: Fixed alert text colors for better visibility in dark theme (white text instead of green)
@@ -651,12 +730,14 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 - **Better User Flow**: Streamlined navigation between membership status and dashboard access
 
 #### Technical Improvements
+
 - **CSS Color Fixes**: Updated `.membership-page .alert-success` color from green (#28a745) to white for dark theme compatibility
 - **Template Logic**: Added conditional rendering to hide signup forms for existing members
 - **Redirect Implementation**: Automatic WordPress redirect to dashboard page for active/cancelled members
 - **User Experience**: Clear visual hierarchy with dashboard access buttons prominently displayed
 
 ### Development Resources
+
 - **PRD.md**: Product requirements document
 - **ACF Fields**: Custom field configurations
 - **Webhook Testing**: Payment integration guides
@@ -671,22 +752,26 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 ---
 
 **FlexPress Theme** - Empowering content creators with professional tools and seamless integrations.
+
 - commission_signup, commission_rebill, commission_type
 - status, total_signups, total_rebills, total_commissions
 - created_at, updated_at
 
 -- Detailed commission tracking  
 wp_flexpress_affiliate_commissions:
+
 - affiliate_id, user_id, transaction_type
 - revenue_amount, commission_amount, commission_rate
 - transaction_id, status, created_at
 
 -- Payout management
 wp_flexpress_affiliate_payouts:
+
 - affiliate_id, period_start, period_end
 - total_amount, payout_method, status
 - processed_at, reference_id
-```
+
+````
 
 #### Core Functions
 - `flexpress_track_affiliate_commission()` - Comprehensive commission tracking
@@ -809,9 +894,10 @@ The affiliate system follows a modular, event-driven architecture with clear sep
 Verotel Webhook → Commission Tracker → Database Logger → Analytics Aggregator
      ↓                    ↓                  ↓                    ↓
 Payment Event    → Calculate Commission → Store Transaction → Update Metrics
-```
+````
 
 **📁 File Structure:**
+
 ```
 includes/
 ├── affiliate-helpers.php           # Core affiliate functions
@@ -830,6 +916,7 @@ assets/
 **🔧 Key Implementation Details:**
 
 1. **Commission Calculation Engine:**
+
 ```php
 function flexpress_calculate_commission($amount, $rate, $type = 'percentage') {
     if ($type === 'percentage') {
@@ -840,6 +927,7 @@ function flexpress_calculate_commission($amount, $rate, $type = 'percentage') {
 ```
 
 2. **Webhook Integration Pattern:**
+
 ```php
 // Dual tracking system for legacy compatibility
 add_action('flexpress_verotel_initial_payment', 'flexpress_track_promo_usage', 10, 4);
@@ -848,6 +936,7 @@ add_action('flexpress_verotel_rebill_payment', 'flexpress_track_affiliate_rebill
 ```
 
 3. **Database Optimization:**
+
 ```sql
 -- Indexes for performance
 CREATE INDEX idx_affiliate_commissions_affiliate_id ON wp_flexpress_affiliate_commissions(affiliate_id);
@@ -856,6 +945,7 @@ CREATE INDEX idx_affiliate_commissions_status ON wp_flexpress_affiliate_commissi
 ```
 
 4. **Security Implementation:**
+
 ```php
 // Multi-layer validation
 $affiliate_code = sanitize_text_field($_POST['affiliate_code']);
@@ -868,6 +958,7 @@ if (!$affiliate || $affiliate->status !== 'active') {
 5. **Dynamic Payout System Implementation:**
 
 **File Structure:**
+
 ```
 includes/
 ├── payout-display-helpers.php          # Payout formatting functions
@@ -881,6 +972,7 @@ assets/
 ```
 
 **Key Functions:**
+
 ```php
 // Format payout details for display
 function flexpress_format_payout_details($payout_method, $payout_details) {
@@ -906,41 +998,50 @@ private function validate_payout_details($method, $details_json) {
 ```
 
 **JavaScript Dynamic Fields:**
+
 ```javascript
 function initPayoutFields() {
-    $(document).on('change', 'select[name="payout_method"]', function() {
-        const selectedMethod = $(this).val();
-        const $container = $(this).closest('form').find('.payout-details-container');
-        
-        // Hide all fields, show selected method fields
-        $container.find('.payout-fields').removeClass('active').hide();
-        $container.find('.' + selectedMethod + '-fields').addClass('active').show();
-        
-        // Update consolidated JSON data
-        updateConsolidatedPayoutDetails($container);
-    });
+  $(document).on("change", 'select[name="payout_method"]', function () {
+    const selectedMethod = $(this).val();
+    const $container = $(this)
+      .closest("form")
+      .find(".payout-details-container");
+
+    // Hide all fields, show selected method fields
+    $container.find(".payout-fields").removeClass("active").hide();
+    $container
+      .find("." + selectedMethod + "-fields")
+      .addClass("active")
+      .show();
+
+    // Update consolidated JSON data
+    updateConsolidatedPayoutDetails($container);
+  });
 }
 ```
 
 **Data Flow:**
+
 1. **Selection** → User selects payout method → Dynamic fields appear
-2. **Collection** → Form data collected → JSON consolidation → Server validation  
+2. **Collection** → Form data collected → JSON consolidation → Server validation
 3. **Storage** → Database storage → Admin display formatting → Payout processing
 4. **Display** → Structured formatting in admin interface with edit capabilities
 
 **🚀 Performance Considerations:**
+
 - **Caching Strategy:** WordPress transients for dashboard data (15-minute cache)
 - **Database Optimization:** Indexed queries for commission lookups
 - **AJAX Endpoints:** Non-blocking commission tracking
 - **Bulk Operations:** Batch processing for large commission calculations
 
 **📊 Analytics Framework:**
+
 ```php
 // Real-time metrics calculation
 function flexpress_get_affiliate_metrics($affiliate_id, $period = '30_days') {
     $cache_key = "affiliate_metrics_{$affiliate_id}_{$period}";
     $metrics = wp_cache_get($cache_key);
-    
+
     if (false === $metrics) {
         $metrics = [
             'total_signups' => $this->count_signups($affiliate_id, $period),
@@ -950,7 +1051,7 @@ function flexpress_get_affiliate_metrics($affiliate_id, $period = '30_days') {
         ];
         wp_cache_set($cache_key, $metrics, '', 900); // 15 minutes
     }
-    
+
     return $metrics;
 }
 ```
@@ -960,6 +1061,7 @@ function flexpress_get_affiliate_metrics($affiliate_id, $period = '30_days') {
 **🎯 Phase 2: Advanced Commission Features (Q2 2024)**
 
 1. **Tiered Commission Structure:**
+
 ```php
 // Multi-tier commission rates based on performance
 $commission_tiers = [
@@ -971,6 +1073,7 @@ $commission_tiers = [
 ```
 
 2. **Bonus Commission Events:**
+
    - Weekend signup bonuses (150% commission rate)
    - Monthly challenges with flat bonus payments
    - Holiday promotional periods with enhanced rates
@@ -985,6 +1088,7 @@ $commission_tiers = [
 **💰 Phase 3: Comprehensive Payout System (Q3 2024)**
 
 1. **Multiple Payout Methods:**
+
 ```php
 // Dynamic Payout System with Method-Specific Fields
 $payout_methods = [
@@ -1022,7 +1126,7 @@ $payout_methods = [
         'name' => 'Swift International ($30 USD Fee)',
         'fee' => 30,
         'fields' => [
-            'swift_bank_name', 'swift_code', 'swift_iban_account', 
+            'swift_bank_name', 'swift_code', 'swift_iban_account',
             'swift_account_holder', 'swift_bank_address', 'swift_beneficiary_address',
             'swift_intermediary_swift', 'swift_intermediary_iban' // Optional
         ],
@@ -1032,6 +1136,7 @@ $payout_methods = [
 ```
 
 2. **Dynamic Payout Form System:**
+
    - **Method-Specific Fields**: Forms dynamically show/hide fields based on selected payout method
    - **Real-time Validation**: Client-side and server-side validation for each method
    - **JSON Data Storage**: Structured storage with legacy compatibility
@@ -1041,47 +1146,55 @@ $payout_methods = [
 3. **Payout Method Details:**
 
    **🇦🇺 Australian Bank Transfer (Free)**
+
    - Bank Name, BSB Number (6 digits), Account Number, Account Holder Name
    - Pattern validation ensures BSB is exactly 6 digits
 
    **💳 Yoursafe (Free)**
+
    - Yoursafe IBAN field with format validation
 
    **🏦 ACH - US Only ($10 USD Fee)**
+
    - Account Number, ABA Routing (9 digits), Account Holder, Bank Name
    - Pattern validation ensures ABA is exactly 9 digits
 
    **🌍 Swift International ($30 USD Fee)**
+
    - Bank Name, SWIFT/BIC Code, IBAN/Account, Account Holder
    - Bank Address, Beneficiary Address
    - Optional: Secondary/Intermediary SWIFT Code, Intermediary IBAN
    - Most comprehensive method with full international transfer support
 
    **💸 PayPal (Free)**
+
    - Email address with format validation
 
    **₿ Cryptocurrency (Free)**
+
    - Cryptocurrency type selection (Bitcoin, Ethereum, Litecoin, Other)
    - Wallet address field with custom type specification
 
 4. **Technical Implementation:**
+
    ```javascript
    // Dynamic field management
    function initPayoutFields() {
-       // Show/hide fields based on selection
-       // Update consolidated JSON data
-       // Handle validation and dependencies
+     // Show/hide fields based on selection
+     // Update consolidated JSON data
+     // Handle validation and dependencies
    }
    ```
 
 5. **Automated Payout Scheduling:**
+
    - Weekly, bi-weekly, monthly payout cycles
    - Minimum payout thresholds per method
    - Fee deduction from payout amounts for paid methods
    - Automatic payout processing with approval workflows
    - Tax document generation (1099, international forms)
 
-3. **Payout Management Dashboard:**
+6. **Payout Management Dashboard:**
    - Real-time payout status tracking
    - Payout method management and verification
    - Historical payout reports and tax summaries
@@ -1090,11 +1203,12 @@ $payout_methods = [
 **🔔 Phase 4: Advanced Notifications & Communication (Q4 2024)**
 
 1. **Discord Integration:**
+
 ```php
 // Discord webhook notifications
 class FlexpressDiscordNotifications {
     private $webhook_url;
-    
+
     public function send_commission_alert($affiliate_code, $amount, $type) {
         $embed = [
             'title' => '💰 New Commission Earned!',
@@ -1103,14 +1217,14 @@ class FlexpressDiscordNotifications {
             'timestamp' => date('c'),
             'footer' => ['text' => 'FlexPress Affiliate System']
         ];
-        
+
         $this->send_webhook(['embeds' => [$embed]]);
     }
-    
+
     public function send_milestone_notification($affiliate_code, $milestone) {
         // Milestone achievement notifications
     }
-    
+
     public function send_payout_processed($affiliate_code, $amount, $method) {
         // Payout confirmation notifications
     }
@@ -1118,6 +1232,7 @@ class FlexpressDiscordNotifications {
 ```
 
 2. **Email Automation System:**
+
    - Welcome series for new affiliates
    - Weekly performance summaries
    - Commission milestone celebrations
@@ -1133,23 +1248,25 @@ class FlexpressDiscordNotifications {
 **📱 Phase 5: Mobile App & Advanced Analytics (Q1 2025)**
 
 1. **Progressive Web App (PWA):**
+
    - Native app experience for affiliate dashboard
    - Offline capability for viewing reports
    - Push notifications for real-time updates
    - Quick commission sharing to social media
 
 2. **Advanced Analytics & AI:**
+
 ```php
 // AI-powered affiliate insights
 class FlexpressAffiliateAI {
     public function predict_conversion_rates($affiliate_id, $traffic_data) {
         // Machine learning predictions for optimization
     }
-    
+
     public function suggest_promotional_strategies($affiliate_performance) {
         // AI-generated marketing recommendations
     }
-    
+
     public function detect_fraud_patterns($commission_data) {
         // Anomaly detection for fraudulent activity
     }
@@ -1166,12 +1283,14 @@ class FlexpressAffiliateAI {
 **🔗 Phase 6: Third-Party Integrations (Q2 2025)**
 
 1. **Marketing Platform Integration:**
+
    - Mailchimp/Klaviyo for email marketing
    - Facebook Pixel for conversion tracking
    - Google Analytics enhanced ecommerce
    - TikTok/Instagram affiliate tools
 
 2. **CRM Integration:**
+
    - HubSpot contact syncing
    - Salesforce lead management
    - Customer lifecycle tracking
@@ -1186,12 +1305,14 @@ class FlexpressAffiliateAI {
 **⚙️ Technical Debt & Optimization Roadmap**
 
 1. **Performance Enhancements:**
+
    - Redis caching for high-volume commission tracking
    - Database sharding for large affiliate networks
    - CDN integration for dashboard assets
    - GraphQL API for mobile app integration
 
 2. **Security Improvements:**
+
    - Two-factor authentication for affiliate accounts
    - Rate limiting for API endpoints
    - Advanced fraud detection algorithms
@@ -1204,6 +1325,7 @@ class FlexpressAffiliateAI {
    - Comprehensive API documentation
 
 **📊 Success Metrics & KPIs to Track:**
+
 - Affiliate signup conversion rate
 - Average commission per affiliate
 - Affiliate retention rate (90-day, 1-year)
@@ -1214,6 +1336,7 @@ class FlexpressAffiliateAI {
 - API adoption and integration success
 
 **🛡️ Compliance & Legal Considerations:**
+
 - FTC affiliate disclosure requirements
 - International tax reporting obligations
 - GDPR/CCPA data privacy compliance
@@ -1222,6 +1345,7 @@ class FlexpressAffiliateAI {
 - Dispute resolution procedures
 
 ### Episode Access Control
+
 - Flexible access types (free/PPV/membership/mixed)
 - Smart pricing calculations
 - Member discount application
@@ -1229,6 +1353,7 @@ class FlexpressAffiliateAI {
 - Admin confirmation controls
 
 ### Activity Logging
+
 - Comprehensive user activity tracking
 - PPV purchase logging
 - Payment confirmation tracking
@@ -1240,18 +1365,22 @@ class FlexpressAffiliateAI {
 Modern, responsive episodes archive page with advanced filtering and layout options inspired by premium adult content sites.
 
 #### Version
+
 2.0.0
 
 #### Status
+
 Enabled
 
 #### Recent Updates
+
 - **v2.0.0:** Complete redesign with Vixen.com-inspired layout, episode card layout overhaul (duration moved to info section), dynamic filtering system, and responsive grid options
 - **v1.5.0:** Added toggle filter functionality with 2-column/3-column layout switching
 - **v1.4.0:** Implemented dropdown-based filter switching between categories and models
 - **v1.3.0:** Enhanced dark theme styling and visual consistency
 
 #### Core Features
+
 - **Responsive Grid Layout:**
   - 8/4 column split (videos/filters) when filters visible
   - 12 column full-width when filters hidden
@@ -1275,23 +1404,27 @@ Enabled
   - Maintains sort state across filter changes
 
 #### Technical Implementation
+
 - **Template:** `archive-episode.php`
 - **Styling:** Enhanced CSS in `main.css` with dark theme integration
 - **JavaScript:** Vanilla JS for filter toggling and dropdown interactions
-- **Query Integration:** 
+- **Query Integration:**
   - WordPress WP_Query with custom meta queries
   - ACF field integration for release dates and model relationships
   - Post tag taxonomy filtering
   - SQL-based alphabetical filtering
 
 #### Filter Types
+
 1. **Category Filtering:**
+
    - Uses WordPress `post_tag` taxonomy
    - Displays tag name with episode count (e.g., "Big Cock (5)")
    - Active filter highlighting
    - Direct URL-based filtering for bookmarkable results
 
 2. **Model Filtering:**
+
    - Integrates with custom `model` post type
    - Uses ACF `featured_models` relationship field
    - Alphabetical model listing
@@ -1304,7 +1437,9 @@ Enabled
    - Clean alphabet navigation
 
 #### Layout System
+
 - **Filters Visible Mode:**
+
   - 8-column video area, 4-column filter sidebar
   - 2 videos per row in responsive grid
   - Sticky sidebar positioning
@@ -1317,6 +1452,7 @@ Enabled
   - Clean, distraction-free viewing
 
 #### Pagination
+
 - **Vixen.com-Style Pagination:**
   - "First | Back | 1 2 3 4 5 | Next | Last" format
   - Page count indicators
@@ -1324,15 +1460,17 @@ Enabled
   - 16 episodes per page (configurable)
 
 #### Responsive Design
+
 - **Desktop (>992px):** Full filter/toggle functionality
 - **Tablet (768px-991px):** Stacked layout with responsive filters
 - **Mobile (<768px):** Single column, simplified interface
 - **All Breakpoints:** Optimized touch targets and spacing
 
 #### Dark Theme Integration
+
 - **Consistent Styling:**
   - Black background (#000000)
-  - White text (#ffffff) 
+  - White text (#ffffff)
   - Dark gray borders (#222222)
   - Smooth hover transitions (#1a1a1a)
 - **Interactive Elements:**
@@ -1342,6 +1480,7 @@ Enabled
   - Filter highlight indicators
 
 #### Performance Features
+
 - **Efficient Queries:** Optimized WP_Query parameters
 - **Lazy Loading:** Future-ready for image optimization
 - **Minimal JavaScript:** Vanilla JS for maximum performance
@@ -1349,6 +1488,7 @@ Enabled
 - **Responsive Images:** BunnyCDN integration ready
 
 #### User Experience
+
 - **Intuitive Navigation:** Clear filter categories and sorting
 - **Visual Feedback:** Active states and hover effects
 - **Smooth Transitions:** Animated layout changes
@@ -1358,11 +1498,13 @@ Enabled
 #### Episode Card Layout v2.0.0
 
 **Clean Information Design:**
+
 - **No Thumbnail Overlays:** Duration and text removed from video thumbnails for clean viewing
 - **Play Button Only:** Centered play button appears on hover over thumbnail
 - **Two-Row Information Section:** Structured content display below thumbnail
 
 **Layout Structure:**
+
 ```html
 <div class="episode-card">
   <a href="episode-url" class="episode-link">
@@ -1375,7 +1517,7 @@ Enabled
       </div>
     </div>
   </a>
-  
+
   <!-- Episode Information Below Thumbnail -->
   <div class="episode-info">
     <div class="episode-info-row">
@@ -1385,7 +1527,7 @@ Enabled
       </h5>
       <span class="episode-duration">17:34</span>
     </div>
-    
+
     <div class="episode-info-row">
       <!-- Row 2: Models | Date -->
       <div class="episode-performers">
@@ -1398,35 +1540,41 @@ Enabled
 ```
 
 **Content Layout:**
+
 - **Row 1:** Episode Title (left-aligned) | Duration (right-aligned)
 - **Row 2:** Featured Models (left-aligned) | Release Date (right-aligned)
 - **Flexbox Alignment:** `justify-content: space-between` for proper spacing
 
 **Interactive Elements:**
+
 - **Clickable Episode Title:** Links to single episode page with hover effects
 - **Clickable Model Names:** Individual links to model profile pages
 - **Model Link Styling:** Gray (#aaaaaa) to white (#ffffff) with underline on hover
 - **Play Button Animation:** Scales and appears on thumbnail hover
 
 **Duration Implementation:**
+
 - **Location:** Moved from thumbnail overlay to info section for cleaner design
 - **Format:** MM:SS display (e.g., "17:34")
 - **Source:** ACF `episode_duration` field with BunnyCDN API fallback
 - **Styling:** Gray color (#888888), right-aligned, 0.85rem font size
 
 **Date Handling:**
+
 - **Format Support:** Smart parsing for UK format (dd/mm/yyyy) and standard formats
 - **Display:** Uppercase format (e.g., "DECEMBER 04, 2018")
 - **Fallback:** Uses WordPress post date if ACF field is empty or invalid
 - **Color:** Dark gray (#888888) for visual hierarchy
 
 **Typography & Colors:**
+
 - **Episode Title:** White (#ffffff), 1.1rem, font-weight 600
 - **Duration:** Gray (#888888), 0.85rem, right-aligned
 - **Model Names:** Gray (#aaaaaa), hover to white with underline transition
 - **Release Date:** Dark gray (#888888), 0.85rem, uppercase format
 
 #### Dependencies
+
 - WordPress 5.0+
 - Advanced Custom Fields (ACF)
 - Bootstrap 5.0+ (included in theme)
@@ -1439,12 +1587,15 @@ Enabled
 Advanced registration system with form validation, password strength checking, and subscription integration.
 
 #### Version
+
 1.0.0
 
 #### Status
+
 Enabled
 
 #### Features
+
 - Custom registration form with shortcode
 - Password strength indicator
 - Real-time password match validation
@@ -1454,6 +1605,7 @@ Enabled
 - Subscription handling
 
 #### Dependencies
+
 - WordPress 5.0+
 - PHP 7.4+
 - Bootstrap 5.0+
@@ -1465,16 +1617,20 @@ Enabled
 Comprehensive episode access management with flexible pricing models and member benefits.
 
 #### Version
+
 1.3.0
 
 #### Status
+
 Enabled
 
 #### Recent Updates
+
 - **v1.3.0:** Added comprehensive purchased episodes management interface with bulk operations and detailed user profile controls
 - **v1.2.0:** Fixed Verotel integration to properly separate one-time purchases (PPV episodes) from recurring subscriptions (memberships)
 
 #### Features
+
 - **Access Types:**
   - Free for Everyone
   - Pay-Per-View Only (No Membership Access)
@@ -1503,6 +1659,7 @@ Enabled
   - Comprehensive purchase history and activity logging
 
 #### Technical Implementation
+
 - **Purchase Types:**
   - PPV Episodes: Uses `get_purchase_URL()` for one-time payments
   - Memberships: Uses `get_subscription_URL()` for recurring billing
@@ -1512,6 +1669,7 @@ Enabled
   - Proper parameter mapping for Verotel API
 
 #### Dependencies
+
 - Advanced Custom Fields (ACF)
 - Verotel FlexPay integration
 - BunnyCDN Stream
@@ -1522,12 +1680,15 @@ Enabled
 Comprehensive activity logging system for tracking Pay-Per-View episode purchases and user interactions.
 
 #### Version
+
 1.0.0
 
 #### Status
+
 Enabled
 
 #### Features
+
 - **Activity Types:**
   - `ppv_purchase` - Initial purchase confirmation
   - `ppv_purchase_confirmed` - Webhook payment confirmation
@@ -1555,18 +1716,21 @@ Enabled
   - Automatic discount calculation tracking
 
 #### Integration Points
+
 - Payment return handler (`flexpress_handle_ppv_payment_return`)
 - Webhook confirmation (`flexpress_handle_ppv_webhook`)
 - Admin user profile pages
 - Activity reporting system
 
 #### Database Storage
+
 - Custom table: `wp_flexpress_user_activity`
 - Indexed by user ID, event type, and date
 - JSON-encoded event data for flexibility
 - IP address and user agent tracking
 
 #### Dependencies
+
 - FlexPress Activity Logger class
 - Verotel FlexPay integration
 - WordPress user meta system
@@ -1577,12 +1741,15 @@ Enabled
 Modern PPV (Pay-Per-View) purchase system using Flowguard's embedded payment forms for seamless episode unlocking.
 
 #### Version
+
 1.0.0
 
 #### Status
+
 Enabled
 
 #### Features
+
 - **Embedded Payment Forms**: No redirects, seamless user experience
 - **Member Discount Support**: Automatic discount application for active members
 - **Secure Transaction Processing**: JWT-based API communication
@@ -1591,6 +1758,7 @@ Enabled
 - **Transaction Tracking**: Complete purchase history and audit trails
 
 #### Technical Implementation
+
 - **API Client**: `FlexPress_Flowguard_API` class with JWT token generation
 - **Purchase Function**: `flexpress_flowguard_create_ppv_purchase()` with member discount handling (uses `episode_price` ACF field)
 - **Webhook Handler**: `flexpress_flowguard_webhook_handler()` for payment processing
@@ -1598,6 +1766,7 @@ Enabled
 - **Payment Pages**: Dedicated templates for payment form and success handling
 
 #### Unlock Button Flow
+
 1. **User clicks unlock button** on episode page
 2. **AJAX request** creates Flowguard purchase session
 3. **Payment form** loads with embedded Flowguard SDK
@@ -1606,12 +1775,14 @@ Enabled
 6. **Episode access granted** and user redirected to success page
 
 #### Configuration
+
 - **FlexPress Settings → Flowguard**: Shop ID, Signature Key, Environment
 - **Webhook URL**: `/wp-admin/admin-ajax.php?action=flowguard_webhook`
 - **Payment Pages**: `/payment` and `/payment-success` templates
 - **Minimum Price**: $2.95 USD (Flowguard requirement)
 
 #### Dependencies
+
 - Flowguard API client
 - Advanced Custom Fields (ACF)
 - WordPress AJAX system
@@ -1622,17 +1793,21 @@ Enabled
 Advanced Verotel FlexPay webhook processing system with comprehensive signature validation and error handling.
 
 #### Version
+
 1.4.0
 
 #### Status
+
 Enabled
 
 #### Recent Updates
+
 - **v1.4.0:** Complete webhook overhaul with advanced signature validation methods and auto-bypass system
 - **v1.3.0:** Enhanced webhook debugging with multiple signature calculation methods
 - **v1.2.0:** Added comprehensive error logging and webhook request analysis
 
 #### Features
+
 - **Advanced Signature Validation:**
   - Multiple signature calculation methods (standard, no-empty-filter, URL-encoded, string concatenation)
   - Official Verotel FlexPay client integration
@@ -1658,6 +1833,7 @@ Enabled
   - Clean status reporting
 
 #### Technical Implementation
+
 - **Webhook Endpoint:** `wp-admin/admin-ajax.php?action=verotel_webhook`
 - **AJAX Actions:**
   - `verotel_webhook` - Main webhook handler
@@ -1672,6 +1848,7 @@ Enabled
   - Faster webhook processing
 
 #### Webhook Events Supported
+
 - **initial** - New subscription signup
 - **rebill** - Recurring subscription charge
 - **cancel** - Subscription cancellation
@@ -1679,12 +1856,14 @@ Enabled
 - **credit** - Subscription termination credit
 
 #### User Identification Methods
+
 1. **custom1** - Primary user ID field
 2. **custom2** - Secondary identifier
 3. **custom3** - Tertiary identifier or combined data
 4. **saleID** - Verotel sale identifier
 
 #### Security Features
+
 - **IP Validation:** Cloudflare-aware IP detection
 - **User Agent Verification:** Verotel-specific user agent validation
 - **Signature Verification:** Multiple cryptographic validation methods
@@ -1692,6 +1871,7 @@ Enabled
 - **Rate Limiting:** Built-in protection against webhook flooding
 
 #### Admin Interface
+
 - **FlexPress Settings → Verotel Settings:**
   - Webhook URL configuration
   - Signature bypass controls
@@ -1704,6 +1884,7 @@ Enabled
   - Error reporting dashboard
 
 #### Troubleshooting
+
 - **Signature Validation Issues:**
   - Enable debug logging in FlexPress settings
   - Check webhook logs in `wp-content/debug.log`
@@ -1723,11 +1904,14 @@ Enabled
 **Issue:** "Sorry, you are not allowed to access this page" error when trying to edit/manage members in FlexPress admin.
 
 **Root Cause:** Two critical misconfigurations:
+
 1. **Permission Mismatch:** Admin menu pages required `manage_options` capability (administrator-only) while the actual membership management functions used `edit_users` capability
 2. **URL Routing Mismatch:** Submenu pages were created with slugs `flexpress-manage-members` and `flexpress-tools` but internal URLs pointed to `flexpress-membership-settings`
 
 **Solution Applied:**
+
 1. **Capability Fixes:**
+
    - Changed "Manage Members" page capability from `manage_options` to `edit_users`
    - Changed "Tools" page capability from `manage_options` to `edit_users`
    - Updated episode sync tool capability from `manage_options` to `edit_posts`
@@ -1740,6 +1924,7 @@ Enabled
    - Fixed episode sync redirect URL
 
 **Files Modified:**
+
 - `wp-content/themes/flexpress/includes/admin/class-flexpress-membership-settings.php`
 
 **Resolution Date:** June 18, 2025
@@ -1747,6 +1932,7 @@ Enabled
 **Prevention:** This issue occurred due to inconsistency between menu registration and internal URL references. Future development should ensure page slugs match throughout all internal links and capability requirements align with actual function permissions.
 
 #### Dependencies
+
 - Verotel FlexPay PHP Client library
 - WordPress AJAX system
 - FlexPress Settings framework
@@ -1754,6 +1940,7 @@ Enabled
 - WordPress user management system
 
 #### File Structure
+
 ```
 includes/
 ├── verotel-integration.php      # Main webhook handler
@@ -1766,6 +1953,7 @@ includes/
 ```
 
 #### Integration Points
+
 - User registration and membership activation
 - Subscription management and billing
 - Episode access control system
@@ -1777,12 +1965,15 @@ includes/
 Modern membership signup page with pricing options and user registration form.
 
 #### Version
+
 1.0.0
 
 #### Status
+
 Enabled
 
 #### Features
+
 - Monthly and annual membership options
 - Responsive design with modern UI
 - AJAX form submission
@@ -1790,6 +1981,7 @@ Enabled
 - Terms and privacy policy integration
 
 #### Dependencies
+
 - WordPress 5.0+
 - PHP 7.4+
 - Bootstrap 5.0+
@@ -1817,17 +2009,20 @@ Enabled
 ## Configuration
 
 ### BunnyCDN Stream
+
 - Library ID
 - API Key
 - Token Key
 - Stream URL
 
 ### Verotel FlexPay
+
 - Merchant ID
 - Shop ID
 - Signature Key
 
 ### Theme Options
+
 - Logo upload
 - Menu configuration
 - Featured content
@@ -1836,11 +2031,13 @@ Enabled
 ## Development
 
 ### Code Style
+
 - PHP: 4 spaces, 120 char limit, single quotes
 - CSS: 2 spaces, 80 char limit, double quotes
 - JS: 2 spaces, 100 char limit, single quotes
 
 ### Best Practices
+
 - No inline styles
 - Organized imports
 - Proper documentation
@@ -1850,6 +2047,7 @@ Enabled
 ## Styling Guidelines & Design Patterns
 
 ### Design Philosophy
+
 - **Vixen.com Inspired**: Clean, professional aesthetic with minimalist design
 - **Dark Theme Focus**: Black backgrounds with white text for premium feel
 - **Modern Video Interface**: Emphasis on video content with sophisticated hover effects
@@ -1858,6 +2056,7 @@ Enabled
 ### Layout Systems
 
 #### CSS Grid Patterns
+
 ```css
 /* Standard Video Grid - 4→3→2→1 columns responsive */
 .video-grid {
@@ -1867,15 +2066,21 @@ Enabled
 }
 
 @media (max-width: 1200px) {
-  .video-grid { grid-template-columns: repeat(3, 1fr); }
+  .video-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
-  .video-grid { grid-template-columns: repeat(2, 1fr); }
+  .video-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 480px) {
-  .video-grid { grid-template-columns: 1fr; }
+  .video-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Model Grid - 6→4→3→2→1 columns responsive */
@@ -1887,6 +2092,7 @@ Enabled
 ```
 
 #### Responsive Breakpoints
+
 - **1200px+**: Full desktop layout
 - **768px-1199px**: Tablet layout (reduced columns)
 - **480px-767px**: Mobile landscape (2 columns max)
@@ -1895,6 +2101,7 @@ Enabled
 ### Card Design Patterns
 
 #### Episode Cards
+
 ```css
 /* Standard Episode Card Structure */
 .episode-card {
@@ -1911,12 +2118,14 @@ Enabled
 ```
 
 **Hover Behavior:**
+
 - **Default State**: Text visible at bottom, play button hidden
 - **Hover State**: Text fades out (`opacity: 0`), play button scales in from center
 - **Play Button**: Circular, centered, white border, glass effect with backdrop-filter
 - **Transition**: 0.3s ease for smooth animations
 
 #### Model Cards
+
 ```css
 /* Model Card with Center + Bottom Overlays */
 .model-card {
@@ -1944,6 +2153,7 @@ Enabled
 ```
 
 **Hover Behavior:**
+
 - **Default State**: Name visible at bottom, magnifying glass hidden
 - **Hover State**: Name disappears, magnifying glass appears in center
 - **No Border Radius**: Remove rounded corners on overlays to match image edges
@@ -1951,6 +2161,7 @@ Enabled
 ### Typography & Text Styling
 
 #### Universal Text Rules
+
 ```css
 /* All Episode/Model Titles */
 .episode-title,
@@ -1973,27 +2184,41 @@ Enabled
 ```
 
 #### Responsive Typography
+
 ```css
 /* Hero Section Text Scaling */
 @media (max-width: 991.98px) {
-  .hero-model-name { font-size: 18px; }
-  .hero-episode-title { font-size: 24px; }
+  .hero-model-name {
+    font-size: 18px;
+  }
+  .hero-episode-title {
+    font-size: 24px;
+  }
 }
 
 @media (max-width: 767.98px) {
-  .hero-model-name { font-size: 16px; }
-  .hero-episode-title { font-size: 20px; }
+  .hero-model-name {
+    font-size: 16px;
+  }
+  .hero-episode-title {
+    font-size: 20px;
+  }
 }
 
 @media (max-width: 480px) {
-  .hero-model-name { font-size: 14px; }
-  .hero-episode-title { font-size: 18px; }
+  .hero-model-name {
+    font-size: 14px;
+  }
+  .hero-episode-title {
+    font-size: 18px;
+  }
 }
 ```
 
 ### Hero Section Patterns
 
 #### Structure
+
 ```html
 <div class="hero-section">
   <a href="episode-url" class="hero-link">
@@ -2005,12 +2230,14 @@ Enabled
 ```
 
 #### Video Container
+
 - **Aspect Ratio**: 16:9 using `padding-top: 56.25%`
 - **Background**: Black (#000) for loading states
 - **Pointer Events**: Disabled to prevent video interaction
 - **User Select**: Disabled for clean UX
 
 #### Play Button Specifications
+
 ```css
 .hero-play-button {
   width: 80px;
@@ -2027,12 +2254,14 @@ Enabled
 ### Interactive Elements
 
 #### Hover Animation Rules
+
 - **NO translateY Effects**: Avoid jumping/lifting animations (user preference)
 - **Opacity Transitions**: 0.3s ease for fade in/out
 - **Scale Transitions**: 0.3s ease for play button appearance
 - **Text Behavior**: Visible by default, hidden on hover
 
 #### Button Styling
+
 ```css
 /* Play Buttons */
 .episode-play-button,
@@ -2054,12 +2283,14 @@ Enabled
 ### ACF Field Integration
 
 #### Episode Fields Usage
+
 - **featured_models**: Relationship field linking to model posts
 - **preview_video**: BunnyCDN video ID for thumbnails/previews
 - **episode_duration**: Display format (MM:SS)
 - **release_date**: Controls visibility and ordering
 
 #### Model Names Display
+
 ```php
 // Convert relationship field to comma-separated names
 $featured_models = get_field('featured_models');
@@ -2073,6 +2304,7 @@ if ($featured_models && !empty($featured_models)) {
 ```
 
 ### Color System
+
 - **Primary Color**: `var(--color-primary)` for white elements
 - **Accent Color**: `var(--color-accent)` for buttons, links, and interactive elements (default: #ff69b4)
 - **Accent Hover**: `var(--color-accent-hover)` for hover states
@@ -2084,12 +2316,14 @@ if ($featured_models && !empty($featured_models)) {
 - **Glass Effects**: `rgba(255, 255, 255, 0.15)` with `backdrop-filter: blur(10px)`
 
 #### Accent Color Features
+
 - **Customizable**: Set via FlexPress Settings → General → Color Settings
 - **Dynamic Variants**: Automatically generates hover, light, and dark variants
 - **Strategic Application**: Used for CTAs, form focus states, navigation, and important UI elements
 - **CSS Classes**: `.btn-accent`, `.accent-link`, `.cta-primary`, `.featured-badge`
 
 ### Performance Considerations
+
 - **CSS Grid**: Preferred over Bootstrap columns for better control
 - **Transitions**: Limited to opacity, transform, and background changes
 - **Image Optimization**: Proper lazy loading and responsive image delivery
@@ -2097,6 +2331,7 @@ if ($featured_models && !empty($featured_models)) {
 - **Gallery Images**: Optimized sizes and CDN delivery via BunnyCDN Storage
 
 ### Testing Checklist
+
 - [ ] Responsive behavior across all breakpoints
 - [ ] Hover effects work consistently on all cards
 - [ ] Text scales appropriately on mobile devices
@@ -2114,12 +2349,14 @@ if ($featured_models && !empty($featured_models)) {
 The theme is designed to be deployed as a standalone package. Only the contents of the `wp-content/themes/flexpress/` directory are required for deployment.
 
 ### Excluded Files
+
 - Development files
 - Configuration files
 - Build artifacts
 - Documentation
 
 ### Required Checks
+
 - Theme metadata
 - Core functionality
 - Screenshot
@@ -2128,21 +2365,25 @@ The theme is designed to be deployed as a standalone package. Only the contents 
 ## 🛡️ Payment Form Validation System
 
 ### Comprehensive Error Handling
+
 The FlexPress theme includes a sophisticated validation system for Flowguard payment forms that provides:
 
 #### Real-Time Field Validation
+
 - **Card Number**: Luhn algorithm validation, card type detection, length verification
 - **Expiry Date**: Format validation (MM/YY), expiration checking, month validation
 - **CVV**: Length validation (3-4 digits), numeric format checking
 - **Cardholder Name**: Character validation, length limits, special character handling
 
 #### Error Recovery Mechanisms
+
 - **Automatic Retry**: Configurable retry attempts for network errors
 - **Graceful Degradation**: Fallback error handling when validation system fails
 - **User-Friendly Messages**: Clear, actionable error messages
 - **Visual Feedback**: Color-coded field states (error, warning, success)
 
 #### Validation Features
+
 - **Cross-Origin Handling**: Works with Flowguard's iframe-based fields
 - **Network Status Monitoring**: Detects online/offline states
 - **Form State Management**: Tracks validation state across form interactions
@@ -2150,6 +2391,7 @@ The FlexPress theme includes a sophisticated validation system for Flowguard pay
 - **Accessibility**: Screen reader friendly error announcements
 
 #### Error Types Handled
+
 - **Field Validation Errors**: Invalid card numbers, expired dates, etc.
 - **Network Errors**: Connection issues, timeouts
 - **Payment Errors**: Declined cards, insufficient funds, fraud detection
@@ -2157,12 +2399,14 @@ The FlexPress theme includes a sophisticated validation system for Flowguard pay
 - **3D Secure Errors**: Authentication failures, cancellations
 
 #### Testing & Debugging
+
 - **Test Page**: `/test-validation.php` for comprehensive validation testing
 - **Mock System**: Simulated validation for development and testing
 - **Error Simulation**: Test various error scenarios
 - **Status Monitoring**: Real-time validation state display
 
 ### Key Validation Files
+
 - `assets/js/flowguard-validation.js` - Core validation system
 - `assets/css/flowguard-validation.css` - Validation styling
 - `assets/css/validation-test.css` - Test page styling
@@ -2170,20 +2414,23 @@ The FlexPress theme includes a sophisticated validation system for Flowguard pay
 - `test-validation.php` - Validation testing and debugging page
 
 ### Validation Configuration
+
 ```javascript
 // Initialize validation system
 const validationSystem = new FlowguardValidation(paymentForm, {
-    showFieldErrors: true,      // Display field-level errors
-    showGlobalErrors: true,     // Display global error messages
-    autoRetry: true,           // Enable automatic retry for recoverable errors
-    maxRetries: 3,            // Maximum retry attempts
-    retryDelay: 2000,          // Delay between retry attempts (ms)
-    enableHelp: true           // Show contextual help messages
+  showFieldErrors: true, // Display field-level errors
+  showGlobalErrors: true, // Display global error messages
+  autoRetry: true, // Enable automatic retry for recoverable errors
+  maxRetries: 3, // Maximum retry attempts
+  retryDelay: 2000, // Delay between retry attempts (ms)
+  enableHelp: true, // Show contextual help messages
 });
 ```
 
 ### Error Message Customization
+
 The validation system includes comprehensive error messages for all common scenarios:
+
 - Card validation errors (invalid format, expired, unsupported)
 - Network errors (connection issues, timeouts)
 - Payment processing errors (declined, insufficient funds, fraud)
@@ -2191,7 +2438,9 @@ The validation system includes comprehensive error messages for all common scena
 - System errors (session expiration, server issues)
 
 ### Integration with Flowguard SDK
+
 The validation system seamlessly integrates with Flowguard's embedded payment forms:
+
 - Monitors iframe-based field changes
 - Handles cross-origin restrictions gracefully
 - Provides visual feedback for field states
@@ -2201,9 +2450,11 @@ The validation system seamlessly integrates with Flowguard's embedded payment fo
 ## 💳 Remember Card Feature
 
 ### Overview
+
 The Remember Card feature allows users to securely save their payment card information for faster future transactions. This enhances user experience by eliminating the need to re-enter card details for each purchase.
 
 ### Key Features
+
 - **🔒 Secure Storage**: Card details stored in browser local storage in masked format
 - **🎨 Theme Integration**: Styled to match FlexPress dark theme aesthetic
 - **⚡ Fast Checkout**: Automatic card prefilling for returning users
@@ -2211,23 +2462,27 @@ The Remember Card feature allows users to securely save their payment card infor
 - **📱 Responsive**: Works seamlessly across all device sizes
 
 ### Security
+
 - **Browser Local Storage**: No server-side storage of sensitive card data
 - **Masked Format**: Sensitive data is masked and never exposed
 - **PCI DSS Compliant**: Follows industry security standards
 - **User Consent**: Explicit user permission required for card storage
 
 ### Implementation
+
 - **Frontend**: Integrated into payment form with custom styling
 - **Validation**: Optional field validation (always valid)
 - **User Experience**: Clear information about card storage benefits
 - **Customization**: Fully customizable styling and messaging
 
 ### Files Modified
+
 - `page-templates/payment.php` - Payment form integration
 - `assets/css/flowguard-validation.css` - Remember card styling
 - `assets/js/flowguard-validation.js` - Validation system updates
 - `FLOWGUARD_REMEMBER_CARD_IMPLEMENTATION.md` - Complete documentation
 
 ### Browser Compatibility
+
 - Chrome 60+, Firefox 55+, Safari 12+, Edge 79+
 - Requires modern JavaScript and Local Storage API support

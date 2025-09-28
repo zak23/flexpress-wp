@@ -18,22 +18,26 @@ FlexPress includes a complete SMTP2Go integration for reliable internal email de
 ### Files Created/Modified
 
 1. **`includes/class-flexpress-smtp2go.php`**
+
    - Main SMTP2Go integration class
    - Handles PHPMailer configuration
    - Smart routing logic for internal emails
    - Comprehensive debug logging
 
 2. **`includes/admin/class-flexpress-smtp2go-settings.php`**
+
    - Admin settings page for SMTP2Go configuration
    - AJAX test connection functionality
    - Form validation and sanitization
    - Built-in setup guide
 
 3. **`includes/admin/class-flexpress-settings.php`**
+
    - Added SMTP2Go submenu to FlexPress settings
    - Render method for SMTP2Go settings page
 
 4. **`includes/class-flexpress-ses-smtp.php`**
+
    - Updated Amazon SES to defer to SMTP2Go for internal emails
    - Fixed routing logic to handle emails TO `zakspov.com`
 
@@ -61,6 +65,7 @@ FlexPress includes a complete SMTP2Go integration for reliable internal email de
 Access the SMTP2Go settings at: `FlexPress → SMTP2Go`
 
 Settings include:
+
 - Enable/disable SMTP2Go
 - SMTP connection details
 - From email and name configuration
@@ -73,22 +78,26 @@ Settings include:
 ### Internal Email Detection
 
 The system automatically detects emails as "internal" if:
+
 1. **Recipient domain matches sender domain** (traditional internal email)
 2. **Recipient domain is `zakspov.com`** (your domain, regardless of sender)
 
 ### Priority Order
 
 For internal emails (TO `@zakspov.com`):
+
 1. **SMTP2Go** (Primary) - Professional delivery with proper From address
 2. **Google SMTP** (Fallback) - If SMTP2Go is disabled or fails
 3. **Amazon SES** (Last Resort) - If both SMTP2Go and Google SMTP fail
 
 For external emails (TO other domains):
+
 - **Amazon SES** - Handles all external email delivery
 
 ### From Address Override
 
 SMTP2Go automatically overrides the From address with your configured settings:
+
 - **Configured From**: `zak@zakozbourne.com`
 - **Configured From Name**: `Zak Ozbourne`
 - **Override Behavior**: Replaces WordPress default From address
@@ -116,16 +125,19 @@ FlexPress SMTP2Go: SMTP configured for zak@zakozbourne.com via mail.smtp2go.com
 ### Common Issues
 
 1. **Username Not Saving**
+
    - **Issue**: SMTP username field not persisting after save
    - **Solution**: Changed sanitization from `sanitize_email()` to `sanitize_text_field()`
    - **Reason**: SMTP usernames are often not email addresses
 
 2. **PHPMailer Class Not Found**
+
    - **Issue**: Fatal error when testing connection
    - **Solution**: Removed direct PHPMailer instantiation, use WordPress mail functions
    - **Reason**: WordPress uses namespaced PHPMailer
 
 3. **Routing Not Working**
+
    - **Issue**: Emails not being routed to SMTP2Go
    - **Solution**: Added class instantiation (`new FlexPress_SMTP2Go()`)
    - **Reason**: Class wasn't being instantiated automatically
@@ -146,12 +158,14 @@ FlexPress SMTP2Go: SMTP configured for zak@zakozbourne.com via mail.smtp2go.com
 ## Benefits
 
 ### Before SMTP2Go
+
 - **Amazon SES Bounces**: Internal emails bounced due to domain conflicts
 - **From Address Issues**: Emails showed confusing From addresses
 - **Spam Filter Problems**: Domain mismatches triggered spam filters
 - **Manual Configuration**: Required complex domain authentication
 
 ### After SMTP2Go
+
 - **No Bounces**: Professional delivery with automatic domain authentication
 - **Proper From Address**: Consistent `zak@zakozbourne.com` From address
 - **Spam Filter Friendly**: Proper domain alignment eliminates spam issues
@@ -185,5 +199,5 @@ Potential improvements for the SMTP2Go integration:
 
 ---
 
-*Last Updated: September 2025*
-*Version: 1.0.0*
+_Last Updated: September 2025_
+_Version: 1.0.0_

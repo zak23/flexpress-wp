@@ -581,7 +581,7 @@ if (function_exists('acf_add_local_field_group')):
                 'label' => 'Profile Image',
                 'name' => 'model_profile_image',
                 'type' => 'image',
-                'instructions' => 'Upload a profile image for the half-half section (separate from featured image)',
+                'instructions' => 'Upload a profile image for the half-half section. This will also automatically set as the featured image for the model post.',
                 'required' => 0,
                 'wrapper' => array(
                     'width' => '50',

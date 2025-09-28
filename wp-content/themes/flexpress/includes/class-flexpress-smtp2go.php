@@ -96,12 +96,13 @@ class FlexPress_SMTP2Go {
         error_log('FlexPress SMTP2Go: Recipients = ' . print_r($recipients, true));
         
         // Check if any recipient is from the same domain as the sender
-        // OR if any recipient is from zakspov.com (your domain)
+        // OR if any recipient is from the site domain
+        $site_domain = parse_url(home_url(), PHP_URL_HOST);
         foreach (array_keys($recipients) as $email) {
             $recipient_domain = substr(strrchr($email, "@"), 1);
             error_log('FlexPress SMTP2Go: Checking recipient ' . $email . ' (domain: ' . $recipient_domain . ')');
             
-            if ($recipient_domain === $from_domain || $recipient_domain === 'zakspov.com') {
+            if ($recipient_domain === $from_domain || $recipient_domain === $site_domain) {
                 error_log('FlexPress SMTP2Go: Found internal email, using SMTP2Go');
                 return true;
             }

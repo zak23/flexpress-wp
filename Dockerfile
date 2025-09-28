@@ -22,17 +22,17 @@ RUN chmod +x /root/.composer/vendor/bin/wp \
     && echo '#!/bin/bash\ncd /var/www/html\n/root/.composer/vendor/bin/wp --allow-root "$@"' > /usr/local/bin/wp \
     && chmod +x /usr/local/bin/wp
 
-# Set proper permissions
-RUN chown -R www-data:www-data /var/www/html
-
-# Enable Apache modules for caching
-RUN a2enmod rewrite expires headers
-
 # Copy custom Apache configuration
 COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
 
 # Copy Redis object cache drop-in
 COPY wp-content/themes/flexpress/object-cache.php /var/www/html/wp-content/object-cache.php
+
+# Set proper permissions
+RUN chown -R www-data:www-data /var/www/html
+
+# Enable Apache modules for caching
+RUN a2enmod rewrite expires headers
 
 # Create PHP configuration for upload limits
 RUN echo "upload_max_filesize = 64M" > /usr/local/etc/php/conf.d/uploads.ini \

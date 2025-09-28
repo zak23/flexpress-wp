@@ -1,9 +1,9 @@
 <?php
 /**
- * Redis Object Cache Drop-in for FlexPress
- * 
- * This file enables Redis as a persistent object cache for WordPress.
- * It replaces the default WordPress object cache with Redis for better performance.
+ * Plugin Name: FlexPress Redis Object Cache
+ * Description: Enables Redis as a persistent object cache for WordPress
+ * Version: 1.0.0
+ * Author: FlexPress
  */
 
 // Prevent direct access
@@ -18,15 +18,10 @@ define('WP_REDIS_DATABASE', 0);
 define('WP_REDIS_PASSWORD', '');
 define('WP_REDIS_TIMEOUT', 1);
 define('WP_REDIS_READ_TIMEOUT', 1);
-
-// Cache key prefix for this site
 define('WP_REDIS_PREFIX', 'flexpress:' . (defined('WP_ENV') ? WP_ENV : 'prod') . ':');
 
-// Enable Redis object cache
-define('WP_REDIS_DISABLED', false);
-
-// Redis object cache implementation
-class Redis_Object_Cache {
+// Redis Object Cache Class
+class FlexPress_Redis_Object_Cache {
     
     private $redis;
     private $connected = false;
@@ -146,26 +141,81 @@ class Redis_Object_Cache {
 }
 
 // Initialize Redis object cache
-$GLOBALS['wp_object_cache'] = new Redis_Object_Cache();
+add_action('init', function() {
+    global $wp_object_cache;
+    
+    // Only replace if not already set
+    if (!isset($wp_object_cache) || !($wp_object_cache instanceof FlexPress_Redis_Object_Cache)) {
+        $wp_object_cache = new FlexPress_Redis_Object_Cache();
+    }
+});
 
 // Add admin notice for Redis status
 add_action('admin_notices', function() {
     global $wp_object_cache;
     
     if (current_user_can('manage_options')) {
-        $stats = $wp_object_cache->get_stats();
-        
-        if ($stats['connected']) {
-            echo '<div class="notice notice-success is-dismissible">';
-            echo '<p><strong>Redis Object Cache:</strong> Connected and active. ';
-            echo 'Memory usage: ' . $stats['used_memory'] . ', ';
-            echo 'Hits: ' . $stats['keyspace_hits'] . ', ';
-            echo 'Misses: ' . $stats['keyspace_misses'] . '</p>';
-            echo '</div>';
-        } else {
-            echo '<div class="notice notice-warning is-dismissible">';
-            echo '<p><strong>Redis Object Cache:</strong> Not connected. Using default object cache.</p>';
-            echo '</div>';
+        if ($wp_object_cache instanceof FlexPress_Redis_Object_Cache) {
+            $stats = $wp_object_cache->get_stats();
+            
+            if ($stats['connected']) {
+                echo '<div class="notice notice-success is-dismissible">';
+                echo '<p><strong>Redis Object Cache:</strong> Connected and active. ';
+                echo 'Memory usage: ' . $stats['used_memory'] . ', ';
+                echo 'Hits: ' . $stats['keyspace_hits'] . ', ';
+                echo 'Misses: ' . $stats['keyspace_misses'] . '</p>';
+                echo '</div>';
+            } else {
+                echo '<div class="notice notice-warning is-dismissible">';
+                echo '<p><strong>Redis Object Cache:</strong> Not connected. Using default object cache.</p>';
+                echo '</div>';
+            }
         }
     }
+});
+
+// Add admin menu for Redis cache management
+add_action('admin_menu', function() {
+    add_management_page(
+        'Redis Cache',
+        'Redis Cache',
+        'manage_options',
+        'redis-cache',
+        function() {
+            global $wp_object_cache;
+            
+            if ($wp_object_cache instanceof FlexPress_Redis_Object_Cache) {
+                $stats = $wp_object_cache->get_stats();
+                
+                echo '<div class="wrap">';
+                echo '<h1>Redis Object Cache Status</h1>';
+                
+                if ($stats['connected']) {
+                    echo '<div class="notice notice-success">';
+                    echo '<p><strong>Status:</strong> Connected and active</p>';
+                    echo '<p><strong>Redis Version:</strong> ' . $stats['redis_version'] . '</p>';
+                    echo '<p><strong>Memory Usage:</strong> ' . $stats['used_memory'] . '</p>';
+                    echo '<p><strong>Cache Hits:</strong> ' . $stats['keyspace_hits'] . '</p>';
+                    echo '<p><strong>Cache Misses:</strong> ' . $stats['keyspace_misses'] . '</p>';
+                    echo '</div>';
+                    
+                    if (isset($_POST['flush_cache']) && wp_verify_nonce($_POST['_wpnonce'], 'flush_redis_cache')) {
+                        $wp_object_cache->flush();
+                        echo '<div class="notice notice-success"><p>Redis cache flushed successfully!</p></div>';
+                    }
+                    
+                    echo '<form method="post">';
+                    wp_nonce_field('flush_redis_cache');
+                    echo '<p><input type="submit" name="flush_cache" value="Flush Redis Cache" class="button button-secondary" /></p>';
+                    echo '</form>';
+                } else {
+                    echo '<div class="notice notice-error">';
+                    echo '<p><strong>Status:</strong> Not connected</p>';
+                    echo '</div>';
+                }
+                
+                echo '</div>';
+            }
+        }
+    );
 });

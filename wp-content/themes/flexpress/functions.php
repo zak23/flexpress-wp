@@ -594,7 +594,7 @@ function flexpress_add_caching_headers() {
         header('Cache-Control: public, max-age=' . $cache_duration);
         
         // Add ETag header
-        $etag = md5(get_the_ID() . get_modified_time('U'));
+        $etag = md5(get_the_ID() . get_the_modified_time('U'));
         header('ETag: "' . $etag . '"');
         
         // Add Last-Modified header

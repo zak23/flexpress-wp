@@ -230,8 +230,28 @@ class FlexPress_Plunk_Subscriber {
                 $contact_id = $contact['id'];
                 update_user_meta($user->ID, 'plunk_contact_id', $contact_id);
             } else {
-                wp_send_json_error('Contact not found');
-                return;
+                // Contact not found, create a new one
+                $contact_data = array(
+                    'email' => $user->user_email,
+                    'subscribed' => false, // Will be set based on action below
+                    'data' => array(
+                        'name' => $user->display_name,
+                        'signupDate' => date('c'),
+                        'source' => 'Dashboard Newsletter Toggle',
+                        'userType' => 'member',
+                        'membershipStatus' => get_user_meta($user->ID, 'membership_status', true) ?: 'none',
+                        'userId' => (string) $user->ID
+                    )
+                );
+                
+                $result = $this->api->add_contact($contact_data);
+                if (!is_wp_error($result) && isset($result['id'])) {
+                    $contact_id = $result['id'];
+                    update_user_meta($user->ID, 'plunk_contact_id', $contact_id);
+                } else {
+                    wp_send_json_error('Failed to create contact: ' . (is_wp_error($result) ? $result->get_error_message() : 'Unknown error'));
+                    return;
+                }
             }
         }
 

@@ -542,6 +542,7 @@ add_filter('body_class', function ($classes) {
                                     $is_subscribed = false;
                                     $subscription_date = '';
                                     $last_email_date = '';
+                                    $contact_exists = true;
 
                                     if (!is_wp_error($contact) && isset($contact['subscribed'])) {
                                         $is_subscribed = $contact['subscribed'];
@@ -551,6 +552,8 @@ add_filter('body_class', function ($classes) {
                                         if (isset($contact['last_email_at'])) {
                                             $last_email_date = $contact['last_email_at'];
                                         }
+                                    } elseif (is_wp_error($contact) && $contact->get_error_code() === 'contact_not_found') {
+                                        $contact_exists = false;
                                     }
                                 ?>
                                     <div class="newsletter-status mb-4">
@@ -576,6 +579,14 @@ add_filter('body_class', function ($classes) {
                                                         </div>
                                                     </div>
                                                 </div>
+
+                                                <?php if (!$contact_exists): ?>
+                                                    <div class="alert alert-info mt-3">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong><?php esc_html_e('New to Newsletter', 'flexpress'); ?></strong>
+                                                        <?php esc_html_e('You haven\'t subscribed to our newsletter yet. Use the toggle above to subscribe and start receiving updates!', 'flexpress'); ?>
+                                                    </div>
+                                                <?php endif; ?>
 
                                                 <?php if ($is_subscribed && $subscription_date): ?>
                                                     <p class="mb-1">

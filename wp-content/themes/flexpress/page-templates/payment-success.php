@@ -258,55 +258,54 @@ $membership_expires = get_user_meta($user_id, 'membership_expires', true);
 
 <style>
 .payment-success-page {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    background-color: var(--color-background);
     min-height: 100vh;
     padding: 2rem 0;
 }
 
 .success-container {
-    background: rgba(255, 255, 255, 0.05);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 16px;
     padding: 2rem;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-lg);
 }
 
 .success-icon {
     font-size: 4rem;
-    color: #28a745;
+    color: var(--color-accent);
     margin-bottom: 1rem;
 }
 
 .success-title {
-    color: #ffffff;
+    color: var(--color-text);
     font-size: 2.5rem;
     font-weight: 700;
     margin-bottom: 1rem;
 }
 
 .success-subtitle {
-    color: #b0b0b0;
+    color: var(--color-text-secondary);
     font-size: 1.2rem;
     margin-bottom: 0;
 }
 
 .card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 12px;
     margin-bottom: 1rem;
 }
 
 .card-header {
-    background: rgba(255, 255, 255, 0.05);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    color: #ffffff;
+    background-color: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
     font-weight: 600;
 }
 
 .card-body {
-    color: #b0b0b0;
+    color: var(--color-text-secondary);
 }
 
 .detail-item {
@@ -314,7 +313,7 @@ $membership_expires = get_user_meta($user_id, 'membership_expires', true);
     justify-content: space-between;
     margin-bottom: 0.75rem;
     padding: 0.5rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .detail-item:last-child {
@@ -324,18 +323,18 @@ $membership_expires = get_user_meta($user_id, 'membership_expires', true);
 
 .detail-item label {
     font-weight: 600;
-    color: #ffffff;
+    color: var(--color-text);
 }
 
 .status-success {
-    color: #28a745;
+    color: var(--color-accent);
     font-weight: 600;
 }
 
 .membership-active .status-indicator {
     display: flex;
     align-items: center;
-    color: #28a745;
+    color: var(--color-accent);
     font-weight: 600;
     font-size: 1.1rem;
 }
@@ -358,8 +357,8 @@ $membership_expires = get_user_meta($user_id, 'membership_expires', true);
 }
 
 .step-number {
-    background: #ff6b6b;
-    color: #ffffff;
+    background: var(--color-accent);
+    color: var(--color-accent-text);
     width: 2rem;
     height: 2rem;
     border-radius: 50%;
@@ -371,40 +370,58 @@ $membership_expires = get_user_meta($user_id, 'membership_expires', true);
 }
 
 .step-content h6 {
-    color: #ffffff;
+    color: var(--color-text);
     margin-bottom: 0.5rem;
 }
 
 .step-content p {
     margin-bottom: 0.75rem;
-    color: #b0b0b0;
+    color: var(--color-text-secondary);
 }
 
 .btn {
     border-radius: 8px;
     font-weight: 500;
     padding: 0.5rem 1rem;
+    transition: var(--transition-fast);
 }
 
 .btn-primary {
-    background: #ff6b6b;
-    border-color: #ff6b6b;
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-accent-text);
 }
 
 .btn-primary:hover {
-    background: #ff5252;
-    border-color: #ff5252;
+    background-color: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
+    color: var(--color-accent-text);
 }
 
 .btn-outline-primary {
-    border-color: #ff6b6b;
-    color: #ff6b6b;
+    border-color: var(--color-accent);
+    color: var(--color-accent);
 }
 
 .btn-outline-primary:hover {
-    background-color: #ff6b6b;
-    border-color: #ff6b6b;
-    color: #ffffff;
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-accent-text);
+}
+
+.btn-outline-secondary {
+    border-color: var(--color-text-secondary);
+    color: var(--color-text-secondary);
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--color-text-secondary);
+    border-color: var(--color-text-secondary);
+    color: var(--color-background);
+}
+
+.text-muted {
+    color: var(--color-text-secondary) !important;
 }
 
 @media (max-width: 768px) {

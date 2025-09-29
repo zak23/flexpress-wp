@@ -2014,6 +2014,34 @@ function flexpress_create_banned_page() {
 add_action('after_setup_theme', 'flexpress_create_banned_page');
 
 /**
+ * Create email blacklist page with the flexpress-email-blacklist.php template
+ */
+function flexpress_create_email_blacklist_page() {
+    // Check if email blacklist page already exists
+    $blacklist_page = get_page_by_path('flexpress-email-blacklist');
+    
+    if (!$blacklist_page) {
+        $page_data = array(
+            'post_title' => 'Email Blacklist Policy',
+            'post_name' => 'flexpress-email-blacklist',
+            'post_content' => 'Information about our email blacklist policy for protecting against fraud.',
+            'post_status' => 'publish',
+            'post_type' => 'page',
+            'post_author' => 1,
+            'page_template' => 'page-templates/flexpress-email-blacklist.php'
+        );
+        
+        $page_id = wp_insert_post($page_data);
+        
+        if ($page_id) {
+            update_post_meta($page_id, '_wp_page_template', 'page-templates/flexpress-email-blacklist.php');
+            error_log('FlexPress: Created email blacklist page with ID ' . $page_id);
+        }
+    }
+}
+add_action('after_setup_theme', 'flexpress_create_email_blacklist_page');
+
+/**
  * Create Home page with the page-home.php template
  */
 function flexpress_create_home_page()
@@ -3669,9 +3697,10 @@ function flexpress_handle_ppv_webhook()
  * 
  * @param int $episode_id The episode ID
  * @param int $user_id The user ID (optional, defaults to current user)
+ * @param bool $force_fresh Whether to force a fresh check (bypass caches)
  * @return array Access information array
  */
-function flexpress_check_episode_access($episode_id = null, $user_id = null)
+function flexpress_check_episode_access($episode_id = null, $user_id = null, $force_fresh = false)
 {
     if (!$episode_id) {
         $episode_id = get_the_ID();
@@ -3707,6 +3736,11 @@ function flexpress_check_episode_access($episode_id = null, $user_id = null)
     $membership_status = '';
     $is_active_member = false;
     if ($is_logged_in) {
+        // If forcing fresh check, clear user meta cache
+        if ($force_fresh) {
+            wp_cache_delete($user_id, 'user_meta');
+        }
+        
         $membership_status = get_user_meta($user_id, 'membership_status', true);
         $is_active_member = in_array($membership_status, ['active', 'cancelled']);
         $access_info['is_member'] = $is_active_member;
@@ -3715,6 +3749,11 @@ function flexpress_check_episode_access($episode_id = null, $user_id = null)
         $purchased_episode_meta = get_user_meta($user_id, 'purchased_episode_' . $episode_id, true);
         $ppv_purchases = get_user_meta($user_id, 'ppv_purchases', true) ?: [];
         $access_info['is_purchased'] = (bool) $purchased_episode_meta || in_array($episode_id, $ppv_purchases);
+        
+        // Log access check for debugging when forcing fresh
+        if ($force_fresh) {
+            error_log('FlexPress Fresh Access Check - Episode: ' . $episode_id . ', User: ' . $user_id . ', Purchased Meta: ' . ($purchased_episode_meta ? 'Yes' : 'No') . ', PPV Purchases: ' . implode(',', $ppv_purchases));
+        }
     }
 
     // Handle different access types
@@ -3846,15 +3885,16 @@ function flexpress_should_show_purchase_button($episode_id = null, $user_id = nu
  * 
  * @param int $episode_id The episode ID
  * @param int $user_id The user ID (optional)
+ * @param bool $force_fresh Whether to force a fresh access check
  * @return string Video ID to display (full, trailer, or preview)
  */
-function flexpress_get_episode_video_for_access($episode_id = null, $user_id = null)
+function flexpress_get_episode_video_for_access($episode_id = null, $user_id = null, $force_fresh = false)
 {
     if (!$episode_id) {
         $episode_id = get_the_ID();
     }
 
-    $access_info = flexpress_check_episode_access($episode_id, $user_id);
+    $access_info = flexpress_check_episode_access($episode_id, $user_id, $force_fresh);
 
     $full_video = get_field('full_video', $episode_id);
     $trailer_video = get_field('trailer_video', $episode_id);

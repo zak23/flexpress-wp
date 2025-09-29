@@ -29,6 +29,15 @@ while (have_posts()):
     // Check for PPV unlock success message
     $ppv_unlocked = isset($_GET['ppv']) && $_GET['ppv'] === 'unlocked';
     $payment_cancelled = isset($_GET['payment']) && $_GET['payment'] === 'cancelled';
+    
+    // If this is a fresh unlock, clear any relevant caches to ensure fresh access check
+    if ($ppv_unlocked) {
+        // Clear WordPress object cache for current user's meta data
+        wp_cache_delete(get_current_user_id(), 'user_meta');
+        
+        // Clear any episode-specific caches
+        wp_cache_delete('episode_access_' . get_the_ID() . '_' . get_current_user_id(), 'flexpress');
+    }
 
     // If we have a full video, try to get the duration from BunnyCDN
     if ($full_video && (empty($duration) || $duration == 0)) {
@@ -66,13 +75,13 @@ while (have_posts()):
         }
     }
 
-    // Check if user has access
-    $access_info = flexpress_check_episode_access(get_the_ID());
+    // Check if user has access (force fresh check if this is a fresh unlock)
+    $access_info = flexpress_check_episode_access(get_the_ID(), get_current_user_id(), $ppv_unlocked);
     $has_access = $access_info['has_access'];
     $is_active_member = $access_info['is_member'];
 
-    // Get video URL based on access
-    $video_id = flexpress_get_episode_video_for_access(get_the_ID());
+    // Get video URL based on access (use fresh access info)
+    $video_id = flexpress_get_episode_video_for_access(get_the_ID(), get_current_user_id(), $ppv_unlocked);
     $video_url = '';
     if ($video_id) {
         $video_url = flexpress_get_bunnycdn_video_url($video_id);

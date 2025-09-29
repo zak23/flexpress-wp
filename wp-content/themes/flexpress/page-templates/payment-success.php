@@ -172,7 +172,7 @@ $membership_expires = get_user_meta($user_id, 'membership_expires', true);
                                             <div class="step-content">
                                                 <h6>Watch Your Episode</h6>
                                                 <p>You now have full access to "<?php echo esc_html($episode->post_title); ?>".</p>
-                                                <a href="<?php echo get_permalink($episode_id); ?>" class="btn btn-primary btn-sm">
+                                                <a href="<?php echo get_permalink($episode_id); ?>?ppv=unlocked&transaction_id=<?php echo esc_attr($transaction_id); ?>" class="btn btn-primary btn-sm">
                                                     <i class="fas fa-play me-1"></i>
                                                     Watch Episode
                                                 </a>

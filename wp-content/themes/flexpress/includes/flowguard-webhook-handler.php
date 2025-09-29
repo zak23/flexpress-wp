@@ -390,23 +390,88 @@ function flexpress_flowguard_handle_refund($payload) {
         'reference_id' => $payload['referenceId'] ?? ''
     ]);
     
-    // If it's a subscription refund, update membership status
-    if ($payload['orderType'] === 'subscription') {
-        flexpress_update_membership_status($user_id, 'refunded');
-    }
+    // Handle access revocation and user banning
+    flexpress_handle_refund_access_revocation($user_id, $payload);
     
     // Log activity
     flexpress_flowguard_log_activity(
         $user_id,
         'flowguard_refund_' . $payload['postbackType'],
-        'Refund processed via Flowguard',
+        'Refund processed via Flowguard - Access revoked and user banned',
         $payload
     );
     
     // Send Discord notification
     flexpress_discord_notify_refund($payload, $user_id);
     
-    error_log('Flowguard Webhook: Refund processed for user ' . $user_id);
+    error_log('Flowguard Webhook: Refund processed for user ' . $user_id . ' - Access revoked and user banned');
+}
+
+/**
+ * Handle access revocation and user banning for refunds/chargebacks
+ * 
+ * @param int $user_id User ID
+ * @param array $payload Webhook payload
+ */
+function flexpress_handle_refund_access_revocation($user_id, $payload) {
+    $user = get_userdata($user_id);
+    if (!$user) {
+        error_log('FlexPress Refund: User not found for ID: ' . $user_id);
+        return;
+    }
+    
+    $order_type = $payload['orderType'] ?? '';
+    $postback_type = $payload['postbackType'] ?? '';
+    $reference_id = $payload['referenceId'] ?? '';
+    
+    // 1. Revoke subscription access
+    if ($order_type === 'subscription') {
+        flexpress_update_membership_status($user_id, 'banned');
+        error_log('FlexPress Refund: Banned user ' . $user_id . ' for subscription refund/chargeback');
+    }
+    
+    // 2. Revoke PPV access if it's a PPV purchase
+    if (strpos($reference_id, 'ppv_') === 0) {
+        // Extract episode ID from reference (format: ppv_{episode_id}_{user_id}_{timestamp})
+        $parts = explode('_', $reference_id);
+        if (count($parts) >= 2) {
+            $episode_id = intval($parts[1]);
+            
+            // Remove episode access
+            delete_user_meta($user_id, 'purchased_episode_' . $episode_id);
+            
+            // Remove from purchased episodes list
+            $purchased_episodes = get_user_meta($user_id, 'purchased_episodes', true);
+            if (is_array($purchased_episodes)) {
+                $purchased_episodes = array_diff($purchased_episodes, [$episode_id]);
+                update_user_meta($user_id, 'purchased_episodes', $purchased_episodes);
+            }
+            
+            // Remove from PPV purchases list
+            $ppv_purchases = get_user_meta($user_id, 'ppv_purchases', true);
+            if (is_array($ppv_purchases)) {
+                $ppv_purchases = array_diff($ppv_purchases, [$episode_id]);
+                update_user_meta($user_id, 'ppv_purchases', $ppv_purchases);
+            }
+            
+            // Remove transaction details
+            delete_user_meta($user_id, 'ppv_transaction_' . $episode_id);
+            
+            error_log('FlexPress Refund: Revoked PPV access to episode ' . $episode_id . ' for user ' . $user_id);
+        }
+    }
+    
+    // 3. Ban the user
+    flexpress_update_membership_status($user_id, 'banned');
+    
+    // 4. Add email to blacklist
+    flexpress_add_email_to_blacklist($user->user_email, 'Refund/Chargeback: ' . $postback_type);
+    
+    // 5. Log the ban reason
+    update_user_meta($user_id, 'ban_reason', 'Refund/Chargeback: ' . $postback_type . ' - Transaction ID: ' . ($payload['transactionId'] ?? ''));
+    update_user_meta($user_id, 'ban_date', current_time('mysql'));
+    
+    error_log('FlexPress Refund: User ' . $user_id . ' (' . $user->user_email . ') banned for ' . $postback_type);
 }
 
 /**

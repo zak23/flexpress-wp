@@ -42,9 +42,17 @@ require_once FLEXPRESS_PATH . '/includes/flowguard-database.php';
 // Discord Notifications
 require_once FLEXPRESS_PATH . '/includes/discord-notifications.php';
 
+// Email Blacklist System
+require_once FLEXPRESS_PATH . '/includes/class-flexpress-email-blacklist.php';
+
 // Verotel files removed - Flowguard is now the primary payment system
 
 // Debug postback functionality removed - file no longer exists
+
+// Email Blacklist Admin Settings (admin only)
+if (is_admin()) {
+    require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-email-blacklist-settings.php';
+}
 
 // Include Flowguard admin tools (admin only)
 if (is_admin()) {
@@ -1976,6 +1984,34 @@ function flexpress_custom_registration_url($register_url)
     return home_url('/register');
 }
 add_filter('register_url', 'flexpress_custom_registration_url');
+
+/**
+ * Create banned page with the banned.php template
+ */
+function flexpress_create_banned_page() {
+    // Check if banned page already exists
+    $banned_page = get_page_by_path('banned');
+    
+    if (!$banned_page) {
+        $page_data = array(
+            'post_title' => 'Account Suspended',
+            'post_name' => 'banned',
+            'post_content' => 'Your account has been suspended.',
+            'post_status' => 'publish',
+            'post_type' => 'page',
+            'post_author' => 1,
+            'page_template' => 'page-templates/banned.php'
+        );
+        
+        $page_id = wp_insert_post($page_data);
+        
+        if ($page_id) {
+            update_post_meta($page_id, '_wp_page_template', 'page-templates/banned.php');
+            error_log('FlexPress: Created banned page with ID ' . $page_id);
+        }
+    }
+}
+add_action('after_setup_theme', 'flexpress_create_banned_page');
 
 /**
  * Create Home page with the page-home.php template

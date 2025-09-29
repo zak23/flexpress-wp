@@ -37,7 +37,7 @@ function flexpress_get_plunk_public_api_key() {
  */
 function flexpress_should_show_newsletter_modal() {
     $settings = flexpress_get_plunk_settings();
-    return flexpress_is_plunk_enabled() && !empty($settings['enable_newsletter_modal']);
+    return flexpress_is_plunk_enabled() && !empty($settings['enable_newsletter_modal']) && is_front_page();
 }
 
 /**

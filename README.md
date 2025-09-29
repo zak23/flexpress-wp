@@ -645,6 +645,8 @@ FlexPress now uses **Flowguard** as the primary payment processing system, repla
 - **Webhook Integration**: Real-time payment notifications
 - **Enhanced Reference System**: Meaningful payment references with user data (affiliate, promo, signup source)
 - **Admin Dashboard**: Complete payment management interface
+- **Refund/Chargeback Protection**: Automatic access revocation and user banning
+- **Email Blacklist System**: Prevents refund/chargeback users from re-registering
 
 #### Flowguard Configuration
 
@@ -668,6 +670,25 @@ Flowguard webhooks are automatically handled at:
 ```
 /wp-admin/admin-ajax.php?action=flowguard_webhook
 ```
+
+#### Refund/Chargeback Protection
+
+FlexPress automatically handles refunds and chargebacks with comprehensive protection:
+
+**Automatic Actions on Refund/Chargeback**:
+
+- **Subscription Access**: Membership status set to "banned"
+- **PPV Access**: Individual episode access revoked
+- **User Banning**: Account banned with reason logged
+- **Email Blacklisting**: Email added to blacklist to prevent re-registration
+- **Transaction Logging**: Complete audit trail maintained
+
+**Email Blacklist System**:
+
+- **Admin Interface**: Manage blacklist via `FlexPress → Email Blacklist`
+- **Registration Prevention**: Blacklisted emails cannot register new accounts
+- **Automatic Addition**: Refund/chargeback emails automatically blacklisted
+- **Manual Management**: Add/remove emails with reason tracking
 
 #### Enhanced Reference System
 
@@ -706,6 +727,29 @@ FlexPress now includes an enhanced reference system that stores meaningful user 
 
 **Backward Compatibility**: Legacy references (`user_123_plan_456`) continue to work seamlessly.
 
+### Email Blacklist System
+
+FlexPress includes a comprehensive email blacklist system to prevent refund/chargeback users from re-registering:
+
+#### Blacklist Features
+
+- **Automatic Blacklisting**: Refund/chargeback emails automatically added to blacklist
+- **Registration Prevention**: Blacklisted emails cannot create new accounts
+- **Admin Management**: Full blacklist management via `FlexPress → Email Blacklist`
+- **Reason Tracking**: Track why emails were blacklisted
+- **Manual Override**: Add/remove emails manually with admin controls
+- **System Integration**: Seamlessly integrated with WordPress registration system
+
+#### Admin Interface
+
+Access the blacklist management at `FlexPress → Email Blacklist`:
+
+- **View All Blacklisted Emails**: Complete list with reasons and dates
+- **Add Emails Manually**: Add emails with custom reasons
+- **Remove Emails**: Remove emails from blacklist when appropriate
+- **Statistics**: View total blacklisted email count
+- **Audit Trail**: Track who added emails and when
+
 #### Database Tables
 
 The integration creates three database tables:
@@ -713,6 +757,24 @@ The integration creates three database tables:
 - `wp_flexpress_flowguard_webhooks` - Webhook event logging
 - `wp_flexpress_flowguard_transactions` - Transaction records
 - `wp_flexpress_flowguard_sessions` - Payment session tracking
+
+**Email Blacklist Storage**: Blacklisted emails are stored in WordPress options table as `flexpress_email_blacklist`.
+
+#### Banned User Protection
+
+FlexPress includes automatic banned user detection and redirection:
+
+**Header Check**: Every page load checks if the logged-in user is banned
+**Automatic Redirect**: Banned users are redirected to `/banned` page
+**Banned Page**: Custom page template displays ban reason and contact information
+**Access Prevention**: Banned users cannot access any content or pages
+
+**Banned Page Features**:
+
+- Displays ban reason and date
+- Contact support information
+- Logout option
+- Professional messaging
 
 ### Discord Notifications System
 

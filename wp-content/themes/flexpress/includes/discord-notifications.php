@@ -534,9 +534,18 @@ class FlexPress_Discord_Notifications {
         $user_display_name = flexpress_get_user_display_name($user_id);
         $refund_type = $payload['postbackType']; // chargeback or credit
         
+        // Differentiate between refund and chargeback
+        if ($refund_type === 'chargeback') {
+            $title = '🚨 Chargeback Dispute';
+            $color = 0xff0000; // Red - more urgent
+        } else {
+            $title = '💰 Refund Processed';
+            $color = 0xffa500; // Orange - less urgent
+        }
+        
         $embed = [
-            'title' => '⚠️ ' . ucfirst($refund_type) . ' Processed',
-            'color' => 0xff0000, // Red
+            'title' => $title,
+            'color' => $color,
             'fields' => [
                 [
                     'name' => 'Username',
@@ -794,7 +803,12 @@ function flexpress_discord_notify_refund($payload, $user_id) {
     $embed = $discord->create_refund_embed($payload, $user_id);
     
     $refund_type = $payload['postbackType'];
-    $discord->send_notification($embed, '⚠️ **' . ucfirst($refund_type) . ' processed!**', 'financial');
+    if ($refund_type === 'chargeback') {
+        $message = '🚨 **Chargeback dispute filed!** Immediate attention required.';
+    } else {
+        $message = '💰 **Refund processed!** Customer service action completed.';
+    }
+    $discord->send_notification($embed, $message, 'financial');
 }
 
 /**

@@ -11,6 +11,26 @@
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
 
+<?php
+// Check for banned users and redirect (but not on specific pages)
+global $post;
+$current_page_slug = isset($post->post_name) ? $post->post_name : '';
+
+// Pages that banned users can access
+$allowed_pages = array('banned', 'support', 'contact');
+
+if (is_user_logged_in() && !in_array($current_page_slug, $allowed_pages)) {
+    $user_id = get_current_user_id();
+    $membership_status = get_user_meta($user_id, 'membership_status', true);
+    
+    if ($membership_status === 'banned') {
+        // Redirect to banned page
+        wp_redirect(home_url('/banned'));
+        exit;
+    }
+}
+?>
+
 <div id="page" class="site">
     <header id="masthead" class="site-header">
         <nav class="navbar navbar-expand-lg navbar-dark">

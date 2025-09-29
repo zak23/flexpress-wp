@@ -369,7 +369,7 @@ function flexpress_display_episode_thumbnail($size = 'episode-card', $class = ''
         }
         
         printf(
-            '<img src="%s" alt="%s" class="%s" data-video-id="%s" data-preview-url="%s" data-original-src="%s" loading="lazy" decoding="async" sizes="(max-width: 768px) 388px, 776px">',
+            '<img src="%s" alt="%s" class="%s" data-video-id="%s" data-preview-url="%s" data-original-src="%s" loading="lazy" decoding="async" sizes="(max-width: 768px) 388px, 776px" fetchpriority="high">',
             esc_url($thumbnail_url),
             esc_attr(get_the_title()),
             esc_attr($classes),
@@ -385,11 +385,13 @@ function flexpress_display_episode_thumbnail($size = 'episode-card', $class = ''
             echo wp_get_attachment_image($thumbnail_id, $size, false, array(
                 'class' => $class,
                 'sizes' => $sizes_attr,
-                'srcset' => wp_get_attachment_image_srcset($thumbnail_id, $size)
+                'srcset' => wp_get_attachment_image_srcset($thumbnail_id, $size),
+                'loading' => 'lazy',
+                'decoding' => 'async'
             ));
         } else {
             // Default placeholder image if no featured image
-            echo '<img src="' . esc_url(get_template_directory_uri()) . '/assets/images/placeholder.jpg" alt="' . esc_attr(get_the_title()) . '" class="' . esc_attr($class) . '" />';
+            echo '<img src="' . esc_url(get_template_directory_uri()) . '/assets/images/placeholder.jpg" alt="' . esc_attr(get_the_title()) . '" class="' . esc_attr($class) . '" loading="lazy" decoding="async" />';
         }
     }
 }

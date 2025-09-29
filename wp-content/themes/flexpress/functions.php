@@ -113,6 +113,7 @@ add_action('init', 'flexpress_load_acf_fields', 20);
 
 // Include admin files immediately - they contain their own admin checks
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-settings.php';
+require_once FLEXPRESS_PATH . '/includes/performance-optimization.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-general-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-video-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-membership-settings.php';
@@ -314,10 +315,13 @@ add_action('after_setup_theme', 'flexpress_disable_admin_bar_for_non_admins');
  */
 function flexpress_enqueue_scripts_and_styles()
 {
-    // Enqueue Bootstrap CSS
+    // Preload critical external resources
+    add_action('wp_head', 'flexpress_preload_critical_resources', 1);
+    
+    // Enqueue Bootstrap CSS with preload
     wp_enqueue_style('bootstrap-css', 'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css', array(), '5.1.3');
 
-    // Enqueue Font Awesome
+    // Enqueue Font Awesome with preload
     wp_enqueue_style('font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css', array(), '6.0.0');
 
     // Enqueue theme CSS files
@@ -348,15 +352,18 @@ function flexpress_enqueue_scripts_and_styles()
         wp_enqueue_style('slick-css', 'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css', array(), '1.8.1');
         wp_enqueue_style('slick-theme-css', 'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css', array('slick-css'), '1.8.1');
         wp_enqueue_script('slick-js', 'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js', array('jquery'), '1.8.1', true);
+        wp_script_add_data('slick-js', 'defer', true);
     }
 
-    // Enqueue jQuery
+    // Enqueue jQuery with defer
     wp_enqueue_script('jquery');
+    wp_script_add_data('jquery', 'defer', true);
 
-    // Enqueue Bootstrap JS
+    // Enqueue Bootstrap JS with defer
     wp_enqueue_script('bootstrap-js', 'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js', array(), '5.1.3', true);
+    wp_script_add_data('bootstrap-js', 'defer', true);
 
-    // Enqueue age verification JavaScript (always loaded)
+    // Enqueue age verification JavaScript (always loaded) - critical, no defer
     wp_enqueue_script('flexpress-age-verification', get_template_directory_uri() . '/assets/js/age-verification.js', array(), wp_get_theme()->get('Version') . '.' . time(), true);
 
     // Localize age verification script with exit URL
@@ -372,11 +379,13 @@ function flexpress_enqueue_scripts_and_styles()
         !is_page_template('page-templates/flowguard-payment.php')
     ) {
         wp_enqueue_script('flexpress-main', get_template_directory_uri() . '/assets/js/main.js', array('jquery'), wp_get_theme()->get('Version'), true);
+        wp_script_add_data('flexpress-main', 'defer', true);
     }
 
     // Enqueue hero video script on homepage
     if (is_page_template('page-templates/page-home.php')) {
         wp_enqueue_script('flexpress-hero-video', get_template_directory_uri() . '/assets/js/hero-video.js', array(), wp_get_theme()->get('Version'), true);
+        wp_script_add_data('flexpress-hero-video', 'defer', true);
     }
 
     // Get membership status for localized data
@@ -404,11 +413,13 @@ function flexpress_enqueue_scripts_and_styles()
     // Enqueue login script on login page
     if (is_page_template('page-templates/login.php')) {
         wp_enqueue_script('flexpress-login', get_template_directory_uri() . '/assets/js/login.js', array('jquery'), wp_get_theme()->get('Version'), true);
+        wp_script_add_data('flexpress-login', 'defer', true);
     }
 
     // Enqueue registration script on registration page
     if (is_page_template('page-templates/register.php')) {
         wp_enqueue_script('flexpress-registration', get_template_directory_uri() . '/assets/js/registration.js', array('jquery'), wp_get_theme()->get('Version'), true);
+        wp_script_add_data('flexpress-registration', 'defer', true);
 
         // Localize registration script with proper data
         wp_localize_script('flexpress-registration', 'flexpressRegistration', array(
@@ -421,6 +432,7 @@ function flexpress_enqueue_scripts_and_styles()
     // Enqueue join page specific script
     if (is_page_template('page-templates/join.php')) {
         wp_enqueue_script('flexpress-join', get_template_directory_uri() . '/assets/js/join.js', array(), wp_get_theme()->get('Version'), true);
+        wp_script_add_data('flexpress-join', 'defer', true);
     }
 
     // Enqueue Flowguard script where needed
@@ -432,6 +444,7 @@ function flexpress_enqueue_scripts_and_styles()
         is_page_template('page-templates/register-flowguard.php')
     ) {
         wp_enqueue_script('flexpress-flowguard', get_template_directory_uri() . '/assets/js/flowguard.js', array('jquery'), wp_get_theme()->get('Version') . '.' . time(), true);
+        wp_script_add_data('flexpress-flowguard', 'defer', true);
 
         // Get Flowguard settings
         $flowguard_settings = get_option('flexpress_flowguard_settings', []);
@@ -447,6 +460,7 @@ function flexpress_enqueue_scripts_and_styles()
     // Flowguard script for payment processing
     if (is_page_template('page-templates/membership.php') || is_page_template('page-templates/dashboard.php')) {
         wp_enqueue_script('flexpress-flowguard', get_template_directory_uri() . '/assets/js/flowguard.js', array('jquery'), wp_get_theme()->get('Version'), true);
+        wp_script_add_data('flexpress-flowguard', 'defer', true);
 
         wp_localize_script('flexpress-flowguard', 'flexpress_flowguard', array(
             'ajax_url' => admin_url('admin-ajax.php'),
@@ -463,6 +477,7 @@ function flexpress_enqueue_scripts_and_styles()
             wp_get_theme()->get('Version'),
             true
         );
+        wp_script_add_data('flexpress-models-lazy-load', 'defer', true);
 
         // Localize script with AJAX data
         wp_localize_script('flexpress-models-lazy-load', 'flexpress_ajax', array(
@@ -480,12 +495,14 @@ function flexpress_enqueue_scripts_and_styles()
             wp_get_theme()->get('Version'),
             true
         );
+        wp_script_add_data('flexpress-gallery-lightbox', 'defer', true);
     }
 
     // Enqueue affiliate signup script on affiliate signup page
     if (is_page_template('page-templates/affiliate-signup.php')) {
         wp_enqueue_style('flexpress-affiliate-styles', get_template_directory_uri() . '/assets/css/affiliate-styles.css', array('flexpress-main'), wp_get_theme()->get('Version'));
         wp_enqueue_script('flexpress-affiliate-signup', get_template_directory_uri() . '/assets/js/affiliate-signup.js', array('jquery'), wp_get_theme()->get('Version'), true);
+        wp_script_add_data('flexpress-affiliate-signup', 'defer', true);
 
         wp_localize_script('flexpress-affiliate-signup', 'affiliateSignup', array(
             'ajaxurl' => admin_url('admin-ajax.php'),
@@ -497,7 +514,9 @@ function flexpress_enqueue_scripts_and_styles()
     if (is_page_template('page-templates/affiliate-dashboard.php')) {
         wp_enqueue_style('flexpress-affiliate-styles', get_template_directory_uri() . '/assets/css/affiliate-styles.css', array('flexpress-main'), wp_get_theme()->get('Version'));
         wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js', array(), '3.9.1', true);
+        wp_script_add_data('chart-js', 'defer', true);
         wp_enqueue_script('flexpress-affiliate-dashboard', get_template_directory_uri() . '/assets/js/affiliate-dashboard.js', array('jquery', 'chart-js'), wp_get_theme()->get('Version'), true);
+        wp_script_add_data('flexpress-affiliate-dashboard', 'defer', true);
 
         // Get affiliate data for the dashboard
         $current_user_id = get_current_user_id();
@@ -532,6 +551,45 @@ function flexpress_enqueue_scripts_and_styles()
     flexpress_add_accent_color_styles();
 }
 add_action('wp_enqueue_scripts', 'flexpress_enqueue_scripts_and_styles');
+
+/**
+ * Preload critical external resources for better performance
+ */
+function flexpress_preload_critical_resources() {
+    // Preload critical external CSS
+    echo '<link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">' . "\n";
+    echo '<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"></noscript>' . "\n";
+    
+    echo '<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">' . "\n";
+    echo '<noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></noscript>' . "\n";
+    
+    // Preload critical theme CSS
+    echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/css/variables.css" as="style">' . "\n";
+    echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/css/main.css" as="style">' . "\n";
+    
+    // Preload critical JavaScript
+    echo '<link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" as="script">' . "\n";
+    
+    // DNS prefetch for external domains
+    echo '<link rel="dns-prefetch" href="//cdn.jsdelivr.net">' . "\n";
+    echo '<link rel="dns-prefetch" href="//cdnjs.cloudflare.com">' . "\n";
+    echo '<link rel="dns-prefetch" href="//storage.bunnycdn.com">' . "\n";
+}
+
+/**
+ * Add defer attribute to script tags
+ */
+function flexpress_add_defer_to_scripts($tag, $handle, $src) {
+    // Get script data
+    $defer = wp_scripts()->get_data($handle, 'defer');
+    
+    if ($defer) {
+        return str_replace('<script ', '<script defer ', $tag);
+    }
+    
+    return $tag;
+}
+add_filter('script_loader_tag', 'flexpress_add_defer_to_scripts', 10, 3);
 
 /**
  * Add accent color CSS variables to the theme

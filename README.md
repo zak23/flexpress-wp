@@ -79,6 +79,14 @@ flexpress/
 ### 🚀 Technology Stack
 
 - **WordPress**: 6.8.2 (Latest stable version)
+
+## 🔎 SEO Basics
+
+- The FlexPress theme now outputs a meta description tag automatically when no SEO plugin is handling it.
+- Fallback order: ACF/meta field (`seo_meta_description` or `meta_description`) → excerpt → content summary → site tagline.
+- If Yoast SEO, Rank Math, AIOSEO, SEOPress, or The SEO Framework is active, the theme suppresses its own meta description to prevent duplicates.
+- Do not hardcode `<meta name="description">` in templates. Use ACF fields for per-page descriptions instead.
+
 - **PHP**: 8.3.26 (Latest stable version with performance improvements)
 - **MySQL**: 8.0 (Latest stable version)
 - **Redis**: 7-alpine (Object caching and session storage)

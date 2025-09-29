@@ -125,6 +125,13 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Menu Systems**: Automated navigation setup with Main, Support, Legal, and Friends menus
 - **Template Hierarchy**: Custom page and archive templates
 
+### SEO Meta Description
+
+- Global meta description is output via a `wp_head` hook in `functions.php`.
+- Fallback order: ACF/meta field (`seo_meta_description` or `meta_description`) → excerpt → content summary → site tagline.
+- Auto-detects common SEO plugins (Yoast, Rank Math, AIOSEO, SEOPress, The SEO Framework) and disables theme output to avoid duplicates.
+- Do not echo `<meta name="description">` directly in templates. Use ACF fields for per-page descriptions.
+
 ---
 
 ## 📂 Theme Structure

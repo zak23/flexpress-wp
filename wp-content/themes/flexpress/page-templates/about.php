@@ -34,11 +34,7 @@ $cta_content = get_field('about_cta_content');
 $cta_button_text = get_field('about_cta_button_text');
 $cta_button_url = get_field('about_cta_button_url');
 
-// Set meta description for SEO
-$meta_description = get_field('about_meta_description');
-if ($meta_description) {
-    echo '<meta name="description" content="' . esc_attr($meta_description) . '">';
-}
+// Removed invalid meta description output. Meta description is now handled globally in header.php via wp_head.
 ?>
 
 <main class="site-main">

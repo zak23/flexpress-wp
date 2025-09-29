@@ -459,13 +459,28 @@ class FlexPress_Membership_Settings {
             $membership_status = sanitize_text_field($_POST['membership_status']);
             $subscription_type = sanitize_text_field($_POST['subscription_type']);
             $next_rebill_date = sanitize_text_field($_POST['next_rebill_date']);
-            $verotel_subscriber_id = sanitize_text_field($_POST['verotel_subscriber_id']);
+            $verotel_subscriber_id = isset($_POST['verotel_subscriber_id']) ? sanitize_text_field($_POST['verotel_subscriber_id']) : '';
+            $flowguard_subscriber_id = isset($_POST['flowguard_subscriber_id']) ? sanitize_text_field($_POST['flowguard_subscriber_id']) : '';
             
             // Update user meta
             update_user_meta($user_id, 'membership_status', $membership_status);
             update_user_meta($user_id, 'subscription_type', $subscription_type);
             update_user_meta($user_id, 'next_rebill_date', $next_rebill_date);
             update_user_meta($user_id, 'verotel_subscriber_id', $verotel_subscriber_id);
+            update_user_meta($user_id, 'flowguard_subscriber_id', $flowguard_subscriber_id);
+            
+            // Clear user cache to ensure updated status is reflected immediately
+            wp_cache_delete($user_id, 'user_meta');
+            clean_user_cache($user_id);
+            
+            // Clear Redis object cache if available
+            if (function_exists('wp_cache_flush')) {
+                wp_cache_flush();
+            }
+            
+            // Force refresh of user meta
+            delete_user_meta($user_id, 'membership_status');
+            update_user_meta($user_id, 'membership_status', $membership_status);
             
             // Calculate and update subscription start date if it doesn't exist
             $subscription_start = get_user_meta($user_id, 'subscription_start_date', true);
@@ -474,6 +489,7 @@ class FlexPress_Membership_Settings {
             }
             
             echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('User membership details updated successfully.', 'flexpress') . '</p></div>';
+            echo '<div class="notice notice-info is-dismissible"><p>' . esc_html__('Note: If the user is currently logged in, they may need to refresh their browser or log out and back in to see the updated status.', 'flexpress') . '</p></div>';
         }
         
         // Get all users
@@ -627,6 +643,7 @@ class FlexPress_Membership_Settings {
         $next_rebill_date = get_user_meta($user_id, 'next_rebill_date', true);
         $verotel_subscriber_id = get_user_meta($user_id, 'verotel_subscriber_id', true);
         $verotel_transaction_id = get_user_meta($user_id, 'verotel_transaction_id', true);
+        $flowguard_subscriber_id = get_user_meta($user_id, 'flowguard_subscriber_id', true);
         ?>
         <h2><?php echo esc_html(sprintf(__('Edit Membership for %s', 'flexpress'), $user->display_name)); ?></h2>
         
@@ -690,6 +707,22 @@ class FlexPress_Membership_Settings {
                 </tr>
                 
 
+                
+                <tr>
+                    <th><label for="verotel_subscriber_id"><?php esc_html_e('Verotel Subscriber ID', 'flexpress'); ?></label></th>
+                    <td>
+                        <input type="text" name="verotel_subscriber_id" id="verotel_subscriber_id" value="<?php echo esc_attr($verotel_subscriber_id); ?>" class="regular-text" />
+                        <p class="description"><?php esc_html_e('Legacy Verotel subscriber ID (read-only)', 'flexpress'); ?></p>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <th><label for="flowguard_subscriber_id"><?php esc_html_e('Flowguard Subscriber ID', 'flexpress'); ?></label></th>
+                    <td>
+                        <input type="text" name="flowguard_subscriber_id" id="flowguard_subscriber_id" value="<?php echo esc_attr($flowguard_subscriber_id); ?>" class="regular-text" />
+                        <p class="description"><?php esc_html_e('Flowguard subscriber ID for subscription management', 'flexpress'); ?></p>
+                    </td>
+                </tr>
                 
                 <tr>
                     <th><label><?php esc_html_e('Verotel Transaction ID', 'flexpress'); ?></label></th>
@@ -1037,6 +1070,7 @@ class FlexPress_Membership_Settings {
         $next_rebill_date = get_user_meta($user->ID, 'next_rebill_date', true);
         $verotel_subscriber_id = get_user_meta($user->ID, 'verotel_subscriber_id', true);
         $verotel_transaction_id = get_user_meta($user->ID, 'verotel_transaction_id', true);
+        $flowguard_subscriber_id = get_user_meta($user->ID, 'flowguard_subscriber_id', true);
         ?>
         <h2><?php esc_html_e('Membership Information', 'flexpress'); ?></h2>
         <table class="form-table">
@@ -1072,6 +1106,21 @@ class FlexPress_Membership_Settings {
                 </td>
             </tr>
             
+            <tr>
+                <th><label for="verotel_subscriber_id"><?php esc_html_e('Verotel Subscriber ID', 'flexpress'); ?></label></th>
+                <td>
+                    <input type="text" name="verotel_subscriber_id" id="verotel_subscriber_id" value="<?php echo esc_attr($verotel_subscriber_id); ?>" class="regular-text" />
+                    <p class="description"><?php esc_html_e('Legacy Verotel subscriber ID', 'flexpress'); ?></p>
+                </td>
+            </tr>
+            
+            <tr>
+                <th><label for="flowguard_subscriber_id"><?php esc_html_e('Flowguard Subscriber ID', 'flexpress'); ?></label></th>
+                <td>
+                    <input type="text" name="flowguard_subscriber_id" id="flowguard_subscriber_id" value="<?php echo esc_attr($flowguard_subscriber_id); ?>" class="regular-text" />
+                    <p class="description"><?php esc_html_e('Flowguard subscriber ID for subscription management', 'flexpress'); ?></p>
+                </td>
+            </tr>
 
         </table>
         
@@ -1095,6 +1144,20 @@ class FlexPress_Membership_Settings {
         update_user_meta($user_id, 'subscription_type', sanitize_text_field($_POST['subscription_type']));
         update_user_meta($user_id, 'next_rebill_date', sanitize_text_field($_POST['next_rebill_date']));
         update_user_meta($user_id, 'verotel_subscriber_id', sanitize_text_field($_POST['verotel_subscriber_id']));
+        update_user_meta($user_id, 'flowguard_subscriber_id', sanitize_text_field($_POST['flowguard_subscriber_id']));
+        
+        // Clear user cache to ensure updated status is reflected immediately
+        wp_cache_delete($user_id, 'user_meta');
+        clean_user_cache($user_id);
+        
+        // Clear Redis object cache if available
+        if (function_exists('wp_cache_flush')) {
+            wp_cache_flush();
+        }
+        
+        // Force refresh of user meta
+        delete_user_meta($user_id, 'membership_status');
+        update_user_meta($user_id, 'membership_status', sanitize_text_field($_POST['membership_status']));
     }
 
     /**

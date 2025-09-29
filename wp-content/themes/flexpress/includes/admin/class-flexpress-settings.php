@@ -138,6 +138,16 @@ class FlexPress_Settings {
                 }
             }
         );
+
+        // Add Tools submenu
+        add_submenu_page(
+            $this->page_slug,
+            __('Tools', 'flexpress'),
+            __('Tools', 'flexpress'),
+            'manage_options',
+            'flexpress-tools',
+            array($this, 'render_tools_page')
+        );
     }
 
     /**
@@ -327,6 +337,88 @@ class FlexPress_Settings {
                     <p><?php esc_html_e('Failed to create support pages and menu. Please check error logs.', 'flexpress'); ?></p>
                 </div>
             <?php endif; ?>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render the Tools page
+     */
+    public function render_tools_page() {
+        // Handle form submissions
+        if (isset($_POST['cancel_banned_subscriptions']) && wp_verify_nonce($_POST['cancel_banned_nonce'], 'cancel_banned_subscriptions')) {
+            if (function_exists('flexpress_cancel_subscriptions_for_banned_users')) {
+                $results = flexpress_cancel_subscriptions_for_banned_users();
+                $message = sprintf(
+                    __('Bulk cancellation completed. Total: %d, Success: %d, Failed: %d', 'flexpress'),
+                    $results['total'],
+                    $results['success'],
+                    $results['failed']
+                );
+                echo '<div class="notice notice-success"><p>' . esc_html($message) . '</p></div>';
+                
+                if (!empty($results['errors'])) {
+                    echo '<div class="notice notice-warning"><p><strong>Errors:</strong></p><ul>';
+                    foreach ($results['errors'] as $error) {
+                        echo '<li>' . esc_html($error) . '</li>';
+                    }
+                    echo '</ul></div>';
+                }
+            } else {
+                echo '<div class="notice notice-error"><p>' . esc_html__('Function not available', 'flexpress') . '</p></div>';
+            }
+        }
+        
+        // Handle test refund
+        if (isset($_POST['test_refund']) && wp_verify_nonce($_POST['test_refund_nonce'], 'test_refund')) {
+            $reference_id = sanitize_text_field($_POST['reference_id']);
+            if (function_exists('flexpress_test_refund_webhook') && !empty($reference_id)) {
+                $result = flexpress_test_refund_webhook($reference_id);
+                if ($result['success']) {
+                    echo '<div class="notice notice-success"><p>' . esc_html($result['message']) . '</p></div>';
+                } else {
+                    echo '<div class="notice notice-error"><p>' . esc_html($result['message']) . '</p></div>';
+                }
+            } else {
+                echo '<div class="notice notice-error"><p>' . esc_html__('Invalid reference ID or function not available', 'flexpress') . '</p></div>';
+            }
+        }
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e('FlexPress Tools', 'flexpress'); ?></h1>
+            
+            <div class="card" style="max-width: 600px;">
+                <h2><?php esc_html_e('Banned User Management', 'flexpress'); ?></h2>
+                <p><?php esc_html_e('Cancel active subscriptions for all banned users to prevent rebilling.', 'flexpress'); ?></p>
+                
+                <form method="post" action="">
+                    <?php wp_nonce_field('cancel_banned_subscriptions', 'cancel_banned_nonce'); ?>
+                    <input type="submit" name="cancel_banned_subscriptions" class="button button-primary" 
+                           value="<?php esc_attr_e('Cancel Subscriptions for Banned Users', 'flexpress'); ?>"
+                           onclick="return confirm('<?php esc_attr_e('Are you sure you want to cancel all active subscriptions for banned users?', 'flexpress'); ?>');" />
+                </form>
+            </div>
+            
+            <div class="card" style="max-width: 600px; margin-top: 20px;">
+                <h2><?php esc_html_e('Test Refund Webhook', 'flexpress'); ?></h2>
+                <p><?php esc_html_e('Test the refund webhook functionality for a specific reference ID.', 'flexpress'); ?></p>
+                
+                <form method="post" action="">
+                    <?php wp_nonce_field('test_refund', 'test_refund_nonce'); ?>
+                    <table class="form-table">
+                        <tr>
+                            <th><label for="reference_id"><?php esc_html_e('Reference ID', 'flexpress'); ?></label></th>
+                            <td>
+                                <input type="text" name="reference_id" id="reference_id" value="ppv_ep666870_uid49_affnone_promonone_srcreferr_ts59121900" class="regular-text" />
+                                <p class="description"><?php esc_html_e('Enter the reference ID to test refund processing', 'flexpress'); ?></p>
+                            </td>
+                        </tr>
+                    </table>
+                    <input type="submit" name="test_refund" class="button button-secondary" 
+                           value="<?php esc_attr_e('Test Refund Webhook', 'flexpress'); ?>"
+                           onclick="return confirm('<?php esc_attr_e('Are you sure you want to test the refund webhook? This will process a refund for the specified reference.', 'flexpress'); ?>');" />
+                </form>
+            </div>
         </div>
         <?php
     }

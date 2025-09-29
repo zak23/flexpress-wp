@@ -13,8 +13,20 @@
 
 <?php
 // Check for banned users and redirect (but not on specific pages)
-global $post;
-$current_page_slug = isset($post->post_name) ? $post->post_name : '';
+$current_url = $_SERVER['REQUEST_URI'] ?? '';
+$current_page_slug = '';
+
+// Extract page slug from URL
+if (preg_match('/\/([^\/\?]+)/', $current_url, $matches)) {
+    $current_page_slug = $matches[1];
+}
+
+// Handle special cases for post type archives
+if (empty($current_page_slug) && strpos($current_url, '/models') !== false) {
+    $current_page_slug = 'models';
+} elseif (empty($current_page_slug) && strpos($current_url, '/episodes') !== false) {
+    $current_page_slug = 'episodes';
+}
 
 // Pages that banned users can access
 $allowed_pages = array('banned', 'support', 'contact');
@@ -23,10 +35,17 @@ if (is_user_logged_in() && !in_array($current_page_slug, $allowed_pages)) {
     $user_id = get_current_user_id();
     $membership_status = get_user_meta($user_id, 'membership_status', true);
     
+    // Debug logging
+    error_log('FlexPress Banned Check: User ID=' . $user_id . ', Status=' . var_export($membership_status, true) . ', Page=' . $current_page_slug . ', URL=' . $current_url . ', Allowed=' . implode(',', $allowed_pages));
+    
+    // Check if status is exactly 'banned' (not empty string or other values)
     if ($membership_status === 'banned') {
         // Redirect to banned page
+        error_log('FlexPress Banned Check: Redirecting user ' . $user_id . ' to banned page');
         wp_redirect(home_url('/banned'));
         exit;
+    } else {
+        error_log('FlexPress Banned Check: User ' . $user_id . ' NOT banned, status=' . var_export($membership_status, true));
     }
 }
 ?>

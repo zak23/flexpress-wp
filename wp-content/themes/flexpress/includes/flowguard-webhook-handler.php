@@ -424,6 +424,8 @@ function flexpress_handle_refund_access_revocation($user_id, $payload) {
     $postback_type = $payload['postbackType'] ?? '';
     $reference_id = $payload['referenceId'] ?? '';
     
+    error_log('FlexPress Refund: Processing refund for user ' . $user_id . ' - Order Type: ' . $order_type . ', Postback Type: ' . $postback_type . ', Reference: ' . $reference_id);
+    
     // 1. Revoke subscription access
     if ($order_type === 'subscription') {
         flexpress_update_membership_status($user_id, 'banned');
@@ -431,47 +433,216 @@ function flexpress_handle_refund_access_revocation($user_id, $payload) {
     }
     
     // 2. Revoke PPV access if it's a PPV purchase
-    if (strpos($reference_id, 'ppv_') === 0) {
-        // Extract episode ID from reference (format: ppv_{episode_id}_{user_id}_{timestamp})
-        $parts = explode('_', $reference_id);
-        if (count($parts) >= 2) {
-            $episode_id = intval($parts[1]);
-            
-            // Remove episode access
-            delete_user_meta($user_id, 'purchased_episode_' . $episode_id);
-            
-            // Remove from purchased episodes list
-            $purchased_episodes = get_user_meta($user_id, 'purchased_episodes', true);
-            if (is_array($purchased_episodes)) {
-                $purchased_episodes = array_diff($purchased_episodes, [$episode_id]);
-                update_user_meta($user_id, 'purchased_episodes', $purchased_episodes);
+    $reference_data = flexpress_flowguard_parse_enhanced_reference($reference_id);
+    if ($reference_data['is_ppv'] && !empty($reference_data['episode_id'])) {
+        $episode_id = $reference_data['episode_id'];
+        
+        // Remove episode access
+        delete_user_meta($user_id, 'purchased_episode_' . $episode_id);
+        
+        // Remove from purchased episodes list
+        $purchased_episodes = get_user_meta($user_id, 'purchased_episodes', true);
+        if (is_array($purchased_episodes)) {
+            $purchased_episodes = array_diff($purchased_episodes, [$episode_id]);
+            update_user_meta($user_id, 'purchased_episodes', $purchased_episodes);
+        }
+        
+        // Remove from PPV purchases list
+        $ppv_purchases = get_user_meta($user_id, 'ppv_purchases', true);
+        if (is_array($ppv_purchases)) {
+            $ppv_purchases = array_diff($ppv_purchases, [$episode_id]);
+            update_user_meta($user_id, 'ppv_purchases', $ppv_purchases);
+        }
+        
+        // Remove transaction details
+        delete_user_meta($user_id, 'ppv_transaction_' . $episode_id);
+        
+        error_log('FlexPress Refund: Revoked PPV access to episode ' . $episode_id . ' for user ' . $user_id . ' (Reference: ' . $reference_id . ')');
+    } else {
+        error_log('FlexPress Refund: No PPV episode found in reference: ' . $reference_id);
+    }
+    
+    // 3. Cancel active subscription if user has one
+    $current_membership_status = get_user_meta($user_id, 'membership_status', true);
+    if (in_array($current_membership_status, ['active', 'cancelled'])) {
+        // Get Flowguard sale ID (this is what we use to cancel subscriptions)
+        $flowguard_sale_id = get_user_meta($user_id, 'flowguard_sale_id', true);
+        
+        if ($flowguard_sale_id) {
+            try {
+                $flowguard_api = flexpress_get_flowguard_api();
+                $cancel_result = $flowguard_api->cancel_subscription($flowguard_sale_id);
+                
+                if ($cancel_result['success']) {
+                    error_log('FlexPress Refund: Successfully cancelled subscription for banned user ' . $user_id . ' (Sale ID: ' . $flowguard_sale_id . ')');
+                    
+                    // Update membership status to cancelled
+                    flexpress_update_membership_status($user_id, 'cancelled');
+                    
+                    // Log the cancellation
+                    flexpress_flowguard_log_activity(
+                        $user_id,
+                        'flowguard_subscription_cancelled_ban',
+                        'Subscription cancelled due to ban for refund/chargeback',
+                        array(
+                            'sale_id' => $flowguard_sale_id,
+                            'reason' => 'Refund/Chargeback: ' . $postback_type
+                        )
+                    );
+                } else {
+                    error_log('FlexPress Refund: Failed to cancel subscription for banned user ' . $user_id . ': ' . ($cancel_result['message'] ?? 'Unknown error'));
+                }
+            } catch (Exception $e) {
+                error_log('FlexPress Refund: Exception cancelling subscription for banned user ' . $user_id . ': ' . $e->getMessage());
             }
-            
-            // Remove from PPV purchases list
-            $ppv_purchases = get_user_meta($user_id, 'ppv_purchases', true);
-            if (is_array($ppv_purchases)) {
-                $ppv_purchases = array_diff($ppv_purchases, [$episode_id]);
-                update_user_meta($user_id, 'ppv_purchases', $ppv_purchases);
-            }
-            
-            // Remove transaction details
-            delete_user_meta($user_id, 'ppv_transaction_' . $episode_id);
-            
-            error_log('FlexPress Refund: Revoked PPV access to episode ' . $episode_id . ' for user ' . $user_id);
+        } else {
+            error_log('FlexPress Refund: No Flowguard sale ID found for banned user ' . $user_id);
         }
     }
     
-    // 3. Ban the user
+    // 4. Ban the user
     flexpress_update_membership_status($user_id, 'banned');
     
-    // 4. Add email to blacklist
+    // 5. Add email to blacklist
     flexpress_add_email_to_blacklist($user->user_email, 'Refund/Chargeback: ' . $postback_type);
     
-    // 5. Log the ban reason
+    // 6. Log the ban reason
     update_user_meta($user_id, 'ban_reason', 'Refund/Chargeback: ' . $postback_type . ' - Transaction ID: ' . ($payload['transactionId'] ?? ''));
     update_user_meta($user_id, 'ban_date', current_time('mysql'));
     
     error_log('FlexPress Refund: User ' . $user_id . ' (' . $user->user_email . ') banned for ' . $postback_type);
+}
+
+/**
+ * Cancel subscription for banned user
+ * 
+ * @param int $user_id User ID
+ * @param string $reason Reason for cancellation
+ * @return bool Success status
+ */
+function flexpress_cancel_subscription_for_banned_user($user_id, $reason = 'User banned') {
+    $user = get_userdata($user_id);
+    if (!$user) {
+        return false;
+    }
+    
+    $membership_status = get_user_meta($user_id, 'membership_status', true);
+    
+    // Only cancel if user has active or cancelled status
+    if (!in_array($membership_status, ['active', 'cancelled'])) {
+        error_log('FlexPress Ban: User ' . $user_id . ' does not have active subscription to cancel');
+        return false;
+    }
+    
+    // Get Flowguard sale ID
+    $flowguard_sale_id = get_user_meta($user_id, 'flowguard_sale_id', true);
+    
+    if (!$flowguard_sale_id) {
+        error_log('FlexPress Ban: No Flowguard sale ID found for user ' . $user_id);
+        return false;
+    }
+    
+    try {
+        $flowguard_api = flexpress_get_flowguard_api();
+        $cancel_result = $flowguard_api->cancel_subscription($flowguard_sale_id);
+        
+        if ($cancel_result['success']) {
+            error_log('FlexPress Ban: Successfully cancelled subscription for banned user ' . $user_id . ' (Sale ID: ' . $flowguard_sale_id . ')');
+            
+            // Update membership status to cancelled
+            flexpress_update_membership_status($user_id, 'cancelled');
+            
+            // Log the cancellation
+            flexpress_flowguard_log_activity(
+                $user_id,
+                'flowguard_subscription_cancelled_ban',
+                'Subscription cancelled due to ban: ' . $reason,
+                array(
+                    'sale_id' => $flowguard_sale_id,
+                    'reason' => $reason
+                )
+            );
+            
+            return true;
+        } else {
+            error_log('FlexPress Ban: Failed to cancel subscription for banned user ' . $user_id . ': ' . ($cancel_result['message'] ?? 'Unknown error'));
+            return false;
+        }
+    } catch (Exception $e) {
+        error_log('FlexPress Ban: Exception cancelling subscription for banned user ' . $user_id . ': ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Test refund webhook for PPV episode
+ * 
+ * @param string $reference_id Reference ID to test
+ * @return array Test results
+ */
+function flexpress_test_refund_webhook($reference_id) {
+    // Create test payload
+    $test_payload = array(
+        'postbackType' => 'credit',
+        'orderType' => 'purchase',
+        'referenceId' => $reference_id,
+        'transactionId' => 'test_' . time(),
+        'saleId' => 'test_sale_' . time(),
+        'priceAmount' => '9.99',
+        'priceCurrency' => 'USD'
+    );
+    
+    error_log('FlexPress Test: Simulating refund webhook for reference: ' . $reference_id);
+    
+    // Call the refund handler
+    flexpress_flowguard_handle_refund($test_payload);
+    
+    return array(
+        'success' => true,
+        'message' => 'Test refund webhook processed for reference: ' . $reference_id
+    );
+}
+
+/**
+ * Cancel subscriptions for all banned users with active subscriptions
+ * 
+ * @return array Results array with success/failure counts
+ */
+function flexpress_cancel_subscriptions_for_banned_users() {
+    global $wpdb;
+    
+    // Find all users with banned status but active/cancelled membership
+    $banned_users = $wpdb->get_results("
+        SELECT u.ID, u.user_email, um1.meta_value as membership_status, um2.meta_value as flowguard_sale_id
+        FROM {$wpdb->users} u
+        LEFT JOIN {$wpdb->usermeta} um1 ON u.ID = um1.user_id AND um1.meta_key = 'membership_status'
+        LEFT JOIN {$wpdb->usermeta} um2 ON u.ID = um2.user_id AND um2.meta_key = 'flowguard_sale_id'
+        WHERE um1.meta_value = 'banned'
+        AND um2.meta_value IS NOT NULL
+        AND um2.meta_value != ''
+    ");
+    
+    $results = array(
+        'total' => count($banned_users),
+        'success' => 0,
+        'failed' => 0,
+        'errors' => array()
+    );
+    
+    foreach ($banned_users as $user) {
+        $success = flexpress_cancel_subscription_for_banned_user($user->ID, 'Bulk cancellation for banned user');
+        
+        if ($success) {
+            $results['success']++;
+        } else {
+            $results['failed']++;
+            $results['errors'][] = 'Failed to cancel subscription for user ' . $user->ID . ' (' . $user->user_email . ')';
+        }
+    }
+    
+    error_log('FlexPress Ban: Bulk subscription cancellation completed. Total: ' . $results['total'] . ', Success: ' . $results['success'] . ', Failed: ' . $results['failed']);
+    
+    return $results;
 }
 
 /**

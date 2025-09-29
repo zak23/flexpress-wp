@@ -936,8 +936,11 @@ function flexpress_validate_plan_for_flowguard($plan) {
  * @return array Flowguard subscription data
  */
 function flexpress_create_flowguard_subscription_data($plan_id, $plan, $user_id) {
+    error_log('FlexPress: Creating subscription data for plan ' . $plan_id . ', user ' . $user_id);
+    
     $user = get_userdata($user_id);
     if (!$user) {
+        error_log('FlexPress: Invalid user ID: ' . $user_id);
         return array('success' => false, 'error' => 'Invalid user');
     }
     
@@ -946,7 +949,7 @@ function flexpress_create_flowguard_subscription_data($plan_id, $plan, $user_id)
         'priceAmount' => number_format($plan['price'] ?? 0, 2, '.', ''),
         'priceCurrency' => flexpress_convert_currency_symbol_to_code($plan['currency'] ?? '$'),
         'successUrl' => home_url('/payment-success'),
-        'declineUrl' => home_url('/payment-declined'),
+        'declineUrl' => home_url('/payment-declined?plan=' . urlencode($plan_id)),
         'postbackUrl' => home_url('/wp-admin/admin-ajax.php?action=flowguard_webhook'),
         'email' => $user->user_email,
         'subscriptionType' => ($plan['plan_type'] ?? 'recurring') === 'one_time' ? 'one-time' : 'recurring',
@@ -965,6 +968,8 @@ function flexpress_create_flowguard_subscription_data($plan_id, $plan, $user_id)
             $plan['trial_duration_unit'] ?? 'days'
         );
     }
+    
+    error_log('FlexPress: Subscription data created: ' . json_encode($subscription_data));
     
     return array('success' => true, 'data' => $subscription_data);
 }
@@ -988,7 +993,7 @@ function flexpress_create_flowguard_purchase_data($plan_id, $plan, $user_id) {
         'priceAmount' => number_format($plan['price'] ?? 0, 2, '.', ''),
         'priceCurrency' => flexpress_convert_currency_symbol_to_code($plan['currency'] ?? '$'),
         'successUrl' => home_url('/payment-success'),
-        'declineUrl' => home_url('/payment-declined'),
+        'declineUrl' => home_url('/payment-declined?plan=' . urlencode($plan_id)),
         'postbackUrl' => home_url('/wp-admin/admin-ajax.php?action=flowguard_webhook'),
         'email' => $user->user_email,
         'referenceId' => flexpress_flowguard_generate_enhanced_reference($user_id, $plan_id)

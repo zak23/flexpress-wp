@@ -39,9 +39,13 @@ if (empty($session_id) && !empty($plan_id)) {
             }
             
         // Get payment data
+        error_log('FlexPress Payment: Creating payment data for plan ' . $plan_id . ', user ' . $user_id);
         $payment_data_result = flexpress_create_flowguard_payment_data($plan_id, $plan, $user_id);
         
+        error_log('FlexPress Payment: Payment data result: ' . json_encode($payment_data_result));
+        
         if (!$payment_data_result['success']) {
+            error_log('FlexPress Payment: Payment data creation failed: ' . $payment_data_result['error']);
             wp_redirect(home_url('/membership?error=session_creation_failed'));
             exit;
         }
@@ -604,14 +608,23 @@ document.addEventListener('DOMContentLoaded', function() {
                             
                             // Set a timeout to prevent infinite spinning
                             const timeoutId = setTimeout(() => {
-                                console.warn('Payment submission timeout - resetting button');
+                                console.warn('Payment submission timeout - checking if still processing or failed');
                                 this.disabled = false;
                                 this.innerHTML = '<i class="fas fa-credit-card me-2"></i>Complete Payment';
                                 document.getElementById('payment-pending').style.display = 'none';
                                 
+                                // Check if we should redirect to declined page or show timeout error
+                                // This timeout might indicate a declined payment that took too long
+                                setTimeout(() => {
+                                    if (document.visibilityState === 'visible' && window.location.pathname.includes('/payment')) {
+                                        console.log('Payment timed out - redirecting to declined page');
+                                        window.location.href = '<?php echo home_url('/payment-declined'); ?>?error_code=timeout&error_message=Payment processing timed out';
+                                    }
+                                }, 5000); // Give 5 more seconds for any late processing
+                                
                                 document.getElementById('error-message').textContent = '<?php esc_html_e('Payment submission timed out. Please try again.', 'flexpress'); ?>';
                                 document.getElementById('payment-error').style.display = 'block';
-                            }, 30000); // 30 second timeout
+                            }, 120000); // 2 minute timeout - give Flowguard more time to process
                             
                             // Store timeout ID for potential cleanup
                             this._paymentTimeout = timeoutId;
@@ -702,6 +715,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 2000);
             });
             
+            // Handle payment declined event
+            paymentForm.on('payment.declined', (event) => {
+                console.log('Payment declined:', event);
+                
+                // Clear any pending timeout
+                const submitButton = document.getElementById('submit-payment');
+                if (submitButton) {
+                    if (submitButton._paymentTimeout) {
+                        clearTimeout(submitButton._paymentTimeout);
+                        submitButton._paymentTimeout = null;
+                    }
+                }
+                
+                // Handle through validation system if available
+                if (validationSystem) {
+                    validationSystem.handlePaymentDeclined(event);
+                } else {
+                    // Fallback to direct handling - redirect to decline page
+                    document.getElementById('payment-pending').style.display = 'none';
+                    document.getElementById('success-message').textContent = '<?php esc_html_e('Payment was declined. Redirecting...', 'flexpress'); ?>';
+                    document.getElementById('payment-success').style.display = 'block';
+                     
+                    setTimeout(() => {
+                        window.location.href = '<?php echo home_url('/payment-declined'); ?>';
+                    }, 2000);
+                }
+            });
+            
             paymentForm.on('payment.error', (event) => {
                 console.error('Payment error:', event);
                 
@@ -735,7 +776,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     errorMessage = event.message;
                 }
                 
-                // Handle through validation system if available
+                // Handle through animation system if available
                 if (validationSystem) {
                     validationSystem.handlePaymentError({
                         ...event,
@@ -815,6 +856,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     window.location.href = successUrl.toString();
                 }, 2000);
+            });
+            
+            // Handle payment declined event (addEventListener version)
+            paymentForm.addEventListener('payment.declined', (event) => {
+                console.log('Payment declined:', event);
+                
+                if (validationSystem) {
+                    validationSystem.handlePaymentDeclined(event);
+                } else {
+                    document.getElementById('payment-pending').style.display = 'none';
+                    document.getElementById('success-message').textContent = '<?php esc_html_e('Payment was declined. Redirecting...', 'flexpress'); ?>';
+                    document.getElementById('payment-success').style.display = 'block';
+                     
+                    setTimeout(() => {
+                        window.location.href = '<?php echo home_url('/payment-declined'); ?>';
+                    }, 2000);
+                }
             });
             
             paymentForm.addEventListener('payment.error', (event) => {

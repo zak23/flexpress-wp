@@ -135,6 +135,10 @@ class FlowguardValidation {
                 this.handlePaymentError(event);
             });
             
+            this.paymentForm.on('payment.declined', (event) => {
+                this.handlePaymentDeclined(event);
+            });
+            
             this.paymentForm.on('payment.pending', (event) => {
                 this.handlePaymentPending(event);
             });
@@ -538,6 +542,24 @@ class FlowguardValidation {
         if (this.options.autoRetry && this.shouldAutoRetry(errorCode)) {
             this.scheduleRetry();
         }
+    }
+    
+    /**
+     * Handle payment declined events
+     */
+    handlePaymentDeclined(event) {
+        this.validationState.lastError = event;
+        
+        // Log the declined event for debugging
+        console.log('Payment declined:', event);
+        
+        // Show declined message briefly
+        this.showGlobalSuccess('Payment was declined. Redirecting...');
+        
+        // Redirect to declined page after short delay
+        setTimeout(() => {
+            window.location.href = '/payment-declined';
+        }, 2000);
     }
     
     /**

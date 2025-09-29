@@ -688,16 +688,44 @@ jQuery(document).ready(function() {
             const isLoggedIn = <?php echo $is_logged_in ? 'true' : 'false'; ?>;
             
             if (isLoggedIn) {
-                // Logged in user - proceed to payment
-                let paymentUrl = '<?php echo esc_url(home_url('/payment')); ?>?plan=' + encodeURIComponent(planId);
+                // Logged in user - create Flowguard session via AJAX
+                console.log('Creating Flowguard session for logged in user');
                 
-                // Add promo code if applied
-                if (appliedPromo && appliedPromo.code) {
-                    paymentUrl += '&promo=' + encodeURIComponent(appliedPromo.code);
-                }
+                // Disable button and show loading state
+                const $continueBtn = jQuery('#membership-continue-btn');
+                $continueBtn.prop('disabled', true);
+                const originalText = $continueBtn.text();
+                $continueBtn.html('<span class="spinner-border spinner-border-sm me-2" role="status"></span>Processing...');
                 
-                console.log('Redirecting logged in user to:', paymentUrl);
-                window.location.href = paymentUrl;
+                // Create Flowguard payment session
+                jQuery.ajax({
+                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                    type: 'POST',
+                    data: {
+                        action: 'flexpress_create_flowguard_payment',
+                        plan_id: planId,
+                        promo_code: appliedPromo ? appliedPromo.code : '',
+                        nonce: '<?php echo wp_create_nonce('flexpress_payment_nonce'); ?>'
+                    },
+                    success: function(response) {
+                        console.log('AJAX Success Response:', response);
+                        if (response.success && response.data.payment_url) {
+                            // Redirect to payment page
+                            window.location.href = response.data.payment_url;
+                        } else {
+                            // Show error message
+                            alert('Error creating payment session: ' + (response.data.message || 'Unknown error'));
+                            $continueBtn.prop('disabled', false);
+                            $continueBtn.text(originalText);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.log('AJAX Error:', xhr, status, error);
+                        alert('Network error. Please try again.');
+                        $continueBtn.prop('disabled', false);
+                        $continueBtn.text(originalText);
+                    }
+                });
             } else {
                 // Non-logged in user - validate form and then register/login
                 const activeForm = jQuery('.auth-form:visible');
@@ -908,6 +936,7 @@ jQuery(document).ready(function() {
         $button.html('<span class="spinner-border spinner-border-sm me-2" role="status"></span>Processing...');
         
         // Create Flowguard payment session with promo code
+        console.log('Making AJAX call for plan:', planId);
         $.ajax({
             url: '<?php echo admin_url('admin-ajax.php'); ?>',
             type: 'POST',
@@ -918,17 +947,24 @@ jQuery(document).ready(function() {
                 nonce: '<?php echo wp_create_nonce('flexpress_payment_nonce'); ?>'
             },
             success: function(response) {
+                console.log('AJAX Success Response:', response);
                 if (response.success && response.data.payment_url) {
                     // Redirect to payment page
                     window.location.href = response.data.payment_url;
                 } else {
+                    // Check if we need to redirect to login
+                    if (response.data && response.data.redirect) {
+                        window.location.href = response.data.redirect;
+                        return;
+                    }
                     // Show error message
                     alert('Error creating payment session: ' + (response.data.message || 'Unknown error'));
                     $button.prop('disabled', false);
                     $button.text(originalText);
                 }
             },
-            error: function() {
+            error: function(xhr, status, error) {
+                console.log('AJAX Error:', xhr, status, error);
                 alert('Network error. Please try again.');
                 $button.prop('disabled', false);
                 $button.text(originalText);

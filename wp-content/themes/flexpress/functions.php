@@ -7691,21 +7691,31 @@ function flexpress_update_membership_status($user_id, $status)
  */
 function flexpress_ajax_create_flowguard_payment()
 {
+    error_log('FlexPress: AJAX create Flowguard payment called - FUNCTION ENTERED');
+    
     // Verify nonce
     if (!wp_verify_nonce($_POST['nonce'], 'flexpress_payment_nonce')) {
+        error_log('FlexPress: Invalid nonce in AJAX request');
         wp_send_json_error(['message' => 'Invalid nonce']);
     }
 
     // Check if user is logged in
     if (!is_user_logged_in()) {
-        wp_send_json_error(['message' => 'User must be logged in']);
+        error_log('FlexPress: User not logged in for AJAX request - redirecting to login');
+        wp_send_json_error([
+            'message' => 'Please log in to continue',
+            'redirect' => home_url('/login?redirect=' . urlencode(home_url('/membership')))
+        ]);
     }
 
     $user_id = get_current_user_id();
     $plan_id = sanitize_text_field($_POST['plan_id']);
     $promo_code = sanitize_text_field($_POST['promo_code'] ?? '');
 
+    error_log('FlexPress: AJAX request - User: ' . $user_id . ', Plan: ' . $plan_id . ', Promo: ' . $promo_code);
+
     if (empty($plan_id)) {
+        error_log('FlexPress: Plan ID is empty in AJAX request');
         wp_send_json_error(['message' => 'Plan ID is required']);
     }
 
@@ -7731,14 +7741,17 @@ function flexpress_ajax_create_flowguard_payment()
     }
 
     // Create Flowguard subscription
+    error_log('FlexPress: Calling flexpress_flowguard_create_subscription');
     $result = flexpress_flowguard_create_subscription($user_id, $plan_id);
 
     if ($result['success']) {
+        error_log('FlexPress: AJAX success - Payment URL: ' . $result['payment_url']);
         wp_send_json_success([
             'payment_url' => $result['payment_url'],
             'session_id' => $result['session_id']
         ]);
     } else {
+        error_log('FlexPress: AJAX error - ' . $result['error']);
         wp_send_json_error(['message' => $result['error']]);
     }
 }

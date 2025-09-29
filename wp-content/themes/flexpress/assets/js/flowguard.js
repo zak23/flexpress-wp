@@ -130,6 +130,12 @@ class FlexPressFlowguard {
             this.handlePaymentError(event);
         });
         
+        // Payment declined
+        this.paymentForm.on('payment.declined', (event) => {
+            console.log('Payment declined:', event);
+            this.handlePaymentDeclined(event);
+        });
+        
         // Payment pending
         this.paymentForm.on('payment.pending', (event) => {
             console.log('Payment pending:', event);
@@ -200,6 +206,27 @@ class FlexPressFlowguard {
         
         // Log error for debugging
         console.error('Payment error details:', event);
+    }
+    
+    /**
+     * Handle payment declined
+     * 
+     * @param {object} event Payment declined event
+     */
+    handlePaymentDeclined(event) {
+        this.hideSuccessMessage();
+        this.hidePendingMessage();
+        
+        // Show declined message briefly
+        this.showSuccessMessage('Payment was declined. Redirecting...');
+        
+        // Log event for debugging
+        console.log('Payment declined details:', event);
+        
+        // Redirect to declined page after short delay
+        setTimeout(() => {
+            window.location.href = '/payment-declined';
+        }, 2000);
     }
     
     /**

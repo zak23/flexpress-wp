@@ -13,9 +13,36 @@ get_header();
 $error_code = isset($_GET['error_code']) ? sanitize_text_field($_GET['error_code']) : '';
 $error_message = isset($_GET['error_message']) ? sanitize_text_field($_GET['error_message']) : '';
 
+// Get URL parameters for determining return URL
+$episode_id = isset($_GET['episode_id']) ? intval($_GET['episode_id']) : 0;
+$plan = isset($_GET['plan']) ? sanitize_text_field($_GET['plan']) : '';
+$ref = isset($_GET['ref']) ? sanitize_text_field($_GET['ref']) : '';
+$return_url = isset($_GET['return_url']) ? esc_url_raw($_GET['return_url']) : '';
+
 // Get current user
 $current_user = wp_get_current_user();
 $user_id = $current_user->ID;
+
+// Determine the appropriate return URL
+$try_again_url = '/join'; // Default fallback
+if ($episode_id > 0) {
+    // PPV episode purchase - return to specific episode page
+    $episode = get_post($episode_id);
+    if ($episode && $episode->post_type === 'episode') {
+        $try_again_url = get_permalink($episode_id);
+    } else {
+        $try_again_url = '/episodes'; // Fallback to episodes page
+    }
+} elseif ($return_url) {
+    // Custom return URL provided
+    $try_again_url = $return_url;
+} elseif ($plan) {
+    // Membership signup with plan - return to membership page
+    $try_again_url = '/membership';
+} else {
+    // General membership signup - return to membership page
+    $try_again_url = '/membership';
+}
 ?>
 
 <main id="primary" class="site-main payment-declined-page">
@@ -146,47 +173,64 @@ $user_id = $current_user->ID;
                         </div>
                     </div>
                     
-                    <!-- Action Buttons -->
-                    <div class="action-buttons text-center">
-                        <a href="<?php echo home_url('/join'); ?>" class="btn btn-primary me-3">
-                            <i class="fas fa-redo me-1"></i>
-                            Try Again
-                        </a>
-                        <a href="<?php echo home_url('/contact'); ?>" class="btn btn-outline-primary me-3">
-                            <i class="fas fa-envelope me-1"></i>
-                            Contact Support
-                        </a>
-                        <a href="<?php echo home_url('/'); ?>" class="btn btn-outline-secondary">
-                            <i class="fas fa-home me-1"></i>
-                            Go Home
-                        </a>
+                    <!-- Next Steps -->
+                    <div class="next-steps mt-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-redo me-2"></i>
+                                    Try Again
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="steps-list">
+                                    <div class="step-item">
+                                        <div class="step-number">1</div>
+                                        <div class="step-content">
+                                            <h6>Retry Payment</h6>
+                                            <p>Double-check your card details and try the payment again.</p>
+                                            <a href="<?php echo home_url($try_again_url); ?>" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-redo me-1"></i>
+                                                Try Payment Again
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="step-item">
+                                        <div class="step-number">2</div>
+                                        <div class="step-content">
+                                            <h6>Contact Support</h6>
+                                            <p>Get help resolving payment issues and explore alternative payment methods.</p>
+                                            <a href="<?php echo home_url('/contact'); ?>" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-envelope me-1"></i>
+                                                Contact Support
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="step-item">
+                                        <div class="step-number">3</div>
+                                        <div class="step-content">
+                                            <h6>Browse Free Content</h6>
+                                            <p>Explore our free content while you resolve payment issues.</p>
+                                            <a href="<?php echo home_url('/'); ?>" class="btn btn-outline-secondary btn-sm">
+                                                <i class="fas fa-home me-1"></i>
+                                                Go Home
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Support Information -->
                     <div class="support-info mt-4 text-center">
-                        <div class="support-card">
-                            <h6>
-                                <i class="fas fa-headset me-2"></i>
-                                Need Immediate Help?
-                            </h6>
-                            <p class="mb-3">
-                                Our support team is available 24/7 to help you resolve payment issues.
-                            </p>
-                            <div class="support-methods">
-                                <a href="mailto:support@example.com" class="support-method">
-                                    <i class="fas fa-envelope"></i>
-                                    Email Support
-                                </a>
-                                <a href="tel:+1234567890" class="support-method">
-                                    <i class="fas fa-phone"></i>
-                                    Call Support
-                                </a>
-                                <a href="<?php echo home_url('/contact'); ?>" class="support-method">
-                                    <i class="fas fa-comments"></i>
-                                    Live Chat
-                                </a>
-                            </div>
-                        </div>
+                        <p class="text-muted">
+                            Need help or have questions about payment issues?
+                        </p>
+                        <a href="<?php echo home_url('/contact'); ?>" class="btn btn-outline-primary">
+                            <i class="fas fa-envelope me-1"></i>
+                            Contact Support
+                        </a>
                     </div>
                 </div>
             </div>
@@ -196,55 +240,54 @@ $user_id = $current_user->ID;
 
 <style>
 .payment-declined-page {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    background-color: var(--color-background);
     min-height: 100vh;
     padding: 2rem 0;
 }
 
 .declined-container {
-    background: rgba(255, 255, 255, 0.05);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 16px;
     padding: 2rem;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-lg);
 }
 
 .declined-icon {
     font-size: 4rem;
-    color: #dc3545;
+    color: var(--color-accent);
     margin-bottom: 1rem;
 }
 
 .declined-title {
-    color: #ffffff;
+    color: var(--color-text);
     font-size: 2.5rem;
     font-weight: 700;
     margin-bottom: 1rem;
 }
 
 .declined-subtitle {
-    color: #b0b0b0;
+    color: var(--color-text-secondary);
     font-size: 1.2rem;
     margin-bottom: 0;
 }
 
 .card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 12px;
     margin-bottom: 1rem;
 }
 
 .card-header {
-    background: rgba(255, 255, 255, 0.05);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    color: #ffffff;
+    background-color: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
     font-weight: 600;
 }
 
 .card-body {
-    color: #b0b0b0;
+    color: var(--color-text-secondary);
 }
 
 .error-message, .error-code {
@@ -253,6 +296,7 @@ $user_id = $current_user->ID;
     background: rgba(220, 53, 69, 0.1);
     border-left: 4px solid #dc3545;
     border-radius: 4px;
+    color: #dc3545;
 }
 
 .reasons-list {
@@ -266,26 +310,26 @@ $user_id = $current_user->ID;
     align-items: flex-start;
     gap: 1rem;
     padding: 1rem;
-    background: rgba(255, 255, 255, 0.02);
+    background-color: var(--color-surface-hover);
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-border);
 }
 
 .reason-item i {
-    color: #ff6b6b;
+    color: var(--color-accent);
     font-size: 1.2rem;
     margin-top: 0.25rem;
     flex-shrink: 0;
 }
 
 .reason-content h6 {
-    color: #ffffff;
+    color: var(--color-text);
     margin-bottom: 0.5rem;
 }
 
 .reason-content p {
     margin-bottom: 0;
-    color: #b0b0b0;
+    color: var(--color-text-secondary);
 }
 
 .steps-list {
@@ -301,8 +345,8 @@ $user_id = $current_user->ID;
 }
 
 .step-number {
-    background: #ff6b6b;
-    color: #ffffff;
+    background: var(--color-accent);
+    color: var(--color-accent-text);
     width: 2rem;
     height: 2rem;
     border-radius: 50%;
@@ -314,88 +358,58 @@ $user_id = $current_user->ID;
 }
 
 .step-content h6 {
-    color: #ffffff;
+    color: var(--color-text);
     margin-bottom: 0.5rem;
 }
 
 .step-content p {
-    margin-bottom: 0;
-    color: #b0b0b0;
+    margin-bottom: 0.75rem;
+    color: var(--color-text-secondary);
 }
 
 .btn {
     border-radius: 8px;
     font-weight: 500;
-    padding: 0.75rem 1.5rem;
+    padding: 0.5rem 1rem;
+    transition: var(--transition-fast);
 }
 
 .btn-primary {
-    background: #ff6b6b;
-    border-color: #ff6b6b;
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-accent-text);
 }
 
 .btn-primary:hover {
-    background: #ff5252;
-    border-color: #ff5252;
+    background-color: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
+    color: var(--color-accent-text);
 }
 
 .btn-outline-primary {
-    border-color: #ff6b6b;
-    color: #ff6b6b;
+    border-color: var(--color-accent);
+    color: var(--color-accent);
 }
 
 .btn-outline-primary:hover {
-    background-color: #ff6b6b;
-    border-color: #ff6b6b;
-    color: #ffffff;
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-accent-text);
 }
 
 .btn-outline-secondary {
-    border-color: #6c757d;
-    color: #6c757d;
+    border-color: var(--color-text-secondary);
+    color: var(--color-text-secondary);
 }
 
 .btn-outline-secondary:hover {
-    background-color: #6c757d;
-    border-color: #6c757d;
-    color: #ffffff;
+    background-color: var(--color-text-secondary);
+    border-color: var(--color-text-secondary);
+    color: var(--color-background);
 }
 
-.support-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 2rem;
-}
-
-.support-card h6 {
-    color: #ffffff;
-    margin-bottom: 1rem;
-}
-
-.support-methods {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.support-method {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    color: #b0b0b0;
-    text-decoration: none;
-    transition: all 0.3s ease;
-}
-
-.support-method:hover {
-    background: rgba(255, 107, 107, 0.1);
-    color: #ff6b6b;
-    text-decoration: none;
+.text-muted {
+    color: var(--color-text-secondary) !important;
 }
 
 @media (max-width: 768px) {
@@ -408,31 +422,22 @@ $user_id = $current_user->ID;
         font-size: 2rem;
     }
     
-    .action-buttons {
-        display: flex;
+    .step-item {
         flex-direction: column;
-        gap: 1rem;
+        text-align: center;
     }
     
-    .action-buttons .btn {
-        width: 100%;
-    }
-    
-    .support-methods {
-        flex-direction: column;
-    }
-    
-    .support-method {
-        justify-content: center;
+    .step-number {
+        align-self: center;
     }
 }
 </style>
 
 <script>
-// Auto-redirect to join page after 60 seconds
+// Auto-redirect after 60 seconds
 setTimeout(function() {
     if (confirm('Would you like to try the payment again?')) {
-        window.location.href = '<?php echo home_url('/join'); ?>';
+        window.location.href = '<?php echo home_url($try_again_url); ?>';
     }
 }, 60000);
 

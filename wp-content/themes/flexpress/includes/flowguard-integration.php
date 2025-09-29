@@ -40,18 +40,23 @@ function flexpress_get_flowguard_api() {
  * @return array Response data
  */
 function flexpress_flowguard_create_subscription($user_id, $plan_id) {
+    error_log('FlexPress: Creating Flowguard subscription for user ' . $user_id . ', plan ' . $plan_id);
+    
     $plan = flexpress_get_pricing_plan($plan_id);
     if (!$plan) {
+        error_log('FlexPress: Invalid plan ID: ' . $plan_id);
         return ['success' => false, 'error' => 'Invalid plan'];
     }
     
     $user = get_userdata($user_id);
     if (!$user) {
+        error_log('FlexPress: Invalid user ID: ' . $user_id);
         return ['success' => false, 'error' => 'Invalid user'];
     }
     
     $api = flexpress_get_flowguard_api();
     if (!$api) {
+        error_log('FlexPress: Flowguard API not configured');
         return ['success' => false, 'error' => 'Flowguard API not configured'];
     }
     
@@ -62,7 +67,7 @@ function flexpress_flowguard_create_subscription($user_id, $plan_id) {
         'priceAmount' => number_format($plan['price'], 2, '.', ''),
         'priceCurrency' => flexpress_flowguard_convert_currency_symbol_to_code($plan['currency']),
         'successUrl' => home_url('/payment-success'),
-        'declineUrl' => home_url('/payment-declined'),
+        'declineUrl' => home_url('/payment-declined?plan=' . urlencode($plan_id)),
         'postbackUrl' => home_url('/wp-admin/admin-ajax.php?action=flowguard_webhook'),
         'email' => $user->user_email,
         'subscriptionType' => $plan['plan_type'] === 'one_time' ? 'one-time' : 'recurring',
@@ -79,13 +84,19 @@ function flexpress_flowguard_create_subscription($user_id, $plan_id) {
         );
     }
     
+    error_log('FlexPress: Calling Flowguard API with data: ' . json_encode($subscription_data));
+    
     $result = $api->start_subscription($subscription_data);
+    
+    error_log('FlexPress: Flowguard API response: ' . json_encode($result));
     
     if ($result['success']) {
         // Store session data for webhook processing
         update_user_meta($user_id, 'flowguard_session_id', $result['session_id']);
         update_user_meta($user_id, 'flowguard_plan_id', $plan_id);
         update_user_meta($user_id, 'flowguard_reference_id', $subscription_data['referenceId']);
+        
+        error_log('FlexPress: Successfully created Flowguard session: ' . $result['session_id']);
         
         return [
             'success' => true,
@@ -94,6 +105,7 @@ function flexpress_flowguard_create_subscription($user_id, $plan_id) {
         ];
     }
     
+    error_log('FlexPress: Flowguard API failed: ' . $result['error']);
     return $result;
 }
 
@@ -141,7 +153,7 @@ function flexpress_flowguard_create_ppv_purchase($user_id, $episode_id, $final_p
         'priceAmount' => number_format($price_to_charge, 2, '.', ''),
         'priceCurrency' => 'USD',
         'successUrl' => home_url('/payment-success?episode_id=' . $episode_id . '&ref=' . $transaction_ref),
-        'declineUrl' => get_permalink($episode_id) . '?payment=cancelled',
+        'declineUrl' => home_url('/payment-declined?episode_id=' . $episode_id . '&ref=' . $transaction_ref),
         'postbackUrl' => home_url('/wp-admin/admin-ajax.php?action=flowguard_webhook'),
         'email' => $user->user_email,
         'referenceId' => $transaction_ref
@@ -227,6 +239,8 @@ function flexpress_flowguard_convert_currency_symbol_to_code($currency_symbol) {
  * @return string Enhanced reference ID
  */
 function flexpress_flowguard_generate_enhanced_reference($user_id, $plan_id, $additional_data = array()) {
+    global $wpdb;
+    
     $user = get_userdata($user_id);
     if (!$user) {
         return 'user_' . $user_id . '_plan_' . $plan_id;
@@ -271,14 +285,34 @@ function flexpress_flowguard_generate_enhanced_reference($user_id, $plan_id, $ad
     // Registration timestamp (if exists, otherwise use current time)
     if (!empty($registration_date)) {
         $timestamp = strtotime($registration_date);
-        $components[] = 'reg' . substr($timestamp, -8); // Last 8 digits
+        $components[] = 'reg' . $timestamp; // Full timestamp
     } else {
         $timestamp = time();
-        $components[] = 'reg' . substr($timestamp, -8); // Last 8 digits of current time
+        $components[] = 'reg' . $timestamp; // Full current timestamp
     }
+    
+    // Add microtime for additional uniqueness
+    $microtime = substr(microtime(true) * 1000000, -6); // Last 6 digits of microtime
+    $components[] = 'mic' . $microtime;
+    
+    // Add random component for maximum uniqueness
+    $random = substr(md5(uniqid(rand(), true)), 0, 8);
+    $components[] = 'rnd' . $random;
     
     // Join components with underscores
     $reference = implode('_', $components);
+    
+    // Ensure reference ID is unique by checking if it exists in database
+    $existing_refs = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM {$wpdb->prefix}flexpress_flowguard_transactions WHERE reference_id = %s",
+        $reference
+    ));
+    
+    if ($existing_refs > 0) {
+        // Add additional random component if reference already exists
+        $extra_random = substr(md5(uniqid(rand(), true)), 0, 8);
+        $reference .= '_' . $extra_random;
+    }
     
     // Store the enhanced reference data for later retrieval
     update_user_meta($user_id, 'flowguard_enhanced_reference', $reference);

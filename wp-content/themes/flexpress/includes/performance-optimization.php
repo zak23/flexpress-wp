@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
  */
 function flexpress_add_performance_headers() {
     // Add cache control headers for static assets
-    if (!is_admin() && !wp_doing_ajax()) {
+    if (!is_admin() && !wp_doing_ajax() && !headers_sent()) {
         // Cache static assets for 1 year
         if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/', $_SERVER['REQUEST_URI'])) {
             header('Cache-Control: public, max-age=31536000, immutable');
@@ -318,7 +318,11 @@ self.addEventListener("fetch", function(event) {
     
     $sw_file = get_template_directory() . '/sw.js';
     if (!file_exists($sw_file)) {
-        file_put_contents($sw_file, $sw_content);
+        $result = file_put_contents($sw_file, $sw_content);
+        if ($result === false) {
+            error_log('FlexPress: Failed to create service worker file at ' . $sw_file);
+        }
     }
 }
-add_action('after_setup_theme', 'flexpress_create_service_worker');
+// Create service worker on admin init instead of theme setup to avoid header conflicts
+add_action('admin_init', 'flexpress_create_service_worker');

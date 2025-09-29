@@ -101,6 +101,7 @@ FlexPress implements a multi-layer caching strategy to ensure optimal performanc
 ### 🚀 Performance Optimizations
 
 #### Script & CSS Optimization
+
 - **Deferred JavaScript**: Non-critical scripts load with `defer` attribute
 - **Critical CSS**: Above-the-fold styles inlined for faster rendering
 - **Async CSS**: Non-critical stylesheets load asynchronously
@@ -108,18 +109,21 @@ FlexPress implements a multi-layer caching strategy to ensure optimal performanc
 - **DNS Prefetch**: External domains prefetched for faster connections
 
 #### Image Optimization
+
 - **Lazy Loading**: All images use `loading="lazy"` and `decoding="async"`
 - **Responsive Images**: Proper `sizes` and `srcset` attributes
 - **CDN Delivery**: BunnyCDN for global image distribution
 - **Automatic Resizing**: Multiple optimized image sizes generated
 
 #### Database & Query Optimization
+
 - **Redis Caching**: Object cache for database queries
 - **Query Optimization**: Reduced unnecessary database calls
 - **Post Limits**: Optimized posts per page for better performance
 - **Meta Query Optimization**: Efficient episode and model queries
 
 #### Browser Optimization
+
 - **Service Worker**: Browser caching for offline functionality
 - **Cache Headers**: Proper caching headers for static assets
 - **Security Headers**: X-Content-Type-Options, X-Frame-Options, etc.

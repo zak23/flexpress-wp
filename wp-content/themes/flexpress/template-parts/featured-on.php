@@ -67,57 +67,32 @@ document.addEventListener('DOMContentLoaded', function() {
         // Count the number of slides
         const slideCount = jQuery('#mediaSlider .media-slide').length;
         
-        // Determine slidesToShow based on actual slide count
-        // For dots to show properly, we need slidesToShow to be less than total slides
-        let slidesToShow = slideCount > 1 ? 1 : slideCount; // Show 1 slide at a time to force dots
-        let slidesToShowMedium = slideCount > 1 ? 1 : slideCount;
-        let slidesToShowSmall = slideCount > 1 ? 1 : slideCount;
-        
-        jQuery('#mediaSlider').slick({
-            dots: slideCount > 1, // Only show dots if there's more than 1 slide
-            infinite: slideCount > 1, // Only enable infinite scroll if there's more than 1 slide
-            speed: 500,
-            slidesToShow: slidesToShow,
-            slidesToScroll: 1,
-            autoplay: slideCount > 1, // Only autoplay if there's more than 1 slide
-            autoplaySpeed: 3000,
-            pauseOnHover: true,
-            adaptiveHeight: false,
-            variableWidth: false,
-            responsive: [
-                {
-                    breakpoint: 1200,
-                    settings: {
-                        slidesToShow: slidesToShowMedium,
-                        slidesToScroll: 1
-                    }
-                },
-                {
-                    breakpoint: 768,
-                    settings: {
-                        slidesToShow: slidesToShowSmall,
-                        slidesToScroll: 1
-                    }
-                },
-                {
-                    breakpoint: 480,
-                    settings: {
-                        slidesToShow: 1,
-                        slidesToScroll: 1
-                    }
-                }
-            ]
-        });
-        
-        // Force dots to show if we have multiple slides but Slick isn't showing them
+        // Only initialize if we have more than 1 slide
         if (slideCount > 1) {
-            setTimeout(() => {
-                const dotsContainer = jQuery('#mediaSlider').siblings('.slick-dots');
-                if (dotsContainer.length === 0 || dotsContainer.find('li').length < slideCount) {
-                    console.log('Forcing dots regeneration...');
-                    jQuery('#mediaSlider').slick('setPosition');
-                }
-            }, 100);
+            jQuery('#mediaSlider').slick({
+                dots: true,
+                infinite: true,
+                speed: 500,
+                slidesToShow: 1,
+                slidesToScroll: 1,
+                autoplay: true,
+                autoplaySpeed: 3000,
+                pauseOnHover: true,
+                adaptiveHeight: false,
+                variableWidth: false,
+                centerMode: false,
+                focusOnSelect: true,
+                swipeToSlide: true,
+                arrows: true,
+                responsive: [
+                    {
+                        breakpoint: 768,
+                        settings: {
+                            arrows: false
+                        }
+                    }
+                ]
+            });
         }
     }
 });

@@ -258,19 +258,21 @@ function flexpress_setup()
 	// Register responsive image sizes used across the theme
 	// Default thumbnail for posts/cards
 	set_post_thumbnail_size(640, 360, true);
-	// Hero banners
-	add_image_size('hero-desktop', 1920, 1080, true);
+	// Hero banners (optimized for actual display sizes)
+	add_image_size('hero-desktop', 776, 436, true); // 2x 388x218
 	add_image_size('hero-mobile', 1080, 1350, true);
-	// Model/profile imagery
-	add_image_size('model-portrait', 800, 1000, true);
-	add_image_size('model-card', 600, 750, true);
-	// Episode cards and grids
-	add_image_size('episode-card', 640, 360, true);
-	// Utility squares and logos
+	// Model/profile imagery (optimized for actual display sizes)
+	add_image_size('model-portrait', 776, 1164, true); // 2x 388x582
+	add_image_size('model-card', 368, 552, true); // 2x 184x276
+	add_image_size('model-card-small', 368, 490, true); // 2x 184x245
+	// Episode cards and grids (optimized for actual display sizes)
+	add_image_size('episode-card', 776, 436, true); // 2x 388x218
+	// Utility squares and logos (optimized for actual display sizes)
 	add_image_size('square-300', 300, 300, true);
 	add_image_size('square-600', 600, 600, true);
-	add_image_size('logo-300', 300, 0, false);
-	add_image_size('logo-600', 600, 0, false);
+	add_image_size('logo-388', 776, 0, false); // 2x 388px width
+	add_image_size('logo-140', 280, 0, false); // 2x 140px width
+	add_image_size('logo-74', 148, 0, false); // 2x 74px width
 
     // Register navigation menus
     register_nav_menus(array(

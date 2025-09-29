@@ -369,7 +369,7 @@ function flexpress_display_episode_thumbnail($size = 'episode-card', $class = ''
         }
         
         printf(
-            '<img src="%s" alt="%s" class="%s" data-video-id="%s" data-preview-url="%s" data-original-src="%s" loading="lazy" decoding="async">',
+            '<img src="%s" alt="%s" class="%s" data-video-id="%s" data-preview-url="%s" data-original-src="%s" loading="lazy" decoding="async" sizes="(max-width: 768px) 388px, 776px">',
             esc_url($thumbnail_url),
             esc_attr(get_the_title()),
             esc_attr($classes),
@@ -380,7 +380,13 @@ function flexpress_display_episode_thumbnail($size = 'episode-card', $class = ''
     } else {
         // Fallback to featured image if no video ID
         if (has_post_thumbnail()) {
-            the_post_thumbnail($size, array('class' => $class));
+            $thumbnail_id = get_post_thumbnail_id();
+            $sizes_attr = $size === 'episode-card' ? '(max-width: 768px) 388px, 776px' : '';
+            echo wp_get_attachment_image($thumbnail_id, $size, false, array(
+                'class' => $class,
+                'sizes' => $sizes_attr,
+                'srcset' => wp_get_attachment_image_srcset($thumbnail_id, $size)
+            ));
         } else {
             // Default placeholder image if no featured image
             echo '<img src="' . esc_url(get_template_directory_uri()) . '/assets/images/placeholder.jpg" alt="' . esc_attr(get_the_title()) . '" class="' . esc_attr($class) . '" />';

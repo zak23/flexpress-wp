@@ -9,7 +9,14 @@
 <a href="<?php the_permalink(); ?>" class="model-card-link">
     <div class="card model-card">
         <?php if (has_post_thumbnail()) : ?>
-            <?php the_post_thumbnail('model-card', array('class' => 'model-image')); ?>
+            <?php 
+            $thumbnail_id = get_post_thumbnail_id();
+            echo wp_get_attachment_image($thumbnail_id, 'model-card', false, array(
+                'class' => 'model-image',
+                'sizes' => '(max-width: 768px) 184px, 368px',
+                'srcset' => wp_get_attachment_image_srcset($thumbnail_id, 'model-card')
+            )); 
+            ?>
         <?php else: ?>
             <div class="model-placeholder">
                 <i class="fa-solid fa-user model-placeholder-icon"></i>

@@ -2013,33 +2013,6 @@ function flexpress_create_banned_page() {
 }
 add_action('after_setup_theme', 'flexpress_create_banned_page');
 
-/**
- * Create email blacklist page with the flexpress-email-blacklist.php template
- */
-function flexpress_create_email_blacklist_page() {
-    // Check if email blacklist page already exists
-    $blacklist_page = get_page_by_path('flexpress-email-blacklist');
-    
-    if (!$blacklist_page) {
-        $page_data = array(
-            'post_title' => 'Email Blacklist Policy',
-            'post_name' => 'flexpress-email-blacklist',
-            'post_content' => 'Information about our email blacklist policy for protecting against fraud.',
-            'post_status' => 'publish',
-            'post_type' => 'page',
-            'post_author' => 1,
-            'page_template' => 'page-templates/flexpress-email-blacklist.php'
-        );
-        
-        $page_id = wp_insert_post($page_data);
-        
-        if ($page_id) {
-            update_post_meta($page_id, '_wp_page_template', 'page-templates/flexpress-email-blacklist.php');
-            error_log('FlexPress: Created email blacklist page with ID ' . $page_id);
-        }
-    }
-}
-add_action('after_setup_theme', 'flexpress_create_email_blacklist_page');
 
 /**
  * Create Home page with the page-home.php template
@@ -5570,6 +5543,18 @@ function flexpress_generate_terms_conditions_content()
 <li>Accept responsibility for all activities under your account</li>
 </ul>
 
+<h2>3.1 Email Blacklist Policy</h2>
+
+<p>{$site_name} maintains an email blacklist to protect against fraudulent activities and maintain platform integrity. Email addresses may be added to this blacklist for the following reasons:</p>
+<ul>
+<li><strong>Chargeback abuse and fraudulent payment disputes</strong></li>
+<li><strong>Refund abuse and policy violations</strong></li>
+<li><strong>Terms of service violations</strong></li>
+<li><strong>Security concerns or suspicious activity</strong></li>
+</ul>
+
+<p>Blacklisted email addresses cannot register new accounts or access our services. If you believe you have been incorrectly blacklisted, you may contact our support team for review. Appeals are reviewed on a case-by-case basis at <a href=\"mailto:{$support_email}\">{$support_email}</a>.</p>
+
 <h2>4. Membership and Billing</h2>
 
 <h3>Subscription Services</h3>
@@ -5917,6 +5902,16 @@ function flexpress_generate_customer_terms_content()
 <li>Subscriptions are for personal use only and may not be transferred or shared.</li>
 <li>Unauthorized access or sharing of login credentials constitutes a breach of this Agreement and may result in termination.</li>
 </ul>
+
+<p><strong>EMAIL BLACKLIST POLICY</strong></p>
+<p>{$parent_company} maintains an email blacklist to protect against fraudulent activities and maintain platform integrity. Email addresses may be added to this blacklist for the following reasons:</p>
+<ul>
+<li>Chargeback abuse and fraudulent payment disputes</li>
+<li>Refund abuse and policy violations</li>
+<li>Terms of service violations</li>
+<li>Security concerns or suspicious activity</li>
+</ul>
+<p>Blacklisted email addresses cannot register new accounts or access our services. If you believe you have been incorrectly blacklisted, you may contact our support team for review at <a href=\"mailto:{$support_email}\">{$support_email}</a>. Appeals are reviewed on a case-by-case basis.</p>
 
 <p><strong>SANCTION AND APPROVAL OF ADULT MATERIAL</strong></p>
 <p>This site contains adult material. Access is restricted to individuals over 18 years of age or the legal age of majority in their jurisdiction.</p>

@@ -255,6 +255,23 @@ function flexpress_setup()
         'caption',
     ));
 
+	// Register responsive image sizes used across the theme
+	// Default thumbnail for posts/cards
+	set_post_thumbnail_size(640, 360, true);
+	// Hero banners
+	add_image_size('hero-desktop', 1920, 1080, true);
+	add_image_size('hero-mobile', 1080, 1350, true);
+	// Model/profile imagery
+	add_image_size('model-portrait', 800, 1000, true);
+	add_image_size('model-card', 600, 750, true);
+	// Episode cards and grids
+	add_image_size('episode-card', 640, 360, true);
+	// Utility squares and logos
+	add_image_size('square-300', 300, 300, true);
+	add_image_size('square-600', 600, 600, true);
+	add_image_size('logo-300', 300, 0, false);
+	add_image_size('logo-600', 600, 0, false);
+
     // Register navigation menus
     register_nav_menus(array(
         'primary' => esc_html__('Primary Menu', 'flexpress'),
@@ -619,6 +636,114 @@ function flexpress_add_caching_headers() {
     }
 }
 add_action('wp_head', 'flexpress_add_caching_headers', 1);
+
+/**
+ * Output meta description tag with smart fallbacks
+ * - Skips when popular SEO plugins are active to avoid duplicates
+ * - Fallback order: ACF/meta field → excerpt → content summary → site/tagline
+ */
+function flexpress_output_meta_description()
+{
+    if (is_admin() || is_feed()) {
+        return;
+    }
+
+    // Detect common SEO plugins that already handle meta descriptions
+    $seo_plugin_active = (
+        defined('WPSEO_VERSION') || // Yoast SEO
+        defined('RANK_MATH_VERSION') || // Rank Math
+        defined('AIOSEO_VERSION') || // All in One SEO
+        function_exists('seopress') || // SEOPress
+        function_exists('the_seo_framework') // The SEO Framework
+    );
+
+    if ($seo_plugin_active) {
+        return;
+    }
+
+    $description = '';
+
+    // Theme options tagline/site description if available
+    $theme_options = get_option('flexpress_general_settings');
+    $theme_site_description = isset($theme_options['site_description']) ? trim(wp_strip_all_tags($theme_options['site_description'])) : '';
+
+    if (is_singular()) {
+        global $post;
+
+        // Try common ACF/meta fields first
+        $acf_keys = array('seo_meta_description', 'meta_description');
+        foreach ($acf_keys as $key) {
+            if (function_exists('get_field')) {
+                $val = get_field($key, $post->ID);
+                if (!empty($val)) {
+                    $description = trim(wp_strip_all_tags($val));
+                    break;
+                }
+            }
+            // Fallback to raw post meta if ACF not present
+            if (empty($description)) {
+                $val = get_post_meta($post->ID, $key, true);
+                if (!empty($val)) {
+                    $description = trim(wp_strip_all_tags($val));
+                    break;
+                }
+            }
+        }
+
+        // Next, use excerpt if available
+        if (empty($description)) {
+            $excerpt = has_excerpt($post) ? get_the_excerpt($post) : '';
+            if (!empty($excerpt)) {
+                $description = trim(wp_strip_all_tags($excerpt));
+            }
+        }
+
+        // Finally, derive from content
+        if (empty($description)) {
+            $content = get_post_field('post_content', $post->ID);
+            if (!empty($content)) {
+                $description = trim(wp_strip_all_tags($content));
+            }
+        }
+    } else {
+        // Non-singular: home, archives, search
+        if (!empty($theme_site_description)) {
+            $description = $theme_site_description;
+        } else {
+            $description = get_bloginfo('description');
+        }
+    }
+
+    // Site-level fallback if still empty
+    if (empty($description)) {
+        $site_name = get_bloginfo('name');
+        $tagline = get_bloginfo('description');
+        $description = trim(($site_name ? $site_name . ' — ' : '') . $tagline);
+        if (empty($description)) {
+            $description = $site_name;
+        }
+    }
+
+    // Normalize whitespace and truncate to ~160 chars
+    $description = preg_replace('/\s+/', ' ', $description);
+    $max_len = 160;
+    if (function_exists('mb_substr')) {
+        if (mb_strlen($description) > $max_len) {
+            $description = rtrim(mb_substr($description, 0, $max_len - 1), " \t\n\r\0\x0B\xC2\xA0");
+            $description .= '…';
+        }
+    } else {
+        if (strlen($description) > $max_len) {
+            $description = rtrim(substr($description, 0, $max_len - 1));
+            $description .= '…';
+        }
+    }
+
+    if (!empty($description)) {
+        echo '<meta name="description" content="' . esc_attr($description) . '" />' . "\n";
+    }
+}
+add_action('wp_head', 'flexpress_output_meta_description', 5);
 
 /**
  * AJAX function to test settings saving

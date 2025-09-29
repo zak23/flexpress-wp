@@ -9,7 +9,7 @@
 <a href="<?php the_permalink(); ?>" class="model-card-link">
     <div class="card model-card">
         <?php if (has_post_thumbnail()) : ?>
-            <?php the_post_thumbnail('large', array('class' => 'model-image')); ?>
+            <?php the_post_thumbnail('model-card', array('class' => 'model-image')); ?>
         <?php else: ?>
             <div class="model-placeholder">
                 <i class="fa-solid fa-user model-placeholder-icon"></i>

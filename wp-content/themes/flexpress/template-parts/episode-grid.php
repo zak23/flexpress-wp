@@ -86,7 +86,7 @@ $episodes = new WP_Query($args);
                         <div class="card-img-top position-relative">
                             <a href="<?php the_permalink(); ?>">
                                 <div class="preview-container position-absolute top-0 start-0 w-100 h-100"></div>
-                                <?php flexpress_display_episode_thumbnail('medium', 'img-fluid'); ?>
+                                <?php flexpress_display_episode_thumbnail('episode-card', 'img-fluid'); ?>
                                 
                                 <div class="episode-overlay">
                                     <?php if ($duration): ?>

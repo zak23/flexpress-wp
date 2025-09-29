@@ -75,7 +75,7 @@ if ($upcoming_episode->have_posts()):
                                     <?php if ($upcoming_thumbnail_url): ?>
                                     <div class="hero-thumbnail" style="background-image: url('<?php echo esc_url($upcoming_thumbnail_url); ?>')"></div>
                                     <?php elseif (has_post_thumbnail()): ?>
-                                    <div class="hero-thumbnail" style="background-image: url('<?php echo esc_url(get_the_post_thumbnail_url(get_the_ID(), 'large')); ?>')"></div>
+                                    <div class="hero-thumbnail" style="background-image: url('<?php echo esc_url(get_the_post_thumbnail_url(get_the_ID(), 'hero-desktop')); ?>')"></div>
                                     <?php else: ?>
                                     <div class="hero-thumbnail" style="background: linear-gradient(135deg, #333, #666); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
                                         <div class="text-center">

@@ -59,7 +59,7 @@ if ($full_video && (empty($duration) || $duration == 0)) {
     <a href="<?php the_permalink(); ?>">
         <div class="card-img-top position-relative">
             <div class="preview-container position-absolute top-0 start-0 w-100 h-100"></div>
-            <?php flexpress_display_episode_thumbnail('medium', 'img-fluid'); ?>
+            <?php flexpress_display_episode_thumbnail('episode-card', 'img-fluid'); ?>
             
             <?php if ($duration): ?>
             <div class="episode-duration">

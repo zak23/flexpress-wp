@@ -15,14 +15,16 @@ get_header();
         <!-- Hero Section -->
         <?php 
         $hero_image = get_field('model_hero_image');
-        if ($hero_image) : ?>
+        if ($hero_image) :
+            $hero_src = isset($hero_image['sizes']['hero-desktop']) ? $hero_image['sizes']['hero-desktop'] : (isset($hero_image['sizes']['large']) ? $hero_image['sizes']['large'] : (isset($hero_image['url']) ? $hero_image['url'] : ''));
+            ?>
             <div class="hero-section-wrapper">
                 <div class="container">
                     <div class="row">
                         <div class="col-12">
                             <div class="hero-section">
                                 <div class="hero-video-container">
-                                    <div class="hero-thumbnail" style="background-image: url('<?php echo esc_url($hero_image['sizes']['large']); ?>');"></div>
+                                    <div class="hero-thumbnail" style="background-image: url('<?php echo esc_url($hero_src); ?>');"></div>
                                     <div class="hero-content-overlay">
                                         <h1 class="hero-episode-title"><?php the_title(); ?></h1>
                                     </div>
@@ -48,12 +50,19 @@ get_header();
                     <div class="text-center mb-4">
                         <?php 
                         $profile_image = get_field('model_profile_image');
-                        if ($profile_image) : ?>
-                            <img src="<?php echo esc_url($profile_image['sizes']['large']); ?>" 
-                                 alt="<?php echo esc_attr(get_the_title()); ?>" 
-                                 class="img-fluid rounded">
+                        if ($profile_image) :
+                            $profile_id = isset($profile_image['ID']) ? (int)$profile_image['ID'] : 0;
+                            if ($profile_id) {
+                                echo wp_get_attachment_image($profile_id, 'model-portrait', false, array(
+                                    'class' => 'img-fluid rounded',
+                                    'alt' => get_the_title()
+                                ));
+                            } else {
+                                echo '<img src="' . esc_url(isset($profile_image['url']) ? $profile_image['url'] : '') . '" alt="' . esc_attr(get_the_title()) . '" class="img-fluid rounded">';
+                            }
+                            ?>
                         <?php elseif (has_post_thumbnail()) : ?>
-                            <?php the_post_thumbnail('large', array('class' => 'img-fluid rounded')); ?>
+                            <?php the_post_thumbnail('model-portrait', array('class' => 'img-fluid rounded')); ?>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -234,7 +243,7 @@ get_header();
                                     </div>
                                     <?php else: ?>
                                     <div class="hero-video-container">
-                                        <?php flexpress_display_episode_thumbnail('large', 'hero-thumbnail-fallback'); ?>
+                                        <?php flexpress_display_episode_thumbnail('hero-desktop', 'hero-thumbnail-fallback'); ?>
                                     </div>
                                     <?php endif; ?>
                                     

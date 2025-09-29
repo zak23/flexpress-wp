@@ -354,7 +354,7 @@ add_action('manage_episode_posts_custom_column', 'flexpress_display_video_previe
  * @param string $class Additional classes for the image
  * @return void
  */
-function flexpress_display_episode_thumbnail($size = 'medium', $class = '') {
+function flexpress_display_episode_thumbnail($size = 'episode-card', $class = '') {
     $post_id = get_the_ID();
     $video_id = flexpress_get_primary_video_id($post_id);
     
@@ -369,7 +369,7 @@ function flexpress_display_episode_thumbnail($size = 'medium', $class = '') {
         }
         
         printf(
-            '<img src="%s" alt="%s" class="%s" data-video-id="%s" data-preview-url="%s" data-original-src="%s">',
+            '<img src="%s" alt="%s" class="%s" data-video-id="%s" data-preview-url="%s" data-original-src="%s" loading="lazy" decoding="async">',
             esc_url($thumbnail_url),
             esc_attr(get_the_title()),
             esc_attr($classes),

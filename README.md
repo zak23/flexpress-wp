@@ -151,7 +151,7 @@ FlexPress implements a multi-layer caching strategy to ensure optimal performanc
 
 - **Lazy Loading**: All images use `loading="lazy"` and `decoding="async"`
 - **Responsive Images**: Proper `sizes` and `srcset` attributes
-- **CDN Delivery**: BunnyCDN for global image distribution
+- **CDN Delivery**: Bunny Stream (BunnyCDN) for global image distribution
 - **Automatic Resizing**: Multiple optimized image sizes generated
 
 #### Database & Query Optimization
@@ -174,7 +174,7 @@ FlexPress implements a multi-layer caching strategy to ensure optimal performanc
 2. **Apache Configuration** - Server-level caching directives
 3. **WordPress Headers** - PHP-level caching headers
 4. **Redis Object Cache** - Persistent in-memory object caching
-5. **BunnyCDN Integration** - CDN caching for media assets
+5. **Bunny Stream Integration** - CDN caching for media assets
 
 #### 📊 Cache Configuration
 
@@ -1940,24 +1940,24 @@ FlexPress includes a professional promo video section on the home page for showc
 ### Setup
 
 1. **Configure ACF Fields**: Edit the Home page in WordPress Admin
-2. **Set Video ID**: Enter your BunnyCDN video ID in the "Promo Video ID" field
+2. **Set Video ID**: Enter your Bunny Stream video ID in the "Promo Video ID" field
 3. **Customize Content**:
    - Set custom title (default: "Welcome to Our Platform")
    - Add subtitle text (default: "Experience premium content like never before")
    - Configure CTA button text and URL (default: "Get Started Now" → "/register")
-4. **Video Display**: The section automatically generates secure BunnyCDN URLs with token authentication
+4. **Video Display**: The section automatically generates secure Bunny Stream URLs with token authentication
 
 ### Technical Implementation
 
 - **Template**: `template-parts/promo-video-section.php`
 - **ACF Fields**: `group_home_page` field group with 5 configurable fields
-- **BunnyCDN Integration**: Uses existing `flexpress_get_bunnycdn_video_url()` function
+- **Bunny Stream Integration**: Uses existing `flexpress_get_bunnycdn_video_url()` function
 - **Styling**: Responsive CSS with hover effects and professional gradients
 - **Fallback**: SVG placeholder when video unavailable
 
 ### ACF Fields
 
-- `home_promo_video_id` - BunnyCDN video ID (required)
+- `home_promo_video_id` - Bunny Stream video ID (required)
 - `home_promo_video_title` - Section title
 - `home_promo_video_subtitle` - Descriptive text below video
 - `home_promo_video_button_text` - CTA button text

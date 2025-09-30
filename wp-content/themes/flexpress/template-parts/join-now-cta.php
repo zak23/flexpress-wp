@@ -12,11 +12,38 @@ if (function_exists('flexpress_has_active_membership') && flexpress_has_active_m
     return;
 }
 
-// Get CTA image URL - try to use a configurable option first, then fallback to optimized default
-$cta_image_url = get_theme_mod('join_cta_image_url', home_url('/wp-content/uploads/2025/06/002-Zak_Mercedes-Green-scaled-800x1200.jpg'));
+// Get CTA image URL - try to use FlexPress settings first, then fallback to optimized default
+$flexpress_options = get_option('flexpress_general_settings', array());
+$join_cta_image_id = isset($flexpress_options['join_cta_image']) ? $flexpress_options['join_cta_image'] : '';
+
+if (!empty($join_cta_image_id)) {
+    // Use the uploaded image with proper sizing
+    $cta_image_url = wp_get_attachment_image_url($join_cta_image_id, 'large');
+    if (!$cta_image_url) {
+        // Fallback to full size if large doesn't exist
+        $cta_image_url = wp_get_attachment_image_url($join_cta_image_id, 'full');
+    }
+} else {
+    // Legacy fallback: support existing Customizer setting if present
+    $legacy_cta_url = get_theme_mod('join_cta_image_url', '');
+    if (!empty($legacy_cta_url)) {
+        $cta_image_url = $legacy_cta_url;
+    } else {
+        // Fallback to default image
+        $cta_image_url = home_url('/wp-content/uploads/2025/06/002-Zak_Mercedes-Green-scaled-800x1200.jpg');
+    }
+}
+
+// Ensure we have a valid image URL
+if (empty($cta_image_url)) {
+    $cta_image_url = home_url('/wp-content/uploads/2025/06/002-Zak_Mercedes-Green-scaled-800x1200.jpg');
+}
 
 // Get site name for dynamic content
 $site_name = get_bloginfo('name');
+if (empty($site_name)) {
+    $site_name = get_bloginfo('name') ?: 'Our Site';
+}
 ?>
 
 

@@ -24,7 +24,7 @@ class FlexPress_Settings {
      * Constructor
      */
     public function __construct() {
-        add_action('admin_menu', array($this, 'add_settings_page'));
+        add_action('admin_menu', array($this, 'add_settings_page'), 10);
         add_action('admin_init', array($this, 'register_settings'));
     }
 

@@ -212,6 +212,24 @@ class FlexPress_General_Settings
             'flexpress_casting_section'
         );
         error_log('FlexPress General Settings: Casting image field added');
+
+        // Add Join CTA Section
+        add_settings_section(
+            'flexpress_join_cta_section',
+            __('Join CTA Section', 'flexpress'),
+            array($this, 'render_join_cta_section_description'),
+            'flexpress_general_settings'
+        );
+
+        // Add join CTA image field
+        add_settings_field(
+            'flexpress_join_cta_image',
+            __('Join CTA Image', 'flexpress'),
+            array($this, 'render_join_cta_image_field'),
+            'flexpress_general_settings',
+            'flexpress_join_cta_section'
+        );
+        error_log('FlexPress General Settings: Join CTA image field added');
     }
 
     /**
@@ -1270,6 +1288,107 @@ class FlexPress_General_Settings
                     e.preventDefault();
                     $('#flexpress_casting_image').val('');
                     $('.flexpress-casting-image-preview').remove();
+                    $(this).remove();
+                });
+            });
+        </script>
+<?php
+    }
+
+    /**
+     * Render join CTA section description
+     */
+    public function render_join_cta_section_description()
+    {
+    ?>
+        <p>
+            <?php esc_html_e('Configure the image for the Join Now call-to-action section that appears on the homepage.', 'flexpress'); ?>
+        </p>
+    <?php
+    }
+
+    /**
+     * Render join CTA image field
+     */
+    public function render_join_cta_image_field()
+    {
+        error_log('FlexPress General Settings: render_join_cta_image_field called');
+        $options = get_option('flexpress_general_settings');
+        $join_cta_image_id = isset($options['join_cta_image']) ? $options['join_cta_image'] : '';
+
+        error_log('FlexPress General Settings: Current join CTA image ID from options: ' . $join_cta_image_id);
+
+        // Display the current image if it exists
+        if (!empty($join_cta_image_id)) {
+            $image_url = wp_get_attachment_image_url($join_cta_image_id, 'medium');
+            error_log('FlexPress General Settings: Image URL for ID ' . $join_cta_image_id . ': ' . ($image_url ? $image_url : 'No URL found'));
+            if ($image_url) {
+                echo '<div class="flexpress-join-cta-image-preview">';
+                echo '<img src="' . esc_url($image_url) . '" style="max-width: 300px; height: auto; margin-bottom: 10px;" />';
+                echo '</div>';
+            }
+        } else {
+            error_log('FlexPress General Settings: No join CTA image ID found, will show upload button');
+        }
+    ?>
+        <input type="hidden" name="flexpress_general_settings[join_cta_image]" id="flexpress_join_cta_image" value="<?php echo esc_attr($join_cta_image_id); ?>" />
+        <input type="button" class="button button-secondary" id="flexpress_upload_join_cta_image_button" value="<?php esc_attr_e('Upload Join CTA Image', 'flexpress'); ?>" />
+        <?php if (!empty($join_cta_image_id)) : ?>
+            <input type="button" class="button button-secondary" id="flexpress_remove_join_cta_image_button" value="<?php esc_attr_e('Remove Image', 'flexpress'); ?>" />
+        <?php endif; ?>
+        <p class="description"><?php esc_html_e('Upload an image for the Join Now call-to-action section. This image will be displayed on the homepage. Recommended size: 800x1200px (portrait orientation).', 'flexpress'); ?></p>
+
+        <script type="text/javascript">
+            jQuery(document).ready(function($) {
+                // Media uploader for join CTA image
+                var joinCtaMediaUploader;
+
+                $('#flexpress_upload_join_cta_image_button').on('click', function(e) {
+                    e.preventDefault();
+
+                    // If the media uploader already exists, open it
+                    if (joinCtaMediaUploader) {
+                        joinCtaMediaUploader.open();
+                        return;
+                    }
+
+                    // Create the media uploader
+                    joinCtaMediaUploader = wp.media({
+                        title: '<?php esc_html_e('Select or Upload Join CTA Image', 'flexpress'); ?>',
+                        button: {
+                            text: '<?php esc_html_e('Use this image', 'flexpress'); ?>'
+                        },
+                        multiple: false
+                    });
+
+                    // When an image is selected, run a callback
+                    joinCtaMediaUploader.on('select', function() {
+                        var attachment = joinCtaMediaUploader.state().get('selection').first().toJSON();
+                        $('#flexpress_join_cta_image').val(attachment.id);
+
+                        // Update preview
+                        if (attachment.url) {
+                            if ($('.flexpress-join-cta-image-preview').length === 0) {
+                                $('<div class="flexpress-join-cta-image-preview"><img style="max-width: 300px; height: auto; margin-bottom: 10px;" /></div>').insertBefore('#flexpress_upload_join_cta_image_button');
+                            }
+                            $('.flexpress-join-cta-image-preview img').attr('src', attachment.url);
+
+                            // Show remove button if not already visible
+                            if ($('#flexpress_remove_join_cta_image_button').length === 0) {
+                                $('<input type="button" class="button button-secondary" id="flexpress_remove_join_cta_image_button" value="<?php esc_attr_e('Remove Image', 'flexpress'); ?>" />').insertAfter('#flexpress_upload_join_cta_image_button');
+                            }
+                        }
+                    });
+
+                    // Open the media uploader
+                    joinCtaMediaUploader.open();
+                });
+
+                // Handle remove button
+                $(document).on('click', '#flexpress_remove_join_cta_image_button', function(e) {
+                    e.preventDefault();
+                    $('#flexpress_join_cta_image').val('');
+                    $('.flexpress-join-cta-image-preview').remove();
                     $(this).remove();
                 });
             });

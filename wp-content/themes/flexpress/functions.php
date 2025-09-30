@@ -963,6 +963,23 @@ function flexpress_sanitize_general_settings($input)
         error_log('FlexPress General Settings: No casting_image in input data');
     }
 
+    // Sanitize join CTA image
+    if (isset($input['join_cta_image'])) {
+        $join_cta_image_id = absint($input['join_cta_image']);
+        $sanitized['join_cta_image'] = $join_cta_image_id;
+        error_log('FlexPress General Settings: Join CTA image being saved with ID: ' . $join_cta_image_id);
+
+        // Log the current value being saved
+        if ($join_cta_image_id > 0) {
+            $image_url = wp_get_attachment_url($join_cta_image_id);
+            error_log('FlexPress General Settings: Join CTA image URL: ' . ($image_url ? $image_url : 'No URL found'));
+        } else {
+            error_log('FlexPress General Settings: Join CTA image ID is 0, will use default image');
+        }
+    } else {
+        error_log('FlexPress General Settings: No join_cta_image in input data');
+    }
+
     // Log the complete sanitized data for debugging
     error_log('FlexPress General Settings: Complete sanitized data: ' . print_r($sanitized, true));
 
@@ -5081,7 +5098,7 @@ function flexpress_show_auto_setup_notice()
             <p><strong>Next Steps:</strong></p>
             <ul style="margin-left: 20px;">
                 <li>📋 Configure Flowguard settings in <a href="<?php echo admin_url('admin.php?page=flexpress-flowguard-settings'); ?>">FlexPress → Flowguard</a></li>
-                <li>🎥 Configure BunnyCDN settings in <a href="<?php echo admin_url('admin.php?page=flexpress-video-settings'); ?>">FlexPress → BunnyCDN</a></li>
+                <li>🎥 Configure Bunny Stream settings in <a href="<?php echo admin_url('admin.php?page=flexpress-bunnycdn-settings'); ?>">FlexPress → Bunny Stream</a></li>
                 <li>💰 Set up pricing plans in <a href="<?php echo admin_url('admin.php?page=flexpress-pricing-settings'); ?>">FlexPress → Pricing</a></li>
                 <li>🎨 Upload your logo in <a href="<?php echo admin_url('admin.php?page=flexpress-settings'); ?>">FlexPress → General</a></li>
             </ul>

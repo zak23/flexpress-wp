@@ -36,7 +36,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 
 ### 🎥 Video Management
 
-- **BunnyCDN Stream Integration**: Secure video hosting and streaming
+- **Bunny Stream Integration**: Secure video hosting and streaming
 - **Thumbnail Generation**: Automatic video previews
 - **Access Control**: Free, PPV, membership, and mixed access types
 - **Token-Based Security**: Secure video URLs with expiration
@@ -44,7 +44,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 
 ### 🖼️ Gallery System
 
-- **BunnyCDN Storage Integration**: Image hosting and optimization
+- **BunnyCDN Storage Integration**: Image hosting and optimization (Stream labels renamed to Bunny Stream in admin)
 - **Automatic Thumbnail Generation**: Center-cropped square thumbnails
 - **Episode Galleries**: Attach image galleries to video content
 - **Drag & Drop Upload**: Admin interface for easy image management
@@ -96,7 +96,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Multiple Brands**: Support for various Verotel payment brands
 - **Debug Tools**: Admin interface for webhook monitoring
 
-### BunnyCDN Services
+### Bunny Stream Services (renamed from BunnyCDN in admin labels)
 
 - **Stream API**: Video hosting and delivery
 - **Storage API**: Image and file management

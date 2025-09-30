@@ -18,7 +18,7 @@ class FlexPress_Email_Blacklist_Settings {
      * Constructor
      */
     public function __construct() {
-        add_action('admin_menu', array($this, 'add_admin_menu'));
+        add_action('admin_menu', array($this, 'add_admin_menu'), 20);
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
     }
     

@@ -109,42 +109,42 @@ class FlexPress_Video_Settings {
         
         add_settings_section(
             'flexpress_video_section',
-            __('BunnyCDN Settings', 'flexpress'),
+            __('Bunny Stream Settings', 'flexpress'),
             array($this, 'render_section_description'),
             'flexpress_video_settings'
         );
 
-        // BunnyCDN Library ID
+        // Bunny Stream Library ID
         add_settings_field(
             'flexpress_bunnycdn_library_id',
-            __('BunnyCDN Library ID', 'flexpress'),
+            __('Bunny Stream Library ID', 'flexpress'),
             array($this, 'render_bunnycdn_library_id_field'),
             'flexpress_video_settings',
             'flexpress_video_section'
         );
 
-        // BunnyCDN URL
+        // Bunny Stream URL
         add_settings_field(
             'flexpress_bunnycdn_url',
-            __('BunnyCDN URL', 'flexpress'),
+            __('Bunny Stream URL', 'flexpress'),
             array($this, 'render_bunnycdn_url_field'),
             'flexpress_video_settings',
             'flexpress_video_section'
         );
 
-        // BunnyCDN API Key
+        // Bunny Stream API Key
         add_settings_field(
             'flexpress_bunnycdn_api_key',
-            __('BunnyCDN API Key', 'flexpress'),
+            __('Bunny Stream API Key', 'flexpress'),
             array($this, 'render_bunnycdn_api_key_field'),
             'flexpress_video_settings',
             'flexpress_video_section'
         );
 
-        // BunnyCDN Token Key
+        // Bunny Stream Token Key
         add_settings_field(
             'flexpress_bunnycdn_token_key',
-            __('BunnyCDN Token Key', 'flexpress'),
+            __('Bunny Stream Token Key', 'flexpress'),
             array($this, 'render_bunnycdn_token_key_field'),
             'flexpress_video_settings',
             'flexpress_video_section'
@@ -235,7 +235,7 @@ class FlexPress_Video_Settings {
      * Render section description
      */
     public function render_section_description() {
-        echo '<p>' . esc_html__('Configure BunnyCDN integration and video player settings.', 'flexpress') . '</p>';
+        echo '<p>' . esc_html__('Configure Bunny Stream integration and video player settings.', 'flexpress') . '</p>';
     }
 
     /**
@@ -249,7 +249,7 @@ class FlexPress_Video_Settings {
                name="flexpress_video_settings[bunnycdn_library_id]" 
                value="<?php echo esc_attr($value); ?>" 
                class="regular-text">
-        <p class="description"><?php esc_html_e('Enter your BunnyCDN Library ID.', 'flexpress'); ?></p>
+        <p class="description"><?php esc_html_e('Enter your Bunny Stream Library ID.', 'flexpress'); ?></p>
         <?php
     }
 
@@ -266,7 +266,7 @@ class FlexPress_Video_Settings {
                name="flexpress_video_settings[bunnycdn_url]" 
                value="<?php echo esc_attr($value); ?>" 
                class="regular-text">
-        <p class="description"><?php esc_html_e('Enter your BunnyCDN URL (e.g., vz-191fb414-531.b-cdn.net)', 'flexpress'); ?></p>
+        <p class="description"><?php esc_html_e('Enter your Bunny Stream URL (e.g., vz-191fb414-531.b-cdn.net)', 'flexpress'); ?></p>
         <?php
     }
 
@@ -281,7 +281,7 @@ class FlexPress_Video_Settings {
                name="flexpress_video_settings[bunnycdn_api_key]" 
                value="<?php echo esc_attr($value); ?>" 
                class="regular-text">
-        <p class="description"><?php esc_html_e('Enter your BunnyCDN API Key.', 'flexpress'); ?></p>
+        <p class="description"><?php esc_html_e('Enter your Bunny Stream API Key.', 'flexpress'); ?></p>
         <?php
     }
 
@@ -296,7 +296,7 @@ class FlexPress_Video_Settings {
                name="flexpress_video_settings[bunnycdn_token_key]" 
                value="<?php echo esc_attr($value); ?>" 
                class="regular-text">
-        <p class="description"><?php esc_html_e('Enter your BunnyCDN Token Key. This is used for generating secure video URLs.', 'flexpress'); ?></p>
+        <p class="description"><?php esc_html_e('Enter your Bunny Stream Token Key. This is used for generating secure video URLs.', 'flexpress'); ?></p>
         <?php
     }
 
@@ -579,8 +579,8 @@ class FlexPress_Video_Settings {
     public function add_submenu_page() {
         add_submenu_page(
             'flexpress-settings',
-            __('BunnyCDN Settings', 'flexpress'),
-            __('BunnyCDN Settings', 'flexpress'),
+            __('Bunny Stream Settings', 'flexpress'),
+            __('Bunny Stream Settings', 'flexpress'),
             'manage_options',
             'flexpress-bunnycdn-settings',
             array($this, 'render_settings_page')
@@ -593,7 +593,7 @@ class FlexPress_Video_Settings {
     public function render_settings_page() {
         ?>
         <div class="wrap">
-            <h1><?php echo esc_html__('BunnyCDN Settings', 'flexpress'); ?></h1>
+            <h1><?php echo esc_html__('Bunny Stream Settings', 'flexpress'); ?></h1>
             
             <form method="post" action="options.php">
                 <?php

@@ -1,32 +1,38 @@
 project:
-  name: FlexPress
-  description: WordPress theme and Dockerized project for zakspov.com with Flowguard, Bunny Stream, Redis, and admin systems.
+name: FlexPress
+description: WordPress theme and Dockerized project for zakspov.com with Flowguard, Bunny Stream, Redis, and admin systems.
 
 conventions:
-  - Always use IP instead of localhost
-  - Never use port 3000 (reserved for MCP tools)
-  - WordPress on port 8085; phpMyAdmin on 8086
-  - All theme work inside wp-content/themes/flexpress/
+
+- Always use IP instead of localhost
+- Never use port 3000 (reserved for MCP tools)
+- WordPress on port 8085; phpMyAdmin on 8086
+- All theme work inside wp-content/themes/flexpress/
 
 docs:
-  - Keep README.md in project root and theme updated with changes
-  - Note: Admin labels renamed from "BunnyCDN" to "Bunny Stream" for Stream settings
+
+- Keep README.md in project root and theme updated with changes
+- Note: Admin labels renamed from "BunnyCDN" to "Bunny Stream" for Stream settings
 
 testing:
-  - Use test site for puppeteer/browser tests
-  - Cache: Redis enabled
+
+- Use test site for puppeteer/browser tests
+- Cache: Redis enabled
 
 mcp:
-  - Prefer IPs for navigation and screenshots
+
+- Prefer IPs for navigation and screenshots
 
 style:
-  php: spaces=4
-  js: spaces=2
-  css: spaces=2
+php: spaces=4
+js: spaces=2
+css: spaces=2
 
 notes:
-  - Update admin menu strings consistently when labels change
-  - Do not alter .wakatime-project once created
+
+- Update admin menu strings consistently when labels change
+- Do not alter .wakatime-project once created
+
 # FlexPress WordPress Theme Development Rules
 
 ## Project Overview

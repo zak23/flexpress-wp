@@ -15,13 +15,26 @@ if (!defined('ABSPATH')) {
  * Add performance optimization headers
  */
 function flexpress_add_performance_headers() {
-    // Add cache control headers for static assets
+    // Add cache control headers for static assets and ensure dynamic HTML is not cached for logged-in users
     if (!is_admin() && !wp_doing_ajax() && !headers_sent()) {
+        $request_uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+
         // Cache static assets for 1 year
-        if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/', $_SERVER['REQUEST_URI'])) {
+        if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/', $request_uri)) {
             header('Cache-Control: public, max-age=31536000, immutable');
+        } else {
+            // For HTML and other dynamic responses, ensure private/no-store for logged-in users
+            if (is_user_logged_in()) {
+                // Prevent intermediary caches and browsers from serving stale logged-in pages
+                header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0');
+                header('Pragma: no-cache');
+                header('Expires: 0');
+            } else {
+                // Keep a modest public cache for anonymous HTML (tuned low)
+                header('Cache-Control: public, max-age=300');
+            }
         }
-        
+
         // Add security headers
         header('X-Content-Type-Options: nosniff');
         header('X-Frame-Options: SAMEORIGIN');

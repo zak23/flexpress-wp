@@ -145,8 +145,14 @@ class Redis_Object_Cache {
     }
 }
 
-// Initialize Redis object cache
-$GLOBALS['wp_object_cache'] = new Redis_Object_Cache();
+// Disable this theme-level drop-in: WordPress loads wp-content/object-cache.php instead.
+// Leaving an extra object cache here can conflict with the official drop-in and cause
+// user-specific state (e.g., is_user_logged_in) to be cached incorrectly across users.
+// We still ship the class for reference, but do not initialize it here.
+// The canonical drop-in is copied into wp-content/object-cache.php by the Docker build.
+// If you need to test this implementation, do it explicitly and never in production.
+
+// $GLOBALS['wp_object_cache'] = new Redis_Object_Cache();
 
 // Add admin notice for Redis status
 add_action('admin_notices', function() {

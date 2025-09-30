@@ -47,9 +47,44 @@ cd /path/to/flexpress
    - WordPress: http://localhost:8085
    - phpMyAdmin: http://localhost:8086
 
+5. **Configure URLs for development:**
+   ```bash
+   # Switch to development URLs (if needed)
+   ./switch-urls.sh dev
+   
+   # Check current URL configuration
+   ./switch-urls.sh status
+   ```
+
 ### Multi-Site Deployment
 
 FlexPress is fully containerized and ready for deployment to multiple sites. See [DOCKER_DEPLOYMENT_GUIDE.md](docs/DOCKER_DEPLOYMENT_GUIDE.md) for complete deployment instructions.
+
+## 🔧 Troubleshooting
+
+### Authentication Issues
+
+If you experience inconsistent login behavior (e.g., being redirected to login page when already logged in), this is typically caused by URL mismatches between development and production environments.
+
+**Solution:**
+```bash
+# Switch to development URLs
+./switch-urls.sh dev
+
+# Or switch to production URLs
+./switch-urls.sh prod
+
+# Check current configuration
+./switch-urls.sh status
+```
+
+**Common Issues:**
+- **Domain Mismatch**: WordPress cookies are set for the wrong domain
+- **HTTPS/HTTP Mismatch**: Mixed protocol usage causes authentication failures
+- **Port Issues**: Accessing via different ports than configured
+
+**Prevention:**
+The `.env` file includes automatic URL detection for local development environments, but manual URL switching may be needed for complex setups.
 
 ## 📁 Project Structure
 

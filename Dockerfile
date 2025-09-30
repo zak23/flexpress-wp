@@ -28,6 +28,9 @@ COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
 # Copy Redis object cache drop-in
 COPY wp-content/themes/flexpress/object-cache.php /var/www/html/wp-content/object-cache.php
 
+# Copy local development configuration
+COPY wp-content/themes/flexpress/wp-config-local.php /var/www/html/wp-config-local.php
+
 # Set proper permissions
 RUN chown -R www-data:www-data /var/www/html
 

@@ -72,7 +72,7 @@ if (function_exists('acf_add_local_field_group')):
                 'default_value' => 'membership',
                 'choices' => array(
                     'free' => 'Free for Everyone',
-                    'membership_only' => 'Membership Only',
+                    'membership_only' => 'Membership Only (No PPV Option)',
                     'ppv_only' => 'Pay-Per-View Only (No Membership Access)',
                     'membership' => 'Membership Access + PPV Option',
                     'mixed' => 'Members Get Discount + PPV for Non-Members',
@@ -92,7 +92,7 @@ if (function_exists('acf_add_local_field_group')):
                 'label' => 'Default PPV Price',
                 'name' => 'episode_price',
                 'type' => 'select',
-                'instructions' => 'Select the price for non-members (not required for membership-only episodes)',
+                'instructions' => 'Choose the default price for non-members (only applies to episodes with PPV option)',
                 'required' => 0,
                 'default_value' => '29.95',
                 'choices' => array(
@@ -100,7 +100,7 @@ if (function_exists('acf_add_local_field_group')):
                     '39.95' => '$39.95',
                     '49.95' => '$49.95',
                 ),
-                'allow_null' => 1,
+                'allow_null' => 0,
                 'multiple' => 0,
                 'ui' => 1,
                 'return_format' => 'value',

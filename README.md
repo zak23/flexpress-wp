@@ -1767,6 +1767,215 @@ flexpress_display_episode_visibility_notice('homepage');
 - **No Broken Links**: Hidden episodes don't appear in navigation or search
 - **Consistent Behavior**: Same visibility rules apply across all site areas
 
+## 🎬 Episode Access Control System
+
+### Overview
+
+FlexPress includes a comprehensive episode access control system that allows content creators to set different access levels for episodes, controlling how users can view content through membership, pay-per-view (PPV), or free access.
+
+### Access Types
+
+The system supports **5 different access types** for episodes:
+
+1. **🆓 Free for Everyone** - No restrictions, accessible to all visitors
+2. **👑 Membership Only** - Accessible only to active members, no PPV option
+3. **💰 Pay-Per-View Only** - Individual purchase required, no membership access
+4. **🎯 Membership Access + PPV Option** - Members get free access, non-members can purchase
+5. **💎 Members Get Discount + PPV for Non-Members** - Members get discounted price, everyone can purchase
+
+### Pricing Configuration
+
+#### Default PPV Pricing
+
+Episodes with PPV options use a **dropdown pricing system** with three predefined price points:
+
+- **$29.95** (Default) - Standard pricing
+- **$39.95** - Premium pricing
+- **$49.95** - Premium+ pricing
+
+#### Member Discounts
+
+For "mixed" access type episodes, members can receive configurable discounts:
+
+- **Discount Range**: 0-100% off PPV price
+- **Automatic Calculation**: Final price calculated based on member discount percentage
+- **Display Logic**: Shows original price crossed out with discounted price highlighted
+
+### Technical Implementation
+
+#### ACF Field Configuration
+
+Located in `includes/acf-fields.php`:
+
+**Access Type Field:**
+
+- **Field Name**: `access_type`
+- **Field Type**: Select dropdown
+- **Default Value**: `membership`
+- **Choices**: All 5 access types with descriptive labels
+
+**Default PPV Price Field:**
+
+- **Field Name**: `episode_price`
+- **Field Type**: Select dropdown
+- **Default Value**: `29.95`
+- **Choices**: $29.95, $39.95, $49.95
+- **Conditional Logic**: Hidden when "Membership Only" is selected
+
+**Member Discount Field:**
+
+- **Field Name**: `member_discount`
+- **Field Type**: Number input
+- **Range**: 0-100%
+- **Conditional Logic**: Only shown for "mixed" access type
+
+#### Access Control Logic
+
+Located in `functions.php` - `flexpress_get_episode_access_info()`:
+
+```php
+// Check episode access for current user
+$access_info = flexpress_get_episode_access_info($episode_id);
+
+// Access info includes:
+$access_info['has_access']           // Boolean: Can user view episode?
+$access_info['show_purchase_button'] // Boolean: Show PPV purchase button?
+$access_info['show_membership_button'] // Boolean: Show membership signup button?
+$access_info['price']                // Float: Original PPV price
+$access_info['final_price']          // Float: Price after member discount
+$access_info['discount']             // Int: Member discount percentage
+$access_info['purchase_reason']      // String: User-facing explanation
+```
+
+#### Access Type Handling
+
+**Free Episodes:**
+
+- Accessible to everyone
+- No purchase buttons or pricing displayed
+
+**Membership Only:**
+
+- Active members: Full access
+- Non-members: Membership signup button only
+- No PPV pricing displayed
+
+**PPV Only:**
+
+- Purchased users: Full access
+- Non-purchased users: PPV purchase button
+- Members still need to purchase (no free access)
+
+**Membership + PPV:**
+
+- Active members: Free access
+- Non-members: PPV purchase button
+- Clear messaging about membership benefits
+
+**Mixed Access:**
+
+- Purchased users: Full access
+- Active members: Discounted PPV price
+- Non-members: Full PPV price
+- Dynamic pricing display based on membership status
+
+### Frontend Implementation
+
+#### Single Episode Template
+
+Located in `single-episode.php`:
+
+**Access Control Display:**
+
+- **Price Display**: Shows original and discounted prices for mixed access
+- **Purchase Button**: Conditional display based on access type
+- **Membership Button**: Shown for membership-only episodes
+- **Access Messages**: Contextual messaging based on user status
+
+**Button Logic:**
+
+```php
+// Purchase button for PPV episodes
+if ($access_info['show_purchase_button']) {
+    // Show PPV purchase button with pricing
+}
+
+// Membership button for membership-only episodes
+if ($access_info['show_membership_button']) {
+    // Show membership signup button
+}
+```
+
+#### Episode Cards
+
+Episode cards throughout the site automatically display appropriate access indicators:
+
+- **Access Icons**: Visual indicators for different access types
+- **Price Display**: Shows PPV pricing when applicable
+- **Member Benefits**: Highlights member discounts and benefits
+
+### User Experience
+
+#### For Members
+
+- **Seamless Access**: Automatic access to membership-included episodes
+- **Discount Visibility**: Clear display of member discounts on mixed episodes
+- **No Confusion**: Clear messaging about what's included vs. requires purchase
+
+#### For Non-Members
+
+- **Clear Pricing**: Transparent PPV pricing with member discount information
+- **Easy Purchase**: Streamlined PPV purchase flow
+- **Membership Benefits**: Clear messaging about membership advantages
+
+#### For Guests
+
+- **Registration Prompts**: Encourages account creation for better experience
+- **Access Preview**: Shows what content is available with membership
+- **Pricing Transparency**: Clear pricing information before purchase
+
+### Admin Interface
+
+#### Episode Editor
+
+**Access Type Selection:**
+
+- Dropdown with all 5 access types
+- Clear descriptions for each option
+- Default selection: "Membership Access + PPV Option"
+
+**Pricing Configuration:**
+
+- Dropdown with 3 price options
+- Default: $29.95
+- Conditional display based on access type
+
+**Member Discount Settings:**
+
+- Number input for discount percentage
+- Only shown for "mixed" access type
+- Range validation: 0-100%
+
+#### Bulk Operations
+
+- **Access Type Changes**: Bulk update access types for multiple episodes
+- **Pricing Updates**: Bulk price changes across episodes
+- **Member Discount**: Bulk discount percentage updates
+
+### Security Features
+
+- **Access Validation**: Server-side validation of all access checks
+- **Purchase Verification**: Webhook verification of PPV purchases
+- **Member Status Validation**: Real-time membership status checking
+- **Cache Invalidation**: Automatic cache clearing on access changes
+
+### Performance Optimization
+
+- **Cached Access Checks**: Redis caching for access validation
+- **Conditional Loading**: Only load pricing logic when needed
+- **Efficient Queries**: Optimized database queries for access checks
+- **Lazy Loading**: Defer access checks until necessary
+
 ## ⚙️ Configuration
 
 ### Environment Variables

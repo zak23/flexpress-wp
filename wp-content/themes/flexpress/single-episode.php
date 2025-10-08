@@ -387,69 +387,91 @@ while (have_posts()):
                                     <?php endif; ?>
 
                                     <!-- Purchase Button -->
-                                    <?php if (is_user_logged_in()): ?>
-                                        <button class="btn btn-primary w-100 purchase-btn mb-3"
-                                            data-episode-id="<?php echo get_the_ID(); ?>"
-                                            data-price="<?php echo esc_attr($access_info['final_price']); ?>"
-                                            data-original-price="<?php echo esc_attr($access_info['price']); ?>"
-                                            data-discount="<?php echo esc_attr($access_info['discount']); ?>"
-                                            data-access-type="<?php echo esc_attr($access_info['access_type']); ?>"
-                                            data-is-active-member="<?php echo $is_active_member ? 'true' : 'false'; ?>">
-                                            <i class="fas fa-shopping-cart me-2"></i>
-                                            <?php esc_html_e('Unlock Now', 'flexpress'); ?>
-                                        </button>
-                                    <?php else: ?>
-                                        <a href="<?php echo esc_url(home_url('/login?redirect_to=' . urlencode(get_permalink()))); ?>"
-                                            class="btn btn-primary w-100 mb-3">
-                                            <i class="fas fa-sign-in-alt me-2"></i>
-                                            <?php esc_html_e('Login to Purchase', 'flexpress'); ?>
+                                    <?php if ($access_info['show_purchase_button']): ?>
+                                        <?php if (is_user_logged_in()): ?>
+                                            <button class="btn btn-primary w-100 purchase-btn mb-3"
+                                                data-episode-id="<?php echo get_the_ID(); ?>"
+                                                data-price="<?php echo esc_attr($access_info['final_price']); ?>"
+                                                data-original-price="<?php echo esc_attr($access_info['price']); ?>"
+                                                data-discount="<?php echo esc_attr($access_info['discount']); ?>"
+                                                data-access-type="<?php echo esc_attr($access_info['access_type']); ?>"
+                                                data-is-active-member="<?php echo $is_active_member ? 'true' : 'false'; ?>">
+                                                <i class="fas fa-shopping-cart me-2"></i>
+                                                <?php esc_html_e('Unlock Now', 'flexpress'); ?>
+                                            </button>
+                                        <?php else: ?>
+                                            <a href="<?php echo esc_url(home_url('/login?redirect_to=' . urlencode(get_permalink()))); ?>"
+                                                class="btn btn-primary w-100 mb-3">
+                                                <i class="fas fa-sign-in-alt me-2"></i>
+                                                <?php esc_html_e('Login to Purchase', 'flexpress'); ?>
+                                            </a>
+                                            <div class="text-center mb-3">
+                                                <small class="text-secondary">
+                                                    <?php esc_html_e('New here?', 'flexpress'); ?>
+                                                    <a href="<?php echo esc_url(home_url('/register?redirect_to=' . urlencode(get_permalink()))); ?>" class="text-white">
+                                                        <?php esc_html_e('Create Account', 'flexpress'); ?>
+                                                    </a>
+                                                </small>
+                                            </div>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+
+                                    <!-- Membership Button for Membership-Only Episodes -->
+                                    <?php if ($access_info['show_membership_button']): ?>
+                                        <a href="<?php echo esc_url(home_url('/join')); ?>" class="btn btn-warning w-100 mb-3">
+                                            <i class="fas fa-crown me-2"></i>
+                                            <?php esc_html_e('Join Membership', 'flexpress'); ?>
                                         </a>
-                                        <div class="text-center mb-3">
-                                            <small class="text-secondary">
-                                                <?php esc_html_e('New here?', 'flexpress'); ?>
-                                                <a href="<?php echo esc_url(home_url('/register?redirect_to=' . urlencode(get_permalink()))); ?>" class="text-white">
-                                                    <?php esc_html_e('Create Account', 'flexpress'); ?>
-                                                </a>
-                                            </small>
-                                        </div>
+                                        <?php if (!is_user_logged_in()): ?>
+                                            <div class="text-center mb-3">
+                                                <small class="text-secondary">
+                                                    <?php esc_html_e('Already have an account?', 'flexpress'); ?>
+                                                    <a href="<?php echo esc_url(home_url('/login?redirect_to=' . urlencode(get_permalink()))); ?>" class="text-white">
+                                                        <?php esc_html_e('Login', 'flexpress'); ?>
+                                                    </a>
+                                                </small>
+                                            </div>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
                             <?php endif; ?>
 
                             <?php if (!is_user_logged_in() || (is_user_logged_in() && !function_exists('flexpress_has_active_membership') || !flexpress_has_active_membership())): ?>
-                                <hr class="my-3 border-secondary">
-                                <div class="text-center">
-                                    <h6 class="mb-2 text-white">
-                                        <?php esc_html_e('Or get unlimited access', 'flexpress'); ?>
-                                    </h6>
-                                    <a href="<?php echo esc_url(home_url('/join')); ?>" class="btn btn-outline-light w-100 border border-secondary">
-                                        <i class="fas fa-crown me-2"></i>
-                                        <?php esc_html_e('Premium Membership', 'flexpress'); ?>
-                                    </a>
-                                    <?php if ($access_info['price'] > 0): ?>
+                                <?php if (!$access_info['show_membership_button']): ?>
+                                    <hr class="my-3 border-secondary">
+                                    <div class="text-center">
                                         <h6 class="mb-2 text-white">
-                                            <i class="fas fa-percentage me-2 text-warning"></i>
-                                            <?php
-                                            if ($access_info['discount'] > 0) {
-                                                // Show actual savings for members
-                                                $savings = $access_info['price'] - $access_info['final_price'];
-                                                printf(
-                                                    esc_html__('Members save $%s this episode!', 'flexpress'),
-                                                    number_format($savings, 2)
-                                                );
-                                            } else {
-                                                // Show potential savings for non-members (using standard member discount)
-                                                $member_price = $access_info['price'] * 0.5; // 50% member discount
-                                                $savings = $access_info['price'] - $member_price;
-                                                printf(
-                                                    esc_html__('Members save $%s this episode!', 'flexpress'),
-                                                    number_format($savings, 2)
-                                                );
-                                            }
-                                            ?>
+                                            <?php esc_html_e('Or get unlimited access', 'flexpress'); ?>
                                         </h6>
-                                    <?php endif; ?>
-                                </div>
+                                        <a href="<?php echo esc_url(home_url('/join')); ?>" class="btn btn-outline-light w-100 border border-secondary">
+                                            <i class="fas fa-crown me-2"></i>
+                                            <?php esc_html_e('Premium Membership', 'flexpress'); ?>
+                                        </a>
+                                        <?php if ($access_info['price'] > 0): ?>
+                                            <h6 class="mb-2 text-white">
+                                                <i class="fas fa-percentage me-2 text-warning"></i>
+                                                <?php
+                                                if ($access_info['discount'] > 0) {
+                                                    // Show actual savings for members
+                                                    $savings = $access_info['price'] - $access_info['final_price'];
+                                                    printf(
+                                                        esc_html__('Members save $%s this episode!', 'flexpress'),
+                                                        number_format($savings, 2)
+                                                    );
+                                                } else {
+                                                    // Show potential savings for non-members (using standard member discount)
+                                                    $member_price = $access_info['price'] * 0.5; // 50% member discount
+                                                    $savings = $access_info['price'] - $member_price;
+                                                    printf(
+                                                        esc_html__('Members save $%s this episode!', 'flexpress'),
+                                                        number_format($savings, 2)
+                                                    );
+                                                }
+                                                ?>
+                                            </h6>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>

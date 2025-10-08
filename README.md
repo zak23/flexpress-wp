@@ -90,6 +90,20 @@ If you experience inconsistent login behavior (e.g., being redirected to login p
 **Prevention:**
 The `.env` file includes automatic URL detection for local development environments, but manual URL switching may be needed for complex setups.
 
+### Sticky User Meta / Membership State Appearing Outdated (October 2025)
+
+If membership status, PPV access, or other user meta appears "stuck" after login/logout or payments, this was caused by persistent Redis object caching of `user_meta`.
+
+Fix implemented:
+
+- Automatic cache invalidation on login and logout
+- Automatic invalidation when critical user meta changes (e.g., `membership_status`, `ppv_purchases`, `purchased_episode_*`, Flowguard keys)
+- Helper: `flexpress_invalidate_user_cache($user_id)` to manually force a refresh when needed
+
+Developer note:
+
+- Access checks can force fresh meta via `flexpress_check_episode_access($episode_id, $user_id, true)` if a one-off bypass is required for debugging.
+
 ## 📁 Project Structure
 
 ```

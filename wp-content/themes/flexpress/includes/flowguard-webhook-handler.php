@@ -136,6 +136,10 @@ function flexpress_flowguard_handle_subscription_approved($payload) {
     
     // Update user membership status
     flexpress_update_membership_status($user_id, 'active');
+    // Ensure caches reflect new status immediately
+    if (function_exists('flexpress_invalidate_user_cache')) {
+        flexpress_invalidate_user_cache($user_id);
+    }
     
     // Store subscription details
     update_user_meta($user_id, 'flowguard_sale_id', $payload['saleId']);
@@ -234,6 +238,9 @@ function flexpress_flowguard_handle_purchase_approved($payload) {
             $ppv_purchases[] = $episode_id;
             $result = update_user_meta($user_id, 'ppv_purchases', $ppv_purchases);
             error_log('Flowguard Webhook: Updated PPV purchases: ' . print_r($ppv_purchases, true) . ' (Result: ' . ($result ? 'success' : 'failed') . ')');
+            if (function_exists('flexpress_invalidate_user_cache')) {
+                flexpress_invalidate_user_cache($user_id);
+            }
         } else {
             error_log('Flowguard Webhook: Episode ' . $episode_id . ' already in user purchases');
         }
@@ -269,6 +276,9 @@ function flexpress_flowguard_handle_subscription_rebill($payload) {
     
     // Update membership status
     flexpress_update_membership_status($user_id, 'active');
+    if (function_exists('flexpress_invalidate_user_cache')) {
+        flexpress_invalidate_user_cache($user_id);
+    }
     
     // Update next rebill date
     if (!empty($payload['nextChargeOn'])) {
@@ -316,6 +326,9 @@ function flexpress_flowguard_handle_subscription_cancel($payload) {
     
     // Update membership status
     flexpress_update_membership_status($user_id, 'cancelled');
+    if (function_exists('flexpress_invalidate_user_cache')) {
+        flexpress_invalidate_user_cache($user_id);
+    }
     
     // Set expiration date if provided
     if (!empty($payload['expiresOn'])) {
@@ -350,6 +363,9 @@ function flexpress_flowguard_handle_subscription_expiry($payload) {
     
     // Update membership status
     flexpress_update_membership_status($user_id, 'expired');
+    if (function_exists('flexpress_invalidate_user_cache')) {
+        flexpress_invalidate_user_cache($user_id);
+    }
     
     // Log activity
     flexpress_flowguard_log_activity(
@@ -429,6 +445,9 @@ function flexpress_handle_refund_access_revocation($user_id, $payload) {
     // 1. Revoke subscription access
     if ($order_type === 'subscription') {
         flexpress_update_membership_status($user_id, 'banned');
+        if (function_exists('flexpress_invalidate_user_cache')) {
+            flexpress_invalidate_user_cache($user_id);
+        }
         error_log('FlexPress Refund: Banned user ' . $user_id . ' for subscription refund/chargeback');
     }
     
@@ -445,6 +464,9 @@ function flexpress_handle_refund_access_revocation($user_id, $payload) {
         if (is_array($purchased_episodes)) {
             $purchased_episodes = array_diff($purchased_episodes, [$episode_id]);
             update_user_meta($user_id, 'purchased_episodes', $purchased_episodes);
+            if (function_exists('flexpress_invalidate_user_cache')) {
+                flexpress_invalidate_user_cache($user_id);
+            }
         }
         
         // Remove from PPV purchases list
@@ -452,6 +474,9 @@ function flexpress_handle_refund_access_revocation($user_id, $payload) {
         if (is_array($ppv_purchases)) {
             $ppv_purchases = array_diff($ppv_purchases, [$episode_id]);
             update_user_meta($user_id, 'ppv_purchases', $ppv_purchases);
+            if (function_exists('flexpress_invalidate_user_cache')) {
+                flexpress_invalidate_user_cache($user_id);
+            }
         }
         
         // Remove transaction details
@@ -502,6 +527,9 @@ function flexpress_handle_refund_access_revocation($user_id, $payload) {
     
     // 4. Ban the user
     flexpress_update_membership_status($user_id, 'banned');
+    if (function_exists('flexpress_invalidate_user_cache')) {
+        flexpress_invalidate_user_cache($user_id);
+    }
     
     // 5. Add email to blacklist
     flexpress_add_email_to_blacklist($user->user_email, 'Refund/Chargeback: ' . $postback_type);

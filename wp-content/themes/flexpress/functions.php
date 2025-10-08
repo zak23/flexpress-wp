@@ -7675,6 +7675,70 @@ function flexpress_has_active_membership($user_id = null)
 }
 
 /**
+ * Invalidate WordPress caches for a specific user.
+ * Ensures fresh reads of user meta after login/logout and membership/meta changes.
+ *
+ * @param int $user_id User ID
+ * @return void
+ */
+function flexpress_invalidate_user_cache($user_id)
+{
+    if (!$user_id) {
+        return;
+    }
+
+    // Clear core user caches
+    wp_cache_delete($user_id, 'user_meta');
+    clean_user_cache($user_id);
+}
+
+// Invalidate cache on login/logout transitions
+add_action('wp_login', function ($user_login, $user) {
+    if ($user && isset($user->ID)) {
+        flexpress_invalidate_user_cache($user->ID);
+    }
+}, 10, 2);
+
+add_action('wp_logout', function () {
+    $current_user_id = get_current_user_id();
+    if ($current_user_id) {
+        flexpress_invalidate_user_cache($current_user_id);
+    }
+});
+
+// Invalidate cache when important membership-related user meta changes
+function flexpress_invalidate_user_cache_on_meta_change($meta_id, $object_id, $meta_key, $_meta_value)
+{
+    if (!$object_id) {
+        return;
+    }
+
+    $watched_keys = array(
+        'membership_status',
+        'subscription_type',
+        'next_rebill_date',
+        'membership_expires',
+        'flowguard_sale_id',
+        'flowguard_transaction_id',
+        'ppv_purchases'
+    );
+
+    $is_watched = in_array($meta_key, $watched_keys, true)
+        || str_starts_with($meta_key, 'purchased_episode_')
+        || str_starts_with($meta_key, 'purchased_extras_')
+        || str_starts_with($meta_key, 'ppv_transaction_');
+
+    if ($is_watched) {
+        flexpress_invalidate_user_cache($object_id);
+    }
+}
+add_action('updated_user_meta', 'flexpress_invalidate_user_cache_on_meta_change', 10, 4);
+add_action('added_user_meta', 'flexpress_invalidate_user_cache_on_meta_change', 10, 4);
+add_action('deleted_user_meta', function ($meta_ids, $object_id, $meta_key, $_meta_value, $delete_all) {
+    flexpress_invalidate_user_cache_on_meta_change(0, $object_id, $meta_key, $_meta_value);
+}, 10, 5);
+
+/**
  * Update user membership status
  *
  * @param int $user_id User ID
@@ -7699,6 +7763,9 @@ function flexpress_update_membership_status($user_id, $status)
             FlexPress_Activity_Logger::log_membership_change($user_id, $old_status, $status);
         }
     }
+
+    // Always invalidate caches so subsequent reads see the new status immediately
+    flexpress_invalidate_user_cache($user_id);
 
     return $result;
 }

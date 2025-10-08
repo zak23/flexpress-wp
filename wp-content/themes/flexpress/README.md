@@ -125,6 +125,15 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Menu Systems**: Automated navigation setup with Main, Support, Legal, and Friends menus
 - **Template Hierarchy**: Custom page and archive templates
 
+### User Meta Cache Invalidation (October 2025)
+
+- Added `flexpress_invalidate_user_cache($user_id)` helper that clears `user_meta` and user object caches
+- Hooks:
+  - On login (`wp_login`) and logout (`wp_logout`) → invalidate current user's cache
+  - On user meta changes for critical keys (`membership_status`, `subscription_type`, `next_rebill_date`, `membership_expires`, Flowguard IDs, `ppv_purchases`, and `purchased_*` patterns) → invalidate that user's cache
+- `flexpress_update_membership_status()` now invalidates caches after updating the status
+- This prevents sticky membership state after purchases, cancellations, or PPV unlocks when Redis object cache is enabled
+
 ### SEO Meta Description
 
 - Global meta description is output via a `wp_head` hook in `functions.php`.

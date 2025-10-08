@@ -25,11 +25,10 @@ RUN chmod +x /root/.composer/vendor/bin/wp \
 # Copy custom Apache configuration
 COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
 
-# Copy Redis object cache drop-in
-COPY wp-content/themes/flexpress/object-cache.php /var/www/html/wp-content/object-cache.php
-
-# Copy local development configuration
-COPY wp-content/themes/flexpress/wp-config-local.php /var/www/html/wp-config-local.php
+# Copy local development configuration if present (optional)
+# To enable, place wp-config-local.php in the theme root; otherwise this step will be skipped.
+# Keeping this commented avoids build failures when the file is absent.
+# COPY wp-content/themes/flexpress/wp-config-local.php /var/www/html/wp-config-local.php
 
 # Set proper permissions
 RUN chown -R www-data:www-data /var/www/html

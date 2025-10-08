@@ -3683,6 +3683,87 @@ function flexpress_handle_ppv_webhook()
  */
 
 /**
+ * Sync Release Date ACF field with WordPress publish date
+ * This function handles bidirectional sync between ACF release_date and post_date
+ */
+function flexpress_sync_episode_release_date($post_id, $post = null)
+{
+    // Only process episodes
+    if (get_post_type($post_id) !== 'episode') {
+        return;
+    }
+
+    // Prevent infinite loops
+    if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
+        return;
+    }
+
+    // Skip if this is a bulk edit or quick edit
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+
+    // Get current values
+    $release_date = get_field('release_date', $post_id);
+    $post_date = get_post_field('post_date', $post_id);
+
+    // If release_date was updated and is different from post_date, update post_date
+    if ($release_date && $release_date !== $post_date) {
+        // Convert ACF date format to WordPress format
+        $wp_date = date('Y-m-d H:i:s', strtotime($release_date));
+        
+        // Update post date without triggering hooks to prevent infinite loop
+        remove_action('save_post', 'flexpress_sync_episode_release_date');
+        wp_update_post(array(
+            'ID' => $post_id,
+            'post_date' => $wp_date,
+            'post_date_gmt' => get_gmt_from_date($wp_date)
+        ));
+        add_action('save_post', 'flexpress_sync_episode_release_date');
+    }
+}
+
+/**
+ * Sync WordPress publish date with Release Date ACF field
+ * This handles the reverse sync when post_date is changed
+ */
+function flexpress_sync_post_date_to_release_date($post_id, $post_after, $post_before)
+{
+    // Only process episodes
+    if (get_post_type($post_id) !== 'episode') {
+        return;
+    }
+
+    // Prevent infinite loops
+    if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
+        return;
+    }
+
+    // Skip if this is a bulk edit or quick edit
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+
+    // Check if post_date changed
+    if ($post_after->post_date !== $post_before->post_date) {
+        // Convert WordPress date to ACF format
+        $acf_date = date('Y-m-d H:i:s', strtotime($post_after->post_date));
+        
+        // Update ACF field without triggering hooks
+        remove_action('acf/save_post', 'flexpress_sync_episode_release_date');
+        update_field('release_date', $acf_date, $post_id);
+        add_action('acf/save_post', 'flexpress_sync_episode_release_date');
+    }
+}
+
+// Hook into WordPress save actions
+add_action('save_post', 'flexpress_sync_episode_release_date', 20);
+add_action('post_updated', 'flexpress_sync_post_date_to_release_date', 20, 3);
+
+// Hook into ACF save actions
+add_action('acf/save_post', 'flexpress_sync_episode_release_date', 20);
+
+/**
  * Check if user has access to an episode based on access type
  * 
  * @param int $episode_id The episode ID
@@ -3766,6 +3847,20 @@ function flexpress_check_episode_access($episode_id = null, $user_id = null, $fo
             }
             break;
 
+        case 'membership_only':
+            // Only accessible to active members, no PPV option
+            if ($is_active_member) {
+                $access_info['has_access'] = true;
+            } else {
+                $access_info['show_purchase_button'] = false;
+                if ($is_logged_in) {
+                    $access_info['purchase_reason'] = 'This episode is exclusive to active members only.';
+                } else {
+                    $access_info['purchase_reason'] = 'This episode is exclusive to members only. Please login or join our membership.';
+                }
+            }
+            break;
+
         case 'membership':
             // Members get free access, non-members can purchase
             if ($is_active_member || $access_info['is_purchased']) {
@@ -3827,6 +3922,9 @@ function flexpress_get_episode_access_summary($episode_id = null)
 
         case 'ppv_only':
             return $price ? '$' . number_format($price, 2) . ' (PPV Only)' : 'PPV Only';
+
+        case 'membership_only':
+            return 'Members Only';
 
         case 'membership':
             if ($has_membership) {

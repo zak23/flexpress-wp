@@ -676,30 +676,37 @@ function flexpress_add_caching_headers() {
     
     // Add Cache-Control header for HTML pages
     if (!headers_sent()) {
-        header('Cache-Control: public, max-age=' . $cache_duration);
-        
-        // Add ETag header
-        $etag = md5(get_the_ID() . get_the_modified_time('U'));
-        header('ETag: "' . $etag . '"');
-        
-        // Add Last-Modified header
-        if (is_singular()) {
-            $last_modified = get_the_modified_time('D, d M Y H:i:s \G\M\T');
-            if ($last_modified) {
-                header('Last-Modified: ' . $last_modified);
+        if (is_user_logged_in()) {
+            // Prevent any shared caching for authenticated users
+            header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+        } else {
+            header('Cache-Control: public, max-age=' . $cache_duration);
+            
+            // Add ETag header
+            $etag = md5(get_the_ID() . get_the_modified_time('U'));
+            header('ETag: "' . $etag . '"');
+            
+            // Add Last-Modified header
+            if (is_singular()) {
+                $last_modified = get_the_modified_time('D, d M Y H:i:s \G\M\T');
+                if ($last_modified) {
+                    header('Last-Modified: ' . $last_modified);
+                }
             }
-        }
-        
-        // Add custom headers that WordPress caching plugins use
-        header('X-Cache-Enabled: true');
-        header('X-Cache-Status: HIT');
-        
-        // Add Age header (simulated)
-        header('Age: 0');
-        
-        // Add development indicator
-        if (flexpress_is_development()) {
-            header('X-Development-Mode: true');
+            
+            // Add custom headers that WordPress caching plugins use
+            header('X-Cache-Enabled: true');
+            header('X-Cache-Status: HIT');
+            
+            // Add Age header (simulated)
+            header('Age: 0');
+            
+            // Add development indicator
+            if (flexpress_is_development()) {
+                header('X-Development-Mode: true');
+            }
         }
     }
 }

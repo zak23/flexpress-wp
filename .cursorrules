@@ -18,6 +18,7 @@ testing:
 
 - Use test site for puppeteer/browser tests
 - Cache: Redis enabled
+- Cache: Redis enabled; logged-in HTML is private/no-store, add `Vary: Cookie`; never cache HTML via service worker
 
 mcp:
 

@@ -97,6 +97,10 @@ if (is_user_logged_in() && !in_array($current_page_slug, $allowed_pages)) {
                     </ul>
                     
                     <div class="ms-lg-4 mt-3 mt-lg-0 d-flex">
+                        <?php
+                        // Prevent fragment caches from serving logged-out UI to logged-in users
+                        if (function_exists('nocache_headers')) { nocache_headers(); }
+                        ?>
                         <?php if (is_user_logged_in()): ?>
                             <a href="<?php echo esc_url(home_url('/my-account')); ?>" class="btn btn-outline-light me-2">
                                 <i class="fas fa-user me-1"></i> <?php esc_html_e('My Account', 'flexpress'); ?>

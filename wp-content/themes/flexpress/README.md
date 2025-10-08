@@ -134,6 +134,16 @@ FlexPress is designed specifically for content websites (primarily adult content
 - `flexpress_update_membership_status()` now invalidates caches after updating the status
 - This prevents sticky membership state after purchases, cancellations, or PPV unlocks when Redis object cache is enabled
 
+### Redis/Object Cache & Logged-in Users (October 2025)
+
+- Added strict cache headers for authenticated sessions:
+  - Logged-in HTML responses now send `Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0`, `Pragma: no-cache`, `Expires: 0`
+  - Anonymous HTML responses keep short public cache (`max-age=300`)
+  - Added `Vary: Cookie` to help CDNs/proxies differentiate login state
+- Service worker updated to never serve cached HTML; only static assets use cache-first
+- Header/nav fragments guarded with `nocache_headers()` before rendering login controls to avoid fragment cache bleed
+- Redis status verified via `./wp-cli.sh redis status`. To flush caches, use a simple logged-in page refresh (headers enforce fresh content) or run a PHP call to `wp_cache_flush()` when WP-CLI cache commands are unavailable in this environment
+
 ### SEO Meta Description
 
 - Global meta description is output via a `wp_head` hook in `functions.php`.

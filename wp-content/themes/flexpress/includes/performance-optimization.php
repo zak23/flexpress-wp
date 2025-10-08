@@ -19,6 +19,9 @@ function flexpress_add_performance_headers() {
     if (!is_admin() && !wp_doing_ajax() && !headers_sent()) {
         $request_uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
 
+        // Help proxies/CDNs differentiate based on login cookies
+        header('Vary: Cookie');
+
         // Cache static assets for 1 year
         if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/', $request_uri)) {
             header('Cache-Control: public, max-age=31536000, immutable');

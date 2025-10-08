@@ -417,7 +417,7 @@ while (have_posts()):
                                     <?php endif; ?>
 
                                     <!-- Membership Button for Membership-Only Episodes -->
-                                    <?php if ($access_info['show_membership_button']): ?>
+                                    <?php if ($access_info['show_membership_button'] ?? false): ?>
                                         <a href="<?php echo esc_url(home_url('/join')); ?>" class="btn btn-warning w-100 mb-3">
                                             <i class="fas fa-crown me-2"></i>
                                             <?php esc_html_e('Join Membership', 'flexpress'); ?>
@@ -437,7 +437,7 @@ while (have_posts()):
                             <?php endif; ?>
 
                             <?php if (!is_user_logged_in() || (is_user_logged_in() && !function_exists('flexpress_has_active_membership') || !flexpress_has_active_membership())): ?>
-                                <?php if (!$access_info['show_membership_button']): ?>
+                                <?php if (!($access_info['show_membership_button'] ?? false)): ?>
                                     <hr class="my-3 border-secondary">
                                     <div class="text-center">
                                         <h6 class="mb-2 text-white">
@@ -475,6 +475,11 @@ while (have_posts()):
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
+                    
+                    <!-- Episode Rating System -->
+                    <div class="episode-rating-section mt-4">
+                        <?php get_template_part('template-parts/episode-rating-system'); ?>
+                    </div>
                 </div>
             </div>
 
@@ -489,6 +494,7 @@ while (have_posts()):
                     </div>
                 </div>
             <?php endif; ?>
+
 
             <!-- Featured Models -->
             <?php

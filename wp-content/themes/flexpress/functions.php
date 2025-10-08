@@ -29,6 +29,7 @@ add_action('init', 'flexpress_increase_upload_limits');
 require_once FLEXPRESS_PATH . '/includes/post-types.php';
 require_once FLEXPRESS_PATH . '/includes/bunnycdn.php';
 require_once FLEXPRESS_PATH . '/includes/gallery-system.php';
+require_once FLEXPRESS_PATH . '/includes/class-flexpress-episode-ratings.php';
 
 // Cheeky ACF Repeater Mod (for free ACF version)
 require_once FLEXPRESS_PATH . '/includes/acf-repeater-mod.php';
@@ -441,6 +442,19 @@ function flexpress_enqueue_scripts_and_styles()
     if (is_page_template('page-templates/join.php')) {
         wp_enqueue_script('flexpress-join', get_template_directory_uri() . '/assets/js/join.js', array(), wp_get_theme()->get('Version'), true);
         wp_script_add_data('flexpress-join', 'defer', true);
+    }
+
+    // Enqueue episode ratings script and styles on episode pages
+    if (is_singular('episode')) {
+        wp_enqueue_style('flexpress-episode-ratings', get_template_directory_uri() . '/assets/css/episode-ratings.css', array('flexpress-main'), wp_get_theme()->get('Version'));
+        wp_enqueue_script('flexpress-episode-ratings', get_template_directory_uri() . '/assets/js/episode-ratings.js', array('jquery'), wp_get_theme()->get('Version'), true);
+        wp_script_add_data('flexpress-episode-ratings', 'defer', true);
+        
+        // Localize episode ratings script
+        wp_localize_script('flexpress-episode-ratings', 'flexpress_ajax', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('episode_rating_nonce')
+        ));
     }
 
     // Enqueue Flowguard script where needed
@@ -3722,6 +3736,7 @@ function flexpress_check_episode_access($episode_id = null, $user_id = null, $fo
         'is_member' => false,
         'is_purchased' => false,
         'show_purchase_button' => false,
+        'show_membership_button' => false,
         'purchase_reason' => '',
         'membership_notice' => ''
     );

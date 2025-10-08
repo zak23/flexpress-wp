@@ -2315,6 +2315,18 @@ Enabled
 - **episode_duration**: Display format (MM:SS)
 - **release_date**: Controls visibility and ordering
 
+#### Episodes Editor Tabs (ACF)
+
+To streamline episode editing, the Episodes field group is organized into ACF tabs:
+
+- Videos: Preview, Trailer, Full videos, Duration
+- Access & Pricing: Access Type, Default PPV Price, Member Discount
+- Scheduling: Release Date
+- Featured & Models: Featured Episode toggle, Featured Models relationship
+- Visibility: Hidden from Public toggle
+
+Note: Field keys and names are unchanged for full backward compatibility.
+
 #### Model Names Display
 
 ```php

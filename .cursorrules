@@ -63,6 +63,16 @@ Do all pupeteer tests on the test site.
 - Add defensive guards if `window.turnstile` is not ready
 - Persist dismissal using localStorage key `flexpress_newsletter_modal_dismissed`; gate auto-show by this flag
 
+### Episodes ACF Editor Tabs
+
+- Organized the Episodes field group into ACF tabs for clarity:
+  - Videos
+  - Access & Pricing
+  - Scheduling
+  - Featured & Models
+  - Visibility
+  - Field keys/names unchanged for backward compatibility
+
 ## Docker Configuration
 
 - Main service: `wordpress` (custom build)

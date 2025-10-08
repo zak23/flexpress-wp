@@ -10,6 +10,23 @@ if (function_exists('acf_add_local_field_group')):
         'key' => 'group_episode_videos',
         'title' => 'Episode Videos',
         'fields' => array(
+            // Videos Tab
+            array(
+                'key' => 'field_episode_tab_videos',
+                'label' => 'Videos',
+                'name' => '',
+                'type' => 'tab',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'placement' => 'top',
+                'endpoint' => 0,
+            ),
             array(
                 'key' => 'field_preview_video',
                 'label' => 'Preview Video',
@@ -61,6 +78,23 @@ if (function_exists('acf_add_local_field_group')):
                     'class' => '',
                     'id' => '',
                 ),
+            ),
+            // Access & Pricing Tab
+            array(
+                'key' => 'field_episode_tab_access',
+                'label' => 'Access & Pricing',
+                'name' => '',
+                'type' => 'tab',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'placement' => 'top',
+                'endpoint' => 0,
             ),
             array(
                 'key' => 'field_access_type',
@@ -143,6 +177,23 @@ if (function_exists('acf_add_local_field_group')):
                     'id' => '',
                 ),
             ),
+            // Scheduling Tab
+            array(
+                'key' => 'field_episode_tab_schedule',
+                'label' => 'Scheduling',
+                'name' => '',
+                'type' => 'tab',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'placement' => 'top',
+                'endpoint' => 0,
+            ),
             array(
                 'key' => 'field_release_date',
                 'label' => 'Release Date',
@@ -155,6 +206,23 @@ if (function_exists('acf_add_local_field_group')):
                     'class' => '',
                     'id' => '',
                 ),
+            ),
+            // Featured & Models Tab
+            array(
+                'key' => 'field_episode_tab_featured',
+                'label' => 'Featured & Models',
+                'name' => '',
+                'type' => 'tab',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'placement' => 'top',
+                'endpoint' => 0,
             ),
             array(
                 'key' => 'field_is_featured',
@@ -196,6 +264,23 @@ if (function_exists('acf_add_local_field_group')):
                 'min' => '',
                 'max' => '',
                 'return_format' => 'object',
+            ),
+            // Visibility Tab
+            array(
+                'key' => 'field_episode_tab_visibility',
+                'label' => 'Visibility',
+                'name' => '',
+                'type' => 'tab',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'placement' => 'top',
+                'endpoint' => 0,
             ),
             array(
                 'key' => 'field_hidden_from_public',

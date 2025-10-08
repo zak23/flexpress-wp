@@ -459,6 +459,17 @@ flexpress_display_cf7_form('content_removal');
 
 ## 🔧 Recent Fixes
 
+### Episodes ACF Editor Tabs (October 2025)
+
+- Reorganized the Episodes editor into clear ACF tabs for faster editing:
+  - Videos
+  - Access & Pricing
+  - Scheduling
+  - Featured & Models
+  - Visibility
+
+No field keys or names changed; existing data remains intact.
+
 ### Model Hide on Homepage Query Fix (September 2025)
 
 - ✅ **RESOLVED**: Fixed issue where models disappeared from homepage after implementing "Hide on Homepage" feature

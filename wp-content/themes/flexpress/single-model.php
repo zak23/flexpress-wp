@@ -253,14 +253,6 @@ get_header();
                                     <?php endif; ?>
                                 <?php endif; ?>
                             </div>
-                            
-                            <?php if (!$is_logged_in) : ?>
-                                <div class="social-unlock-message">
-                                    <i class="fas fa-crown"></i>
-                                    <p><strong>Want to connect with <?php the_title(); ?>?</strong><br>
-                                    <a href="/login/" class="text-decoration-underline">Log in</a> to unlock exclusive access to social media profiles and stay updated!</p>
-                                </div>
-                            <?php endif; ?>
                         </div>
                         <?php endif; ?>
                     </div>

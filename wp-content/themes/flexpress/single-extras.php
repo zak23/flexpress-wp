@@ -388,48 +388,6 @@ while (have_posts()):
     </div>
 </div>
 
-<script>
-jQuery(document).ready(function($) {
-    // Gallery lightbox functionality
-    $('.extras-gallery .gallery-image').on('click', function(e) {
-        e.preventDefault();
-        
-        if ($(this).closest('.extras-gallery').data('lightbox') === 'true') {
-            const fullImage = $(this).data('full');
-            const caption = $(this).data('caption');
-            
-            // Create lightbox modal
-            const lightbox = $(`
-                <div class="gallery-lightbox" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; align-items: center; justify-content: center;">
-                    <div class="lightbox-content" style="position: relative; max-width: 90%; max-height: 90%;">
-                        <img src="${fullImage}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                        ${caption ? `<div class="lightbox-caption" style="color: white; text-align: center; margin-top: 10px;">${caption}</div>` : ''}
-                        <button class="lightbox-close" style="position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-                    </div>
-                </div>
-            `);
-            
-            $('body').append(lightbox);
-            
-            // Close lightbox
-            lightbox.on('click', function(e) {
-                if (e.target === this || $(e.target).hasClass('lightbox-close')) {
-                    lightbox.remove();
-                }
-            });
-            
-            // Close on escape key
-            $(document).on('keyup.lightbox', function(e) {
-                if (e.keyCode === 27) {
-                    lightbox.remove();
-                    $(document).off('keyup.lightbox');
-                }
-            });
-        }
-    });
-});
-</script>
-
 <?php
 endwhile;
 get_footer();

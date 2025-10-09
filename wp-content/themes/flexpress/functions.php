@@ -507,8 +507,8 @@ function flexpress_enqueue_scripts_and_styles()
         ));
     }
 
-    // Enqueue gallery lightbox script on single episode pages
-    if (is_singular('episode')) {
+    // Enqueue gallery lightbox script on single episode and extras pages
+    if (is_singular('episode') || is_singular('extras')) {
         wp_enqueue_script(
             'flexpress-gallery-lightbox',
             get_template_directory_uri() . '/assets/js/gallery-lightbox.js',
@@ -4312,7 +4312,8 @@ function flexpress_display_extras_gallery($extras_id = null, $columns = null, $h
 
     ?>
     <div class="extras-gallery" data-columns="<?php echo esc_attr($columns); ?>"
-         data-lightbox="<?php echo $lightbox ? 'true' : 'false'; ?>">
+         data-lightbox="<?php echo $lightbox ? 'true' : 'false'; ?>"
+         data-autoplay="false">
         <div class="gallery-grid" style="grid-template-columns: repeat(<?php echo esc_attr($columns); ?>, 1fr);">
             <?php foreach ($display_images as $index => $image) : ?>
                 <?php
@@ -4329,25 +4330,36 @@ function flexpress_display_extras_gallery($extras_id = null, $columns = null, $h
                 $is_last_preview = $preview_mode && $index === 4;
                 ?>
                 <div class="gallery-item" data-index="<?php echo $index; ?>">
-                    <?php if ($is_last_preview): ?>
-                        <div class="gallery-item-preview-lock">
-                            <img src="<?php echo esc_url($thumbnail_url); ?>" 
-                                 alt="<?php echo esc_attr($image['alt'] ?? ''); ?>"
-                                 class="gallery-image">
-                            <div class="gallery-lock-overlay">
-                                <div class="gallery-lock-content">
-                                    <i class="fas fa-lock fa-2x mb-2"></i>
-                                    <p class="mb-0"><?php echo esc_html($remaining_count); ?> more images</p>
-                                    <small>Purchase to unlock</small>
+                    <?php if ($has_access || !$is_last_preview): ?>
+                        <a href="<?php echo esc_url($large_url); ?>"
+                            class="gallery-link"
+                            data-lightbox="extras-gallery-<?php echo $extras_id; ?>"
+                            data-title="<?php echo esc_attr($image['caption'] ?? ''); ?>">
+                            <img src="<?php echo esc_url($thumbnail_url); ?>"
+                                alt="<?php echo esc_attr($image['alt'] ?? ''); ?>"
+                                loading="lazy">
+                            <?php if (!empty($image['caption'])) : ?>
+                                <div class="gallery-caption">
+                                    <?php echo esc_html($image['caption']); ?>
+                                </div>
+                            <?php endif; ?>
+                        </a>
+                    <?php else: ?>
+                        <!-- 5th image with remaining count overlay -->
+                        <div class="gallery-preview-last">
+                            <img src="<?php echo esc_url($thumbnail_url); ?>"
+                                alt="<?php echo esc_attr($image['alt'] ?? ''); ?>"
+                                loading="lazy">
+                            <div class="gallery-preview-overlay">
+                                <div class="preview-overlay-content">
+                                    <div class="remaining-count">
+                                        <i class="fas fa-lock fa-2x mb-2"></i>
+                                        <p class="mb-0"><?php echo esc_html($remaining_count); ?> more images</p>
+                                        <small>Purchase to unlock</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    <?php else: ?>
-                        <img src="<?php echo esc_url($thumbnail_url); ?>" 
-                             alt="<?php echo esc_attr($image['alt'] ?? ''); ?>"
-                             class="gallery-image"
-                             data-full="<?php echo esc_url($large_url); ?>"
-                             data-caption="<?php echo esc_attr($image['caption'] ?? ''); ?>">
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>

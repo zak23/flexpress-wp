@@ -332,7 +332,7 @@ if (isset($_GET['error'])) {
                                                         <?php echo esc_html($trial_duration_text); ?> trial for <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['trial_price'], 2)); ?>
                                                     </span>
                                                     <br>
-                                                    <span class="then-billing">
+                                                    <span class="plan-billing">
                                                         Then <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['price'], 2)); ?> every <?php echo esc_html($billing_duration_text); ?>
                                                     </span>
                                                 </p>

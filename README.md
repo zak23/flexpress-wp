@@ -925,7 +925,18 @@ All Discord notifications follow a consistent data structure for easy tracking a
 4. **Amount** - Payment amount with currency
 5. **Transaction ID** - Flowguard transaction identifier
 6. **Sale ID** - Flowguard sale identifier
-7. **Additional Fields** - Event-specific information
+7. **Promo Code** - Applied promo code (if used during signup)
+8. **Additional Fields** - Event-specific information
+
+#### Promo Code Tracking
+
+FlexPress automatically tracks and displays promo codes in Discord notifications:
+
+- **🎉 New Member Signups** - Shows the promo code used during registration
+- **💰 Subscription Rebills** - Shows the original promo code from signup
+- **🔄 Subscription Extensions** - Shows the original promo code from signup
+- **Promo Code Storage** - All promo codes are stored in user meta for future reference
+- **Tracking Integration** - Works with the existing promo code system and usage analytics
 
 #### Notification Examples
 
@@ -940,6 +951,7 @@ Amount: USD 29.95
 Subscription Type: Recurring
 Transaction ID: 123456789
 Sale ID: 987654321
+Promo Code: SAVE20
 Next Charge: Jan 15, 2025
 ```
 
@@ -952,6 +964,7 @@ User ID: 123
 Amount: USD 29.95
 Transaction ID: 123456790
 Sale ID: 987654321
+Original Promo Code: SAVE20
 Next Charge: Feb 15, 2025
 ```
 

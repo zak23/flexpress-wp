@@ -211,6 +211,16 @@ class FlexPress_Discord_Notifications {
             'timestamp' => date('c')
         ];
         
+        // Add promo code if used during signup
+        $applied_promo_code = get_user_meta($user_id, 'applied_promo_code', true);
+        if (!empty($applied_promo_code)) {
+            $embed['fields'][] = [
+                'name' => 'Promo Code',
+                'value' => '`' . $applied_promo_code . '`',
+                'inline' => true
+            ];
+        }
+        
         // Add next charge date for recurring subscriptions
         if ($payload['subscriptionType'] ?? 'unknown' === 'recurring' && !empty($payload['nextChargeOn'])) {
             $embed['fields'][] = [
@@ -283,6 +293,16 @@ class FlexPress_Discord_Notifications {
             ],
             'timestamp' => date('c')
         ];
+        
+        // Add promo code if used during original signup
+        $applied_promo_code = get_user_meta($user_id, 'applied_promo_code', true);
+        if (!empty($applied_promo_code)) {
+            $embed['fields'][] = [
+                'name' => 'Original Promo Code',
+                'value' => '`' . $applied_promo_code . '`',
+                'inline' => true
+            ];
+        }
         
         return $embed;
     }
@@ -437,6 +457,16 @@ class FlexPress_Discord_Notifications {
             ],
             'timestamp' => date('c')
         ];
+        
+        // Add promo code if used during original signup
+        $applied_promo_code = get_user_meta($user_id, 'applied_promo_code', true);
+        if (!empty($applied_promo_code)) {
+            $embed['fields'][] = [
+                'name' => 'Original Promo Code',
+                'value' => '`' . $applied_promo_code . '`',
+                'inline' => true
+            ];
+        }
         
         // Add next charge date for recurring subscriptions
         if ($payload['subscriptionType'] ?? 'unknown' === 'recurring' && !empty($payload['nextChargeOn'])) {

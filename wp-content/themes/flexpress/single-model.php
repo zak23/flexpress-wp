@@ -85,7 +85,7 @@ get_header();
 
                         <!-- Model Details -->
                         <div class="model-details-section mb-5">
-                            <h4 class="model-section-heading mb-4">Details</h4>
+                           
                             <div class="model-details-grid">
                                 <?php if (get_field('model_gender')) : ?>
                                     <div class="model-detail-item">
@@ -174,133 +174,83 @@ get_header();
                             
                             <div class="model-social-grid <?php echo !$is_logged_in ? 'social-locked' : ''; ?>">
                                 <?php if (get_field('model_instagram')) : ?>
-                                    <div class="social-card" data-platform="instagram">
-                                        <div class="social-card-inner">
-                                            <div class="social-icon">
-                                                <i class="fab fa-instagram"></i>
-                                            </div>
-                                            <div class="social-details">
-                                                <span class="social-platform">Instagram</span>
-                                                <span class="social-handle">@<?php echo esc_html(preg_replace('/^@/', '', basename(parse_url(get_field('model_instagram'), PHP_URL_PATH)))); ?></span>
-                                            </div>
-                                        </div>
-                                        <?php if ($is_logged_in) : ?>
-                                            <a href="<?php echo esc_url(get_field('model_instagram')); ?>" target="_blank" class="social-link" rel="noopener">
-                                                <span>Follow</span>
-                                                <i class="fas fa-arrow-right"></i>
-                                            </a>
-                                        <?php else : ?>
-                                            <button class="social-link-locked" onclick="showLoginPrompt('instagram')">
-                                                <i class="fas fa-lock"></i>
-                                                <span>Login to View</span>
-                                            </button>
-                                        <?php endif; ?>
-                                    </div>
+                                    <?php if ($is_logged_in) : ?>
+                                        <a href="<?php echo esc_url(get_field('model_instagram')); ?>" target="_blank" class="social-icon-link" data-platform="instagram" rel="noopener" title="Follow on Instagram">
+                                            <i class="fab fa-instagram"></i>
+                                            <span class="social-label">Instagram</span>
+                                        </a>
+                                    <?php else : ?>
+                                        <button class="social-icon-link locked" data-platform="instagram" onclick="showLoginPrompt('instagram')" title="Login to view Instagram">
+                                            <i class="fab fa-instagram"></i>
+                                            <span class="social-label">Instagram</span>
+                                            <i class="fas fa-lock social-lock-icon"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                                 
                                 <?php if (get_field('model_twitter')) : ?>
-                                    <div class="social-card" data-platform="twitter">
-                                        <div class="social-card-inner">
-                                            <div class="social-icon">
-                                                <i class="fab fa-x-twitter"></i>
-                                            </div>
-                                            <div class="social-details">
-                                                <span class="social-platform">Twitter/X</span>
-                                                <span class="social-handle">@<?php echo esc_html(preg_replace('/^@/', '', basename(parse_url(get_field('model_twitter'), PHP_URL_PATH)))); ?></span>
-                                            </div>
-                                        </div>
-                                        <?php if ($is_logged_in) : ?>
-                                            <a href="<?php echo esc_url(get_field('model_twitter')); ?>" target="_blank" class="social-link" rel="noopener">
-                                                <span>Follow</span>
-                                                <i class="fas fa-arrow-right"></i>
-                                            </a>
-                                        <?php else : ?>
-                                            <button class="social-link-locked" onclick="showLoginPrompt('twitter')">
-                                                <i class="fas fa-lock"></i>
-                                                <span>Login to View</span>
-                                            </button>
-                                        <?php endif; ?>
-                                    </div>
+                                    <?php if ($is_logged_in) : ?>
+                                        <a href="<?php echo esc_url(get_field('model_twitter')); ?>" target="_blank" class="social-icon-link" data-platform="twitter" rel="noopener" title="Follow on Twitter/X">
+                                            <i class="fab fa-x-twitter"></i>
+                                            <span class="social-label">Twitter/X</span>
+                                        </a>
+                                    <?php else : ?>
+                                        <button class="social-icon-link locked" data-platform="twitter" onclick="showLoginPrompt('twitter')" title="Login to view Twitter">
+                                            <i class="fab fa-x-twitter"></i>
+                                            <span class="social-label">Twitter/X</span>
+                                            <i class="fas fa-lock social-lock-icon"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                                 
                                 <?php if (get_field('model_tiktok')) : ?>
-                                    <div class="social-card" data-platform="tiktok">
-                                        <div class="social-card-inner">
-                                            <div class="social-icon">
-                                                <i class="fab fa-tiktok"></i>
-                                            </div>
-                                            <div class="social-details">
-                                                <span class="social-platform">TikTok</span>
-                                                <span class="social-handle">@<?php echo esc_html(preg_replace('/^@/', '', basename(parse_url(get_field('model_tiktok'), PHP_URL_PATH)))); ?></span>
-                                            </div>
-                                        </div>
-                                        <?php if ($is_logged_in) : ?>
-                                            <a href="<?php echo esc_url(get_field('model_tiktok')); ?>" target="_blank" class="social-link" rel="noopener">
-                                                <span>Follow</span>
-                                                <i class="fas fa-arrow-right"></i>
-                                            </a>
-                                        <?php else : ?>
-                                            <button class="social-link-locked" onclick="showLoginPrompt('tiktok')">
-                                                <i class="fas fa-lock"></i>
-                                                <span>Login to View</span>
-                                            </button>
-                                        <?php endif; ?>
-                                    </div>
+                                    <?php if ($is_logged_in) : ?>
+                                        <a href="<?php echo esc_url(get_field('model_tiktok')); ?>" target="_blank" class="social-icon-link" data-platform="tiktok" rel="noopener" title="Follow on TikTok">
+                                            <i class="fab fa-tiktok"></i>
+                                            <span class="social-label">TikTok</span>
+                                        </a>
+                                    <?php else : ?>
+                                        <button class="social-icon-link locked" data-platform="tiktok" onclick="showLoginPrompt('tiktok')" title="Login to view TikTok">
+                                            <i class="fab fa-tiktok"></i>
+                                            <span class="social-label">TikTok</span>
+                                            <i class="fas fa-lock social-lock-icon"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                                 
                                 <?php if (get_field('model_onlyfans')) : ?>
-                                    <div class="social-card" data-platform="onlyfans">
-                                        <div class="social-card-inner">
-                                            <div class="social-icon">
-                                                <i class="fas fa-heart"></i>
-                                            </div>
-                                            <div class="social-details">
-                                                <span class="social-platform">OnlyFans</span>
-                                                <span class="social-handle">Exclusive Content</span>
-                                            </div>
-                                        </div>
-                                        <?php if ($is_logged_in) : ?>
-                                            <a href="<?php echo esc_url(get_field('model_onlyfans')); ?>" target="_blank" class="social-link" rel="noopener">
-                                                <span>Subscribe</span>
-                                                <i class="fas fa-arrow-right"></i>
-                                            </a>
-                                        <?php else : ?>
-                                            <button class="social-link-locked" onclick="showLoginPrompt('onlyfans')">
-                                                <i class="fas fa-lock"></i>
-                                                <span>Login to View</span>
-                                            </button>
-                                        <?php endif; ?>
-                                    </div>
+                                    <?php if ($is_logged_in) : ?>
+                                        <a href="<?php echo esc_url(get_field('model_onlyfans')); ?>" target="_blank" class="social-icon-link" data-platform="onlyfans" rel="noopener" title="Subscribe on OnlyFans">
+                                            <i class="fas fa-heart"></i>
+                                            <span class="social-label">OnlyFans</span>
+                                        </a>
+                                    <?php else : ?>
+                                        <button class="social-icon-link locked" data-platform="onlyfans" onclick="showLoginPrompt('onlyfans')" title="Login to view OnlyFans">
+                                            <i class="fas fa-heart"></i>
+                                            <span class="social-label">OnlyFans</span>
+                                            <i class="fas fa-lock social-lock-icon"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                                 
                                 <?php if (get_field('model_website')) : ?>
-                                    <div class="social-card" data-platform="website">
-                                        <div class="social-card-inner">
-                                            <div class="social-icon">
-                                                <i class="fas fa-globe"></i>
-                                            </div>
-                                            <div class="social-details">
-                                                <span class="social-platform">
-                                                    <?php 
-                                                    $website_title = get_field('model_website_title');
-                                                    echo esc_html($website_title ? $website_title : 'Personal Website');
-                                                    ?>
-                                                </span>
-                                                <span class="social-handle">Official Site</span>
-                                            </div>
-                                        </div>
-                                        <?php if ($is_logged_in) : ?>
-                                            <a href="<?php echo esc_url(get_field('model_website')); ?>" target="_blank" class="social-link" rel="noopener">
-                                                <span>Visit</span>
-                                                <i class="fas fa-arrow-right"></i>
-                                            </a>
-                                        <?php else : ?>
-                                            <button class="social-link-locked" onclick="showLoginPrompt('website')">
-                                                <i class="fas fa-lock"></i>
-                                                <span>Login to View</span>
-                                            </button>
-                                        <?php endif; ?>
-                                    </div>
+                                    <?php if ($is_logged_in) : ?>
+                                        <a href="<?php echo esc_url(get_field('model_website')); ?>" target="_blank" class="social-icon-link" data-platform="website" rel="noopener" title="Visit Website">
+                                            <i class="fas fa-globe"></i>
+                                            <span class="social-label">
+                                                <?php 
+                                                $website_title = get_field('model_website_title');
+                                                echo esc_html($website_title ? $website_title : 'Website');
+                                                ?>
+                                            </span>
+                                        </a>
+                                    <?php else : ?>
+                                        <button class="social-icon-link locked" data-platform="website" onclick="showLoginPrompt('website')" title="Login to view Website">
+                                            <i class="fas fa-globe"></i>
+                                            <span class="social-label">Website</span>
+                                            <i class="fas fa-lock social-lock-icon"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </div>
                             

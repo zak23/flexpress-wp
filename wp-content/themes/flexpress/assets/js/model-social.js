@@ -107,7 +107,7 @@
         }
     });
 
-    // Add subtle animations to social cards on scroll
+    // Add subtle animations to social icons on scroll
     if (typeof IntersectionObserver !== 'undefined') {
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry, index) => {
@@ -115,13 +115,13 @@
                     setTimeout(() => {
                         entry.target.style.opacity = '1';
                         entry.target.style.transform = 'translateY(0)';
-                    }, index * 100);
+                    }, index * 80);
                     observer.unobserve(entry.target);
                 }
             });
         }, { threshold: 0.1 });
 
-        $('.social-card').each(function() {
+        $('.social-icon-link').each(function() {
             $(this).css({
                 'opacity': '0',
                 'transform': 'translateY(20px)',

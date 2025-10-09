@@ -227,12 +227,6 @@ if (isset($_GET['error'])) {
                                         <div class="plan-header">
                                             <h5 class="plan-name"><?php echo esc_html($plan['name']); ?></h5>
                                             <div class="plan-badges">
-                                                <?php if (!empty($plan['trial_enabled']) && !empty($plan['trial_price']) && !empty($plan['trial_duration'])): ?>
-                                                    <span class="trial-badge">
-                                                        <i class="fas fa-gift me-1"></i>
-                                                        <?php esc_html_e('TRIAL AVAILABLE', 'flexpress'); ?>
-                                                    </span>
-                                                <?php endif; ?>
                                                 <?php if ($is_featured): ?>
                                                     <span class="popular-badge"><?php esc_html_e('MOST POPULAR', 'flexpress'); ?></span>
                                                 <?php elseif ($is_promo_only): ?>
@@ -270,7 +264,6 @@ if (isset($_GET['error'])) {
                                                 ?>
                                                 <p class="plan-billing">
                                                     <span class="trial-info">
-                                                        <i class="fas fa-gift me-1"></i>
                                                         <?php echo esc_html($trial_duration_text); ?> trial for <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['trial_price'], 2)); ?>
                                                     </span>
                                                     <br>
@@ -537,22 +530,8 @@ if (isset($_GET['error'])) {
 }
 
 /* Trial Display Styling */
-.trial-badge {
-    background: linear-gradient(135deg, #ff6b6b, #ee5a24) !important;
-    color: white !important;
-    padding: 0.25rem 0.75rem !important;
-    border-radius: 1rem !important;
-    font-size: 0.7rem !important;
-    font-weight: bold !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
-    display: inline-block !important;
-    margin-right: 0.5rem !important;
-    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3) !important;
-}
-
 .trial-info {
-    color: #ff6b6b !important;
+    color: var(--color-accent) !important;
     font-weight: bold !important;
     font-size: 0.9rem !important;
 }
@@ -563,7 +542,7 @@ if (isset($_GET['error'])) {
 }
 
 .trial-rate-indicator {
-    color: #ff6b6b !important;
+    color: var(--color-accent) !important;
     font-weight: bold !important;
     font-size: 0.8rem !important;
 }
@@ -577,11 +556,6 @@ if (isset($_GET['error'])) {
 
 /* Responsive Design for Trial Elements */
 @media (max-width: 768px) {
-    .trial-badge {
-        font-size: 0.65rem !important;
-        padding: 0.2rem 0.6rem !important;
-    }
-
     .plan-badges {
         gap: 0.3rem !important;
     }

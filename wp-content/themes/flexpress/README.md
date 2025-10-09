@@ -76,7 +76,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Interactive Elements**: Hover effects and smooth animations
 - **Video Cards**: Clean episode presentation with play buttons
 - **Model Profiles**: Performer showcase with relationship linking
-- **Members-Only Social Links**: Exclusive model social media access for logged-in users with clever lock/unlock UI
+- **Members-Only Social Links**: Exclusive model social media access for logged-in users with icon-based grid and platform-specific brand colors
 - **Join Now CTA**: Compelling call-to-action section with features list and promotional offers
 - **Clean User Experience**: Admin toolbar disabled for non-admin users
 

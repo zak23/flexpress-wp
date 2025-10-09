@@ -189,6 +189,13 @@ flexpress/
 
 - **Episodes**: Video content with access control (free/PPV/membership/mixed)
 - **Models**: Performer profiles with relationship linking and homepage visibility control
+  - Model profile pages display all related episodes and extras
+  - Latest scene hero section with video preview
+  - Grid display of all episodes and extras featuring the model (up to 12 each)
+  - Member-only messaging system for fan interaction
+- **Extras**: Behind-the-scenes content, interviews, photo galleries, bloopers
+  - Displayed on model profiles alongside episodes
+  - Content type and format badges (video/gallery)
 - **Galleries**: Image galleries attached to episodes with BunnyCDN Storage
 - **Access Control**: Flexible pricing and member discount systems
 - **Upcoming Episodes**: Automatic countdown timer system for scheduled episodes

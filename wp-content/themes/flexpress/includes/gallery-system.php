@@ -21,8 +21,18 @@ class FlexPress_Gallery_System
      */
     public function __construct()
     {
-        add_action('init', array($this, 'init_gallery_system'));
-        add_action('add_meta_boxes', array($this, 'add_gallery_meta_box'));
+        // Check if we're in admin and if init has already been called
+        if (is_admin() && did_action('init')) {
+            $this->init_gallery_system();
+        } else {
+            add_action('init', array($this, 'init_gallery_system'));
+        }
+        
+        // Add meta boxes immediately if we're in admin
+        if (is_admin()) {
+            add_action('add_meta_boxes', array($this, 'add_gallery_meta_box'));
+        }
+        
         add_action('save_post', array($this, 'save_gallery_data'));
         add_action('wp_ajax_flexpress_upload_gallery_image', array($this, 'ajax_upload_gallery_image'));
         add_action('wp_ajax_flexpress_delete_gallery_image', array($this, 'ajax_delete_gallery_image'));
@@ -369,7 +379,6 @@ class FlexPress_Gallery_System
         if (!is_array($gallery_images)) {
             $gallery_images = array();
         }
-
 ?>
         <div class="flexpress-gallery-manager">
             <div class="gallery-upload-section">
@@ -1149,8 +1158,8 @@ class FlexPress_Gallery_System
         // Debug logging
         error_log("FlexPress Gallery: Hook = $hook, Post Type = $post_type");
 
-        if (($hook === 'post.php' || $hook === 'post-new.php') && $post_type === 'episode') {
-            error_log("FlexPress Gallery: Enqueuing scripts for episode page");
+        if (($hook === 'post.php' || $hook === 'post-new.php') && in_array($post_type, array('episode', 'extras'))) {
+            error_log("FlexPress Gallery: Enqueuing scripts for {$post_type} page");
             wp_enqueue_media();
             wp_enqueue_script('jquery-ui-sortable');
 
@@ -1164,6 +1173,7 @@ class FlexPress_Gallery_System
 
             wp_localize_script('flexpress-gallery-admin', 'flexpressGallery', array(
                 'ajaxUrl' => admin_url('admin-ajax.php'),
+                'postType' => $post_type,
                 'nonce' => wp_create_nonce('flexpress_gallery_upload'),
                 'deleteNonce' => wp_create_nonce('flexpress_gallery_delete'),
                 'deleteAllNonce' => wp_create_nonce('flexpress_gallery_delete_all'),

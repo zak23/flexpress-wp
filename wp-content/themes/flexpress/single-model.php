@@ -84,52 +84,72 @@ get_header();
                         <?php endif; ?>
 
                         <!-- Model Details -->
-                        <div class="model-details mb-4 text-white">
-                            <h4 class="text-white">Details</h4>
-                            <div class="row">
+                        <div class="model-details-section mb-5">
+                            <h4 class="model-section-heading mb-4">Details</h4>
+                            <div class="model-details-grid">
                                 <?php if (get_field('model_gender')) : ?>
-                                    <div class="col-sm-6 mb-2">
-                                        <strong class="text-white">Gender:</strong><br>
-                                        <span class="text-white">
-                                            <?php 
-                                            $gender = get_field('model_gender');
-                                            echo esc_html(ucwords(str_replace('-', ' ', $gender)));
-                                            ?>
-                                        </span>
+                                    <div class="model-detail-item">
+                                        <div class="model-detail-icon">
+                                            <i class="fas fa-venus-mars"></i>
+                                        </div>
+                                        <div class="model-detail-content">
+                                            <span class="model-detail-label">Gender</span>
+                                            <span class="model-detail-value">
+                                                <?php 
+                                                $gender = get_field('model_gender');
+                                                echo esc_html(ucwords(str_replace('-', ' ', $gender)));
+                                                ?>
+                                            </span>
+                                        </div>
                                     </div>
                                 <?php endif; ?>
                                 
                                 <?php if (get_field('model_birthdate')) : ?>
-                                    <div class="col-sm-6 mb-2">
-                                        <strong class="text-white">Date of Birth:</strong><br>
-                                        <span class="text-white">
-                                            <?php 
-                                            $date = DateTime::createFromFormat('Y-m-d', get_field('model_birthdate'));
-                                            echo $date ? $date->format('F j, Y') : '';
-                                            ?>
-                                        </span>
+                                    <div class="model-detail-item">
+                                        <div class="model-detail-icon">
+                                            <i class="fas fa-birthday-cake"></i>
+                                        </div>
+                                        <div class="model-detail-content">
+                                            <span class="model-detail-label">Date of Birth</span>
+                                            <span class="model-detail-value">
+                                                <?php 
+                                                $date = DateTime::createFromFormat('Y-m-d', get_field('model_birthdate'));
+                                                echo $date ? $date->format('F j, Y') : '';
+                                                ?>
+                                            </span>
+                                        </div>
                                     </div>
                                 <?php endif; ?>
                                 
                                 <?php if (get_field('model_height')) : ?>
-                                    <div class="col-sm-6 mb-2">
-                                        <strong class="text-white">Height:</strong><br>
-                                        <span class="text-white"><?php echo esc_html(get_field('model_height')); ?></span>
+                                    <div class="model-detail-item">
+                                        <div class="model-detail-icon">
+                                            <i class="fas fa-ruler-vertical"></i>
+                                        </div>
+                                        <div class="model-detail-content">
+                                            <span class="model-detail-label">Height</span>
+                                            <span class="model-detail-value"><?php echo esc_html(get_field('model_height')); ?></span>
+                                        </div>
                                     </div>
                                 <?php endif; ?>
                                 
                                 <?php if (get_field('model_measurements')) : ?>
-                                    <div class="col-sm-6 mb-2">
-                                        <strong class="text-white">Measurements:</strong><br>
-                                        <span class="text-white"><?php echo esc_html(get_field('model_measurements')); ?></span>
+                                    <div class="model-detail-item">
+                                        <div class="model-detail-icon">
+                                            <i class="fas fa-chart-line"></i>
+                                        </div>
+                                        <div class="model-detail-content">
+                                            <span class="model-detail-label">Measurements</span>
+                                            <span class="model-detail-value"><?php echo esc_html(get_field('model_measurements')); ?></span>
+                                        </div>
                                     </div>
                                 <?php endif; ?>
                             </div>
                         </div>
 
                         <!-- Social Media Links -->
-                        <div class="model-social text-white">
-                            <h4 class="text-white">Follow <?php the_title(); ?></h4>
+                        <div class="model-social-section text-white">
+                            <h4 class="model-section-heading mb-4">Follow <?php the_title(); ?></h4>
                             <div class="d-flex flex-wrap">
                                 <?php if (get_field('model_instagram')) : ?>
                                     <a href="<?php echo esc_url(get_field('model_instagram')); ?>" target="_blank" class="btn btn-outline-light me-2 mb-2">

@@ -4246,8 +4246,8 @@ function flexpress_get_extras_gallery($extras_id = null)
         $extras_id = get_the_ID();
     }
 
-    $gallery = get_field('extras_gallery', $extras_id);
-    return $gallery ?: array();
+    // Use custom gallery system instead of ACF
+    return get_post_meta($extras_id, '_extras_gallery_images', true) ?: array();
 }
 
 /**
@@ -4304,14 +4304,23 @@ function flexpress_display_extras_gallery($extras_id = null, $columns = null, $h
         <div class="gallery-grid" style="grid-template-columns: repeat(<?php echo esc_attr($columns); ?>, 1fr);">
             <?php foreach ($display_images as $index => $image) : ?>
                 <?php
+                // Use BunnyCDN thumbnail URL if available, otherwise fallback to WordPress URLs
+                $thumbnail_url = !empty($image['bunnycdn_thumbnail_url']) ?
+                    FlexPress_Gallery_System::generate_bunnycdn_token_url($image['bunnycdn_thumbnail_url'], 24) : (!empty($image['bunnycdn_url']) ?
+                        FlexPress_Gallery_System::generate_bunnycdn_token_url($image['bunnycdn_url'], 24) :
+                        $image['thumbnail']);
+                $large_url = !empty($image['bunnycdn_url']) ?
+                    FlexPress_Gallery_System::generate_bunnycdn_token_url($image['bunnycdn_url'], 24) :
+                    $image['large'];
+                
                 // Check if this is the 5th image in preview mode
                 $is_last_preview = $preview_mode && $index === 4;
                 ?>
                 <div class="gallery-item" data-index="<?php echo $index; ?>">
                     <?php if ($is_last_preview): ?>
                         <div class="gallery-item-preview-lock">
-                            <img src="<?php echo esc_url($image['sizes']['medium']); ?>" 
-                                 alt="<?php echo esc_attr($image['alt']); ?>"
+                            <img src="<?php echo esc_url($thumbnail_url); ?>" 
+                                 alt="<?php echo esc_attr($image['alt'] ?? ''); ?>"
                                  class="gallery-image">
                             <div class="gallery-lock-overlay">
                                 <div class="gallery-lock-content">
@@ -4322,11 +4331,11 @@ function flexpress_display_extras_gallery($extras_id = null, $columns = null, $h
                             </div>
                         </div>
                     <?php else: ?>
-                        <img src="<?php echo esc_url($image['sizes']['medium']); ?>" 
-                             alt="<?php echo esc_attr($image['alt']); ?>"
+                        <img src="<?php echo esc_url($thumbnail_url); ?>" 
+                             alt="<?php echo esc_attr($image['alt'] ?? ''); ?>"
                              class="gallery-image"
-                             data-full="<?php echo esc_url($image['sizes']['large']); ?>"
-                             data-caption="<?php echo esc_attr($image['caption']); ?>">
+                             data-full="<?php echo esc_url($large_url); ?>"
+                             data-caption="<?php echo esc_attr($image['caption'] ?? ''); ?>">
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
@@ -4363,10 +4372,22 @@ function flexpress_get_extras_thumbnail($extras_id = null, $size = 'medium')
         $gallery = flexpress_get_extras_gallery($extras_id);
         if (!empty($gallery)) {
             $first_image = $gallery[0];
+            // Use the appropriate size key directly (not nested in 'sizes')
+            $url = '';
+            if ($size === 'thumbnail') {
+                $url = $first_image['thumbnail'] ?? '';
+            } elseif ($size === 'medium') {
+                $url = $first_image['medium'] ?? '';
+            } elseif ($size === 'large') {
+                $url = $first_image['large'] ?? '';
+            } else {
+                $url = $first_image['full'] ?? '';
+            }
+            
             return array(
-                'url' => $first_image['sizes'][$size],
-                'alt' => $first_image['alt'],
-                'title' => $first_image['title']
+                'url' => $url,
+                'alt' => $first_image['alt'] ?? '',
+                'title' => $first_image['title'] ?? ''
             );
         }
     }

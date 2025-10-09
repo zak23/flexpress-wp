@@ -95,8 +95,8 @@ if (empty($site_name)) {
 
                 <!-- CTA Section -->
                 <div class="cta-actions">
-                    <h2 class="cta-offer"><?php esc_html_e('Join Now and Save 50% Off Your First Month!', 'flexpress'); ?></h2>
-                    <a href="<?php echo esc_url(home_url('/join')); ?>"
+                    <h2 class="cta-offer"><?php esc_html_e('Use promo code WELCOME50 and Save 50% Off Your First Month!', 'flexpress'); ?></h2>
+                    <a href="<?php echo esc_url(home_url('/join?promo=welcome50')); ?>"
                         class="btn btn-cta-primary btn-lg"
                         role="button">
                         <?php esc_html_e('Get Instant Access', 'flexpress'); ?> <i class="fas fa-arrow-right ms-2"></i>

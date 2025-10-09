@@ -459,6 +459,37 @@ flexpress_display_cf7_form('content_removal');
 
 ## 🔧 Recent Fixes
 
+### Extras Post Type Gallery System (October 2025)
+
+- **Complete Gallery Implementation**: Built comprehensive gallery system for Extras post type matching Episodes functionality
+- **Gallery Management**: Full admin interface with drag-and-drop upload, reordering, deletion, and metadata editing
+- **BunnyCDN Integration**: Automatic thumbnail generation and upload to BunnyCDN storage
+- **Lightbox Display**: Professional image gallery with lightbox viewer on front-end
+- **Archive Page Styling**: Complete CSS overhaul matching episode card design with hover effects
+- **Content Format Support**: Dual support for gallery and video content types with appropriate badges
+- **Responsive Design**: Mobile-optimized cards with proper aspect ratios and touch interactions
+- **Filter System**: Category, content type, model, and alphabetical filtering with sidebar
+- **Access Control**: PPV pricing and member-only access for premium extras content
+
+**Key Features:**
+- Gallery meta box in admin with image upload, alt text, captions, reordering
+- Automatic BunnyCDN thumbnail generation (episodes/galleries/ and extras/galleries/ paths)
+- Gallery count badge and content type badge on archive cards
+- Lightbox functionality with keyboard navigation and captions
+- 16:9 aspect ratio thumbnails with zoom hover effect
+- Play/gallery button overlay with smooth transitions
+- Professional card styling matching episode archive design
+
+**Files Updated:**
+- `includes/gallery-system.php` - Gallery management class with BunnyCDN integration
+- `assets/js/gallery-admin.js` - Admin interface JavaScript for uploads and reordering
+- `assets/js/gallery-lightbox.js` - Front-end lightbox functionality
+- `assets/css/main.css` - Comprehensive extras card styling (260+ lines)
+- `functions.php` - Gallery display and thumbnail helper functions
+- `single-extras.php` - Single extras template with gallery display
+- `archive-extras.php` - Extras archive with filtering and sorting
+- `template-parts/content-extras-card.php` - Extras card template
+
 ### Episodes ACF Editor Tabs (October 2025)
 
 - Reorganized the Episodes editor into clear ACF tabs for faster editing:

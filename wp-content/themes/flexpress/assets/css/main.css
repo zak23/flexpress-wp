@@ -5679,7 +5679,7 @@ footer.bg-black .row.footer {
     bottom: 0;
     width: 60px;
     height: 3px;
-    background: linear-gradient(90deg, #e50914 0%, #ff6b6b 100%);
+    background: linear-gradient(90deg, var(--color-accent, #e50914) 0%, var(--color-accent-hover, #ff6b6b) 100%);
     border-radius: 2px;
 }
 
@@ -5710,7 +5710,7 @@ footer.bg-black .row.footer {
 
 .model-detail-item:hover {
     background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(229, 9, 20, 0.3);
+    border-color: var(--color-accent, rgba(229, 9, 20, 0.3));
     transform: translateY(-2px);
 }
 
@@ -5721,9 +5721,9 @@ footer.bg-black .row.footer {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, rgba(229, 9, 20, 0.2), rgba(255, 107, 107, 0.2));
+    background: linear-gradient(135deg, var(--color-accent-light, rgba(229, 9, 20, 0.2)), var(--color-accent-light, rgba(255, 107, 107, 0.2)));
     border-radius: 8px;
-    color: #ff6b6b;
+    color: var(--color-accent, #ff6b6b);
     font-size: 1.25rem;
 }
 

@@ -446,7 +446,6 @@ function flexpress_enqueue_scripts_and_styles()
 
     // Enqueue episode ratings script and styles on episode pages
     if (is_singular('episode')) {
-        wp_enqueue_style('flexpress-episode-ratings', get_template_directory_uri() . '/assets/css/episode-ratings.css', array('flexpress-main'), wp_get_theme()->get('Version'));
         wp_enqueue_script('flexpress-episode-ratings', get_template_directory_uri() . '/assets/js/episode-ratings.js', array('jquery'), wp_get_theme()->get('Version'), true);
         wp_script_add_data('flexpress-episode-ratings', 'defer', true);
         
@@ -3861,6 +3860,13 @@ function flexpress_get_episode_access_summary($episode_id = null)
     switch ($access_type) {
         case 'free':
             return 'Free';
+
+        case 'membership_only':
+            if ($has_membership) {
+                return ''; // No pricing display for members
+            } else {
+                return 'Members Only';
+            }
 
         case 'ppv_only':
             return $price ? '$' . number_format($price, 2) . ' (PPV Only)' : 'PPV Only';

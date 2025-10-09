@@ -73,6 +73,7 @@ FlexPress is designed specifically for content websites (primarily adult content
 
 - **Dark Theme Design**: Vixen.com-inspired professional aesthetics
 - **Responsive Layout**: Mobile-first responsive design
+- **Primary Navigation**: Top menu with Episodes, Extras, and Models links with active state detection
 - **Interactive Elements**: Hover effects and smooth animations
 - **Video Cards**: Clean episode presentation with play buttons
 - **Model Profiles**: Performer showcase with relationship linking
@@ -1710,6 +1711,7 @@ Previously, the extras archive showed ALL tags and models from the entire site, 
 - **Performance:** Efficient database queries with proper indexing and prepared statements
 
 **Code Pattern:**
+
 ```php
 // Get tags that are actually used on extras posts
 $extras_tags = get_terms(array(
@@ -1723,10 +1725,10 @@ $extras_tags = get_terms(array(
 
 // Get only models featured in extras
 $model_ids_in_extras = $wpdb->get_col(
-    "SELECT DISTINCT meta_value 
+    "SELECT DISTINCT meta_value
     FROM {$wpdb->postmeta} pm
     INNER JOIN {$wpdb->posts} p ON pm.post_id = p.ID
-    WHERE p.post_type = 'extras' 
+    WHERE p.post_type = 'extras'
     AND pm.meta_key = 'featured_models'"
 );
 ```

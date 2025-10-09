@@ -77,6 +77,11 @@ if (is_user_logged_in() && !in_array($current_page_slug, $allowed_pages)) {
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link <?php echo (is_post_type_archive('extras') || is_singular('extras')) ? 'active' : ''; ?>" href="<?php echo esc_url(get_post_type_archive_link('extras')); ?>">
+                                <?php esc_html_e('Extras', 'flexpress'); ?>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link <?php echo (is_post_type_archive('model') || is_singular('model')) ? 'active' : ''; ?>" href="<?php echo esc_url(get_post_type_archive_link('model')); ?>">
                                 <?php esc_html_e('Models', 'flexpress'); ?>
                             </a>

@@ -2246,6 +2246,14 @@ docker exec -it flexpress_wordpress wp [command]
 
 ## 🔧 Recent Updates
 
+### October 2025
+
+- **Enhanced Navigation Menu**: Added Extras to the primary navigation menu
+  - Primary top menu now displays: Episodes, Extras, Models
+  - Active state detection shows current section when viewing extras archive or single extras
+  - Consistent styling with existing navigation items using Bootstrap classes
+  - Responsive mobile navigation includes extras menu item
+
 ### January 2025
 
 - **Enhanced Model Archive Filtering System**: Added comprehensive Vixen.com-style filtering to model archive pages
@@ -2510,7 +2518,7 @@ The individual model profile page provides a comprehensive view of each model's 
 - Uses Vixen-style episode card template
 - Only shows episodes with `release_date <= current_time()`
 
-**6. All Extras Grid** *(NEW)*
+**6. All Extras Grid** _(NEW)_
 
 - Displays all published extras featuring the model
 - Grid layout: 2 extras per row (6 columns each)
@@ -2523,7 +2531,7 @@ The individual model profile page provides a comprehensive view of each model's 
 **7. Model Messages Section**
 
 - Member-only comment system for direct messages to models
-- **Access Control**: 
+- **Access Control**:
   - Non-logged-in users: Prompted to log in
   - Logged-in non-members: Prompted to join
   - Active members: Can send messages
@@ -2533,6 +2541,7 @@ The individual model profile page provides a comprehensive view of each model's 
 #### Query Logic
 
 **Episodes Query:**
+
 ```php
 $all_episodes_query = new WP_Query(array(
     'post_type' => 'episode',
@@ -2557,6 +2566,7 @@ $all_episodes_query = new WP_Query(array(
 ```
 
 **Extras Query:**
+
 ```php
 $all_extras_query = new WP_Query(array(
     'post_type' => 'extras',

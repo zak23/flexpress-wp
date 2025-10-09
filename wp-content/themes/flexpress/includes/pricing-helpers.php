@@ -454,8 +454,10 @@ function flexpress_calculate_daily_rate($plan) {
 function flexpress_get_daily_rate_display($plan, $show_trial_rate = false) {
     $currency = $plan['currency'] ?? '$';
     
-    // Check if we should show trial rate
-    if ($show_trial_rate && !empty($plan['trial_enabled']) && isset($plan['trial_price']) && isset($plan['trial_duration'])) {
+    // Check if we should show trial rate (default to true for trial-enabled plans)
+    $should_show_trial = $show_trial_rate || (!empty($plan['trial_enabled']) && isset($plan['trial_price']) && isset($plan['trial_duration']) && $plan['trial_price'] > 0 && $plan['trial_duration'] > 0);
+    
+    if ($should_show_trial) {
         $trial_plan = array(
             'price' => $plan['trial_price'],
             'duration' => $plan['trial_duration'],

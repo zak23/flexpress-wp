@@ -226,25 +226,69 @@ if (isset($_GET['error'])) {
                                     <div class="plan-info">
                                         <div class="plan-header">
                                             <h5 class="plan-name"><?php echo esc_html($plan['name']); ?></h5>
-                                            <?php if ($is_featured): ?>
-                                            <span class="popular-badge"><?php esc_html_e('MOST POPULAR', 'flexpress'); ?></span>
-                                            <?php elseif ($is_promo_only): ?>
-                                            <span class="promo-only-badge"><?php esc_html_e('PROMO ONLY', 'flexpress'); ?></span>
-                                            <?php endif; ?>
+                                            <div class="plan-badges">
+                                                <?php if (!empty($plan['trial_enabled']) && !empty($plan['trial_price']) && !empty($plan['trial_duration'])): ?>
+                                                    <span class="trial-badge">
+                                                        <i class="fas fa-gift me-1"></i>
+                                                        <?php esc_html_e('TRIAL AVAILABLE', 'flexpress'); ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                                <?php if ($is_featured): ?>
+                                                    <span class="popular-badge"><?php esc_html_e('MOST POPULAR', 'flexpress'); ?></span>
+                                                <?php elseif ($is_promo_only): ?>
+                                                    <span class="promo-only-badge"><?php esc_html_e('PROMO ONLY', 'flexpress'); ?></span>
+                                                <?php endif; ?>
+                                            </div>
                                         </div>
                                         <?php if (!empty($plan['description'])): ?>
                                         <p class="plan-description"><?php echo esc_html($plan['description']); ?></p>
                                         <?php endif; ?>
                                         <?php if ($plan['plan_type'] === 'recurring'): ?>
-                                        <p class="plan-billing"><?php esc_html_e('Recurring Charge / Billed As', 'flexpress'); ?> <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['price'], 2)); ?></p>
+                                            <?php if (!empty($plan['trial_enabled']) && !empty($plan['trial_price']) && !empty($plan['trial_duration'])): ?>
+                                                <?php
+                                                // Format trial duration text
+                                                $trial_duration_text = $plan['trial_duration'] . ' ' . $plan['trial_duration_unit'];
+                                                if ($plan['trial_duration'] > 1 && $plan['trial_duration_unit'] === 'day') {
+                                                    $trial_duration_text = $plan['trial_duration'] . ' days';
+                                                } elseif ($plan['trial_duration'] > 1 && $plan['trial_duration_unit'] === 'week') {
+                                                    $trial_duration_text = $plan['trial_duration'] . ' weeks';
+                                                } elseif ($plan['trial_duration'] > 1 && $plan['trial_duration_unit'] === 'month') {
+                                                    $trial_duration_text = $plan['trial_duration'] . ' months';
+                                                }
+                                                
+                                                // Format billing cycle duration text
+                                                $billing_duration_text = $plan['duration'] . ' ' . $plan['duration_unit'];
+                                                if ($plan['duration'] > 1 && $plan['duration_unit'] === 'day') {
+                                                    $billing_duration_text = $plan['duration'] . ' days';
+                                                } elseif ($plan['duration'] > 1 && $plan['duration_unit'] === 'week') {
+                                                    $billing_duration_text = $plan['duration'] . ' weeks';
+                                                } elseif ($plan['duration'] > 1 && $plan['duration_unit'] === 'month') {
+                                                    $billing_duration_text = $plan['duration'] . ' months';
+                                                } elseif ($plan['duration'] > 1 && $plan['duration_unit'] === 'year') {
+                                                    $billing_duration_text = $plan['duration'] . ' years';
+                                                }
+                                                ?>
+                                                <p class="plan-billing">
+                                                    <span class="trial-info">
+                                                        <i class="fas fa-gift me-1"></i>
+                                                        <?php echo esc_html($trial_duration_text); ?> trial for <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['trial_price'], 2)); ?>
+                                                    </span>
+                                                    <br>
+                                                    <span class="then-billing">
+                                                        Then <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['price'], 2)); ?> every <?php echo esc_html($billing_duration_text); ?>
+                                                    </span>
+                                                </p>
+                                            <?php else: ?>
+                                                <p class="plan-billing"><?php esc_html_e('Recurring Charge / Billed As', 'flexpress'); ?> <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['price'], 2)); ?></p>
+                                            <?php endif; ?>
                                         <?php elseif ($plan['plan_type'] === 'one_time'): ?>
-                                        <p class="plan-billing"><?php esc_html_e('One time charge Billed As', 'flexpress'); ?> <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['price'], 2)); ?></p>
+                                            <p class="plan-billing"><?php esc_html_e('One time charge Billed As', 'flexpress'); ?> <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['price'], 2)); ?></p>
                                         <?php endif; ?>
                                     </div>
                                     <div class="plan-pricing">
                                         <div class="price">
                                             <span class="price-amount"><?php echo esc_html(flexpress_get_daily_rate_display($plan)); ?></span>
-                                            <small class="price-period">/Per Day</small>
+                                            <small class="price-period">/Per Day<?php if (!empty($plan['trial_enabled']) && !empty($plan['trial_price']) && !empty($plan['trial_duration'])): ?> <span class="trial-rate-indicator">(Trial Rate)</span><?php endif; ?></small>
                                         </div>
                                     </div>
                                 </div>
@@ -490,6 +534,57 @@ if (isset($_GET['error'])) {
     white-space: nowrap !important;
     flex-shrink: 0 !important;
     font-size: 0.65rem !important;
+}
+
+/* Trial Display Styling */
+.trial-badge {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24) !important;
+    color: white !important;
+    padding: 0.25rem 0.75rem !important;
+    border-radius: 1rem !important;
+    font-size: 0.7rem !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    display: inline-block !important;
+    margin-right: 0.5rem !important;
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3) !important;
+}
+
+.trial-info {
+    color: #ff6b6b !important;
+    font-weight: bold !important;
+    font-size: 0.9rem !important;
+}
+
+.then-billing {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 0.85rem !important;
+}
+
+.trial-rate-indicator {
+    color: #ff6b6b !important;
+    font-weight: bold !important;
+    font-size: 0.8rem !important;
+}
+
+.plan-badges {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    margin-top: 0.5rem !important;
+}
+
+/* Responsive Design for Trial Elements */
+@media (max-width: 768px) {
+    .trial-badge {
+        font-size: 0.65rem !important;
+        padding: 0.2rem 0.6rem !important;
+    }
+
+    .plan-badges {
+        gap: 0.3rem !important;
+    }
 }
 </style>
 

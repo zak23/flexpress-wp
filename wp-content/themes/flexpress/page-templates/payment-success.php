@@ -43,9 +43,26 @@ if ($is_ppv_purchase) {
     $episode = get_post($episode_id);
 }
 
-// Get transaction details if available
+// Smart transaction retrieval - try URL first, then get latest for user
 $transaction = null;
-if ($transaction_id) {
+if (empty($transaction_id)) {
+    // If no transaction_id in URL, get the most recent transaction for this user
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'flexpress_flowguard_transactions';
+    $latest_transaction = $wpdb->get_row(
+        $wpdb->prepare(
+            "SELECT * FROM {$table_name} WHERE user_id = %d ORDER BY created_at DESC LIMIT 1",
+            $user_id
+        ),
+        ARRAY_A
+    );
+    
+    if ($latest_transaction) {
+        $transaction_id = $latest_transaction['transaction_id'];
+        $transaction = $latest_transaction;
+    }
+} else {
+    // Get transaction details using the provided transaction_id
     $transaction = flexpress_flowguard_get_transaction($transaction_id);
 }
 
@@ -87,10 +104,12 @@ $membership_expires = get_user_meta($user_id, 'membership_expires', true);
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-6">
+                                        <?php if (!empty($transaction_id)): ?>
                                         <div class="detail-item">
                                             <label>Transaction ID:</label>
-                                            <span><?php echo esc_html($transaction_id ?: 'N/A'); ?></span>
+                                            <span><?php echo esc_html($transaction_id); ?></span>
                                         </div>
+                                        <?php endif; ?>
                                         <?php if ($sale_id): ?>
                                         <div class="detail-item">
                                             <label>Sale ID:</label>
@@ -379,46 +398,6 @@ $membership_expires = get_user_meta($user_id, 'membership_expires', true);
     color: var(--color-text-secondary);
 }
 
-.btn {
-    border-radius: 8px;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    transition: var(--transition-fast);
-}
-
-.btn-primary {
-    background-color: var(--color-accent);
-    border-color: var(--color-accent);
-    color: var(--color-accent-text);
-}
-
-.btn-primary:hover {
-    background-color: var(--color-accent-hover);
-    border-color: var(--color-accent-hover);
-    color: var(--color-accent-text);
-}
-
-.btn-outline-primary {
-    border-color: var(--color-accent);
-    color: var(--color-accent);
-}
-
-.btn-outline-primary:hover {
-    background-color: var(--color-accent);
-    border-color: var(--color-accent);
-    color: var(--color-accent-text);
-}
-
-.btn-outline-secondary {
-    border-color: var(--color-text-secondary);
-    color: var(--color-text-secondary);
-}
-
-.btn-outline-secondary:hover {
-    background-color: var(--color-text-secondary);
-    border-color: var(--color-text-secondary);
-    color: var(--color-background);
-}
 
 .text-muted {
     color: var(--color-text-secondary) !important;

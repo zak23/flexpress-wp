@@ -251,7 +251,7 @@ while (have_posts()):
                                     <i class="fas fa-tag me-1"></i>
                                     <?php
                                     // Only show member discount for access types that support it (not ppv_only)
-                                    if (is_user_logged_in() && $member_discount && $access_type !== 'ppv_only') {
+                                    if (is_user_logged_in() && $member_discount && $access_info['access_type'] !== 'ppv_only') {
                                         $discounted_price = $price * (1 - ($member_discount / 100));
                                         echo '$' . number_format($discounted_price, 2);
                                     } else {
@@ -458,7 +458,7 @@ while (have_posts()):
                                             <i class="fas fa-crown me-2"></i>
                                             <?php esc_html_e('Premium Membership', 'flexpress'); ?>
                                         </a>
-                                        <?php if ($access_info['price'] > 0 && $access_type !== 'ppv_only'): ?>
+                                        <?php if ($access_info['price'] > 0 && $access_info['access_type'] !== 'ppv_only'): ?>
                                             <h6 class="mb-2 text-white">
                                                 <i class="fas fa-percentage me-2 text-warning"></i>
                                                 <?php

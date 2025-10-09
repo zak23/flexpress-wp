@@ -146,7 +146,10 @@ get_header();
                                 <?php endif; ?>
                             </div>
                         </div>
-
+</div>
+</div>
+<div class="row">
+    <div class="col-12">
                         <!-- Social Media Links -->
                         <?php 
                         $is_logged_in = is_user_logged_in();
@@ -159,17 +162,6 @@ get_header();
                         <div class="model-social-section <?php echo !$is_logged_in ? 'locked' : ''; ?>" data-logged-in="<?php echo $is_logged_in ? 'true' : 'false'; ?>">
                             <div class="model-social-header mb-4">
                                 <h4 class="model-section-heading">Connect with <?php the_title(); ?></h4>
-                                <?php if (!$is_logged_in) : ?>
-                                    <div class="members-only-badge">
-                                        <i class="fas fa-lock"></i>
-                                        <span>Members Only</span>
-                                    </div>
-                                <?php else : ?>
-                                    <div class="members-unlocked-badge">
-                                        <i class="fas fa-unlock"></i>
-                                        <span>Exclusive Access</span>
-                                    </div>
-                                <?php endif; ?>
                             </div>
                             
                             <div class="model-social-grid <?php echo !$is_logged_in ? 'social-locked' : ''; ?>">
@@ -247,7 +239,10 @@ get_header();
                                     <?php else : ?>
                                         <button class="social-icon-link locked" data-platform="website" onclick="showLoginPrompt('website')" title="Login to view Website">
                                             <i class="fas fa-globe"></i>
-                                            <span class="social-label">Website</span>
+                                            <span class="social-label">  <?php 
+                                                $website_title = get_field('model_website_title');
+                                                echo esc_html($website_title ? $website_title : 'Website');
+                                                ?></span>
                                             <i class="fas fa-lock social-lock-icon"></i>
                                         </button>
                                     <?php endif; ?>

@@ -836,6 +836,10 @@ class FlexPress_Gallery_System
         error_log("Post ID: $post_id");
         error_log("File Path: $file_path");
 
+        // Get post type
+        $post_type = get_post_type($post_id);
+        error_log("Post Type: $post_type");
+
         // Get BunnyCDN settings
         $video_settings = get_option('flexpress_video_settings', array());
         $storage_api_key = isset($video_settings['bunnycdn_storage_api_key']) ? $video_settings['bunnycdn_storage_api_key'] : '';
@@ -918,7 +922,7 @@ class FlexPress_Gallery_System
         error_log('✅ Original file uploaded successfully to BunnyCDN Storage via HTTP API');
 
         // Generate and upload thumbnail
-        $thumbnail_url = $this->generate_and_upload_thumbnail($file_path, $filename, $post_id, $storage_api_key, $storage_zone, $storage_url, $serve_url);
+        $thumbnail_url = $this->generate_and_upload_thumbnail($file_path, $filename, $post_id, $post_type, $storage_api_key, $storage_zone, $storage_url, $serve_url);
 
         // Return CDN URL (use serve URL if available, otherwise storage URL)
         $cdn_url = !empty($serve_url) ? $serve_url : $storage_url;
@@ -937,7 +941,7 @@ class FlexPress_Gallery_System
     /**
      * Generate and upload thumbnail to BunnyCDN Storage
      */
-    private function generate_and_upload_thumbnail($original_file_path, $original_filename, $post_id, $storage_api_key, $storage_zone, $storage_url, $serve_url)
+    private function generate_and_upload_thumbnail($original_file_path, $original_filename, $post_id, $post_type, $storage_api_key, $storage_zone, $storage_url, $serve_url)
     {
         error_log("=== THUMBNAIL GENERATION START ===");
 
@@ -948,9 +952,11 @@ class FlexPress_Gallery_System
         error_log("Thumbnail Settings:");
         error_log("  Size: {$thumbnail_size}x{$thumbnail_size} pixels");
 
-        // Generate thumbnail filename
+        // Generate thumbnail filename with correct path based on post type
         $thumbnail_filename = 'thumb_' . $original_filename;
-        $thumbnail_remote_path = 'episodes/galleries/' . $post_id . '/thumbs/' . $thumbnail_filename;
+        $thumbnail_remote_path = ($post_type === 'episode') ? 
+            'episodes/galleries/' . $post_id . '/thumbs/' . $thumbnail_filename :
+            'extras/galleries/' . $post_id . '/thumbs/' . $thumbnail_filename;
 
         error_log("Thumbnail Path: $thumbnail_remote_path");
 

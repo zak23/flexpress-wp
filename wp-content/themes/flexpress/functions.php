@@ -4112,33 +4112,32 @@ function flexpress_should_show_extras_purchase_button($extras_id = null, $user_i
 }
 
 /**
- * Get video to display based on access level for extras
+ * Get gallery images to display based on access level for extras
  * 
  * @param int $extras_id The extras ID
  * @param int $user_id The user ID (optional)
- * @return string Video ID to display (full, trailer, or preview)
+ * @return array Gallery images array
  */
-function flexpress_get_extras_video_for_access($extras_id = null, $user_id = null)
+function flexpress_get_extras_gallery_for_access($extras_id = null, $user_id = null)
 {
     if (!$extras_id) {
         $extras_id = get_the_ID();
     }
 
     $access_info = flexpress_check_extras_access($extras_id, $user_id);
+    $gallery = flexpress_get_extras_gallery($extras_id);
 
-    $full_video = get_field('full_video', $extras_id);
-    $trailer_video = get_field('trailer_video', $extras_id);
-    $preview_video = get_field('preview_video', $extras_id);
-
-    if ($access_info['has_access'] && $full_video) {
-        return $full_video;
-    } elseif ($trailer_video) {
-        return $trailer_video;
-    } elseif ($preview_video) {
-        return $preview_video;
+    if (empty($gallery)) {
+        return array();
     }
 
-    return null;
+    // If user has access, return all images
+    if ($access_info['has_access']) {
+        return $gallery;
+    }
+
+    // If no access, return first 5 images for preview
+    return array_slice($gallery, 0, 5);
 }
 
 /**
@@ -4155,6 +4154,32 @@ function flexpress_can_user_view_extras($extras_id = null, $user_id = null)
 }
 
 /**
+ * Get extras video for access level
+ * 
+ * @param int $extras_id The extras ID
+ * @param int $user_id The user ID (optional)
+ * @return string Video ID to display
+ */
+function flexpress_get_extras_video_for_access($extras_id = null, $user_id = null)
+{
+    if (!$extras_id) {
+        $extras_id = get_the_ID();
+    }
+
+    $access_info = flexpress_check_extras_access($extras_id, $user_id);
+    $full_video = get_field('full_video', $extras_id);
+    $preview_video = get_field('preview_video', $extras_id);
+
+    if ($access_info['has_access'] && $full_video) {
+        return $full_video;
+    } elseif ($preview_video) {
+        return $preview_video;
+    }
+
+    return null;
+}
+
+/**
  * Get primary video ID for extras (for thumbnails)
  * 
  * @param int $extras_id The extras ID
@@ -4167,10 +4192,210 @@ function flexpress_get_primary_extras_video_id($extras_id = null)
     }
 
     $full_video = get_field('full_video', $extras_id);
-    $trailer_video = get_field('trailer_video', $extras_id);
     $preview_video = get_field('preview_video', $extras_id);
 
-    return $full_video ?: $trailer_video ?: $preview_video ?: '';
+    return $full_video ?: $preview_video ?: '';
+}
+
+/**
+ * Get extras content format (gallery or video)
+ * 
+ * @param int $extras_id The extras ID
+ * @return string Content format
+ */
+function flexpress_get_extras_content_format($extras_id = null)
+{
+    if (!$extras_id) {
+        $extras_id = get_the_ID();
+    }
+
+    return get_field('content_format', $extras_id) ?: 'gallery';
+}
+
+/**
+ * Check if extras is gallery content
+ * 
+ * @param int $extras_id The extras ID
+ * @return bool Whether extras is gallery
+ */
+function flexpress_is_extras_gallery($extras_id = null)
+{
+    return flexpress_get_extras_content_format($extras_id) === 'gallery';
+}
+
+/**
+ * Check if extras is video content
+ * 
+ * @param int $extras_id The extras ID
+ * @return bool Whether extras is video
+ */
+function flexpress_is_extras_video($extras_id = null)
+{
+    return flexpress_get_extras_content_format($extras_id) === 'video';
+}
+
+/**
+ * Get extras gallery images
+ * 
+ * @param int $extras_id The extras ID
+ * @return array Gallery images array
+ */
+function flexpress_get_extras_gallery($extras_id = null)
+{
+    if (!$extras_id) {
+        $extras_id = get_the_ID();
+    }
+
+    $gallery = get_field('extras_gallery', $extras_id);
+    return $gallery ?: array();
+}
+
+/**
+ * Check if extras has gallery images
+ * 
+ * @param int $extras_id The extras ID
+ * @return bool Whether extras has gallery
+ */
+function flexpress_has_extras_gallery($extras_id = null)
+{
+    $gallery = flexpress_get_extras_gallery($extras_id);
+    return !empty($gallery) && is_array($gallery);
+}
+
+/**
+ * Display extras gallery
+ * 
+ * @param int $extras_id The extras ID
+ * @param int $columns Number of columns (optional)
+ * @param bool $has_access Whether user has access (optional)
+ */
+function flexpress_display_extras_gallery($extras_id = null, $columns = null, $has_access = null)
+{
+    if (!$extras_id) {
+        $extras_id = get_the_ID();
+    }
+
+    $gallery = flexpress_get_extras_gallery($extras_id);
+    if (empty($gallery)) {
+        return;
+    }
+
+    // Check access if not provided
+    if ($has_access === null) {
+        $access_info = flexpress_check_extras_access($extras_id);
+        $has_access = $access_info['has_access'];
+    }
+
+    // Get gallery settings
+    if ($columns === null) {
+        $columns = get_field('gallery_columns', $extras_id) ?: 3;
+    }
+    
+    $lightbox = get_field('gallery_lightbox', $extras_id) ?: true;
+
+    // Determine if we should show preview mode (only first 5 images)
+    $preview_mode = !$has_access && count($gallery) > 5;
+    $display_images = $preview_mode ? array_slice($gallery, 0, 5) : $gallery;
+    $remaining_count = $preview_mode ? count($gallery) - 5 : 0;
+
+    ?>
+    <div class="extras-gallery" data-columns="<?php echo esc_attr($columns); ?>"
+         data-lightbox="<?php echo $lightbox ? 'true' : 'false'; ?>">
+        <div class="gallery-grid" style="grid-template-columns: repeat(<?php echo esc_attr($columns); ?>, 1fr);">
+            <?php foreach ($display_images as $index => $image) : ?>
+                <?php
+                // Check if this is the 5th image in preview mode
+                $is_last_preview = $preview_mode && $index === 4;
+                ?>
+                <div class="gallery-item" data-index="<?php echo $index; ?>">
+                    <?php if ($is_last_preview): ?>
+                        <div class="gallery-item-preview-lock">
+                            <img src="<?php echo esc_url($image['sizes']['medium']); ?>" 
+                                 alt="<?php echo esc_attr($image['alt']); ?>"
+                                 class="gallery-image">
+                            <div class="gallery-lock-overlay">
+                                <div class="gallery-lock-content">
+                                    <i class="fas fa-lock fa-2x mb-2"></i>
+                                    <p class="mb-0"><?php echo esc_html($remaining_count); ?> more images</p>
+                                    <small>Purchase to unlock</small>
+                                </div>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <img src="<?php echo esc_url($image['sizes']['medium']); ?>" 
+                             alt="<?php echo esc_attr($image['alt']); ?>"
+                             class="gallery-image"
+                             data-full="<?php echo esc_url($image['sizes']['large']); ?>"
+                             data-caption="<?php echo esc_attr($image['caption']); ?>">
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        
+        <?php if ($preview_mode): ?>
+            <div class="gallery-preview-notice text-center mt-3">
+                <p class="text-muted">
+                    <i class="fas fa-lock me-2"></i>
+                    Showing 5 of <?php echo count($gallery); ?> images. 
+                    <a href="#purchase-section" class="text-white">Purchase to view all</a>
+                </p>
+            </div>
+        <?php endif; ?>
+    </div>
+    <?php
+}
+
+/**
+ * Get extras thumbnail image
+ * 
+ * @param int $extras_id The extras ID
+ * @param string $size Image size
+ * @return array|false Image array or false
+ */
+function flexpress_get_extras_thumbnail($extras_id = null, $size = 'medium')
+{
+    if (!$extras_id) {
+        $extras_id = get_the_ID();
+    }
+
+    // Check if it's gallery content
+    if (flexpress_is_extras_gallery($extras_id)) {
+        $gallery = flexpress_get_extras_gallery($extras_id);
+        if (!empty($gallery)) {
+            $first_image = $gallery[0];
+            return array(
+                'url' => $first_image['sizes'][$size],
+                'alt' => $first_image['alt'],
+                'title' => $first_image['title']
+            );
+        }
+    }
+    // Check if it's video content
+    elseif (flexpress_is_extras_video($extras_id)) {
+        $video_id = flexpress_get_primary_extras_video_id($extras_id);
+        if ($video_id) {
+            $thumbnail_url = flexpress_get_bunnycdn_video_thumbnail($video_id);
+            if ($thumbnail_url) {
+                return array(
+                    'url' => $thumbnail_url,
+                    'alt' => get_the_title($extras_id),
+                    'title' => get_the_title($extras_id)
+                );
+            }
+        }
+    }
+
+    // Fallback to featured image
+    $featured_image = get_the_post_thumbnail($extras_id, $size);
+    if ($featured_image) {
+        return array(
+            'url' => get_the_post_thumbnail_url($extras_id, $size),
+            'alt' => get_post_meta(get_post_thumbnail_id($extras_id), '_wp_attachment_image_alt', true),
+            'title' => get_the_title(get_post_thumbnail_id($extras_id))
+        );
+    }
+
+    return false;
 }
 
 /**
@@ -4181,14 +4406,11 @@ function flexpress_get_primary_extras_video_id($extras_id = null)
  */
 function flexpress_display_extras_thumbnail($size = 'medium', $class = 'extras-thumbnail')
 {
-    $video_id = flexpress_get_primary_extras_video_id();
+    $thumbnail = flexpress_get_extras_thumbnail(null, $size);
 
-    if ($video_id) {
-        $thumbnail_url = flexpress_get_bunnycdn_video_thumbnail($video_id);
-        if ($thumbnail_url) {
-            echo '<img src="' . esc_url($thumbnail_url) . '" alt="' . esc_attr(get_the_title()) . '" class="' . esc_attr($class) . '" />';
-            return;
-        }
+    if ($thumbnail) {
+        echo '<img src="' . esc_url($thumbnail['url']) . '" alt="' . esc_attr($thumbnail['alt']) . '" class="' . esc_attr($class) . '" />';
+        return;
     }
 
     // Fallback to featured image
@@ -6702,6 +6924,13 @@ function flexpress_add_promo_url_rewrites()
         'index.php?pagename=join&promo=$matches[1]',
         'top'
     );
+    
+    // Add rewrite rule for /membership/{promo_code}
+    add_rewrite_rule(
+        '^membership/([^/]+)/?$',
+        'index.php?pagename=membership&promo=$matches[1]',
+        'top'
+    );
 }
 add_action('init', 'flexpress_add_promo_url_rewrites');
 
@@ -7127,6 +7356,99 @@ add_action('wp_ajax_nopriv_apply_promo_code', 'flexpress_apply_promo_code_ajax')
 // AJAX handler for user registration
 add_action('wp_ajax_flexpress_register_user', 'flexpress_register_user_ajax');
 add_action('wp_ajax_nopriv_flexpress_register_user', 'flexpress_register_user_ajax');
+
+// Simple registration handler for /register page (no membership required)
+add_action('admin_post_register_user', 'flexpress_handle_simple_registration');
+add_action('admin_post_nopriv_register_user', 'flexpress_handle_simple_registration');
+
+/**
+ * Handle simple user registration (no membership required)
+ */
+function flexpress_handle_simple_registration() {
+    // Verify nonce
+    if (!wp_verify_nonce($_POST['register_nonce'], 'register_user')) {
+        wp_redirect(home_url('/register?register=failed&error=security'));
+        exit;
+    }
+
+    // Sanitize input data
+    $email = sanitize_email($_POST['user_email']);
+    $password = $_POST['user_pass'];
+    $confirm_password = $_POST['user_pass_confirm'];
+    $agree_terms = isset($_POST['terms']) ? true : false;
+
+    // Validation
+    if (empty($email) || empty($password) || empty($confirm_password)) {
+        wp_redirect(home_url('/register?register=failed&error=fields'));
+        exit;
+    }
+
+    if ($password !== $confirm_password) {
+        wp_redirect(home_url('/register?register=failed&error=password'));
+        exit;
+    }
+
+    if (!$agree_terms) {
+        wp_redirect(home_url('/register?register=failed&error=terms'));
+        exit;
+    }
+
+    if (!is_email($email)) {
+        wp_redirect(home_url('/register?register=failed&error=email'));
+        exit;
+    }
+
+    if (strlen($password) < 8) {
+        wp_redirect(home_url('/register?register=failed&error=password_length'));
+        exit;
+    }
+
+    // Check if email already exists
+    if (email_exists($email)) {
+        wp_redirect(home_url('/register?register=failed&error=exists'));
+        exit;
+    }
+
+    // Create user (use email as username)
+    $user_id = wp_create_user($email, $password, $email);
+
+    if (is_wp_error($user_id)) {
+        wp_redirect(home_url('/register?register=failed&error=create'));
+        exit;
+    }
+
+    // Set display name from email prefix (part before @)
+    $email_parts = explode('@', $email);
+    $display_name = $email_parts[0];
+    update_user_meta($user_id, 'flexpress_display_name', $display_name);
+
+    // Set user role as subscriber
+    $user = new WP_User($user_id);
+    $user->set_role('subscriber');
+
+    // Store registration metadata
+    update_user_meta($user_id, 'registration_date', current_time('mysql'));
+    update_user_meta($user_id, 'registration_ip', $_SERVER['REMOTE_ADDR']);
+    update_user_meta($user_id, 'signup_source', 'simple_register');
+
+    // Log activity
+    if (class_exists('FlexPress_Activity_Logger')) {
+        FlexPress_Activity_Logger::log_activity(
+            $user_id,
+            'user_registered',
+            'User registered via simple registration form',
+            ['email' => $email]
+        );
+    }
+
+    // Log the user in
+    wp_set_current_user($user_id);
+    wp_set_auth_cookie($user_id);
+
+    // Redirect to account page or dashboard
+    wp_redirect(home_url('/my-account?registered=success'));
+    exit;
+}
 
 /**
  * Handle user registration via AJAX

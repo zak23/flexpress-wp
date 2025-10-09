@@ -8281,3 +8281,198 @@ body.page-template-casting .site-main .alert-info {
         align-self: center;
     }
 }
+
+/* ==========================================================================
+   Extras Gallery Styles
+   ========================================================================== */
+
+/* Gallery Grid */
+.extras-gallery {
+    margin-bottom: 2rem;
+}
+
+.gallery-grid {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.gallery-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    aspect-ratio: 1;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover {
+    transform: scale(1.02);
+}
+
+.gallery-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 0.3s ease;
+}
+
+.gallery-item:hover .gallery-image {
+    opacity: 0.8;
+}
+
+/* Gallery Preview Lock */
+.gallery-item-preview-lock {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.gallery-lock-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+}
+
+.gallery-lock-content {
+    padding: 1rem;
+}
+
+.gallery-lock-content i {
+    color: #ffc107;
+}
+
+/* Gallery Preview Notice */
+.gallery-preview-notice {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.gallery-preview-notice a {
+    color: #ffc107;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.gallery-preview-notice a:hover {
+    text-decoration: underline;
+}
+
+/* Gallery Count Badge */
+.gallery-count-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+/* Video Duration Badge */
+.video-duration-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+/* Extras Card Updates */
+.extras-card .extras-play-button i {
+    font-size: 2rem;
+}
+
+.extras-card:hover .extras-play-button {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Lightbox Styles */
+.gallery-lightbox {
+    z-index: 9999;
+}
+
+.lightbox-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+}
+
+.lightbox-close {
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    color: white;
+    font-size: 2rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+}
+
+.lightbox-close:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.lightbox-caption {
+    color: white;
+    text-align: center;
+    margin-top: 1rem;
+    padding: 0 1rem;
+}
+
+/* Responsive Gallery */
+@media (max-width: 768px) {
+    .gallery-grid {
+        gap: 0.5rem;
+    }
+    
+    .gallery-item {
+        border-radius: 4px;
+    }
+    
+    .gallery-count-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+    }
+    
+    .lightbox-content {
+        max-width: 95vw;
+        max-height: 95vh;
+    }
+}
+
+@media (max-width: 576px) {
+    .gallery-grid {
+        gap: 0.25rem;
+    }
+    
+    .gallery-preview-notice {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+}

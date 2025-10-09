@@ -171,7 +171,7 @@ if (isset($_GET['error'])) {
         <!-- Header Section -->
         <div class="row justify-content-center mb-5">
             <div class="col-md-10 text-center">
-                <h1 class="display-4 mb-4"><?php echo sprintf(esc_html__('Join %s Today', 'flexpress'), get_bloginfo('name')); ?></h1>
+                <h1 class="display-4 mb-4"><?php echo sprintf(esc_html__('Join %s Today', 'flexpress'), esc_html(get_bloginfo('name') ?: 'Our Site')); ?></h1>
                 <p class="lead mb-4"><?php esc_html_e('Join thousands of satisfied members and get instant access to premium content. No commitment required - cancel anytime.', 'flexpress'); ?></p>
 
                 <?php if ($payment_status === 'declined'): ?>
@@ -674,6 +674,24 @@ if (isset($_GET['error'])) {
     .membership-page .promo-code-input .form-control::placeholder {
         color: rgba(255, 255, 255, 0.6) !important;
     }
+    
+    /* Promo Code Message Styling */
+    .membership-page .promo-code-message {
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    .membership-page .promo-code-message.success {
+        color: var(--color-success);
+    }
+    
+    .membership-page .promo-code-message.error {
+        color: var(--color-danger);
+    }
+    
+    .membership-page .promo-code-message.info {
+        color: var(--color-info);
+    }
 
     /* Value Proposition Section Styling */
     .value-proposition-card {
@@ -998,7 +1016,7 @@ wp_localize_script($script_handle, 'flexpressPromo', array(
                     type: 'POST',
                     data: {
                         action: 'flexpress_process_registration_and_payment',
-                        nonce: '<?php echo wp_create_nonce('flexpress_join_form'); ?>',
+                        nonce: flexpressPromo.nonce,
                         email: email,
                         password: password,
                         selected_plan: planId,
@@ -1046,6 +1064,14 @@ wp_localize_script($script_handle, 'flexpressPromo', array(
             console.log('Auto-selected popular plan:', selectedPlan);
         }
 
+        // Prevent Enter key from submitting promo code
+        jQuery('#membership-promo-code').on('keypress', function(e) {
+            if (e.which === 13) { // Enter key
+                e.preventDefault();
+                jQuery('#apply-membership-promo').click();
+            }
+        });
+        
         // Promo code functionality
         jQuery('.promo-code-label').on('click', function() {
             jQuery('.promo-code-input').toggleClass('show');
@@ -1096,6 +1122,67 @@ wp_localize_script($script_handle, 'flexpressPromo', array(
             setTimeout(() => {
                 messageDiv.hide();
             }, 5000);
+        }
+        
+        // Remove promo code
+        function removePromoCode() {
+            jQuery.ajax({
+                url: flexpressPromo.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'remove_promo_code',
+                    nonce: flexpressPromo.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        appliedPromo = null;
+                        showPromoMessage('Promo code removed', 'info');
+                        updatePlanPrices();
+                    }
+                }
+            });
+        }
+        
+        function updatePlanPrices() {
+            console.log('updatePlanPrices called, appliedPromo:', appliedPromo);
+            jQuery('.membership-card').each(function() {
+                const $card = jQuery(this);
+                const $price = $card.find('.price');
+                const originalPrice = parseFloat($price.data('original-price') || $price.text().replace(/[^0-9.]/g, ''));
+                console.log('Processing card, original price:', originalPrice);
+                
+                if (appliedPromo && appliedPromo.discount_type && appliedPromo.discount_value) {
+                    // Calculate discount based on promo code settings
+                    let discountAmount = 0;
+                    if (appliedPromo.discount_type === 'percentage') {
+                        discountAmount = (originalPrice * appliedPromo.discount_value) / 100;
+                    } else {
+                        discountAmount = appliedPromo.discount_value;
+                    }
+                    
+                    // Apply maximum discount limit if set
+                    if (appliedPromo.maximum_discount > 0 && discountAmount > appliedPromo.maximum_discount) {
+                        discountAmount = appliedPromo.maximum_discount;
+                    }
+                    
+                    const discountedPrice = Math.max(0, originalPrice - discountAmount);
+                    
+                    // Update price display
+                    $price.html('<span class="original-price text-decoration-line-through text-muted me-2">$' + originalPrice.toFixed(2) + '</span><span class="discounted-price text-success fw-bold">$' + discountedPrice.toFixed(2) + '</span>');
+                    
+                    // Add discount indicator
+                    if (!$card.find('.discount-indicator').length) {
+                        const discountText = appliedPromo.discount_type === 'percentage' 
+                            ? appliedPromo.discount_value + '% OFF' 
+                            : 'Save $' + discountAmount.toFixed(2);
+                        $price.after('<small class="discount-indicator text-success d-block fw-bold">' + discountText + '</small>');
+                    }
+                } else {
+                    $price.text('$' + originalPrice.toFixed(2));
+                    $price.removeClass('text-success');
+                    $card.find('.discount-indicator').remove();
+                }
+            });
         }
 
         // Store original prices

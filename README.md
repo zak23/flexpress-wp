@@ -727,6 +727,32 @@ FlexPress now uses **Flowguard** as the primary payment processing system, repla
 - **Success Page**: `/payment-success` - Payment completion confirmation
 - **Declined Page**: `/payment-declined` - Payment failure handling
 
+#### Synced Join & Membership Pages (January 2025)
+
+FlexPress includes synchronized `/join` and `/membership` pages with consistent promocode functionality:
+
+**Page Purposes**:
+
+- **`/join`** - For non-logged-in users to create accounts and choose membership options
+- **`/register`** - Simple account creation for users who want to unlock posts
+- **`/membership`** - For logged-in users to select and manage their membership
+
+**Synchronized Features**:
+
+- **Promocode Support**: Both pages support `/page/code` and `?promo=code` URL formats
+- **Consistent UI**: Matching promocode input sections, message displays, and styling
+- **Shared Functionality**: Identical promocode validation, application, and removal logic
+- **Plan Display**: Consistent pricing plan display with trial information and badges
+- **User Flow**: Join page redirects logged-in users to membership page appropriately
+
+**Promocode Features**:
+
+- **URL Support**: `/join/code` and `/membership/code` formats automatically apply promocodes
+- **Real-time Validation**: AJAX-powered promocode validation with instant feedback
+- **Price Updates**: Dynamic price display with discount indicators and original price strikethrough
+- **Plan Unlocking**: Promocodes can unlock promo-only pricing plans
+- **Usage Tracking**: Complete promocode usage tracking and analytics
+
 #### Webhook Endpoint
 
 Flowguard webhooks are automatically handled at:

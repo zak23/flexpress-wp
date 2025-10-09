@@ -194,7 +194,7 @@ function flexpress_register_extras_post_type() {
         'label'               => __('Extra', 'flexpress'),
         'description'         => __('Behind-the-Scenes and Extra Content', 'flexpress'),
         'labels'              => $labels,
-        'supports'            => array('title', 'editor', 'thumbnail', 'excerpt'),
+        'supports'            => array('title', 'editor', 'thumbnail', 'excerpt', 'custom-fields'),
         'taxonomies'          => array('post_tag'),
         'hierarchical'        => false,
         'public'              => true,
@@ -214,6 +214,9 @@ function flexpress_register_extras_post_type() {
     );
 
     register_post_type('extras', $args);
+
+    // Add gallery support to extras
+    add_post_type_support('extras', 'gallery');
 
     // Register Extras Status Taxonomy
     $status_labels = array(

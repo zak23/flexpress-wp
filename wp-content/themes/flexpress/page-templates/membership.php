@@ -20,8 +20,12 @@ if ($is_logged_in && function_exists('flexpress_get_membership_status')) {
     $subscription_type = get_user_meta($current_user_id, 'subscription_type', true);
 }
 
-// Check for promo code in URL
-$promo_code = isset($_GET['promo']) ? sanitize_text_field($_GET['promo']) : '';
+// Check for promo code in URL (supports both /membership/code and /membership?promo=code)
+$promo_code = get_query_var('promo');
+if (empty($promo_code)) {
+    $promo_code = isset($_GET['promo']) ? sanitize_text_field($_GET['promo']) : '';
+}
+$promo_code = sanitize_text_field($promo_code);
 
 // Get pricing plans from FlexPress settings (include promo code to unlock promo-only plans)
 $pricing_plans = flexpress_get_pricing_plans(true, $promo_code);
@@ -164,7 +168,7 @@ if (isset($_GET['error'])) {
                             <?php if (!empty($promo_code)): ?>
                                 <div class="promo-applied-message text-success">
                                     <i class="fas fa-check-circle me-1"></i>
-                                    <?php echo sprintf(esc_html__('Promo code "%s" applied!', 'flexpress'), esc_html($promo_code)); ?>
+                                    <?php echo sprintf(esc_html__('Promo code "%s" applied!', 'flexpress'), esc_html($promo_code ?: '')); ?>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -529,6 +533,76 @@ if (isset($_GET['error'])) {
     font-size: 0.65rem !important;
 }
 
+/* Promo Code Section Styling */
+.membership-page .promo-code-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.membership-page .promo-code-label {
+    color: var(--color-text-muted);
+    cursor: pointer;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.membership-page .promo-code-label i {
+    transition: transform 0.3s ease;
+}
+
+.membership-page .promo-code-section:hover .promo-code-label i {
+    transform: rotate(180deg);
+}
+
+.membership-page .promo-code-input .form-control {
+    background-color: var(--color-background);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    border-radius: 8px;
+}
+
+.membership-page .promo-code-input .form-control:focus {
+    background-color: var(--color-background);
+    border-color: var(--color-primary);
+    color: var(--color-text);
+    box-shadow: 0 0 0 0.2rem rgba(var(--color-primary-rgb), 0.25);
+}
+
+.membership-page .promo-code-input .form-control::placeholder {
+    color: var(--color-text-muted);
+}
+
+.membership-page .promo-code-input .btn-primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    border-radius: 8px;
+}
+
+.membership-page .promo-code-input .btn-primary:hover {
+    background-color: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+}
+
+/* Promo Code Message Styling */
+.membership-page .promo-code-message {
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.membership-page .promo-code-message.success {
+    color: var(--color-success);
+}
+
+.membership-page .promo-code-message.error {
+    color: var(--color-danger);
+}
+
+.membership-page .promo-code-message.info {
+    color: var(--color-info);
+}
+
 /* Trial Display Styling */
 .trial-info {
     color: var(--color-accent) !important;
@@ -877,6 +951,9 @@ jQuery(document).ready(function() {
     });
     
     // Promo code functionality
+    jQuery('.promo-code-label').on('click', function() {
+        jQuery('.promo-code-input').toggleClass('show');
+    });
     jQuery('#apply-membership-promo').on('click', function() {
         const code = jQuery('#membership-promo-code').val().trim();
         
@@ -936,7 +1013,7 @@ jQuery(document).ready(function() {
     function showPromoMessage(message, type) {
         const messageDiv = jQuery('#membership-promo-message');
         messageDiv.removeClass('success error info').addClass(type);
-        messageDiv.text(message).show();
+        messageDiv.html('<div class="promo-applied-message text-' + type + '"><i class="fas fa-check-circle me-1"></i>' + message + '</div>').show();
         
         setTimeout(() => {
             messageDiv.hide();

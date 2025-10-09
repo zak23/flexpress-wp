@@ -38,6 +38,9 @@ class FlexPress_Gallery_System
     {
         // Add gallery support to episodes
         add_post_type_support('episode', 'gallery');
+        
+        // Add gallery support to extras
+        add_post_type_support('extras', 'gallery');
 
         // Register gallery image sizes
         $this->register_gallery_image_sizes();
@@ -62,7 +65,7 @@ class FlexPress_Gallery_System
     }
 
     /**
-     * Add gallery meta box to episodes
+     * Add gallery meta box to episodes and extras
      */
     public function add_gallery_meta_box()
     {
@@ -71,6 +74,15 @@ class FlexPress_Gallery_System
             __('Episode Gallery', 'flexpress'),
             array($this, 'render_gallery_meta_box'),
             'episode',
+            'normal',
+            'high'
+        );
+        
+        add_meta_box(
+            'extras_gallery',
+            __('Extras Gallery', 'flexpress'),
+            array($this, 'render_extras_gallery_meta_box'),
+            'extras',
             'normal',
             'high'
         );

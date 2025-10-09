@@ -1,16 +1,13 @@
 <?php
 /**
- * Template part for displaying extras cards - Vixen.com Style
+ * Template part for displaying extras cards - Gallery-focused design
  */
 
-$preview_video = get_field('preview_video');
-$trailer_video = get_field('trailer_video');
-$full_video = get_field('full_video');
-$duration = get_field('extras_duration');
 $price = get_field('extras_price');
 $release_date = get_field('release_date');
 $featured_models = get_field('featured_models');
 $content_type = get_field('content_type');
+$content_format = get_field('content_format') ?: 'gallery';
 
 // Get performer names from the relationship field
 $performers = '';
@@ -22,48 +19,29 @@ if ($featured_models && !empty($featured_models)) {
     $performers = implode(', ', $model_names);
 }
 
-// Get video ID using the helper function
-$video_id = flexpress_get_primary_extras_video_id(get_the_ID());
-
-// If we have a full video but no duration, try to get it from BunnyCDN
-if ($full_video && (empty($duration) || $duration == 0)) {
-    $video_details = flexpress_get_bunnycdn_video_details($full_video);
-    
-    $duration_seconds = null;
-    
-    // Check multiple possible properties for duration
-    if (isset($video_details['length'])) {
-        $duration_seconds = $video_details['length'];
-    } elseif (isset($video_details['duration'])) {
-        $duration_seconds = $video_details['duration'];
-    } elseif (isset($video_details['lengthSeconds'])) {
-        $duration_seconds = $video_details['lengthSeconds'];
-    } elseif (isset($video_details['durationSeconds'])) {
-        $duration_seconds = $video_details['durationSeconds'];
-    }
-    
-    if ($duration_seconds !== null) {
-        // Format duration as MM:SS instead of just minutes
-        $minutes = floor($duration_seconds / 60);
-        $seconds = $duration_seconds % 60;
-        $formatted_duration = sprintf('%d:%02d', $minutes, $seconds);
-        
-        // Save this back to the ACF field
-        update_field('extras_duration', $formatted_duration, get_the_ID());
-        $duration = $formatted_duration;
-    }
-}
+// Get thumbnail based on content format
+$thumbnail = flexpress_get_extras_thumbnail(get_the_ID(), 'medium');
 ?>
 
-<div class="extras-card" data-preview-video="<?php echo esc_attr($preview_video); ?>" data-video-id="<?php echo esc_attr($video_id); ?>">
+<div class="extras-card">
     <a href="<?php the_permalink(); ?>" class="extras-link">
         <div class="card-img-top">
             <div class="preview-container"></div>
-            <?php flexpress_display_extras_thumbnail('medium', 'extras-thumbnail'); ?>
+            <?php if ($thumbnail): ?>
+                <img src="<?php echo esc_url($thumbnail['url']); ?>" 
+                     alt="<?php echo esc_attr($thumbnail['alt']); ?>" 
+                     class="extras-thumbnail">
+            <?php else: ?>
+                <?php flexpress_display_extras_thumbnail('medium', 'extras-thumbnail'); ?>
+            <?php endif; ?>
             
             <div class="extras-overlay">
                 <div class="extras-play-button">
-                    <i class="fa-solid fa-play"></i>
+                    <?php if ($content_format === 'video'): ?>
+                        <i class="fa-solid fa-play"></i>
+                    <?php else: ?>
+                        <i class="fa-solid fa-images"></i>
+                    <?php endif; ?>
                 </div>
             </div>
             
@@ -72,6 +50,25 @@ if ($full_video && (empty($duration) || $duration == 0)) {
                 <div class="content-type-badge">
                     <?php echo esc_html(ucwords(str_replace('_', ' ', $content_type))); ?>
                 </div>
+            <?php endif; ?>
+            
+            <!-- Content Format Badge -->
+            <?php if ($content_format === 'gallery'): 
+                $gallery = flexpress_get_extras_gallery(get_the_ID());
+                if (!empty($gallery)): ?>
+                    <div class="gallery-count-badge">
+                        <i class="fas fa-images me-1"></i>
+                        <?php echo count($gallery); ?>
+                    </div>
+                <?php endif; ?>
+            <?php elseif ($content_format === 'video'): 
+                $duration = get_field('extras_duration');
+                if ($duration): ?>
+                    <div class="video-duration-badge">
+                        <i class="fas fa-play me-1"></i>
+                        <?php echo esc_html($duration); ?>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     </a>
@@ -82,9 +79,6 @@ if ($full_video && (empty($duration) || $duration == 0)) {
             <h5 class="extras-title">
                 <a href="<?php the_permalink(); ?>" class="extras-title-link"><?php the_title(); ?></a>
             </h5>
-            <?php if ($duration): ?>
-            <span class="extras-duration"><?php echo esc_html($duration); ?></span>
-            <?php endif; ?>
         </div>
         
         <div class="extras-info-row">
@@ -127,5 +121,15 @@ if ($full_video && (empty($duration) || $duration == 0)) {
             ?>
             <span class="extras-date"><?php echo esc_html($formatted_date); ?></span>
         </div>
+        
+        <!-- Price Display -->
+        <?php if ($price): ?>
+        <div class="extras-info-row">
+            <span class="extras-price">
+                <i class="fas fa-tag me-1"></i>
+                $<?php echo number_format($price, 2); ?>
+            </span>
+        </div>
+        <?php endif; ?>
     </div>
 </div>

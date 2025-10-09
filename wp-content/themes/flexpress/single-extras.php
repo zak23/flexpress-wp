@@ -17,66 +17,26 @@ while (have_posts()):
         }
     }
     
-    $preview_video = get_field('preview_video');
-    $trailer_video = get_field('trailer_video');
-    $full_video = get_field('full_video');
-    $duration = get_field('extras_duration');
     $price = get_field('extras_price');
     $member_discount = get_field('member_discount');
     $release_date = get_field('release_date');
     $content_type = get_field('content_type');
+    $content_format = get_field('content_format') ?: 'gallery';
+    $gallery_columns = get_field('gallery_columns') ?: 3;
+    
+    // Video fields (only for video content)
+    $preview_video = get_field('preview_video');
+    $full_video = get_field('full_video');
+    $duration = get_field('extras_duration');
     
     // Check for PPV unlock success message
     $ppv_unlocked = isset($_GET['ppv']) && $_GET['ppv'] === 'unlocked';
     $payment_cancelled = isset($_GET['payment']) && $_GET['payment'] === 'cancelled';
     
-    // If we have a full video, try to get the duration from BunnyCDN
-    if ($full_video && (empty($duration) || $duration == 0)) {
-        $video_details = flexpress_get_bunnycdn_video_details($full_video);
-        
-        // Debug what we received
-        error_log('Retrieved video details for extra ' . get_the_ID() . ': ' . print_r($video_details, true));
-        
-        $duration_seconds = null;
-        
-        // Check multiple possible properties for duration
-        if (isset($video_details['length'])) {
-            $duration_seconds = $video_details['length'];
-        } elseif (isset($video_details['duration'])) {
-            $duration_seconds = $video_details['duration'];
-        } elseif (isset($video_details['lengthSeconds'])) {
-            $duration_seconds = $video_details['lengthSeconds'];
-        } elseif (isset($video_details['durationSeconds'])) {
-            $duration_seconds = $video_details['durationSeconds'];
-        }
-        
-        if ($duration_seconds !== null) {
-            // Format duration as MM:SS instead of just minutes
-            $minutes = floor($duration_seconds / 60);
-            $seconds = $duration_seconds % 60;
-            $formatted_duration = sprintf('%d:%02d', $minutes, $seconds);
-            
-            // Save this formatted value back to the ACF field
-            update_field('extras_duration', $formatted_duration, get_the_ID());
-            $duration = $formatted_duration;
-            
-            error_log('Setting extra ' . get_the_ID() . ' duration to ' . $formatted_duration . ' (from ' . $duration_seconds . ' seconds)');
-        } else {
-            error_log('Could not find duration property in BunnyCDN response for extra ' . get_the_ID() . ' with video ID ' . $full_video);
-        }
-    }
-    
     // Check if user has access
     $access_info = flexpress_check_extras_access(get_the_ID());
     $has_access = $access_info['has_access'];
     $is_active_member = $access_info['is_member'];
-    
-    // Get video URL based on access
-    $video_id = flexpress_get_extras_video_for_access(get_the_ID());
-    $video_url = '';
-    if ($video_id) {
-        $video_url = flexpress_get_bunnycdn_video_url($video_id);
-    }
 ?>
 
 <div class="extras-single">
@@ -99,106 +59,61 @@ while (have_posts()):
             </div>
         <?php endif; ?>
         
-        <!-- Full Width Video Player -->
-        <div class="row">
-            <div class="col-12">
-                <div class="video-player mb-5">
-                    <?php if ($has_access && $full_video): ?>
-                        <?php
-                        $video_settings = get_option('flexpress_video_settings', array());
-                        $library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
-                        $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
-                        
-                        // Generate token and expiration
-                        $expires = time() + 3600; // 1 hour expiry
-                        $token = '';
-                        
-                        if (!empty($token_key)) {
-                            // BunnyCDN token generation - format: hash('sha256', $token_key . $video_id . $expires)
-                            $token = hash('sha256', $token_key . $full_video . $expires);
-                        }
-                        ?>
-                        <div style="position:relative;padding-top:56.25%;">
-                            <iframe src="https://iframe.mediadelivery.net/embed/<?php echo esc_attr($library_id); ?>/<?php echo esc_attr($full_video); ?>?token=<?php echo esc_attr($token); ?>&expires=<?php echo esc_attr($expires); ?>&autoplay=true&loop=true&muted=true&controls=false"
-                                    loading="lazy"
-                                    style="border:0;position:absolute;top:0;height:100%;width:100%;"
-                                    allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
-                                    allowfullscreen="true">
-                            </iframe>
-                        </div>
-                    <?php elseif ($trailer_video): ?>
-                        <?php
-                        $video_settings = get_option('flexpress_video_settings', array());
-                        $library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
-                        $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
-                        
-                        // Generate token and expiration
-                        $expires = time() + 3600; // 1 hour expiry
-                        $token = '';
-                        
-                        if (!empty($token_key)) {
-                            // BunnyCDN token generation - format: hash('sha256', $token_key . $video_id . $expires)
-                            $token = hash('sha256', $token_key . $trailer_video . $expires);
-                        }
-                        ?>
-                        <div style="position:relative;padding-top:56.25%;">
-                            <iframe src="https://iframe.mediadelivery.net/embed/<?php echo esc_attr($library_id); ?>/<?php echo esc_attr($trailer_video); ?>?token=<?php echo esc_attr($token); ?>&expires=<?php echo esc_attr($expires); ?>&autoplay=true&loop=true&muted=true&controls=false"
-                                    loading="lazy"
-                                    style="border:0;position:absolute;top:0;height:100%;width:100%;"
-                                    allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
-                                    allowfullscreen="true">
-                            </iframe>
-                        </div>
-                    <?php elseif ($preview_video): ?>
-                        <?php
-                        $video_settings = get_option('flexpress_video_settings', array());
-                        $library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
-                        $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
-                        
-                        // Generate token and expiration
-                        $expires = time() + 3600; // 1 hour expiry
-                        $token = '';
-                        
-                        if (!empty($token_key)) {
-                            // BunnyCDN token generation - format: hash('sha256', $token_key . $video_id . $expires)
-                            $token = hash('sha256', $token_key . $preview_video . $expires);
-                        }
-                        ?>
-                        <div style="position:relative;padding-top:56.25%;">
-                            <iframe src="https://iframe.mediadelivery.net/embed/<?php echo esc_attr($library_id); ?>/<?php echo esc_attr($preview_video); ?>?token=<?php echo esc_attr($token); ?>&expires=<?php echo esc_attr($expires); ?>&autoplay=true&loop=true&muted=true&controls=false"
-                                    loading="lazy"
-                                    style="border:0;position:absolute;top:0;height:100%;width:100%;"
-                                    allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
-                                    allowfullscreen="true">
-                            </iframe>
-                        </div>
-                    <?php else: ?>
-                        <div class="d-flex align-items-center justify-content-center" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
-                            <div class="text-center text-light">
-                                <i class="fas fa-lock fa-3x mb-3"></i>
-                                <h4><?php esc_html_e('Premium Extra Content', 'flexpress'); ?></h4>
-                                <p><?php esc_html_e('Please purchase this extra content to view.', 'flexpress'); ?></p>
-                                <?php if (!is_user_logged_in()): ?>
-                                    <a href="<?php echo esc_url(home_url('/login')); ?>" class="btn btn-primary me-2">
-                                        <?php esc_html_e('Login', 'flexpress'); ?>
-                                    </a>
-                                <?php endif; ?>
-                                <?php if ($price): ?>
-                                    <button class="btn btn-primary purchase-btn" 
-                                            data-extras-id="<?php echo get_the_ID(); ?>"
-                                            data-price="<?php echo esc_attr($price); ?>"
-                                            data-discount="<?php echo esc_attr($member_discount); ?>">
-                                        <?php esc_html_e('Purchase Now', 'flexpress'); ?>
-                                    </button>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    <?php endif; ?>
+        <!-- Content Section -->
+        <?php if ($content_format === 'gallery'): ?>
+            <!-- Gallery Section -->
+            <?php if (flexpress_has_extras_gallery()): ?>
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="extras-gallery-section">
+                        <?php flexpress_display_extras_gallery(get_the_ID(), $gallery_columns, $has_access); ?>
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Extra Content Details in Two Column Layout -->
+            <?php endif; ?>
+        <?php elseif ($content_format === 'video'): ?>
+            <!-- Video Section -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="video-player">
+                        <?php 
+                        $video_id = flexpress_get_extras_video_for_access(get_the_ID());
+                        if ($video_id): 
+                            $video_settings = get_option('flexpress_video_settings', array());
+                            $library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
+                            $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
+                            
+                            // Generate token and expiration
+                            $expires = time() + 3600; // 1 hour expiry
+                            $token = '';
+                            
+                            if (!empty($token_key)) {
+                                $token = hash('sha256', $token_key . $video_id . $expires);
+                            }
+                        ?>
+                            <div style="position:relative;padding-top:56.25%;">
+                                <iframe src="https://iframe.mediadelivery.net/embed/<?php echo esc_attr($library_id); ?>/<?php echo esc_attr($video_id); ?>?token=<?php echo esc_attr($token); ?>&expires=<?php echo esc_attr($expires); ?>&autoplay=true&loop=true&muted=true&controls=false"
+                                        loading="lazy"
+                                        style="border:0;position:absolute;top:0;height:100%;width:100%;"
+                                        allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
+                                        allowfullscreen="true">
+                                </iframe>
+                            </div>
+                        <?php else: ?>
+                            <div class="d-flex align-items-center justify-content-center" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+                                <div class="text-center text-light">
+                                    <i class="fas fa-lock fa-3x mb-3"></i>
+                                    <h4><?php esc_html_e('Premium Extra Content', 'flexpress'); ?></h4>
+                                    <p><?php esc_html_e('Please purchase this extra content to view.', 'flexpress'); ?></p>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+        
+        <!-- Content Section -->
         <div class="row">
             <div class="col-lg-8">
                 <!-- Extra Content Details -->
@@ -210,13 +125,6 @@ while (have_posts()):
                             <span class="me-3">
                                 <i class="fas fa-tag me-1"></i>
                                 <?php echo esc_html(ucwords(str_replace('_', ' ', $content_type))); ?>
-                            </span>
-                        <?php endif; ?>
-                        
-                        <?php if ($duration): ?>
-                            <span class="me-3">
-                                <i class="far fa-clock me-1"></i>
-                                <?php echo esc_html($duration); ?>
                             </span>
                         <?php endif; ?>
                         
@@ -299,91 +207,93 @@ while (have_posts()):
             </div>
 
             <div class="col-lg-4">
-                <!-- Extra Content Actions -->
+                <!-- Purchase Section -->
                 <?php if (!$has_access): ?>
-                <div class="extras-actions">
+                <div class="extras-purchase-section" id="purchase-section">
                     <?php if ($access_info['show_purchase_button']): ?>
-                        <div class="mb-3">
-                            <h5 class="text-white mb-3 text-center">
-                                <i class="fas fa-unlock me-2"></i>
-                                <?php esc_html_e('Unlock Extra Content', 'flexpress'); ?>
-                            </h5>
-                            
-                            <!-- Access Type Badge -->
-                            <div class="access-type-badge mb-3 text-center">
-                                <span class="badge bg-dark text-white fs-6 px-3 py-2 border border-secondary">
-                                    <?php echo wp_kses(flexpress_get_extras_access_summary(get_the_ID()), array('br' => array())); ?>
-                                </span>
+                        <div class="card bg-dark border-secondary">
+                            <div class="card-body">
+                                <h5 class="text-white mb-3 text-center">
+                                    <i class="fas fa-unlock me-2"></i>
+                                    <?php esc_html_e('Unlock Extra Content', 'flexpress'); ?>
+                                </h5>
+                                
+                                <!-- Access Type Badge -->
+                                <div class="access-type-badge mb-3 text-center">
+                                    <span class="badge bg-dark text-white fs-6 px-3 py-2 border border-secondary">
+                                        <?php echo wp_kses(flexpress_get_extras_access_summary(get_the_ID()), array('br' => array())); ?>
+                                    </span>
+                                </div>
+                                
+                                <!-- Purchase Reason -->
+                                <?php if (!empty($access_info['purchase_reason'])): ?>
+                                    <div class="purchase-reason mb-3 p-3 bg-dark border border-secondary rounded">
+                                        <small class="text-white">
+                                            <i class="fas fa-info-circle me-2 text-secondary"></i>
+                                            <?php echo esc_html($access_info['purchase_reason']); ?>
+                                        </small>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <!-- Membership Notice for PPV-Only -->
+                                <?php if (!empty($access_info['membership_notice'])): ?>
+                                    <div class="membership-notice mb-3 p-3 bg-warning text-dark rounded">
+                                        <small>
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            <?php echo esc_html($access_info['membership_notice']); ?>
+                                        </small>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <!-- Price Display -->
+                                <?php if ($access_info['price'] > 0): ?>
+                                    <div class="price-display mb-3 text-center p-3 bg-dark border border-secondary rounded">
+                                        <?php if ($access_info['discount'] > 0): ?>
+                                            <div class="original-price text-secondary text-decoration-line-through mb-1">
+                                                $<?php echo number_format($access_info['price'], 2); ?>
+                                            </div>
+                                            <div class="discounted-price fs-4 text-white fw-bold">
+                                                $<?php echo number_format($access_info['final_price'], 2); ?>
+                                            </div>
+                                            <div class="fs-6 text-secondary">
+                                                (<?php echo $access_info['discount']; ?>% member discount)
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="current-price fs-4 text-white fw-bold">
+                                                $<?php echo number_format($access_info['final_price'], 2); ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <!-- Purchase Button -->
+                                <?php if (is_user_logged_in()): ?>
+                                    <button class="btn btn-primary w-100 purchase-btn mb-3" 
+                                            data-extras-id="<?php echo get_the_ID(); ?>"
+                                            data-price="<?php echo esc_attr($access_info['final_price']); ?>"
+                                            data-original-price="<?php echo esc_attr($access_info['price']); ?>"
+                                            data-discount="<?php echo esc_attr($access_info['discount']); ?>"
+                                            data-access-type="<?php echo esc_attr($access_info['access_type']); ?>"
+                                            data-is-active-member="<?php echo $is_active_member ? 'true' : 'false'; ?>">
+                                        <i class="fas fa-shopping-cart me-2"></i>
+                                        <?php esc_html_e('Unlock Now', 'flexpress'); ?>
+                                    </button>
+                                <?php else: ?>
+                                    <a href="<?php echo esc_url(home_url('/login?redirect_to=' . urlencode(get_permalink()))); ?>" 
+                                       class="btn btn-primary w-100 mb-3">
+                                        <i class="fas fa-sign-in-alt me-2"></i>
+                                        <?php esc_html_e('Login to Purchase', 'flexpress'); ?>
+                                    </a>
+                                    <div class="text-center mb-3">
+                                        <small class="text-secondary">
+                                            <?php esc_html_e('New here?', 'flexpress'); ?>
+                                            <a href="<?php echo esc_url(home_url('/register?redirect_to=' . urlencode(get_permalink()))); ?>" class="text-white">
+                                                <?php esc_html_e('Create Account', 'flexpress'); ?>
+                                            </a>
+                                        </small>
+                                    </div>
+                                <?php endif; ?>
                             </div>
-                            
-                            <!-- Purchase Reason -->
-                            <?php if (!empty($access_info['purchase_reason'])): ?>
-                                <div class="purchase-reason mb-3 p-3 bg-dark border border-secondary rounded">
-                                    <small class="text-white">
-                                        <i class="fas fa-info-circle me-2 text-secondary"></i>
-                                        <?php echo esc_html($access_info['purchase_reason']); ?>
-                                    </small>
-                                </div>
-                            <?php endif; ?>
-                            
-                            <!-- Membership Notice for PPV-Only -->
-                            <?php if (!empty($access_info['membership_notice'])): ?>
-                                <div class="membership-notice mb-3 p-3 bg-warning text-dark rounded">
-                                    <small>
-                                        <i class="fas fa-exclamation-triangle me-2"></i>
-                                        <?php echo esc_html($access_info['membership_notice']); ?>
-                                    </small>
-                                </div>
-                            <?php endif; ?>
-                            
-                            <!-- Price Display -->
-                            <?php if ($access_info['price'] > 0): ?>
-                                <div class="price-display mb-3 text-center p-3 bg-dark border border-secondary rounded">
-                                    <?php if ($access_info['discount'] > 0): ?>
-                                        <div class="original-price text-secondary text-decoration-line-through mb-1">
-                                            $<?php echo number_format($access_info['price'], 2); ?>
-                                        </div>
-                                        <div class="discounted-price fs-4 text-white fw-bold">
-                                            $<?php echo number_format($access_info['final_price'], 2); ?>
-                                        </div>
-                                        <div class="fs-6 text-secondary">
-                                            (<?php echo $access_info['discount']; ?>% member discount)
-                                        </div>
-                                    <?php else: ?>
-                                        <div class="current-price fs-4 text-white fw-bold">
-                                            $<?php echo number_format($access_info['final_price'], 2); ?>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endif; ?>
-                            
-                            <!-- Purchase Button -->
-                            <?php if (is_user_logged_in()): ?>
-                                <button class="btn btn-primary w-100 purchase-btn mb-3" 
-                                        data-extras-id="<?php echo get_the_ID(); ?>"
-                                        data-price="<?php echo esc_attr($access_info['final_price']); ?>"
-                                        data-original-price="<?php echo esc_attr($access_info['price']); ?>"
-                                        data-discount="<?php echo esc_attr($access_info['discount']); ?>"
-                                        data-access-type="<?php echo esc_attr($access_info['access_type']); ?>"
-                                        data-is-active-member="<?php echo $is_active_member ? 'true' : 'false'; ?>">
-                                    <i class="fas fa-shopping-cart me-2"></i>
-                                    <?php esc_html_e('Unlock Now', 'flexpress'); ?>
-                                </button>
-                            <?php else: ?>
-                                <a href="<?php echo esc_url(home_url('/login?redirect_to=' . urlencode(get_permalink()))); ?>" 
-                                   class="btn btn-primary w-100 mb-3">
-                                    <i class="fas fa-sign-in-alt me-2"></i>
-                                    <?php esc_html_e('Login to Purchase', 'flexpress'); ?>
-                                </a>
-                                <div class="text-center mb-3">
-                                    <small class="text-secondary">
-                                        <?php esc_html_e('New here?', 'flexpress'); ?>
-                                        <a href="<?php echo esc_url(home_url('/register?redirect_to=' . urlencode(get_permalink()))); ?>" class="text-white">
-                                            <?php esc_html_e('Create Account', 'flexpress'); ?>
-                                        </a>
-                                    </small>
-                                </div>
-                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
 
@@ -453,13 +363,19 @@ while (have_posts()):
                     
                     if ($related_extras->have_posts()):
                     ?>
-                        <div class="video-grid recent-grid">
-                            <?php
-                            while ($related_extras->have_posts()): $related_extras->the_post();
-                                get_template_part('template-parts/content-extras-card');
-                            endwhile;
-                            wp_reset_postdata();
-                            ?>
+                        <div class="extras-grid">
+                            <div class="row g-4">
+                                <?php
+                                while ($related_extras->have_posts()): $related_extras->the_post();
+                                ?>
+                                    <div class="col-6 col-lg-3">
+                                        <?php get_template_part('template-parts/content', 'extras-card'); ?>
+                                    </div>
+                                <?php
+                                endwhile;
+                                wp_reset_postdata();
+                                ?>
+                            </div>
                         </div>
                     <?php else: ?>
                         <div class="alert alert-info">
@@ -474,7 +390,43 @@ while (have_posts()):
 
 <script>
 jQuery(document).ready(function($) {
-    // Player initialization or other extras page functionality
+    // Gallery lightbox functionality
+    $('.extras-gallery .gallery-image').on('click', function(e) {
+        e.preventDefault();
+        
+        if ($(this).closest('.extras-gallery').data('lightbox') === 'true') {
+            const fullImage = $(this).data('full');
+            const caption = $(this).data('caption');
+            
+            // Create lightbox modal
+            const lightbox = $(`
+                <div class="gallery-lightbox" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+                    <div class="lightbox-content" style="position: relative; max-width: 90%; max-height: 90%;">
+                        <img src="${fullImage}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                        ${caption ? `<div class="lightbox-caption" style="color: white; text-align: center; margin-top: 10px;">${caption}</div>` : ''}
+                        <button class="lightbox-close" style="position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+                    </div>
+                </div>
+            `);
+            
+            $('body').append(lightbox);
+            
+            // Close lightbox
+            lightbox.on('click', function(e) {
+                if (e.target === this || $(e.target).hasClass('lightbox-close')) {
+                    lightbox.remove();
+                }
+            });
+            
+            // Close on escape key
+            $(document).on('keyup.lightbox', function(e) {
+                if (e.keyCode === 27) {
+                    lightbox.remove();
+                    $(document).off('keyup.lightbox');
+                }
+            });
+        }
+    });
 });
 </script>
 

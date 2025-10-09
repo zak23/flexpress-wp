@@ -250,7 +250,8 @@ while (have_posts()):
                                 <span>
                                     <i class="fas fa-tag me-1"></i>
                                     <?php
-                                    if (is_user_logged_in() && $member_discount) {
+                                    // Only show member discount for access types that support it (not ppv_only)
+                                    if (is_user_logged_in() && $member_discount && $access_type !== 'ppv_only') {
                                         $discounted_price = $price * (1 - ($member_discount / 100));
                                         echo '$' . number_format($discounted_price, 2);
                                     } else {
@@ -323,14 +324,24 @@ while (have_posts()):
                 </div>
 
                 <div class="col-lg-4">
+                    <!-- Episode Rating System (top of sidebar) -->
+                    <div class="episode-rating-section mb-4">
+                        <?php get_template_part('template-parts/episode-rating-system'); ?>
+                    </div>
                     <!-- Episode Actions -->
                     <?php if (!$has_access): ?>
                         <div class="episode-actions">
-                            <?php if ($access_info['show_purchase_button']): ?>
+                            <?php if ($access_info['show_purchase_button'] || $access_info['show_membership_button']): ?>
                                 <div class="mb-3">
                                     <h5 class="text-white mb-3 text-center">
                                         <i class="fas fa-unlock me-2"></i>
-                                        <?php esc_html_e('Unlock Episode', 'flexpress'); ?>
+                                        <?php 
+                                        if ($access_info['show_membership_button']) {
+                                            esc_html_e('Membership Required', 'flexpress');
+                                        } else {
+                                            esc_html_e('Unlock Episode', 'flexpress');
+                                        }
+                                        ?>
                                     </h5>
 
                                     <!-- Access Type Badge -->
@@ -365,8 +376,8 @@ while (have_posts()):
                                         </div>
                                     <?php endif; ?>
 
-                                    <!-- Price Display -->
-                                    <?php if ($access_info['price'] > 0): ?>
+                                    <!-- Price Display (only for PPV episodes) -->
+                                    <?php if ($access_info['show_purchase_button'] && $access_info['price'] > 0): ?>
                                         <div class="price-display mb-3 text-center p-3 bg-dark border border-secondary rounded">
                                             <?php if ($access_info['discount'] > 0): ?>
                                                 <div class="original-price text-secondary text-decoration-line-through mb-1">
@@ -418,7 +429,7 @@ while (have_posts()):
 
                                     <!-- Membership Button for Membership-Only Episodes -->
                                     <?php if ($access_info['show_membership_button'] ?? false): ?>
-                                        <a href="<?php echo esc_url(home_url('/join')); ?>" class="btn btn-warning w-100 mb-3">
+                                        <a href="<?php echo esc_url(home_url('/join')); ?>" class="btn btn-primary w-100 mb-3">
                                             <i class="fas fa-crown me-2"></i>
                                             <?php esc_html_e('Join Membership', 'flexpress'); ?>
                                         </a>
@@ -447,7 +458,7 @@ while (have_posts()):
                                             <i class="fas fa-crown me-2"></i>
                                             <?php esc_html_e('Premium Membership', 'flexpress'); ?>
                                         </a>
-                                        <?php if ($access_info['price'] > 0): ?>
+                                        <?php if ($access_info['price'] > 0 && $access_type !== 'ppv_only'): ?>
                                             <h6 class="mb-2 text-white">
                                                 <i class="fas fa-percentage me-2 text-warning"></i>
                                                 <?php
@@ -476,10 +487,6 @@ while (have_posts()):
                         </div>
                     <?php endif; ?>
                     
-                    <!-- Episode Rating System -->
-                    <div class="episode-rating-section mt-4">
-                        <?php get_template_part('template-parts/episode-rating-system'); ?>
-                    </div>
                 </div>
             </div>
 

@@ -1,6 +1,682 @@
 /* Main FlexPress Theme Styles - Vixen.com inspired layout */
 
 /* ==========================================================================
+   Episode Rating System Styles
+   ========================================================================== */
+
+/* Rating Stars */
+.rating-stars {
+    display: inline-flex;
+    gap: 2px;
+}
+
+.rating-stars .star {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.rating-stars .star::before {
+    content: '★';
+    font-family: Arial, sans-serif;
+    font-weight: normal;
+    font-size: 20px;
+    color: #6c757d;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: all 0.2s ease;
+}
+
+.rating-stars .star.filled::before {
+    font-weight: 900;
+    color: #ffc107;
+}
+
+.rating-stars .star.half-filled::before {
+    font-weight: 900;
+    color: #ffc107;
+}
+
+.rating-stars .star.half-filled::after {
+    content: '★';
+    font-family: Arial, sans-serif;
+    font-weight: normal;
+    font-size: 20px;
+    color: #6c757d;
+    position: absolute;
+    top: 0;
+    left: 0;
+    clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
+}
+
+/* Interactive Rating Stars */
+.rating-stars-interactive .star:hover::before {
+    color: #ffc107;
+    transform: scale(1.1);
+}
+
+.rating-stars-interactive .star:hover ~ .star::before {
+    color: #6c757d;
+}
+
+/* Episode Rating Form */
+.episode-rating-form {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+}
+
+.episode-rating-form h4 {
+    color: #ffffff;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.rating-stars-interactive {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.rating-stars-interactive .star {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.rating-stars-interactive .star::before {
+    content: '★';
+    font-family: Arial, sans-serif;
+    font-weight: normal;
+    font-size: 20px;
+    color: #6c757d;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: all 0.2s ease;
+}
+
+.rating-stars-interactive .star.filled::before {
+    font-weight: 900;
+    color: #ffc107;
+}
+
+.rating-stars-interactive .star.half-filled::before {
+    font-weight: 900;
+    color: #ffc107;
+}
+
+.rating-stars-interactive .star.half-filled::after {
+    content: '★';
+    font-family: Arial, sans-serif;
+    font-weight: normal;
+    font-size: 20px;
+    color: #6c757d;
+    position: absolute;
+    top: 0;
+    left: 0;
+    clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
+}
+
+.rating-text {
+    color: #ffffff;
+    font-size: 0.9rem;
+    margin-left: 0.5rem;
+}
+
+.rating-comment .form-label {
+    color: #ffffff;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.rating-comment .form-control {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    border-radius: 6px;
+}
+
+.rating-comment .form-control:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    color: #ffffff;
+}
+
+.rating-comment .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Rating action links - minimal text styling */
+.rating-actions a {
+    color: #ffffff;
+    text-decoration: underline;
+    font-size: 0.8rem;
+    transition: color 0.2s ease;
+}
+
+.rating-actions a:hover {
+    color: var(--color-accent);
+    text-decoration: underline;
+}
+
+.rating-actions .remove-rating {
+    color: #6c757d;
+}
+
+.rating-actions .remove-rating:hover {
+    color: var(--color-accent);
+}
+
+/* Rating Statistics */
+.episode-rating-stats {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+}
+
+.rating-summary {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+}
+
+.average-rating {
+    align-items: center;
+}
+
+.rating-number {
+    color: #ffffff;
+    font-size: 1.5rem;
+    margin-left: 0.5rem;
+}
+
+.rating-count {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+/* Rating Distribution */
+.rating-distribution {
+    margin-top: 1rem;
+}
+
+.rating-bar {
+    margin-bottom: 0.5rem;
+}
+
+.rating-label {
+    color: #ffffff;
+    font-weight: 500;
+    min-width: 20px;
+    text-align: center;
+}
+
+.rating-bar .progress {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.rating-bar .progress-bar {
+    background: linear-gradient(90deg, #ffc107 0%, #ff8c00 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.rating-bar .rating-count {
+    color: #6c757d;
+    font-size: 0.8rem;
+    text-align: right;
+    min-width: 20px;
+}
+
+/* Rating List */
+.episode-ratings-list {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+}
+
+.episode-ratings-list h4 {
+    color: #ffffff;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.rating-item {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+}
+
+.rating-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.rating-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.rating-user {
+    color: #ffffff;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.rating-comment {
+    color: #e9ecef;
+    line-height: 1.5;
+    font-size: 0.9rem;
+}
+
+/* Load More Button */
+.load-more-ratings {
+    width: 100%;
+    margin-top: 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.load-more-ratings:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+/* Login Required Message */
+.rating-login-required {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+    text-align: center;
+}
+
+.rating-login-required p {
+    color: #ffffff;
+    margin: 0;
+}
+
+.rating-login-required a {
+    color: #ffc107;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.rating-login-required a:hover {
+    color: #ff8c00;
+    text-decoration: underline;
+}
+
+/* Sidebar Rating System */
+.episode-rating-sidebar {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.episode-rating-sidebar h5 {
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.episode-rating-sidebar h6 {
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+/* Compact Rating Statistics for Sidebar */
+.episode-rating-sidebar .episode-rating-stats {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0 0 1rem 0;
+}
+
+.episode-rating-sidebar .rating-summary {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.episode-rating-sidebar .rating-number {
+    font-size: 1.25rem;
+}
+
+.episode-rating-sidebar .rating-count {
+    font-size: 0.8rem;
+}
+
+/* Compact Rating Form for Sidebar */
+.episode-rating-sidebar .episode-rating-form {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.episode-rating-sidebar .episode-rating-form h4 {
+    display: none; /* Hide the form title since we have the sidebar title */
+}
+
+.episode-rating-sidebar .rating-stars-interactive {
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    width: 100%;
+    display: flex;
+}
+
+.episode-rating-sidebar .rating-text {
+    font-size: 0.8rem;
+    text-align: center;
+    margin-left: 0;
+    margin-top: 0.25rem;
+}
+
+.episode-rating-sidebar .rating-comment .form-label {
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.episode-rating-sidebar .rating-comment .form-control {
+    font-size: 0.8rem;
+    padding: 0.5rem;
+}
+
+.episode-rating-sidebar .submit-rating,
+.episode-rating-sidebar .remove-rating {
+    font-size: 0.8rem;
+    padding: 0.5rem 1rem;
+}
+
+/* Sidebar Recent Ratings */
+.recent-ratings-sidebar {
+    margin-top: 1rem;
+}
+
+.ratings-container-sidebar {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.rating-item-sidebar {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.rating-item-sidebar:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.rating-header-sidebar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.rating-user-sidebar {
+    margin-bottom: 0.25rem;
+}
+
+.rating-comment-sidebar {
+    line-height: 1.3;
+}
+
+/* Small Rating Display for Episode Cards */
+.episode-rating-display {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.rating-stars-small {
+    display: inline-flex;
+    gap: 1px;
+}
+
+.rating-stars-small .star {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    position: relative;
+}
+
+.rating-stars-small .star::before {
+    content: '★';
+    font-family: Arial, sans-serif;
+    font-weight: normal;
+    font-size: 12px;
+    color: #6c757d;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.rating-stars-small .star.filled::before {
+    font-weight: 900;
+    color: #ffc107;
+}
+
+.rating-stars-small .star.half-filled::before {
+    font-weight: 900;
+    color: #ffc107;
+}
+
+.rating-stars-small .star.half-filled::after {
+    content: '★';
+    font-family: Arial, sans-serif;
+    font-weight: normal;
+    font-size: 12px;
+    color: #6c757d;
+    position: absolute;
+    top: 0;
+    left: 0;
+    clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
+}
+
+.rating-text-small {
+    color: #6c757d;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Responsive Design for Rating System */
+@media (max-width: 768px) {
+    .episode-rating-form,
+    .episode-rating-stats,
+    .episode-ratings-list {
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .rating-stars .star {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .rating-stars .star::before {
+        font-size: 18px;
+    }
+    
+    .rating-stars .star.half-filled::after {
+        font-size: 18px;
+    }
+    
+    .rating-number {
+        font-size: 1.25rem;
+    }
+    
+    .rating-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .episode-rating-display {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    .rating-stars-small .star {
+        width: 10px;
+        height: 10px;
+    }
+    
+    .rating-stars-small .star::before {
+        font-size: 10px;
+    }
+    
+    .rating-stars-small .star.half-filled::after {
+        font-size: 10px;
+    }
+    
+    .rating-text-small {
+        font-size: 0.7rem;
+    }
+    
+    /* Sidebar responsive adjustments */
+    .episode-rating-sidebar {
+        padding: 0.75rem;
+        margin-top: 0.75rem;
+    }
+    
+    .episode-rating-sidebar h5 {
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .episode-rating-sidebar h6 {
+        font-size: 0.8rem;
+    }
+    
+    .episode-rating-sidebar .rating-stars-interactive {
+        margin-bottom: 0.5rem;
+    }
+    
+    .episode-rating-sidebar .rating-text {
+        font-size: 0.75rem;
+    }
+    
+    .episode-rating-sidebar .rating-comment .form-control {
+        font-size: 0.75rem;
+        padding: 0.4rem;
+    }
+    
+    .episode-rating-sidebar .submit-rating,
+    .episode-rating-sidebar .remove-rating {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .ratings-container-sidebar {
+        max-height: 150px;
+    }
+}
+
+/* Animation for new ratings */
+.rating-item {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Hover effects for interactive elements */
+.rating-stars-interactive .star:hover {
+    transform: scale(1.1);
+}
+
+.rating-item:hover {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+    padding: 0.5rem;
+    margin: 0 -0.5rem 1rem -0.5rem;
+}
+
+/* Ensure average stars and number stay on the same line */
+.episode-rating-stats .average-rating { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:nowrap; }
+.episode-rating-stats .average-rating > * { white-space:nowrap; }
+
+.episode-rating-stats .average-rating .rating-stars { display:flex; align-items:center; flex:0 0 auto; margin:0; line-height:20px; padding-bottom:3px; }
+
+.episode-rating-stats .average-rating .rating-number { display:flex; align-items:center; flex:0 0 auto; white-space:nowrap; line-height:20px; }
+.episode-rating-stats .average-rating .rating-stars .star { vertical-align:middle; }
+
+/* Loading states */
+.submit-rating:disabled,
+.remove-rating:disabled,
+.load-more-ratings:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Success/Error message styling */
+.alert {
+    border-radius: 6px;
+    border: none;
+    margin-bottom: 1rem;
+}
+
+.alert-success {
+    background: rgba(40, 167, 69, 0.2);
+    color: #ffffff;
+    border-left: 4px solid #28a745;
+}
+
+.alert-danger {
+    background: rgba(220, 53, 69, 0.2);
+    color: #ffffff;
+    border-left: 4px solid #dc3545;
+}
+
+.alert .btn-close {
+    filter: invert(1);
+}
+
+/* ==========================================================================
+   End Episode Rating System Styles
+   ========================================================================== */
+
+/* ==========================================================================
    Global Styles
    ========================================================================== */
 body {

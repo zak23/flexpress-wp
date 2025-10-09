@@ -114,7 +114,7 @@ class FlexPress_Episode_Ratings {
             $stats = $this->get_episode_rating_stats($episode_id);
             
             wp_send_json_success(array(
-                'message' => sprintf(__('Rating %s successfully!', 'flexpress'), $action),
+                'message' => sprintf(__('Rating %s!', 'flexpress'), $action === 'submitted' ? 'submitted' : 'updated'),
                 'stats' => $stats,
                 'user_rating' => $rating,
                 'action' => $action
@@ -413,20 +413,16 @@ class FlexPress_Episode_Ratings {
      */
     public function display_rating_form($episode_id) {
         if (!is_user_logged_in()) {
-            return '<div class="rating-login-required">
-                <p>' . __('Please <a href="' . wp_login_url(get_permalink()) . '">login</a> to rate this episode.', 'flexpress') . '</p>
-            </div>';
+            // Do not show any login prompt; hide the rating UI for logged-out users
+            return '';
         }
         
         $user_rating = $this->get_current_user_rating($episode_id);
         $current_rating = $user_rating ? $user_rating->rating : 0;
-        $current_comment = $user_rating ? $user_rating->comment : '';
         
         ob_start();
         ?>
         <div class="episode-rating-form" data-episode-id="<?php echo esc_attr($episode_id); ?>">
-            <h4><?php esc_html_e('Rate This Episode', 'flexpress'); ?></h4>
-            
             <div class="rating-stars-interactive mb-2" style="justify-content:center;">
                 <?php echo $this->display_rating_stars($current_rating, true, $episode_id); ?>
             </div>
@@ -438,27 +434,17 @@ class FlexPress_Episode_Ratings {
                 <?php endif; ?>
             </div>
             
-            <div class="rating-comment mb-3">
-                <label for="rating-comment-<?php echo esc_attr($episode_id); ?>" class="form-label">
-                    <?php esc_html_e('Comment (optional)', 'flexpress'); ?>
-                </label>
-                <textarea 
-                    id="rating-comment-<?php echo esc_attr($episode_id); ?>" 
-                    class="form-control" 
-                    rows="3" 
-                    placeholder="<?php esc_attr_e('Share your thoughts about this episode...', 'flexpress'); ?>"
-                ><?php echo esc_textarea($current_comment); ?></textarea>
+            <div class="rating-actions text-center">
+                <a href="#" class="submit-rating small" data-episode-id="<?php echo esc_attr($episode_id); ?>" style="text-decoration:underline;">
+                    <?php echo $user_rating ? esc_html__('Update Rating', 'flexpress') : esc_html__('Submit Rating', 'flexpress'); ?>
+                </a>
+                <?php if ($user_rating): ?>
+                    <span class="mx-1 text-muted">·</span>
+                    <a href="#" class="remove-rating small text-muted" data-episode-id="<?php echo esc_attr($episode_id); ?>" style="text-decoration:underline;">
+                        <?php esc_html_e('Remove rating', 'flexpress'); ?>
+                    </a>
+                <?php endif; ?>
             </div>
-            
-            <button type="button" class="btn btn-primary submit-rating" data-episode-id="<?php echo esc_attr($episode_id); ?>">
-                <?php echo $user_rating ? esc_html__('Update Rating', 'flexpress') : esc_html__('Submit Rating', 'flexpress'); ?>
-            </button>
-            
-            <?php if ($user_rating): ?>
-                <button type="button" class="btn btn-outline-secondary ms-2 remove-rating" data-episode-id="<?php echo esc_attr($episode_id); ?>">
-                    <?php esc_html_e('Remove Rating', 'flexpress'); ?>
-                </button>
-            <?php endif; ?>
         </div>
         <?php
         return ob_get_clean();
@@ -471,43 +457,22 @@ class FlexPress_Episode_Ratings {
         $stats = $this->get_episode_rating_stats($episode_id);
         
         if ($stats['total_ratings'] === 0) {
-            return '<div class="episode-rating-stats">
-                <p class="text-muted">' . esc_html__('No ratings yet.', 'flexpress') . '</p>
-            </div>';
+            // Do not render stats when there are no ratings
+            return '';
         }
-        
+
         ob_start();
         ?>
         <div class="episode-rating-stats">
-            <div class="rating-summary mb-3">
-                <div class="average-rating d-flex align-items-center mb-2">
+            <div class="rating-summary mb-2">
+                <div class="average-rating d-flex align-items-center justify-content-center mb-0">
                     <div class="rating-stars me-2">
                         <?php echo $this->display_rating_stars($stats['average_rating']); ?>
                     </div>
                     <span class="rating-number fw-bold">
                         <?php echo esc_html($stats['average_rating']); ?>
                     </span>
-                    <span class="rating-count text-muted ms-2">
-                        (<?php printf(_n('%d rating', '%d ratings', $stats['total_ratings'], 'flexpress'), $stats['total_ratings']); ?>)
-                    </span>
                 </div>
-            </div>
-            
-            <div class="rating-distribution">
-                <?php for ($i = 5; $i >= 1; $i--): ?>
-                    <div class="rating-bar d-flex align-items-center mb-1">
-                        <span class="rating-label me-2"><?php echo $i; ?></span>
-                        <div class="progress flex-grow-1 me-2" style="height: 8px;">
-                            <?php 
-                            $percentage = $stats['total_ratings'] > 0 ? ($stats['rating_distribution'][$i] / $stats['total_ratings']) * 100 : 0;
-                            ?>
-                            <div class="progress-bar" style="width: <?php echo esc_attr($percentage); ?>%"></div>
-                        </div>
-                        <span class="rating-count text-muted" style="min-width: 20px;">
-                            <?php echo esc_html($stats['rating_distribution'][$i]); ?>
-                        </span>
-                    </div>
-                <?php endfor; ?>
             </div>
         </div>
         <?php

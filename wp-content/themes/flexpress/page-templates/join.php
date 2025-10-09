@@ -389,7 +389,7 @@ if (isset($_GET['error'])) {
 
                     <div class="continue-button-section text-center">
                         <button type="button" id="membership-continue-btn" class="btn btn-primary btn-lg continue-btn">
-                            <?php esc_html_e('JOIN PREMIUM NOW >', 'flexpress'); ?>
+                            <?php esc_html_e('CONTINUE >', 'flexpress'); ?>
                         </button>
                     </div>
 

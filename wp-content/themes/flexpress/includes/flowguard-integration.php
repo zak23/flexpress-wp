@@ -95,6 +95,30 @@ function flexpress_flowguard_create_subscription($user_id, $plan_id) {
         update_user_meta($user_id, 'flowguard_session_id', $result['session_id']);
         update_user_meta($user_id, 'flowguard_plan_id', $plan_id);
         update_user_meta($user_id, 'flowguard_reference_id', $subscription_data['referenceId']);
+        // Persist session with promo code for full resolution later
+        // Get applied promo code from request or user meta
+        $applied_promo = '';
+        if (isset($_REQUEST['promo'])) {
+            $applied_promo = sanitize_text_field($_REQUEST['promo']);
+        }
+        if (empty($applied_promo)) {
+            $applied_promo = get_user_meta($user_id, 'applied_promo_code', true);
+        }
+        $session_data = array(
+            'session_id' => $result['session_id'],
+            'user_id' => $user_id,
+            'plan_id' => $plan_id,
+            'session_type' => 'subscription',
+            'status' => 'pending',
+            'amount' => floatval($subscription_data['priceAmount']),
+            'currency' => $subscription_data['priceCurrency'],
+            'reference_id' => $subscription_data['referenceId'],
+            'promo_code' => $applied_promo ?: null,
+            'expires_at' => date('Y-m-d H:i:s', strtotime('+2 hours'))
+        );
+        if (function_exists('flexpress_flowguard_store_session')) {
+            flexpress_flowguard_store_session($session_data);
+        }
         
         error_log('FlexPress: Successfully created Flowguard session: ' . $result['session_id']);
         
@@ -176,6 +200,29 @@ function flexpress_flowguard_create_ppv_purchase($user_id, $episode_id, $final_p
             'created' => current_time('mysql')
         ]);
         
+        // Persist session with promo code for full resolution later
+        $applied_promo = '';
+        if (isset($_REQUEST['promo'])) {
+            $applied_promo = sanitize_text_field($_REQUEST['promo']);
+        }
+        if (empty($applied_promo)) {
+            $applied_promo = get_user_meta($user_id, 'applied_promo_code', true);
+        }
+        if (function_exists('flexpress_flowguard_store_session')) {
+            flexpress_flowguard_store_session([
+                'session_id' => $result['session_id'],
+                'user_id' => $user_id,
+                'episode_id' => $episode_id,
+                'session_type' => 'purchase',
+                'status' => 'pending',
+                'amount' => floatval($price_to_charge),
+                'currency' => 'USD',
+                'reference_id' => $transaction_ref,
+                'promo_code' => $applied_promo ?: null,
+                'expires_at' => date('Y-m-d H:i:s', strtotime('+2 hours'))
+            ]);
+        }
+
         return [
             'success' => true,
             'session_id' => $result['session_id'],
@@ -265,9 +312,28 @@ function flexpress_flowguard_generate_enhanced_reference($user_id, $plan_id, $ad
         $components[] = 'affnone'; // Placeholder for no affiliate
     }
     
-    // Promo code (if exists, otherwise use placeholder)
+    // Promo code (if exists, otherwise use placeholder) + durable identifier
     if (!empty($promo_code)) {
-        $components[] = 'promo' . substr($promo_code, 0, 8); // Limit length
+        $components[] = 'promo' . substr($promo_code, 0, 8); // Truncated for legacy parsing
+        // Prefer a stable numeric promo ID when available; otherwise include a short hash
+        $promo_identifier_added = false;
+        if (isset($wpdb)) {
+            $promo_table = $wpdb->prefix . 'flexpress_promo_codes';
+            if ($wpdb->get_var("SHOW TABLES LIKE '$promo_table'") === $promo_table) {
+                $promo_id = $wpdb->get_var($wpdb->prepare(
+                    "SELECT id FROM {$promo_table} WHERE LOWER(code) = LOWER(%s) LIMIT 1",
+                    $promo_code
+                ));
+                if (!empty($promo_id)) {
+                    $components[] = 'prm' . intval($promo_id);
+                    $promo_identifier_added = true;
+                }
+            }
+        }
+        if (!$promo_identifier_added) {
+            $hash = substr(base_convert(substr(sha1(strtolower($promo_code)), 0, 10), 16, 36), 0, 6);
+            $components[] = 'prh' . $hash;
+        }
     } else {
         $components[] = 'promonone'; // Placeholder for no promo
     }
@@ -367,11 +433,29 @@ function flexpress_flowguard_generate_enhanced_ppv_reference($user_id, $episode_
         $components[] = 'affnone'; // Placeholder for no affiliate
     }
     
-    // Promo code (if exists, otherwise use placeholder)
+    // Promo code (if exists, otherwise use placeholder) + durable identifier
     if (!empty($promo_code)) {
-        $components[] = 'promo' . substr($promo_code, 0, 8); // Limit length
+        $components[] = 'promo' . substr($promo_code, 0, 8);
+        $promo_identifier_added = false;
+        if (isset($wpdb)) {
+            $promo_table = $wpdb->prefix . 'flexpress_promo_codes';
+            if ($wpdb->get_var("SHOW TABLES LIKE '$promo_table'") === $promo_table) {
+                $promo_id = $wpdb->get_var($wpdb->prepare(
+                    "SELECT id FROM {$promo_table} WHERE LOWER(code) = LOWER(%s) LIMIT 1",
+                    $promo_code
+                ));
+                if (!empty($promo_id)) {
+                    $components[] = 'prm' . intval($promo_id);
+                    $promo_identifier_added = true;
+                }
+            }
+        }
+        if (!$promo_identifier_added) {
+            $hash = substr(base_convert(substr(sha1(strtolower($promo_code)), 0, 10), 16, 36), 0, 6);
+            $components[] = 'prh' . $hash;
+        }
     } else {
-        $components[] = 'promonone'; // Placeholder for no promo
+        $components[] = 'promonone';
     }
     
     // Signup source (if exists, otherwise use placeholder)
@@ -475,7 +559,7 @@ function flexpress_flowguard_parse_enhanced_reference($reference_id) {
         return $data;
     }
     
-    // Handle enhanced references (uid123_affABC123_promoXYZ_reg12345678_plan456)
+    // Handle enhanced references (uid123_affABC123_promoXYZ_prm1|prhabc123_src..._reg..._plan456)
     if (preg_match('/^uid(\d+)/', $reference_id)) {
         $data['is_enhanced'] = true;
         
@@ -494,6 +578,14 @@ function flexpress_flowguard_parse_enhanced_reference($reference_id) {
         if (preg_match('/promo([^_]+)/', $reference_id, $matches)) {
             $promo_code = $matches[1];
             $data['promo_code'] = ($promo_code === 'none') ? '' : $promo_code;
+        }
+
+        // Extract durable promo identifier: numeric ID or short hash
+        if (preg_match('/prm(\d+)/', $reference_id, $matches)) {
+            $data['promo_id'] = intval($matches[1]);
+        }
+        if (preg_match('/prh([a-z0-9]+)/', $reference_id, $matches)) {
+            $data['promo_hash'] = $matches[1];
         }
         
         // Extract signup source

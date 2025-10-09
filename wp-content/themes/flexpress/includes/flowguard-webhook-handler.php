@@ -157,7 +157,20 @@ function flexpress_flowguard_handle_subscription_approved($payload) {
     }
     
     // Parse enhanced reference data
-    $reference_data = flexpress_flowguard_parse_enhanced_reference($payload['referenceId'] ?? '');
+    $reference_id = $payload['referenceId'] ?? '';
+    $reference_data = flexpress_flowguard_parse_enhanced_reference($reference_id);
+    
+    // Resolve full promo code from session when available
+    $resolved_promo_code = '';
+    if (function_exists('flexpress_flowguard_get_session_by_reference') && !empty($reference_id)) {
+        $session_row = flexpress_flowguard_get_session_by_reference($reference_id);
+        if ($session_row && !empty($session_row['promo_code'])) {
+            $resolved_promo_code = $session_row['promo_code'];
+        }
+    }
+    if (empty($resolved_promo_code)) {
+        $resolved_promo_code = $reference_data['promo_code'] ?? '';
+    }
     
     // Store transaction with enhanced reference data
     flexpress_flowguard_store_transaction([
@@ -171,10 +184,50 @@ function flexpress_flowguard_handle_subscription_approved($payload) {
         'order_type' => 'subscription',
         'reference_id' => $payload['referenceId'] ?? '',
         'affiliate_code' => $reference_data['affiliate_code'] ?? '',
-        'promo_code' => $reference_data['promo_code'] ?? '',
+        'promo_code' => $resolved_promo_code,
         'signup_source' => $reference_data['signup_source'] ?? '',
         'plan_id' => $reference_data['plan_id'] ?? ''
     ]);
+
+    // Record promo usage in centralized tables if available
+    if (!empty($resolved_promo_code)) {
+        global $wpdb;
+        $promo_codes_table = $wpdb->prefix . 'flexpress_promo_codes';
+        if ($wpdb->get_var("SHOW TABLES LIKE '$promo_codes_table'") === $promo_codes_table) {
+            $promo_id = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$promo_codes_table} WHERE LOWER(code) = LOWER(%s) LIMIT 1",
+                $resolved_promo_code
+            ));
+            if ($promo_id) {
+                // Increment usage_count
+                $wpdb->query($wpdb->prepare(
+                    "UPDATE {$promo_codes_table} SET usage_count = usage_count + 1 WHERE id = %d",
+                    $promo_id
+                ));
+                // Insert usage row if usage table exists
+                $promo_usage_table = $wpdb->prefix . 'flexpress_promo_usage';
+                if ($wpdb->get_var("SHOW TABLES LIKE '$promo_usage_table'") === $promo_usage_table) {
+                    $wpdb->insert(
+                        $promo_usage_table,
+                        array(
+                            'promo_code_id' => intval($promo_id),
+                            'promo_code' => strtolower($resolved_promo_code),
+                            'user_id' => intval($user_id),
+                            'order_id' => (string)($payload['transactionId'] ?? ''),
+                            'plan_id' => (string)($reference_data['plan_id'] ?? ''),
+                            'original_amount' => floatval($payload['priceAmount']),
+                            'discount_amount' => 0.00,
+                            'final_amount' => floatval($payload['priceAmount']),
+                            'used_at' => current_time('mysql'),
+                            'ip_address' => '',
+                            'user_agent' => ''
+                        ),
+                        array('%d','%s','%d','%s','%s','%f','%f','%f','%s','%s','%s')
+                    );
+                }
+            }
+        }
+    }
     
     // Log activity
     flexpress_flowguard_log_activity(
@@ -203,7 +256,8 @@ function flexpress_flowguard_handle_purchase_approved($payload) {
     }
     
     // Parse enhanced reference data for PPV purchase
-    $reference_data = flexpress_flowguard_parse_enhanced_reference($payload['referenceId'] ?? '');
+    $reference_id = $payload['referenceId'] ?? '';
+    $reference_data = flexpress_flowguard_parse_enhanced_reference($reference_id);
     $episode_id = $reference_data['episode_id'] ?? 0;
     
     if (!$episode_id) {
@@ -211,6 +265,18 @@ function flexpress_flowguard_handle_purchase_approved($payload) {
         return;
     }
     
+    // Resolve full promo code from session when available
+    $resolved_promo_code = '';
+    if (function_exists('flexpress_flowguard_get_session_by_reference') && !empty($reference_id)) {
+        $session_row = flexpress_flowguard_get_session_by_reference($reference_id);
+        if ($session_row && !empty($session_row['promo_code'])) {
+            $resolved_promo_code = $session_row['promo_code'];
+        }
+    }
+    if (empty($resolved_promo_code)) {
+        $resolved_promo_code = $reference_data['promo_code'] ?? '';
+    }
+
     // Store transaction with enhanced reference data
     flexpress_flowguard_store_transaction([
         'user_id' => $user_id,
@@ -223,10 +289,50 @@ function flexpress_flowguard_handle_purchase_approved($payload) {
         'order_type' => 'purchase',
         'reference_id' => $payload['referenceId'] ?? '',
         'affiliate_code' => $reference_data['affiliate_code'] ?? '',
-        'promo_code' => $reference_data['promo_code'] ?? '',
+        'promo_code' => $resolved_promo_code,
         'signup_source' => $reference_data['signup_source'] ?? '',
         'plan_id' => 'ppv_episode_' . $episode_id
     ]);
+
+    // Record promo usage in centralized tables if available (PPV)
+    if (!empty($resolved_promo_code)) {
+        global $wpdb;
+        $promo_codes_table = $wpdb->prefix . 'flexpress_promo_codes';
+        if ($wpdb->get_var("SHOW TABLES LIKE '$promo_codes_table'") === $promo_codes_table) {
+            $promo_id = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$promo_codes_table} WHERE LOWER(code) = LOWER(%s) LIMIT 1",
+                $resolved_promo_code
+            ));
+            if ($promo_id) {
+                // Increment usage_count
+                $wpdb->query($wpdb->prepare(
+                    "UPDATE {$promo_codes_table} SET usage_count = usage_count + 1 WHERE id = %d",
+                    $promo_id
+                ));
+                // Insert usage row if usage table exists
+                $promo_usage_table = $wpdb->prefix . 'flexpress_promo_usage';
+                if ($wpdb->get_var("SHOW TABLES LIKE '$promo_usage_table'") === $promo_usage_table) {
+                    $wpdb->insert(
+                        $promo_usage_table,
+                        array(
+                            'promo_code_id' => intval($promo_id),
+                            'promo_code' => strtolower($resolved_promo_code),
+                            'user_id' => intval($user_id),
+                            'order_id' => (string)($payload['transactionId'] ?? ''),
+                            'plan_id' => 'ppv_episode_' . intval($episode_id),
+                            'original_amount' => floatval($payload['priceAmount']),
+                            'discount_amount' => 0.00,
+                            'final_amount' => floatval($payload['priceAmount']),
+                            'used_at' => current_time('mysql'),
+                            'ip_address' => '',
+                            'user_agent' => ''
+                        ),
+                        array('%d','%s','%d','%s','%s','%f','%f','%f','%s','%s','%s')
+                    );
+                }
+            }
+        }
+    }
     
     // If it's a PPV purchase, grant access to the episode
     if ($episode_id > 0) {

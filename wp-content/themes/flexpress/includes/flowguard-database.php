@@ -83,6 +83,7 @@ function flexpress_flowguard_create_tables() {
         amount decimal(10,2),
         currency varchar(3),
         reference_id varchar(255),
+        promo_code varchar(50),
         created_at datetime NOT NULL,
         expires_at datetime NOT NULL,
         PRIMARY KEY (id),
@@ -100,7 +101,7 @@ function flexpress_flowguard_create_tables() {
     dbDelta($sessions_sql);
     
     // Store database version
-    update_option('flexpress_flowguard_db_version', '1.0.0');
+    update_option('flexpress_flowguard_db_version', '1.0.1');
     
     return true;
 }
@@ -181,6 +182,7 @@ function flexpress_flowguard_store_session($session_data) {
             'amount' => $session_data['amount'] ?? null,
             'currency' => $session_data['currency'] ?? null,
             'reference_id' => $session_data['reference_id'] ?? null,
+            'promo_code' => $session_data['promo_code'] ?? null,
             'created_at' => current_time('mysql'),
             'expires_at' => $session_data['expires_at'] ?? date('Y-m-d H:i:s', strtotime('+1 hour'))
         ],
@@ -194,6 +196,7 @@ function flexpress_flowguard_store_session($session_data) {
             '%f', // amount
             '%s', // currency
             '%s', // reference_id
+            '%s', // promo_code
             '%s', // created_at
             '%s'  // expires_at
         ]
@@ -238,6 +241,28 @@ function flexpress_flowguard_update_session($session_id, $status, $additional_da
     }
     
     return true;
+}
+
+/**
+ * Get Flowguard session by reference ID
+ *
+ * @param string $reference_id Reference ID
+ * @return array|false Session data or false if not found
+ */
+function flexpress_flowguard_get_session_by_reference($reference_id) {
+    global $wpdb;
+    
+    $table_name = $wpdb->prefix . 'flexpress_flowguard_sessions';
+    
+    $session = $wpdb->get_row(
+        $wpdb->prepare(
+            "SELECT * FROM {$table_name} WHERE reference_id = %s ORDER BY id DESC LIMIT 1",
+            $reference_id
+        ),
+        ARRAY_A
+    );
+    
+    return $session ?: false;
 }
 
 /**

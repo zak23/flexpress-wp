@@ -106,22 +106,39 @@ class FlexPress_Promo_Codes_Integration {
             if (!session_id()) {
                 session_start();
             }
+            // Normalize promo data (array from hardcoded list or stdClass from database)
+            if (is_array($promo)) {
+                $code_val = $promo['code'] ?? '';
+                $id_val = $promo['id'] ?? 0;
+                $name_val = $promo['name'] ?? '';
+                $type_val = $promo['discount_type'] ?? '';
+                $value_val = $promo['discount_value'] ?? 0;
+                $max_val = $promo['maximum_discount'] ?? 0;
+            } else {
+                $code_val = $promo->code ?? '';
+                $id_val = $promo->id ?? 0;
+                $name_val = $promo->name ?? '';
+                $type_val = $promo->discount_type ?? '';
+                $value_val = $promo->discount_value ?? 0;
+                $max_val = $promo->maximum_discount ?? 0;
+            }
+
             $_SESSION['flexpress_applied_promo'] = array(
-                'code' => $promo['code'],
-                'promo_id' => $promo['id'],
-                'name' => $promo['name'],
-                'discount_type' => $promo['discount_type'],
-                'discount_value' => $promo['discount_value'],
-                'maximum_discount' => $promo['maximum_discount']
+                'code' => $code_val,
+                'promo_id' => $id_val,
+                'name' => $name_val,
+                'discount_type' => $type_val,
+                'discount_value' => $value_val,
+                'maximum_discount' => $max_val
             );
             
             wp_send_json_success(array(
                 'valid' => true,
-                'code' => $promo['code'],
-                'name' => $promo['name'],
-                'discount_type' => $promo['discount_type'],
-                'discount_value' => $promo['discount_value'],
-                'maximum_discount' => $promo['maximum_discount'],
+                'code' => $code_val,
+                'name' => $name_val,
+                'discount_type' => $type_val,
+                'discount_value' => $value_val,
+                'maximum_discount' => $max_val,
                 'message' => 'Promo code applied successfully!'
             ));
         } else {

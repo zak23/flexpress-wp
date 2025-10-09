@@ -3042,7 +3042,7 @@ function flexpress_process_registration_and_payment()
     // Track promo code usage if applied
     if (!empty($applied_promo_code)) {
         update_user_meta($user_id, 'applied_promo_code', $applied_promo_code);
-        flexpress_track_promo_usage($applied_promo_code, $user_id, $selected_plan, 'registration_' . $user_id);
+        flexpress_track_promo_usage($applied_promo_code, $user_id, $selected_plan, 'registration_' . $user_id, 0.00);
     }
 
     // Store signup source and tracking data
@@ -7521,6 +7521,29 @@ function flexpress_theme_activation()
     // Log activation
     error_log('FlexPress theme activated - Database tables created');
 }
+
+/**
+ * Database Schema Upgrade Hook
+ * 
+ * Runs on every admin_init to ensure DB schema is up to date.
+ * Uses version tracking to avoid redundant migrations.
+ */
+function flexpress_check_db_version()
+{
+    $current_version = get_option('flexpress_db_version', '1.0.0');
+    $target_version = '1.0.1';
+
+    if (version_compare($current_version, $target_version, '<')) {
+        // Run migrations
+        flexpress_flowguard_create_tables();
+        flexpress_affiliate_init_database();
+        
+        // Update version
+        update_option('flexpress_db_version', $target_version);
+        error_log('FlexPress DB upgraded to ' . $target_version);
+    }
+}
+add_action('admin_init', 'flexpress_check_db_version');
 
 /**
  * Create talent applications table

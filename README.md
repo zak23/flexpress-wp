@@ -754,29 +754,39 @@ FlexPress automatically handles refunds and chargebacks with comprehensive prote
 - **Automatic Addition**: Refund/chargeback emails automatically blacklisted
 - **Manual Management**: Add/remove emails with reason tracking
 
-#### Enhanced Reference System
+#### Enhanced Reference System & Promo Code Logging (October 2025)
 
-FlexPress now includes an enhanced reference system that stores meaningful user information in Flowguard payment references:
+FlexPress includes an enhanced reference system that stores meaningful user information in Flowguard payment references and logs full promo codes for accurate attribution:
 
 **Reference Formats**:
 
-**Subscription References**: `uid123_affAFF12345_promoWELCOME_srcgoogle_planpremium_monthly_reg12345678`
+**Subscription References**: `uid123_affAFF12345_promoWELCOME_prm42_srcgoogle_planpremium_monthly_reg12345678`
 
 - `uid123` - User ID
 - `affAFF12345` - Affiliate code (truncated to 8 chars, or `affnone` if no affiliate)
-- `promoWELCOME` - Promo code (truncated to 8 chars, or `promonone` if no promo)
+- `promoWELCOME` - Promo code (truncated to 8 chars for legacy parsing, or `promonone` if no promo)
+- `prm42` - Durable promo identifier (numeric ID) for full code resolution
 - `srcgoogle` - Signup source (google, facebook, twitter, etc., or `srcnone` if no source)
 - `planpremium_monthly` - Plan ID
 - `reg12345678` - Registration timestamp (last 8 digits)
 
-**PPV/Unlock References**: `ppv_ep123_uid456_affAFF12345_promoWELCOME_srcgoogle_ts12345678`
+**PPV/Unlock References**: `ppv_ep123_uid456_affAFF12345_promoWELCOME_prm42_srcgoogle_ts12345678`
 
 - `ppv` - PPV identifier
 - `ep123` - Episode ID
 - `uid456` - User ID
 - `affAFF12345` - Affiliate code (truncated to 8 chars, or `affnone` if no affiliate)
-- `promoWELCOME` - Promo code (truncated to 8 chars, or `promonone` if no promo)
+- `promoWELCOME` - Promo code (truncated to 8 chars for legacy parsing, or `promonone` if no promo)
+- `prm42` - Durable promo identifier (numeric ID) for full code resolution
 - `srcgoogle` - Signup source (google, facebook, twitter, etc., or `srcnone` if no source)
+
+**Promo Code Logging**:
+
+- **Full Code Persistence**: Complete promo codes stored in `wp_flexpress_flowguard_sessions.promo_code` at payment creation
+- **Webhook Resolution**: Webhook handler resolves full promo via session (fallback to reference parser)
+- **Usage Tracking**: Approved payments increment `wp_flexpress_promo_codes.usage_count` and log to `wp_flexpress_promo_usage`
+- **Admin Reporting**: Promo Codes tab (`FlexPress → Affiliate Settings → Promo Codes`) displays redemptions and usage
+- **Transaction Logging**: Full promo code stored in `wp_flexpress_flowguard_transactions.promo_code` for attribution
 - `ts12345678` - Purchase timestamp (last 8 digits)
 
 **Empty Field Handling**: When fields are empty, the system uses placeholder values (`none`) to maintain consistent reference structure and enable proper parsing.

@@ -206,43 +206,7 @@ if (isset($_GET['error'])) {
             </div>
         </div>
 
-        <!-- Value Proposition Section -->
-        <div class="row justify-content-center mb-5">
-            <div class="col-md-10 text-center">
-                <div class="value-proposition-card bg-gradient-primary p-4 rounded-3 mb-4">
-                    <h3 class="text-white mb-3"><?php esc_html_e('Get Started in 30 Seconds', 'flexpress'); ?></h3>
-                    <div class="row text-center">
-                        <div class="col-md-4 mb-3">
-                            <div class="value-step">
-                                <div class="step-icon mb-2">
-                                    <i class="fas fa-user-plus fa-2x text-white"></i>
-                                </div>
-                                <h5 class="text-white mb-2"><?php esc_html_e('1. Quick Signup', 'flexpress'); ?></h5>
-                                <p class="text-white-50 mb-0"><?php esc_html_e('Just email & password - takes 10 seconds', 'flexpress'); ?></p>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="value-step">
-                                <div class="step-icon mb-2">
-                                    <i class="fas fa-credit-card fa-2x text-white"></i>
-                                </div>
-                                <h5 class="text-white mb-2"><?php esc_html_e('2. Secure Payment', 'flexpress'); ?></h5>
-                                <p class="text-white-50 mb-0"><?php esc_html_e('Safe & encrypted payment processing', 'flexpress'); ?></p>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="value-step">
-                                <div class="step-icon mb-2">
-                                    <i class="fas fa-play fa-2x text-white"></i>
-                                </div>
-                                <h5 class="text-white mb-2"><?php esc_html_e('3. Instant Access', 'flexpress'); ?></h5>
-                                <p class="text-white-50 mb-0"><?php esc_html_e('Start watching premium content immediately', 'flexpress'); ?></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Promo Code Section -->
         <div class="row justify-content-center mb-4">

@@ -45,13 +45,6 @@ $thumbnail = flexpress_get_extras_thumbnail(get_the_ID(), 'medium');
                 </div>
             </div>
             
-            <!-- Content Type Badge -->
-            <?php if ($content_type): ?>
-                <div class="content-type-badge">
-                    <?php echo esc_html(ucwords(str_replace('_', ' ', $content_type))); ?>
-                </div>
-            <?php endif; ?>
-            
             <!-- Content Format Badge -->
             <?php if ($content_format === 'gallery'): 
                 $gallery = flexpress_get_extras_gallery(get_the_ID());
@@ -61,14 +54,11 @@ $thumbnail = flexpress_get_extras_thumbnail(get_the_ID(), 'medium');
                         <?php echo count($gallery); ?>
                     </div>
                 <?php endif; ?>
-            <?php elseif ($content_format === 'video'): 
-                $duration = get_field('extras_duration');
-                if ($duration): ?>
-                    <div class="video-duration-badge">
-                        <i class="fas fa-play me-1"></i>
-                        <?php echo esc_html($duration); ?>
-                    </div>
-                <?php endif; ?>
+            <?php elseif ($content_format === 'video' && $content_type): ?>
+                <div class="video-duration-badge">
+                    <i class="fas fa-tag me-1"></i>
+                    <?php echo esc_html(ucwords(str_replace('_', ' ', $content_type))); ?>
+                </div>
             <?php endif; ?>
         </div>
     </a>

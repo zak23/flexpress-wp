@@ -624,6 +624,13 @@
     transform: scale(1.1);
 }
 
+/* Disabled state for stars during submission */
+.rating-stars-interactive .star.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
 .rating-item:hover {
     background: rgba(255, 255, 255, 0.02);
     border-radius: 6px;

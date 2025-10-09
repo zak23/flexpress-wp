@@ -430,21 +430,17 @@ class FlexPress_Episode_Ratings {
                 <?php if ($current_rating > 0): ?>
                     <?php printf(__('Your rating: %d star%s', 'flexpress'), $current_rating, $current_rating > 1 ? 's' : ''); ?>
                 <?php else: ?>
-                    <?php esc_html_e('Click to rate', 'flexpress'); ?>
+                    <?php esc_html_e('Click a star to rate', 'flexpress'); ?>
                 <?php endif; ?>
             </div>
             
-            <div class="rating-actions text-center">
-                <a href="#" class="submit-rating small" data-episode-id="<?php echo esc_attr($episode_id); ?>" style="text-decoration:underline;">
-                    <?php echo $user_rating ? esc_html__('Update Rating', 'flexpress') : esc_html__('Submit Rating', 'flexpress'); ?>
-                </a>
-                <?php if ($user_rating): ?>
-                    <span class="mx-1 text-muted">·</span>
+            <?php if ($user_rating): ?>
+                <div class="rating-actions text-center">
                     <a href="#" class="remove-rating small text-muted" data-episode-id="<?php echo esc_attr($episode_id); ?>" style="text-decoration:underline;">
                         <?php esc_html_e('Remove rating', 'flexpress'); ?>
                     </a>
-                <?php endif; ?>
-            </div>
+                </div>
+            <?php endif; ?>
         </div>
         <?php
         return ob_get_clean();

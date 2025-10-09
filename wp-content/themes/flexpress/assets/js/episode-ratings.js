@@ -13,7 +13,6 @@ jQuery(document).ready(function($) {
         const $stars = $form.find('.rating-stars-interactive .star');
         const $ratingText = $form.find('.rating-text');
         const $comment = $form.find('textarea');
-        const $submitBtn = $form.find('.submit-rating');
         const $removeBtn = $form.find('.remove-rating');
         
         let selectedRating = 0;
@@ -28,22 +27,13 @@ jQuery(document).ready(function($) {
             highlightStars($stars, selectedRating);
         });
         
-        // Star click
+        // Star click - 1-click rating system
         $stars.on('click', function() {
             selectedRating = $(this).data('rating');
             highlightStars($stars, selectedRating);
             updateRatingText();
-        });
-        
-        // Submit rating
-        $submitBtn.on('click', function(e) {
-            e.preventDefault();
             
-            if (selectedRating === 0) {
-                showMessage('Please select a rating before submitting.', 'error');
-                return;
-            }
-            
+            // Immediately submit the rating
             submitRating(episodeId, selectedRating, $comment.val());
         });
         
@@ -73,7 +63,7 @@ jQuery(document).ready(function($) {
                 const text = selectedRating === 1 ? 'Your rating: 1 star' : `Your rating: ${selectedRating} stars`;
                 $ratingText.text(text);
             } else {
-                $ratingText.text('Click to rate');
+                $ratingText.text('Click a star to rate');
             }
         }
         
@@ -116,9 +106,10 @@ jQuery(document).ready(function($) {
     
     function submitRating(episodeId, rating, comment) {
         const $form = $('.episode-rating-form[data-episode-id="' + episodeId + '"]');
-        const $submitBtn = $form.find('.submit-rating');
+        const $stars = $form.find('.rating-stars-interactive .star');
         
-        $submitBtn.prop('disabled', true).text('Submitting...');
+        // Disable stars during submission to prevent multiple clicks
+        $stars.addClass('disabled').css('pointer-events', 'none');
         
         $.ajax({
             url: flexpress_ajax.ajax_url,
@@ -137,9 +128,6 @@ jQuery(document).ready(function($) {
                     // Update rating stats
                     updateRatingStats(episodeId, response.data.stats);
                     
-                    // Update submit button text
-                    $submitBtn.text(response.data.action === 'created' ? 'Update Rating' : 'Update Rating');
-                    
                     // Show remove button if it was hidden
                     $form.find('.remove-rating').show();
                 } else {
@@ -150,7 +138,8 @@ jQuery(document).ready(function($) {
                 showMessage('An error occurred while submitting your rating.', 'error');
             },
             complete: function() {
-                $submitBtn.prop('disabled', false);
+                // Re-enable stars after submission
+                $stars.removeClass('disabled').css('pointer-events', 'auto');
             }
         });
     }
@@ -175,9 +164,8 @@ jQuery(document).ready(function($) {
                     
                     // Reset form
                     $form.find('.rating-stars-interactive .star').removeClass('filled half-filled');
-                    $form.find('.rating-text').text('Click to rate');
+                    $form.find('.rating-text').text('Click a star to rate');
                     $form.find('textarea').val('');
-                    $form.find('.submit-rating').text('Submit Rating');
                     $form.find('.remove-rating').hide();
                     
                     // Update rating stats

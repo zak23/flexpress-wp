@@ -60,60 +60,6 @@ while (have_posts()):
         <?php endif; ?>
         
         <!-- Content Section -->
-        <?php if ($content_format === 'gallery'): ?>
-            <!-- Gallery Section -->
-            <?php if (flexpress_has_extras_gallery()): ?>
-            <div class="row mb-5">
-                <div class="col-12">
-                    <div class="extras-gallery-section">
-                        <?php flexpress_display_extras_gallery(get_the_ID(), $gallery_columns, $has_access); ?>
-                    </div>
-                </div>
-            </div>
-            <?php endif; ?>
-        <?php elseif ($content_format === 'video'): ?>
-            <!-- Video Section -->
-            <div class="row mb-5">
-                <div class="col-12">
-                    <div class="video-player">
-                        <?php 
-                        $video_id = flexpress_get_extras_video_for_access(get_the_ID());
-                        if ($video_id): 
-                            $video_settings = get_option('flexpress_video_settings', array());
-                            $library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
-                            $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
-                            
-                            // Generate token and expiration
-                            $expires = time() + 3600; // 1 hour expiry
-                            $token = '';
-                            
-                            if (!empty($token_key)) {
-                                $token = hash('sha256', $token_key . $video_id . $expires);
-                            }
-                        ?>
-                            <div style="position:relative;padding-top:56.25%;">
-                                <iframe src="https://iframe.mediadelivery.net/embed/<?php echo esc_attr($library_id); ?>/<?php echo esc_attr($video_id); ?>?token=<?php echo esc_attr($token); ?>&expires=<?php echo esc_attr($expires); ?>&autoplay=true&loop=true&muted=true&controls=false"
-                                        loading="lazy"
-                                        style="border:0;position:absolute;top:0;height:100%;width:100%;"
-                                        allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
-                                        allowfullscreen="true">
-                                </iframe>
-                            </div>
-                        <?php else: ?>
-                            <div class="d-flex align-items-center justify-content-center" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
-                                <div class="text-center text-light">
-                                    <i class="fas fa-lock fa-3x mb-3"></i>
-                                    <h4><?php esc_html_e('Premium Extra Content', 'flexpress'); ?></h4>
-                                    <p><?php esc_html_e('Please purchase this extra content to view.', 'flexpress'); ?></p>
-                                </div>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-        <?php endif; ?>
-        
-        <!-- Content Section -->
         <div class="row">
             <div class="col-lg-8">
                 <!-- Extra Content Details -->
@@ -197,6 +143,52 @@ while (have_posts()):
                     <div class="extras-description mb-4">
                         <?php the_content(); ?>
                     </div>
+
+                    <!-- Gallery or Video Content -->
+                    <?php if ($content_format === 'gallery'): ?>
+                        <!-- Gallery Section -->
+                        <?php if (flexpress_has_extras_gallery()): ?>
+                            <div class="extras-gallery-section mb-4">
+                                <?php flexpress_display_extras_gallery(get_the_ID(), $gallery_columns, $has_access); ?>
+                            </div>
+                        <?php endif; ?>
+                    <?php elseif ($content_format === 'video'): ?>
+                        <!-- Video Section -->
+                        <div class="video-player mb-4">
+                            <?php 
+                            $video_id = flexpress_get_extras_video_for_access(get_the_ID());
+                            if ($video_id): 
+                                $video_settings = get_option('flexpress_video_settings', array());
+                                $library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
+                                $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
+                                
+                                // Generate token and expiration
+                                $expires = time() + 3600; // 1 hour expiry
+                                $token = '';
+                                
+                                if (!empty($token_key)) {
+                                    $token = hash('sha256', $token_key . $video_id . $expires);
+                                }
+                            ?>
+                                <div style="position:relative;padding-top:56.25%;">
+                                    <iframe src="https://iframe.mediadelivery.net/embed/<?php echo esc_attr($library_id); ?>/<?php echo esc_attr($video_id); ?>?token=<?php echo esc_attr($token); ?>&expires=<?php echo esc_attr($expires); ?>&autoplay=true&loop=true&muted=true&controls=false"
+                                            loading="lazy"
+                                            style="border:0;position:absolute;top:0;height:100%;width:100%;"
+                                            allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
+                                            allowfullscreen="true">
+                                    </iframe>
+                                </div>
+                            <?php else: ?>
+                                <div class="d-flex align-items-center justify-content-center" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+                                    <div class="text-center text-light">
+                                        <i class="fas fa-lock fa-3x mb-3"></i>
+                                        <h4><?php esc_html_e('Premium Extra Content', 'flexpress'); ?></h4>
+                                        <p><?php esc_html_e('Please purchase this extra content to view.', 'flexpress'); ?></p>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
 
                     <?php if (has_tag()): ?>
                         <div class="extras-tags mt-4">

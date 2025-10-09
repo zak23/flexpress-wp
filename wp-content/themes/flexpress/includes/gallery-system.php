@@ -359,16 +359,152 @@ class FlexPress_Gallery_System
     }
 
     /**
+     * Render extras gallery meta box
+     */
+    public function render_extras_gallery_meta_box($post)
+    {
+        wp_nonce_field('extras_gallery_meta_box', 'extras_gallery_meta_box_nonce');
+
+        $gallery_images = get_post_meta($post->ID, '_extras_gallery_images', true);
+        if (!is_array($gallery_images)) {
+            $gallery_images = array();
+        }
+
+?>
+        <div class="flexpress-gallery-manager">
+            <div class="gallery-upload-section">
+                <h4><?php _e('Upload Gallery Images', 'flexpress'); ?></h4>
+                <p class="description">
+                    <?php _e('Upload images to create a gallery for this extra content. Images will be automatically resized and optimized.', 'flexpress'); ?>
+                </p>
+
+                <div class="gallery-upload-area" id="extras-gallery-upload-area">
+                    <div class="upload-prompt">
+                        <span class="dashicons dashicons-upload"></span>
+                        <p><?php _e('Drag & drop images here or click to select', 'flexpress'); ?></p>
+                        <button type="button" class="button button-primary" id="select-extras-gallery-images">
+                            <?php _e('Select Images', 'flexpress'); ?>
+                        </button>
+                    </div>
+                    <input type="file" id="extras-gallery-file-input" multiple accept="image/*" style="display: none;">
+                </div>
+
+                <div class="upload-progress" id="extras-upload-progress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <p class="progress-text"><?php _e('Uploading...', 'flexpress'); ?></p>
+                </div>
+            </div>
+
+            <div class="gallery-images-section">
+                <div class="gallery-images-header">
+                    <h4><?php _e('Gallery Images', 'flexpress'); ?></h4>
+                    <?php if (!empty($gallery_images)): ?>
+                        <button type="button" class="button button-secondary" id="delete-all-extras-gallery-images">
+                            <?php _e('Delete All Images', 'flexpress'); ?>
+                        </button>
+                    <?php endif; ?>
+                </div>
+
+                <div class="gallery-images-grid" id="extras-gallery-images-grid">
+                    <?php if (empty($gallery_images)): ?>
+                        <div class="no-images">
+                            <?php _e('No images uploaded yet. Use the upload area above to add images.', 'flexpress'); ?>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($gallery_images as $index => $image): ?>
+                            <div class="gallery-image-item" data-image-id="<?php echo esc_attr($image['id']); ?>">
+                                <div class="image-preview">
+                                    <img src="<?php echo esc_url($image['thumbnail']); ?>" alt="<?php echo esc_attr($image['alt']); ?>">
+                                    <div class="image-overlay">
+                                        <button type="button" class="button button-small edit-image" data-image-id="<?php echo esc_attr($image['id']); ?>">
+                                            <?php _e('Edit', 'flexpress'); ?>
+                                        </button>
+                                        <button type="button" class="button button-small delete-image" data-image-id="<?php echo esc_attr($image['id']); ?>">
+                                            <?php _e('Delete', 'flexpress'); ?>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="image-info">
+                                    <input type="text" name="gallery_image_title[<?php echo esc_attr($image['id']); ?>]" 
+                                           value="<?php echo esc_attr($image['title']); ?>" 
+                                           placeholder="<?php _e('Image Title', 'flexpress'); ?>">
+                                    <input type="text" name="gallery_image_alt[<?php echo esc_attr($image['id']); ?>]" 
+                                           value="<?php echo esc_attr($image['alt']); ?>" 
+                                           placeholder="<?php _e('Alt Text', 'flexpress'); ?>">
+                                    <textarea name="gallery_image_caption[<?php echo esc_attr($image['id']); ?>]" 
+                                              placeholder="<?php _e('Image Caption', 'flexpress'); ?>"><?php echo esc_textarea($image['caption']); ?></textarea>
+                                </div>
+                                <div class="image-order">
+                                    <span class="order-number"><?php echo $index + 1; ?></span>
+                                    <div class="order-controls">
+                                        <button type="button" class="button button-small move-up" data-image-id="<?php echo esc_attr($image['id']); ?>">↑</button>
+                                        <button type="button" class="button button-small move-down" data-image-id="<?php echo esc_attr($image['id']); ?>">↓</button>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div class="gallery-settings-section">
+                <h4><?php _e('Gallery Settings', 'flexpress'); ?></h4>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="extras_gallery_columns"><?php _e('Gallery Columns', 'flexpress'); ?></label>
+                        </th>
+                        <td>
+                            <select name="extras_gallery_columns" id="extras_gallery_columns">
+                                <option value="1" <?php selected(get_post_meta($post->ID, '_extras_gallery_columns', true), '1'); ?>><?php _e('1 Column', 'flexpress'); ?></option>
+                                <option value="2" <?php selected(get_post_meta($post->ID, '_extras_gallery_columns', true), '2'); ?>><?php _e('2 Columns', 'flexpress'); ?></option>
+                                <option value="3" <?php selected(get_post_meta($post->ID, '_extras_gallery_columns', true), '3'); ?>><?php _e('3 Columns', 'flexpress'); ?></option>
+                                <option value="4" <?php selected(get_post_meta($post->ID, '_extras_gallery_columns', true), '4'); ?>><?php _e('4 Columns', 'flexpress'); ?></option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="extras_gallery_lightbox"><?php _e('Enable Lightbox', 'flexpress'); ?></label>
+                        </th>
+                        <td>
+                            <input type="checkbox" name="extras_gallery_lightbox" id="extras_gallery_lightbox" value="1"
+                                <?php checked(get_post_meta($post->ID, '_extras_gallery_lightbox', true), '1'); ?>>
+                            <label for="extras_gallery_lightbox"><?php _e('Enable lightbox gallery viewer', 'flexpress'); ?></label>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    <?php
+    }
+
+    /**
      * Save gallery data
      */
     public function save_gallery_data($post_id)
     {
-        // Check nonce
-        if (
-            !isset($_POST['episode_gallery_meta_box_nonce']) ||
-            !wp_verify_nonce($_POST['episode_gallery_meta_box_nonce'], 'episode_gallery_meta_box')
-        ) {
-            return;
+        $post_type = get_post_type($post_id);
+        
+        // Check nonce based on post type
+        if ($post_type === 'episode') {
+            if (
+                !isset($_POST['episode_gallery_meta_box_nonce']) ||
+                !wp_verify_nonce($_POST['episode_gallery_meta_box_nonce'], 'episode_gallery_meta_box')
+            ) {
+                return;
+            }
+        } elseif ($post_type === 'extras') {
+            if (
+                !isset($_POST['extras_gallery_meta_box_nonce']) ||
+                !wp_verify_nonce($_POST['extras_gallery_meta_box_nonce'], 'extras_gallery_meta_box')
+            ) {
+                return;
+            }
+        } else {
+            return; // Not a supported post type
         }
 
         // Check permissions
@@ -376,21 +512,67 @@ class FlexPress_Gallery_System
             return;
         }
 
-        // Save gallery settings
-        if (isset($_POST['gallery_columns'])) {
-            update_post_meta($post_id, '_gallery_columns', sanitize_text_field($_POST['gallery_columns']));
+        // Save gallery settings based on post type
+        if ($post_type === 'episode') {
+            if (isset($_POST['gallery_columns'])) {
+                update_post_meta($post_id, '_gallery_columns', sanitize_text_field($_POST['gallery_columns']));
+            }
+
+            if (isset($_POST['gallery_lightbox'])) {
+                update_post_meta($post_id, '_gallery_lightbox', '1');
+            } else {
+                delete_post_meta($post_id, '_gallery_lightbox');
+            }
+
+            if (isset($_POST['gallery_autoplay'])) {
+                update_post_meta($post_id, '_gallery_autoplay', '1');
+            } else {
+                delete_post_meta($post_id, '_gallery_autoplay');
+            }
+        } elseif ($post_type === 'extras') {
+            if (isset($_POST['extras_gallery_columns'])) {
+                update_post_meta($post_id, '_extras_gallery_columns', sanitize_text_field($_POST['extras_gallery_columns']));
+            }
+
+            if (isset($_POST['extras_gallery_lightbox'])) {
+                update_post_meta($post_id, '_extras_gallery_lightbox', '1');
+            } else {
+                delete_post_meta($post_id, '_extras_gallery_lightbox');
+            }
         }
 
-        if (isset($_POST['gallery_lightbox'])) {
-            update_post_meta($post_id, '_gallery_lightbox', '1');
-        } else {
-            delete_post_meta($post_id, '_gallery_lightbox');
+        // Save image metadata
+        if (isset($_POST['gallery_image_title']) && is_array($_POST['gallery_image_title'])) {
+            foreach ($_POST['gallery_image_title'] as $image_id => $title) {
+                $image_id = intval($image_id);
+                if ($image_id > 0) {
+                    wp_update_post(array(
+                        'ID' => $image_id,
+                        'post_title' => sanitize_text_field($title)
+                    ));
+                }
+            }
         }
 
-        if (isset($_POST['gallery_autoplay'])) {
-            update_post_meta($post_id, '_gallery_autoplay', '1');
-        } else {
-            delete_post_meta($post_id, '_gallery_autoplay');
+        if (isset($_POST['gallery_image_alt']) && is_array($_POST['gallery_image_alt'])) {
+            foreach ($_POST['gallery_image_alt'] as $image_id => $alt) {
+                $image_id = intval($image_id);
+                if ($image_id > 0) {
+                    update_post_meta($image_id, '_wp_attachment_image_alt', sanitize_text_field($alt));
+                }
+            }
+        }
+
+        if (isset($_POST['gallery_image_caption']) && is_array($_POST['gallery_image_caption'])) {
+            foreach ($_POST['gallery_image_caption'] as $image_id => $caption) {
+                $image_id = intval($image_id);
+                if ($image_id > 0) {
+                    wp_update_post(array(
+                        'ID' => $image_id,
+                        'post_excerpt' => sanitize_textarea_field($caption)
+                    ));
+                }
+            }
         }
     }
 
@@ -413,12 +595,14 @@ class FlexPress_Gallery_System
         }
 
         $post_id = intval($_POST['post_id']);
-        if (!$post_id || get_post_type($post_id) !== 'episode') {
-            error_log("❌ Invalid post ID: $post_id");
-            wp_die('Invalid post ID');
+        $post_type = get_post_type($post_id);
+        
+        if (!$post_id || !in_array($post_type, array('episode', 'extras'))) {
+            error_log("❌ Invalid post ID: $post_id or post type: $post_type");
+            wp_die('Invalid post ID or post type');
         }
 
-        error_log("✅ Valid upload request for episode ID: $post_id");
+        error_log("✅ Valid upload request for $post_type ID: $post_id");
 
         // Handle file upload
         if (!isset($_FILES['image'])) {
@@ -479,8 +663,9 @@ class FlexPress_Gallery_System
         $large_url = wp_get_attachment_image_url($attachment_id, 'gallery-large');
         $full_url = wp_get_attachment_image_url($attachment_id, 'full');
 
-        // Add to gallery
-        $gallery_images = get_post_meta($post_id, '_episode_gallery_images', true);
+        // Add to gallery based on post type
+        $meta_key = ($post_type === 'episode') ? '_episode_gallery_images' : '_extras_gallery_images';
+        $gallery_images = get_post_meta($post_id, $meta_key, true);
         if (!is_array($gallery_images)) {
             $gallery_images = array();
         }
@@ -504,7 +689,7 @@ class FlexPress_Gallery_System
         error_log("  BunnyCDN URL: " . ($bunnycdn_url ?: 'NOT SET'));
 
         $gallery_images[] = $new_image;
-        update_post_meta($post_id, '_episode_gallery_images', $gallery_images);
+        update_post_meta($post_id, $meta_key, $gallery_images);
         error_log("✅ Gallery updated with " . count($gallery_images) . " images");
 
         error_log("=== FLEXPRESS AJAX GALLERY UPLOAD COMPLETE ===");
@@ -530,18 +715,20 @@ class FlexPress_Gallery_System
 
         $post_id = intval($_POST['post_id']);
         $image_id = intval($_POST['image_id']);
+        $post_type = get_post_type($post_id);
 
-        if (!$post_id || !$image_id) {
-            wp_die('Invalid IDs');
+        if (!$post_id || !$image_id || !in_array($post_type, array('episode', 'extras'))) {
+            wp_die('Invalid IDs or post type');
         }
 
-        // Remove from gallery
-        $gallery_images = get_post_meta($post_id, '_episode_gallery_images', true);
+        // Remove from gallery based on post type
+        $meta_key = ($post_type === 'episode') ? '_episode_gallery_images' : '_extras_gallery_images';
+        $gallery_images = get_post_meta($post_id, $meta_key, true);
         if (is_array($gallery_images)) {
             $gallery_images = array_filter($gallery_images, function ($img) use ($image_id) {
                 return $img['id'] != $image_id;
             });
-            update_post_meta($post_id, '_episode_gallery_images', $gallery_images);
+            update_post_meta($post_id, $meta_key, $gallery_images);
         }
 
         // Delete attachment
@@ -564,13 +751,15 @@ class FlexPress_Gallery_System
         }
 
         $post_id = intval($_POST['post_id']);
+        $post_type = get_post_type($post_id);
 
-        if (!$post_id) {
-            wp_die('Invalid post ID');
+        if (!$post_id || !in_array($post_type, array('episode', 'extras'))) {
+            wp_die('Invalid post ID or post type');
         }
 
-        // Get all gallery images
-        $gallery_images = get_post_meta($post_id, '_episode_gallery_images', true);
+        // Get all gallery images based on post type
+        $meta_key = ($post_type === 'episode') ? '_episode_gallery_images' : '_extras_gallery_images';
+        $gallery_images = get_post_meta($post_id, $meta_key, true);
         if (!is_array($gallery_images)) {
             wp_send_json_success('No images to delete');
         }
@@ -583,7 +772,7 @@ class FlexPress_Gallery_System
         }
 
         // Clear gallery meta
-        delete_post_meta($post_id, '_episode_gallery_images');
+        delete_post_meta($post_id, $meta_key);
 
         wp_send_json_success('All gallery images deleted successfully');
     }
@@ -603,13 +792,15 @@ class FlexPress_Gallery_System
 
         $post_id = intval($_POST['post_id']);
         $image_order = array_map('intval', $_POST['image_order']);
+        $post_type = get_post_type($post_id);
 
-        if (!$post_id || empty($image_order)) {
-            wp_die('Invalid data');
+        if (!$post_id || empty($image_order) || !in_array($post_type, array('episode', 'extras'))) {
+            wp_die('Invalid data or post type');
         }
 
-        // Reorder gallery
-        $gallery_images = get_post_meta($post_id, '_episode_gallery_images', true);
+        // Reorder gallery based on post type
+        $meta_key = ($post_type === 'episode') ? '_episode_gallery_images' : '_extras_gallery_images';
+        $gallery_images = get_post_meta($post_id, $meta_key, true);
         if (is_array($gallery_images)) {
             $reordered = array();
             foreach ($image_order as $image_id) {
@@ -620,7 +811,7 @@ class FlexPress_Gallery_System
                     }
                 }
             }
-            update_post_meta($post_id, '_episode_gallery_images', $reordered);
+            update_post_meta($post_id, $meta_key, $reordered);
         }
 
         wp_send_json_success('Gallery reordered successfully');
@@ -660,7 +851,9 @@ class FlexPress_Gallery_System
         $random_string = wp_generate_password(8, false);
         $unix_timestamp = time();
         $filename = $original_filename . '-' . $random_string . '-' . $unix_timestamp . '.jpg';
-        $remote_path = 'episodes/galleries/' . $post_id . '/' . $filename;
+        $remote_path = ($post_type === 'episode') ? 
+            'episodes/galleries/' . $post_id . '/' . $filename :
+            'extras/galleries/' . $post_id . '/' . $filename;
 
         error_log("Filename Generation:");
         error_log("  Original filename: $original_filename");
@@ -1151,3 +1344,7 @@ function flexpress_get_gallery_image_url($image_data, $size = 'thumbnail', $expi
 
     return isset($image_data[$size_key]) ? $image_data[$size_key] : '';
 }
+
+// Function flexpress_has_extras_gallery() is already defined in functions.php
+
+// Function flexpress_display_extras_gallery() is already defined in functions.php

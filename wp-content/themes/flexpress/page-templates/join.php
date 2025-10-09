@@ -703,11 +703,15 @@ wp_localize_script($script_handle, 'flexpressPromo', array(
         // Function to update legal text based on selected plan
         function updateLegalText(planElement) {
             const planType = planElement.data('plan-type');
-            const planPrice = planElement.data('plan-price');
+            let planPrice = planElement.data('plan-price');
             const planCurrency = planElement.data('plan-currency');
             const planDuration = planElement.data('duration');
             const planDurationUnit = planElement.data('duration-unit');
             const billingTextElement = jQuery('#billing-text');
+            
+            // Check if promo is applied (plan has original-price data attribute)
+            const originalPrice = planElement.find('.price-amount').data('original-price');
+            const hasPromoDiscount = originalPrice && originalPrice > planPrice;
 
             // Trial information
             const trialEnabled = planElement.data('trial-enabled') == 1;
@@ -729,20 +733,49 @@ wp_localize_script($script_handle, 'flexpressPromo', array(
                 durationText = planDuration + ' years';
             }
 
+            // Format trial duration text
+            let trialDurationText = '';
+            if (trialEnabled && trialDuration > 0) {
+                trialDurationText = trialDuration + ' ' + trialDurationUnit;
+                if (trialDuration > 1 && trialDurationUnit === 'day') {
+                    trialDurationText = trialDuration + ' days';
+                } else if (trialDuration > 1 && trialDurationUnit === 'week') {
+                    trialDurationText = trialDuration + ' weeks';
+                } else if (trialDuration > 1 && trialDurationUnit === 'month') {
+                    trialDurationText = trialDuration + ' months';
+                }
+            }
+
+            // Build price display text (with promo discount if applicable)
+            let priceText = planCurrency + planPrice.toFixed(2);
+            if (hasPromoDiscount) {
+                priceText = planCurrency + planPrice.toFixed(2) + ' (promo discount applied)';
+            }
+            
             if (planType === 'recurring') {
-                billingText = 'Your subscription will automatically renew at ' + planCurrency + planPrice.toFixed(2) + ' every ' + durationText + ' unless cancelled. You may cancel at any time';
+                if (trialEnabled && trialPrice > 0 && trialDuration > 0) {
+                    // Trial-enabled recurring plan
+                    billingText = 'Your subscription starts with a ' + trialDurationText + ' trial for ' + planCurrency + trialPrice.toFixed(2) + ', then automatically renews at ' + priceText + ' every ' + durationText + ' unless cancelled. You may cancel at any time';
+                } else {
+                    // Regular recurring plan
+                    billingText = 'Your subscription will automatically renew at ' + priceText + ' every ' + durationText + ' unless cancelled. You may cancel at any time';
+                }
             } else if (planType === 'one_time') {
-                billingText = 'This is a one-time payment of ' + planCurrency + planPrice.toFixed(2) + '. No recurring charges will be applied.';
+                billingText = 'This is a one-time payment of ' + priceText + '. No recurring charges will be applied.';
             } else if (planType === 'lifetime') {
-                billingText = 'This is a one-time payment of ' + planCurrency + planPrice.toFixed(2) + ' for lifetime access. No recurring charges will be applied.';
+                billingText = 'This is a one-time payment of ' + priceText + ' for lifetime access. No recurring charges will be applied.';
             } else {
                 // Default fallback
-                billingText = 'Your subscription will automatically renew at ' + planCurrency + planPrice.toFixed(2) + ' every ' + durationText + ' unless cancelled. You may cancel at any time';
+                if (trialEnabled && trialPrice > 0 && trialDuration > 0) {
+                    billingText = 'Your subscription starts with a ' + trialDurationText + ' trial for ' + planCurrency + trialPrice.toFixed(2) + ', then automatically renews at ' + priceText + ' every ' + durationText + ' unless cancelled. You may cancel at any time';
+                } else {
+                    billingText = 'Your subscription will automatically renew at ' + priceText + ' every ' + durationText + ' unless cancelled. You may cancel at any time';
+                }
             }
 
             billingTextElement.text(billingText);
 
-            // Update trial disclaimer
+            // Update trial disclaimer (keep for additional emphasis if needed)
             updateTrialDisclaimer(trialEnabled, trialPrice, trialDuration, trialDurationUnit, planCurrency, planPrice, planDuration, planDurationUnit);
         }
 

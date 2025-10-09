@@ -212,7 +212,7 @@ get_header();
                                 
                                 <?php if (get_field('model_onlyfans')) : ?>
                                     <?php if ($is_logged_in) : ?>
-                                        <a href="<?php echo esc_url(get_field('model_onlyfans')); ?>" target="_blank" class="social-icon-link" data-platform="onlyfans" rel="noopener" title="Subscribe on OnlyFans">
+                                        <a href="<?php echo esc_url(flexpress_append_onlyfans_referral(get_field('model_onlyfans'))); ?>" target="_blank" class="social-icon-link" data-platform="onlyfans" rel="noopener" title="Subscribe on OnlyFans">
                                             <i class="fas fa-heart"></i>
                                             <span class="social-label">OnlyFans</span>
                                         </a>

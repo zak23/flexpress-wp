@@ -251,6 +251,26 @@ flexpress/
 - **Sanitization**: Uses `sanitize_text_field()` for SMTP username (not `sanitize_email()`)
 - **Debug Logging**: Comprehensive logging for troubleshooting and monitoring
 
+### OnlyFans Referral Code System
+
+#### Automatic URL Appending
+
+- **Configuration**: Set referral code once in `FlexPress → General` settings (e.g., `17503922`)
+- **Automatic Application**: All OnlyFans links across the site automatically include `?ref={code}`
+- **Smart Detection**: Only appends to onlyfans.com URLs, skips existing referral parameters
+- **Site-Wide Coverage**: Model profiles, footer links, contact pages, all social media links
+
+#### Implementation Details
+
+- **Helper Functions**: 
+  - `flexpress_get_onlyfans_referral_code()` - Retrieves referral code from settings
+  - `flexpress_append_onlyfans_referral($url)` - Appends referral code to OnlyFans URLs
+- **Application Points**:
+  - Model social links in `functions.php` (`flexpress_get_model_social_links`)
+  - Model profiles in `single-model.php` (logged-in OnlyFans link)
+  - Site-wide social links in `includes/contact-helpers.php` (`flexpress_get_all_social_media_links`)
+- **Smart URL Parsing**: Handles existing query parameters, checks for duplicate ref parameters
+
 ### Admin Features
 
 - **Settings Panels**: General, Video, Membership, Flowguard, Pricing, Affiliate, Contact, Google SMTP, SMTP2Go, Upcoming Episode
@@ -259,6 +279,7 @@ flexpress/
 - **Email Testing**: Built-in test functionality for Google SMTP and SMTP2Go
 - **Legal Pages**: Dynamic content generation for compliance
 - **Automatic Episode Scheduling**: WordPress scheduled posts integration
+- **OnlyFans Referral Tracking**: Automatic referral code appending to all OnlyFans links site-wide
 
 ### Frontend Features
 

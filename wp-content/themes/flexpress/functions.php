@@ -6683,7 +6683,7 @@ function flexpress_get_model_social_links($model_id = null)
     // OnlyFans
     if ($onlyfans = get_field('model_onlyfans', $model_id)) {
         $social_links['onlyfans'] = array(
-            'url' => $onlyfans,
+            'url' => flexpress_append_onlyfans_referral($onlyfans),
             'label' => 'OnlyFans',
             'icon' => 'fas fa-heart'
         );

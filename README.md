@@ -591,6 +591,53 @@ FlexPress
 - Check verification status: `flexpressAgeVerification.status()`
 - Configure exit URL in WordPress Admin → FlexPress Settings → General → "Age Verification Exit URL"
 
+### OnlyFans Referral Code System (October 2025)
+
+FlexPress includes automatic OnlyFans referral code tracking that appends your referral code to all OnlyFans links across the site.
+
+**Key Features:**
+
+- **Automatic URL Appending**: Referral code automatically appended to all OnlyFans links
+- **Site-Wide Application**: Works on model profiles, footer, contact pages, and any OnlyFans social links
+- **Smart Detection**: Only appends code to OnlyFans URLs, skips existing referral parameters
+- **Zero Configuration Required**: Set your code once, forget about it
+
+**Configuration:**
+
+1. Go to `FlexPress Settings → General`
+2. Enter your OnlyFans referral code in the "OnlyFans Referral Code" field (e.g., `17503922`)
+3. Save settings
+4. All OnlyFans links will automatically include `?ref={your-code}`
+
+**Technical Implementation:**
+
+- **Helper Functions**:
+  - `flexpress_get_onlyfans_referral_code()` - Retrieves referral code from settings
+  - `flexpress_append_onlyfans_referral($url)` - Appends referral code to OnlyFans URLs
+- **Automatic Application**:
+  - Model social links (`single-model.php`)
+  - Site social media links (`includes/contact-helpers.php`)
+  - Model profile data (`functions.php`)
+- **Smart URL Parsing**: Properly handles existing query parameters and skips URLs that already have referral codes
+
+**Usage Examples:**
+
+```php
+// Automatic application in model profiles
+$onlyfans_url = get_field('model_onlyfans'); // https://onlyfans.com/username
+echo flexpress_append_onlyfans_referral($onlyfans_url); // https://onlyfans.com/username?ref=17503922
+
+// Automatic application in footer social links
+flexpress_display_social_media_links(); // OnlyFans link includes referral code
+```
+
+**Files Modified:**
+
+- `includes/admin/class-flexpress-general-settings.php` - Added referral code field
+- `functions.php` - Added helper functions and applied to model social links
+- `single-model.php` - Applied to model profile OnlyFans links
+- `includes/contact-helpers.php` - Applied to site-wide social media links
+
 ### Dual Logo System (September 2025)
 
 - **Primary Logo**: Main logo displayed by default

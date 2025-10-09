@@ -225,7 +225,12 @@ function flexpress_get_all_social_media_links() {
     foreach ($platforms as $platform) {
         $field_name = 'social_' . $platform;
         if (isset($options[$field_name]) && !empty($options[$field_name])) {
-            $social_links[$platform] = $options[$field_name];
+            $url = $options[$field_name];
+            // Apply OnlyFans referral code if applicable
+            if ($platform === 'onlyfans' && function_exists('flexpress_append_onlyfans_referral')) {
+                $url = flexpress_append_onlyfans_referral($url);
+            }
+            $social_links[$platform] = $url;
         }
     }
     

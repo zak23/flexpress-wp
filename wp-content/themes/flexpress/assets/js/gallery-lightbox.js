@@ -85,7 +85,7 @@
         }
         
         openLightbox(clickedElement) {
-            const $gallery = $(clickedElement).closest('.episode-gallery');
+            const $gallery = $(clickedElement).closest('.episode-gallery, .extras-gallery');
             const $images = $gallery.find('.gallery-item');
             
             // Build images array
@@ -198,7 +198,7 @@
     
     // Initialize lightbox when document is ready
     $(document).ready(() => {
-        if ($('.episode-gallery').length) {
+        if ($('.episode-gallery').length || $('.extras-gallery').length) {
             new FlexPressGalleryLightbox();
         }
     });

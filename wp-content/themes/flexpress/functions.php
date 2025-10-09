@@ -1024,6 +1024,55 @@ function flexpress_sanitize_general_settings($input)
 }
 
 /**
+ * Get OnlyFans referral code from settings
+ *
+ * @return string|null The referral code or null if not set
+ */
+function flexpress_get_onlyfans_referral_code() {
+    $options = get_option('flexpress_general_settings');
+    $referral_code = isset($options['onlyfans_referral_code']) ? trim($options['onlyfans_referral_code']) : '';
+    return !empty($referral_code) ? $referral_code : null;
+}
+
+/**
+ * Append OnlyFans referral code to OnlyFans URLs
+ *
+ * @param string $url The OnlyFans URL
+ * @return string The URL with referral code appended if applicable
+ */
+function flexpress_append_onlyfans_referral($url) {
+    // Check if URL is empty
+    if (empty($url)) {
+        return $url;
+    }
+
+    // Check if URL is an OnlyFans URL
+    if (stripos($url, 'onlyfans.com') === false) {
+        return $url;
+    }
+
+    // Get the referral code
+    $referral_code = flexpress_get_onlyfans_referral_code();
+    
+    // If no referral code is set, return the original URL
+    if (empty($referral_code)) {
+        return $url;
+    }
+
+    // Check if URL already has ref parameter
+    if (stripos($url, '?ref=') !== false || stripos($url, '&ref=') !== false) {
+        return $url;
+    }
+
+    // Parse the URL
+    $parsed = parse_url($url);
+    $separator = isset($parsed['query']) ? '&' : '?';
+
+    // Append the referral code
+    return $url . $separator . 'ref=' . urlencode($referral_code);
+}
+
+/**
  * Get age verification exit URL from settings
  */
 function flexpress_get_age_verification_exit_url()

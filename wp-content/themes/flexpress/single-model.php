@@ -414,6 +414,59 @@ get_header();
         wp_reset_postdata();
         ?>
 
+        <!-- All Extras Grid Section -->
+        <?php
+        $all_extras_query = new WP_Query(array(
+            'post_type' => 'extras',
+            'posts_per_page' => 12,
+            'meta_query' => array(
+                array(
+                    'key' => 'featured_models',
+                    'value' => '"' . get_the_ID() . '"',
+                    'compare' => 'LIKE'
+                ),
+                array(
+                    'key' => 'release_date',
+                    'value' => current_time('mysql'),
+                    'compare' => '<=',
+                    'type' => 'DATETIME'
+                )
+            ),
+            'meta_key' => 'release_date',
+            'orderby' => 'meta_value',
+            'order' => 'DESC'
+        ));
+        
+        if ($all_extras_query->have_posts()) : ?>
+            <div class="container py-5">
+                <div class="row">
+                    <div class="col-12 text-left mb-5">
+                        <h2 class="section-title"><?php echo get_the_title(get_queried_object_id()); ?> Extras</h2>
+                    </div>
+                </div>
+                
+                <!-- Extras Grid -->
+                <div class="extras-grid">
+                    <div class="row g-4">
+                        <?php while ($all_extras_query->have_posts()) : $all_extras_query->the_post(); ?>
+                            <div class="col-lg-6 col-md-6 col-sm-6">
+                                <?php get_template_part('template-parts/content', 'extras-card'); ?>
+                            </div>
+                        <?php endwhile; ?>
+                    </div>
+                </div>
+                
+                <?php if ($all_extras_query->found_posts > 12) : ?>
+                    <div class="text-center mt-5">
+                        <p class="text-muted">Showing 12 of <?php echo $all_extras_query->found_posts; ?> extras</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php 
+        endif;
+        wp_reset_postdata();
+        ?>
+
         <!-- Model Messages Section -->
         <?php 
         // Store the main post context before checking comments

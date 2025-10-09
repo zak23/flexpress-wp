@@ -280,20 +280,34 @@ $extras_query = new WP_Query($extras_args);
                                         <?php esc_html_e('Categories', 'flexpress'); ?>
                                     </div>
                                     <?php
+                                    // Get tags that are actually used on extras posts
                                     $extras_tags = get_terms(array(
                                         'taxonomy' => 'post_tag',
                                         'hide_empty' => true,
                                         'orderby' => 'name',
-                                        'order' => 'ASC'
+                                        'order' => 'ASC',
+                                        'object_ids' => get_posts(array(
+                                            'post_type' => 'extras',
+                                            'posts_per_page' => -1,
+                                            'fields' => 'ids'
+                                        ))
                                     ));
 
                                     if (!empty($extras_tags) && !is_wp_error($extras_tags)):
                                         foreach ($extras_tags as $tag):
+                                            // Count only extras with this tag
+                                            $tag_count = $wpdb->get_var($wpdb->prepare(
+                                                "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p
+                                                INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+                                                INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                                                WHERE p.post_type = 'extras' AND p.post_status = 'publish' AND tt.term_id = %d",
+                                                $tag->term_id
+                                            ));
                                     ?>
                                             <a href="<?php echo esc_url(add_query_arg(array('filter_type' => 'category', 'filter_value' => $tag->slug))); ?>"
                                                 class="filter-item <?php echo ($filter_type === 'category' && $filter_value === $tag->slug) ? 'active' : ''; ?>">
                                                 <?php echo esc_html($tag->name); ?>
-                                                <span class="filter-count">(<?php echo $tag->count; ?>)</span>
+                                                <span class="filter-count">(<?php echo $tag_count; ?>)</span>
                                             </a>
                                     <?php
                                         endforeach;
@@ -330,12 +344,38 @@ $extras_query = new WP_Query($extras_args);
 
                                 <!-- Models Filter Section -->
                                 <?php
-                                $models = get_posts(array(
-                                    'post_type' => 'model',
-                                    'posts_per_page' => -1,
-                                    'orderby' => 'title',
-                                    'order' => 'ASC'
-                                ));
+                                // Get only models that are featured in extras posts
+                                global $wpdb;
+                                $model_ids_in_extras = $wpdb->get_col(
+                                    "SELECT DISTINCT meta_value 
+                                    FROM {$wpdb->postmeta} pm
+                                    INNER JOIN {$wpdb->posts} p ON pm.post_id = p.ID
+                                    WHERE p.post_type = 'extras' 
+                                    AND p.post_status = 'publish'
+                                    AND pm.meta_key = 'featured_models'
+                                    AND pm.meta_value != ''"
+                                );
+                                
+                                // Extract model IDs from serialized arrays
+                                $model_ids = array();
+                                foreach ($model_ids_in_extras as $serialized) {
+                                    $unserialized = maybe_unserialize($serialized);
+                                    if (is_array($unserialized)) {
+                                        $model_ids = array_merge($model_ids, $unserialized);
+                                    }
+                                }
+                                $model_ids = array_unique(array_filter($model_ids));
+                                
+                                $models = array();
+                                if (!empty($model_ids)) {
+                                    $models = get_posts(array(
+                                        'post_type' => 'model',
+                                        'posts_per_page' => -1,
+                                        'orderby' => 'title',
+                                        'order' => 'ASC',
+                                        'post__in' => $model_ids
+                                    ));
+                                }
                                 ?>
                                 <div id="model-filters" class="filter-section" style="display: <?php echo ($filter_type === 'model') ? 'block' : 'none'; ?>;">
                                     <div class="filter-header">
@@ -349,6 +389,10 @@ $extras_query = new WP_Query($extras_args);
                                                 <?php echo esc_html($model->post_title); ?>
                                             </a>
                                         <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <div class="text-muted small px-3 py-2">
+                                            <?php esc_html_e('No models found', 'flexpress'); ?>
+                                        </div>
                                     <?php endif; ?>
                                 </div>
 

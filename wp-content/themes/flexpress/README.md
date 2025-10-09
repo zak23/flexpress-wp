@@ -1458,16 +1458,19 @@ Enabled
 1. **Category Filtering:**
 
    - Uses WordPress `post_tag` taxonomy
-   - Displays tag name with episode count (e.g., "Big Cock (5)")
+   - **Context-Aware:** Only shows tags used on episode posts
+   - Displays tag name with accurate episode count (e.g., "Big Cock (5)")
    - Active filter highlighting
    - Direct URL-based filtering for bookmarkable results
 
 2. **Model Filtering:**
 
    - Integrates with custom `model` post type
+   - **Context-Aware:** Only shows models featured in episodes
    - Uses ACF `featured_models` relationship field
    - Alphabetical model listing
    - Model-specific episode filtering
+   - Graceful empty state when no models are found
 
 3. **Alphabetical Filtering:**
    - A-Z grid layout (6 columns desktop, responsive)
@@ -1594,8 +1597,168 @@ Enabled
 **Duration Implementation:**
 
 - **Location:** Moved from thumbnail overlay to info section for cleaner design
+
+### Extras Archive System
+
+Modern, responsive extras (BTS content) archive page with advanced filtering and layout options, mirroring the Episodes Archive System with extras-specific features.
+
+#### Version
+
+2.0.0
+
+#### Status
+
+Enabled
+
+#### Recent Updates
+
+- **v2.0.0:** Complete redesign with Vixen.com-inspired layout, context-aware filtering (only shows tags/models used in extras), dedicated content type filter
+- **v1.5.0:** Added toggle filter functionality with 2-column/3-column layout switching
+- **v1.4.0:** Implemented dropdown-based filter switching between categories, content types, and models
+- **v1.3.0:** Enhanced dark theme styling and visual consistency
+
+#### Core Features
+
+- **Responsive Grid Layout:**
+  - 8/4 column split (content/filters) when filters visible
+  - 12 column full-width when filters hidden
+  - 2 extras per row (filters visible) or 3 extras per row (filters hidden)
+  - Mobile-responsive single column on small screens
+- **Dynamic Filter Toggle:**
+  - Show/Hide filters button with smooth animations
+  - Instant layout switching between 2-column and 3-column content grids
+  - Persistent filter state during session
+  - Professional hover effects and transitions
+- **Advanced Filtering System:**
+  - Dropdown-based filter type selection (Category/Content Type/Models)
+  - **Context-Aware Filtering:** Only shows tags and models used in extras posts
+  - Dynamic content display based on selected filter type
+  - Smart category filtering by post tags with accurate extras counts
+  - Content type filtering (Behind Scenes, Bloopers, Interviews, Photo Shoots, Making Of, Deleted Scenes, Extended Cuts, Other)
+  - Model-based filtering using ACF relationship fields
+  - Alphabetical filtering (A-Z) for extras by title
+- **Sorting Options:**
+  - Compact button-based sort controls
+  - Newest/Oldest extras sorting
+  - Release date-based ordering using ACF fields
+  - Maintains sort state across filter changes
+
+#### Technical Implementation
+
+- **Template:** `archive-extras.php`
+- **Styling:** Enhanced CSS in `main.css` with dark theme integration
+- **JavaScript:** Vanilla JS for filter toggling and dropdown interactions
+- **Query Integration:**
+  - WordPress WP_Query with custom meta queries
+  - ACF field integration for release dates, content types, and model relationships
+  - Post tag taxonomy filtering with post type specificity
+  - SQL-based alphabetical filtering
+  - Custom SQL queries for accurate tag/model counts
+
+#### Filter Types
+
+1. **Category Filtering:**
+
+   - Uses WordPress `post_tag` taxonomy
+   - **Context-Aware:** Only shows tags used on extras posts
+   - Displays tag name with accurate extras count (e.g., "BTS (3)")
+   - Active filter highlighting
+   - Direct URL-based filtering for bookmarkable results
+   - SQL query ensures counts reflect only extras, not episodes
+
+2. **Content Type Filtering:**
+
+   - Exclusive to extras archive
+   - Eight predefined content types:
+     - Behind the Scenes
+     - Bloopers
+     - Interviews
+     - Photo Shoots
+     - Making Of
+     - Deleted Scenes
+     - Extended Cuts
+     - Other
+   - ACF `content_type` field integration
+   - Professional icon-based display
+
+3. **Model Filtering:**
+
+   - Integrates with custom `model` post type
+   - **Context-Aware:** Only shows models featured in extras posts
+   - Uses ACF `featured_models` relationship field
+   - Alphabetical model listing
+   - Model-specific extras filtering
+   - Graceful empty state when no models are found
+   - SQL query extracts model IDs from serialized ACF arrays
+
+4. **Alphabetical Filtering:**
+   - A-Z grid layout (6 columns desktop, responsive)
+   - SQL LIKE query for title-based filtering
+   - Letter-based extras grouping
+   - Clean alphabet navigation
+
+#### Context-Aware Filtering Implementation
+
+**Problem Solved:**
+Previously, the extras archive showed ALL tags and models from the entire site, including those only used on episodes. This created confusion for users who would click a tag/model and see no results.
+
+**Solution:**
+
+- **Tag Filtering:** Uses `object_ids` parameter in `get_terms()` to limit results to tags actually used on extras posts
+- **Model Filtering:** Custom SQL query extracts model IDs from `featured_models` meta field for extras posts only
+- **Accurate Counts:** Custom SQL queries count only extras posts, not episodes, for each tag
+- **Performance:** Efficient database queries with proper indexing and prepared statements
+
+**Code Pattern:**
+```php
+// Get tags that are actually used on extras posts
+$extras_tags = get_terms(array(
+    'taxonomy' => 'post_tag',
+    'object_ids' => get_posts(array(
+        'post_type' => 'extras',
+        'posts_per_page' => -1,
+        'fields' => 'ids'
+    ))
+));
+
+// Get only models featured in extras
+$model_ids_in_extras = $wpdb->get_col(
+    "SELECT DISTINCT meta_value 
+    FROM {$wpdb->postmeta} pm
+    INNER JOIN {$wpdb->posts} p ON pm.post_id = p.ID
+    WHERE p.post_type = 'extras' 
+    AND pm.meta_key = 'featured_models'"
+);
+```
+
+#### Layout System
+
+- **Filters Visible Mode:**
+  - 8-column content area, 4-column filter sidebar
+  - 2 extras per row
+  - 16 extras per page
+- **Filters Hidden Mode:**
+  - 12-column full-width content area
+  - 3 extras per row
+  - 16 extras per page
+- **Grid Transitions:**
+  - Smooth CSS animations
+  - Instant column recalculation
+  - Responsive breakpoint handling
+
+#### Pagination
+
+- **Vixen-Style Navigation:**
+  - First/Back/Next/Last controls
+  - Page number display
+  - Page count indicators
+  - Clean, professional styling
+  - 16 extras per page (configurable)
+
+**Duration Implementation:**
+
 - **Format:** MM:SS display (e.g., "17:34")
-- **Source:** ACF `episode_duration` field with BunnyCDN API fallback
+- **Source:** ACF `extras_duration` field with BunnyCDN API fallback
 - **Styling:** Gray color (#888888), right-aligned, 0.85rem font size
 
 **Date Handling:**

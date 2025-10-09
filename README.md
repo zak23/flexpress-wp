@@ -472,6 +472,7 @@ flexpress_display_cf7_form('content_removal');
 - **Access Control**: PPV pricing and member-only access for premium extras content
 
 **Key Features:**
+
 - Gallery meta box in admin with image upload, alt text, captions, reordering
 - Automatic BunnyCDN thumbnail generation (episodes/galleries/ and extras/galleries/ paths)
 - Gallery count badge and content type badge on archive cards
@@ -481,6 +482,7 @@ flexpress_display_cf7_form('content_removal');
 - Professional card styling matching episode archive design
 
 **Files Updated:**
+
 - `includes/gallery-system.php` - Gallery management class with BunnyCDN integration
 - `assets/js/gallery-admin.js` - Admin interface JavaScript for uploads and reordering
 - `assets/js/gallery-lightbox.js` - Front-end lightbox functionality
@@ -2462,6 +2464,134 @@ $all_models_args = array(
 - **Field Name**: `model_hide_on_homepage`
 - **Default Value**: `0` (visible by default)
 - **UI**: Toggle switch with "Yes/No" labels
+
+### Model Profile Page (single-model.php)
+
+The individual model profile page provides a comprehensive view of each model's information and related content.
+
+#### Page Sections
+
+**1. Hero Section**
+
+- Displays model hero image (1920x600px recommended) with model name overlay
+- Falls back to simple header if no hero image is set
+- Responsive design with professional styling
+
+**2. Profile Details Section**
+
+- **Left Column**: Model profile image (uses `model_profile_image` or featured image)
+- **Right Column**: Model information including:
+  - Biography/About text
+  - Gender, Date of Birth, Height, Measurements (when available)
+  - Additional content from WordPress editor
+  - Icon-based detail display with FontAwesome icons
+
+**3. Social Media Links**
+
+- Displays model's social media profiles (Instagram, Twitter, TikTok, OnlyFans, custom website)
+- **Access Control**: Social links are locked for non-logged-in users
+- **Member-Only Access**: Must be logged in to view social links
+- **OnlyFans Referral Integration**: Automatically appends referral code to OnlyFans links
+
+**4. Latest Scene Section**
+
+- Shows the most recent published episode featuring the model
+- Full-width hero video player with BunnyCDN integration
+- Hover-to-play preview functionality
+- Displays episode title and featured performers
+- Links to episode page
+
+**5. All Episodes Grid**
+
+- Displays all published episodes featuring the model
+- Grid layout: 2 episodes per row (6 columns each)
+- Shows up to 12 episodes with count display
+- Sorted by release date (newest first)
+- Uses Vixen-style episode card template
+- Only shows episodes with `release_date <= current_time()`
+
+**6. All Extras Grid** *(NEW)*
+
+- Displays all published extras featuring the model
+- Grid layout: 2 extras per row (6 columns each)
+- Shows up to 12 extras with count display
+- Sorted by release date (newest first)
+- Displays content type badges (Behind the Scenes, Interviews, etc.)
+- Shows gallery count or video duration badges
+- Only shows extras with `release_date <= current_time()`
+
+**7. Model Messages Section**
+
+- Member-only comment system for direct messages to models
+- **Access Control**: 
+  - Non-logged-in users: Prompted to log in
+  - Logged-in non-members: Prompted to join
+  - Active members: Can send messages
+- Displays existing messages from other members
+- Custom comment form with model-specific messaging context
+
+#### Query Logic
+
+**Episodes Query:**
+```php
+$all_episodes_query = new WP_Query(array(
+    'post_type' => 'episode',
+    'posts_per_page' => 12,
+    'meta_query' => array(
+        array(
+            'key' => 'featured_models',
+            'value' => '"' . get_the_ID() . '"',
+            'compare' => 'LIKE'
+        ),
+        array(
+            'key' => 'release_date',
+            'value' => current_time('mysql'),
+            'compare' => '<=',
+            'type' => 'DATETIME'
+        )
+    ),
+    'meta_key' => 'release_date',
+    'orderby' => 'meta_value',
+    'order' => 'DESC'
+));
+```
+
+**Extras Query:**
+```php
+$all_extras_query = new WP_Query(array(
+    'post_type' => 'extras',
+    'posts_per_page' => 12,
+    'meta_query' => array(
+        array(
+            'key' => 'featured_models',
+            'value' => '"' . get_the_ID() . '"',
+            'compare' => 'LIKE'
+        ),
+        array(
+            'key' => 'release_date',
+            'value' => current_time('mysql'),
+            'compare' => '<=',
+            'type' => 'DATETIME'
+        )
+    ),
+    'meta_key' => 'release_date',
+    'orderby' => 'meta_value',
+    'order' => 'DESC'
+));
+```
+
+#### Template Files
+
+- **Main Template**: `single-model.php`
+- **Episode Card**: `template-parts/content-episode-card.php`
+- **Extras Card**: `template-parts/content-extras-card.php`
+- **Helper Functions**: `functions.php` (social media links, OnlyFans referral)
+
+#### Access Control Features
+
+- **Social Links**: Locked for non-logged-in users with login prompt
+- **Message System**: Active membership required to send messages
+- **Content Display**: All episodes and extras visible to all visitors (access control applied at content level)
 
 ## 🆘 Support
 

@@ -73,6 +73,15 @@ Do all pupeteer tests on the test site.
   - Visibility
   - Field keys/names unchanged for backward compatibility
 
+### Archive Filtering System
+
+- **Context-Aware Filters**: Episode and Extras archives only show filters relevant to their post type
+- **Category Filters**: Only display tags that are actually used on the specific post type (episodes or extras)
+- **Model Filters**: Only show models that are featured in the specific post type
+- **Content Type Filter**: Exclusive to extras archive (behind_scenes, bloopers, interviews, photo_shoots, making_of, deleted_scenes, extended_cuts, other)
+- **Implementation**: Uses WordPress query optimization with `object_ids` parameter and custom SQL queries to ensure accurate counts
+- **Benefits**: Prevents confusion by not showing episode-related filters on extras pages and vice versa
+
 ## Docker Configuration
 
 - Main service: `wordpress` (custom build)

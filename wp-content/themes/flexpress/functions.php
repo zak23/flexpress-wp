@@ -7777,9 +7777,9 @@ function flexpress_invalidate_user_cache_on_meta_change($meta_id, $object_id, $m
 }
 add_action('updated_user_meta', 'flexpress_invalidate_user_cache_on_meta_change', 10, 4);
 add_action('added_user_meta', 'flexpress_invalidate_user_cache_on_meta_change', 10, 4);
-add_action('deleted_user_meta', function ($meta_ids, $object_id, $meta_key, $_meta_value, $delete_all) {
+add_action('deleted_user_meta', function ($meta_ids, $object_id, $meta_key, $_meta_value) {
     flexpress_invalidate_user_cache_on_meta_change(0, $object_id, $meta_key, $_meta_value);
-}, 10, 5);
+}, 10, 4);
 
 /**
  * Update user membership status

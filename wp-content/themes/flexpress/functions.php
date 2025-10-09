@@ -910,6 +910,11 @@ function flexpress_sanitize_general_settings($input)
         $sanitized['age_verification_exit_url'] = $url ? $url : 'https://duckduckgo.com'; // Fallback to default
     }
 
+    // Sanitize OnlyFans referral code
+    if (isset($input['onlyfans_referral_code'])) {
+        $sanitized['onlyfans_referral_code'] = sanitize_text_field($input['onlyfans_referral_code']);
+    }
+
     // Sanitize awards enabled
     if (isset($input['awards_enabled'])) {
         $sanitized['awards_enabled'] = '1';

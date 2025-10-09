@@ -117,6 +117,15 @@ class FlexPress_General_Settings
             'flexpress_general_section'
         );
 
+        // Add OnlyFans referral code field
+        add_settings_field(
+            'flexpress_onlyfans_referral_code',
+            __('OnlyFans Referral Code', 'flexpress'),
+            array($this, 'render_onlyfans_referral_code_field'),
+            'flexpress_general_settings',
+            'flexpress_general_section'
+        );
+
         // Add Awards Section
         add_settings_section(
             'flexpress_awards_section',
@@ -365,6 +374,25 @@ class FlexPress_General_Settings
             placeholder="https://example.com">
         <p class="description">
             <?php esc_html_e('URL to redirect users when they click "Exit Site" in the age verification modal. Default is DuckDuckGo.', 'flexpress'); ?>
+        </p>
+    <?php
+    }
+
+    /**
+     * Render OnlyFans referral code field
+     */
+    public function render_onlyfans_referral_code_field()
+    {
+        $options = get_option('flexpress_general_settings');
+        $value = isset($options['onlyfans_referral_code']) ? $options['onlyfans_referral_code'] : '';
+    ?>
+        <input type="text"
+            name="flexpress_general_settings[onlyfans_referral_code]"
+            value="<?php echo esc_attr($value); ?>"
+            class="regular-text"
+            placeholder="17503922">
+        <p class="description">
+            <?php esc_html_e('Enter your OnlyFans referral code. When set, all OnlyFans links on your site will automatically include ?ref={code} to track referrals.', 'flexpress'); ?>
         </p>
     <?php
     }

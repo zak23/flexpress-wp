@@ -448,7 +448,7 @@ while (have_posts()):
                             <?php endif; ?>
 
                             <?php if (!is_user_logged_in() || (is_user_logged_in() && !function_exists('flexpress_has_active_membership') || !flexpress_has_active_membership())): ?>
-                                <?php if (!($access_info['show_membership_button'] ?? false)): ?>
+                                <?php if (!($access_info['show_membership_button'] ?? false) && $access_info['access_type'] !== 'ppv_only'): ?>
                                     <hr class="my-3 border-secondary">
                                     <div class="text-center">
                                         <h6 class="mb-2 text-white">

@@ -262,7 +262,7 @@ flexpress/
 
 #### Implementation Details
 
-- **Helper Functions**: 
+- **Helper Functions**:
   - `flexpress_get_onlyfans_referral_code()` - Retrieves referral code from settings
   - `flexpress_append_onlyfans_referral($url)` - Appends referral code to OnlyFans URLs
 - **Application Points**:

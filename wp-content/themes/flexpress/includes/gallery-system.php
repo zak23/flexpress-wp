@@ -417,48 +417,46 @@ class FlexPress_Gallery_System
                 </div>
 
                 <div class="gallery-images-grid" id="extras-gallery-images-grid">
-                    <?php if (empty($gallery_images)): ?>
-                        <div class="no-images">
-                            <?php _e('No images uploaded yet. Use the upload area above to add images.', 'flexpress'); ?>
-                        </div>
-                    <?php else: ?>
-                        <?php foreach ($gallery_images as $index => $image): ?>
+                    <?php if (!empty($gallery_images)) : ?>
+                        <?php foreach ($gallery_images as $index => $image) : ?>
                             <div class="gallery-image-item" data-image-id="<?php echo esc_attr($image['id']); ?>">
                                 <div class="image-preview">
                                     <img src="<?php echo esc_url($image['thumbnail']); ?>" alt="<?php echo esc_attr($image['alt']); ?>">
                                     <div class="image-overlay">
-                                        <button type="button" class="button button-small edit-image" data-image-id="<?php echo esc_attr($image['id']); ?>">
-                                            <?php _e('Edit', 'flexpress'); ?>
+                                        <button type="button" class="button button-small edit-image" title="<?php _e('Edit Image', 'flexpress'); ?>">
+                                            <span class="dashicons dashicons-edit"></span>
                                         </button>
-                                        <button type="button" class="button button-small delete-image" data-image-id="<?php echo esc_attr($image['id']); ?>">
-                                            <?php _e('Delete', 'flexpress'); ?>
+                                        <button type="button" class="button button-small delete-image" title="<?php _e('Delete Image', 'flexpress'); ?>">
+                                            <span class="dashicons dashicons-trash"></span>
                                         </button>
                                     </div>
                                 </div>
                                 <div class="image-info">
-                                    <input type="text" name="gallery_image_title[<?php echo esc_attr($image['id']); ?>]" 
-                                           value="<?php echo esc_attr($image['title']); ?>" 
-                                           placeholder="<?php _e('Image Title', 'flexpress'); ?>">
-                                    <input type="text" name="gallery_image_alt[<?php echo esc_attr($image['id']); ?>]" 
-                                           value="<?php echo esc_attr($image['alt']); ?>" 
-                                           placeholder="<?php _e('Alt Text', 'flexpress'); ?>">
-                                    <textarea name="gallery_image_caption[<?php echo esc_attr($image['id']); ?>]" 
-                                              placeholder="<?php _e('Image Caption', 'flexpress'); ?>"><?php echo esc_textarea($image['caption']); ?></textarea>
+                                    <input type="text" class="image-alt" value="<?php echo esc_attr($image['alt']); ?>"
+                                        placeholder="<?php _e('Alt text', 'flexpress'); ?>">
+                                    <input type="text" class="image-caption" value="<?php echo esc_attr($image['caption']); ?>"
+                                        placeholder="<?php _e('Caption', 'flexpress'); ?>">
                                 </div>
                                 <div class="image-order">
                                     <span class="order-number"><?php echo $index + 1; ?></span>
                                     <div class="order-controls">
-                                        <button type="button" class="button button-small move-up" data-image-id="<?php echo esc_attr($image['id']); ?>">↑</button>
-                                        <button type="button" class="button button-small move-down" data-image-id="<?php echo esc_attr($image['id']); ?>">↓</button>
+                                        <button type="button" class="button button-small move-up" title="<?php _e('Move Up', 'flexpress'); ?>">
+                                            <span class="dashicons dashicons-arrow-up-alt2"></span>
+                                        </button>
+                                        <button type="button" class="button button-small move-down" title="<?php _e('Move Down', 'flexpress'); ?>">
+                                            <span class="dashicons dashicons-arrow-down-alt2"></span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
+                    <?php else : ?>
+                        <p class="no-images"><?php _e('No gallery images uploaded yet.', 'flexpress'); ?></p>
                     <?php endif; ?>
                 </div>
             </div>
 
-            <div class="gallery-settings-section">
+            <div class="gallery-settings">
                 <h4><?php _e('Gallery Settings', 'flexpress'); ?></h4>
                 <table class="form-table">
                     <tr>
@@ -467,11 +465,15 @@ class FlexPress_Gallery_System
                         </th>
                         <td>
                             <select name="extras_gallery_columns" id="extras_gallery_columns">
-                                <option value="1" <?php selected(get_post_meta($post->ID, '_extras_gallery_columns', true), '1'); ?>><?php _e('1 Column', 'flexpress'); ?></option>
-                                <option value="2" <?php selected(get_post_meta($post->ID, '_extras_gallery_columns', true), '2'); ?>><?php _e('2 Columns', 'flexpress'); ?></option>
-                                <option value="3" <?php selected(get_post_meta($post->ID, '_extras_gallery_columns', true), '3'); ?>><?php _e('3 Columns', 'flexpress'); ?></option>
-                                <option value="4" <?php selected(get_post_meta($post->ID, '_extras_gallery_columns', true), '4'); ?>><?php _e('4 Columns', 'flexpress'); ?></option>
+                                <?php
+                                $current_columns = get_post_meta($post->ID, '_extras_gallery_columns', true) ?: '3';
+                                ?>
+                                <option value="2" <?php selected($current_columns, '2'); ?>><?php _e('2 Columns', 'flexpress'); ?></option>
+                                <option value="3" <?php selected($current_columns, '3'); ?>><?php _e('3 Columns', 'flexpress'); ?></option>
+                                <option value="4" <?php selected($current_columns, '4'); ?>><?php _e('4 Columns', 'flexpress'); ?></option>
+                                <option value="5" <?php selected($current_columns, '5'); ?>><?php _e('5 Columns', 'flexpress'); ?></option>
                             </select>
+                            <p class="description"><?php _e('Number of columns to display in the gallery grid.', 'flexpress'); ?></p>
                         </td>
                     </tr>
                     <tr>

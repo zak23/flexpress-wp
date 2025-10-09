@@ -450,65 +450,6 @@
     line-height: 1.3;
 }
 
-/* Small Rating Display for Episode Cards */
-.episode-rating-display {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-}
-
-.rating-stars-small {
-    display: inline-flex;
-    gap: 1px;
-}
-
-.rating-stars-small .star {
-    width: 12px;
-    height: 12px;
-    display: inline-block;
-    position: relative;
-}
-
-.rating-stars-small .star::before {
-    content: '★';
-    font-family: Arial, sans-serif;
-    font-weight: normal;
-    font-size: 12px;
-    color: #6c757d;
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
-.rating-stars-small .star.filled::before {
-    font-weight: 900;
-    color: #ffc107;
-}
-
-.rating-stars-small .star.half-filled::before {
-    font-weight: 900;
-    color: #ffc107;
-}
-
-.rating-stars-small .star.half-filled::after {
-    content: '★';
-    font-family: Arial, sans-serif;
-    font-weight: normal;
-    font-size: 12px;
-    color: #6c757d;
-    position: absolute;
-    top: 0;
-    left: 0;
-    clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
-}
-
-.rating-text-small {
-    color: #6c757d;
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-
 /* Responsive Design for Rating System */
 @media (max-width: 768px) {
     .episode-rating-form,
@@ -539,29 +480,6 @@
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
-    }
-    
-    .episode-rating-display {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.25rem;
-    }
-    
-    .rating-stars-small .star {
-        width: 10px;
-        height: 10px;
-    }
-    
-    .rating-stars-small .star::before {
-        font-size: 10px;
-    }
-    
-    .rating-stars-small .star.half-filled::after {
-        font-size: 10px;
-    }
-    
-    .rating-text-small {
-        font-size: 0.7rem;
     }
     
     /* Sidebar responsive adjustments */

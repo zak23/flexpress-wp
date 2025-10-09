@@ -519,6 +519,18 @@ function flexpress_enqueue_scripts_and_styles()
         wp_script_add_data('flexpress-gallery-lightbox', 'defer', true);
     }
 
+    // Enqueue model social script on single model pages
+    if (is_singular('model')) {
+        wp_enqueue_script(
+            'flexpress-model-social',
+            get_template_directory_uri() . '/assets/js/model-social.js',
+            array('jquery'),
+            wp_get_theme()->get('Version'),
+            true
+        );
+        wp_script_add_data('flexpress-model-social', 'defer', true);
+    }
+
     // Enqueue affiliate signup script on affiliate signup page
     if (is_page_template('page-templates/affiliate-signup.php')) {
         wp_enqueue_style('flexpress-affiliate-styles', get_template_directory_uri() . '/assets/css/affiliate-styles.css', array('flexpress-main'), wp_get_theme()->get('Version'));

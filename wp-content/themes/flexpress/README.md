@@ -41,6 +41,12 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Access Control**: Free, PPV, membership, and mixed access types
 - **Token-Based Security**: Secure video URLs with expiration
 - **Multiple Video Types**: Full episodes, trailers, and previews
+- **Episode Rating System**: User-generated ratings and reviews for episodes
+- **Interactive Star Ratings**: 5-star rating system with comments
+- **Rating Statistics**: Average ratings, distribution charts, and rating counts
+- **Logged-in User Only**: Only authenticated users can rate episodes
+- **Rating Management**: Users can update or remove their ratings
+- **Episode Card Integration**: Rating display on episode cards and archive pages
 
 ### 🖼️ Gallery System
 
@@ -392,6 +398,12 @@ flexpress_track_enhanced_promo_usage(
 - **Release Scheduling**: Future episode planning
 - **Duration Tracking**: Episode length management
 - **Category System**: Tags and filtering
+- **Rating System**: User-generated ratings and reviews
+- **Interactive Ratings**: 5-star rating system with optional comments
+- **Rating Statistics**: Average ratings, distribution charts, and rating counts
+- **User Management**: Only logged-in users can rate episodes
+- **Rating Updates**: Users can modify or remove their ratings
+- **Episode Card Integration**: Rating display on episode cards and archive pages
 
 ### Extras/BTS Content
 
@@ -2326,6 +2338,65 @@ To streamline episode editing, the Episodes field group is organized into ACF ta
 - Visibility: Hidden from Public toggle
 
 Note: Field keys and names are unchanged for full backward compatibility.
+
+#### Episode Rating System
+
+A comprehensive rating system that allows logged-in users to rate episodes with stars and optional comments.
+
+##### Database Structure
+
+- **Table**: `wp_flexpress_episode_ratings`
+- **Fields**: episode_id, user_id, rating (1-5), comment, created_at, updated_at
+- **Constraints**: Unique user-episode combination, rating validation (1-5 stars)
+
+##### Key Features
+
+- **5-Star Rating System**: Interactive star interface with hover effects
+- **Optional Comments**: Users can add text reviews alongside ratings
+- **Rating Statistics**: Average ratings, distribution charts, total counts
+- **User Management**: Only authenticated users can rate episodes
+- **Rating Updates**: Users can modify or remove their existing ratings
+- **AJAX Integration**: Seamless rating submission without page reloads
+- **Responsive Design**: Mobile-optimized rating interface
+
+##### Technical Implementation
+
+- **Class**: `FlexPress_Episode_Ratings` in `includes/class-flexpress-episode-ratings.php`
+- **AJAX Handlers**:
+  - `submit_episode_rating`: Create/update ratings
+  - `get_episode_ratings`: Retrieve paginated ratings
+  - `remove_episode_rating`: Delete user ratings
+- **Template**: `template-parts/episode-rating-system.php`
+- **Assets**:
+  - `assets/js/episode-ratings.js`: Interactive rating functionality
+  - `assets/css/episode-ratings.css`: Dark theme compatible styling
+
+##### Helper Functions
+
+- `flexpress_get_episode_rating_stats($episode_id)`: Get rating statistics
+- `flexpress_get_user_episode_rating($episode_id, $user_id)`: Get user's rating
+- `flexpress_display_episode_rating_stars($rating, $interactive, $episode_id)`: Display stars
+- `flexpress_display_episode_rating_form($episode_id)`: Show rating form
+- `flexpress_display_episode_rating_stats($episode_id)`: Show statistics
+- `flexpress_episode_has_ratings($episode_id)`: Check if episode has ratings
+- `flexpress_get_episode_average_rating($episode_id)`: Get average rating
+
+##### Integration Points
+
+- **Single Episode Pages**: Rating system integrated into Episode Actions sidebar with form, stats, and recent ratings
+- **Episode Cards**: Small rating display with stars and count
+- **Archive Pages**: Rating information in episode listings
+- **User Dashboard**: User's rating history (future enhancement)
+
+##### Sidebar Integration
+
+The rating system is designed to fit seamlessly into the Episode Actions sidebar:
+
+- **Compact Layout**: Optimized for sidebar display with smaller fonts and spacing
+- **Centered Stars**: Interactive rating stars centered for better visual appeal
+- **Scrollable Reviews**: Recent ratings section with scrollable container (max 200px height)
+- **Responsive Design**: Adapts to mobile screens with further size reductions
+- **Consistent Styling**: Matches the dark theme and Episode Actions design
 
 #### Model Names Display
 

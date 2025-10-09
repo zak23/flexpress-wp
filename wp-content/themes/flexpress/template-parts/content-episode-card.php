@@ -92,6 +92,23 @@ if ($full_video && (empty($duration) || $duration == 0)) {
             </div>
             <?php endif; ?>
             
+            <!-- Episode Rating Display -->
+            <?php if (function_exists('flexpress_episode_has_ratings') && flexpress_episode_has_ratings(get_the_ID())): ?>
+                <div class="episode-rating-display">
+                    <?php 
+                    $average_rating = flexpress_get_episode_average_rating(get_the_ID());
+                    $rating_stats = flexpress_get_episode_rating_stats(get_the_ID());
+                    ?>
+                    <div class="rating-stars-small">
+                        <?php echo flexpress_display_episode_rating_stars($average_rating); ?>
+                    </div>
+                    <span class="rating-text-small">
+                        <?php echo esc_html($average_rating); ?> 
+                        (<?php printf(_n('%d rating', '%d ratings', $rating_stats['total_ratings'], 'flexpress'), $rating_stats['total_ratings']); ?>)
+                    </span>
+                </div>
+            <?php endif; ?>
+            
             <?php 
             if ($release_date) {
                 // Handle multiple date formats

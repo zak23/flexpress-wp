@@ -405,6 +405,7 @@ class FlexPress_Affiliate_Settings {
         add_action('wp_ajax_create_tables_manually', array($this, 'create_tables_manually_ajax'));
         add_action('wp_ajax_update_tables_manually', array($this, 'update_tables_manually_ajax'));
         add_action('wp_ajax_force_recreate_promo_table', array($this, 'force_recreate_promo_table_ajax'));
+        add_action('wp_ajax_export_promo_report_csv', array($this, 'export_promo_report_csv'));
         
         // Create table on theme activation
         add_action('after_switch_theme', array(__CLASS__, 'create_affiliate_tables'));
@@ -862,6 +863,12 @@ class FlexPress_Affiliate_Settings {
                     
                     <!-- Promo Codes Table -->
                     <div class="promo-codes-table">
+                        <div class="table-header-actions">
+                            <button type="button" class="button button-secondary" id="export-promo-report">
+                                <span class="dashicons dashicons-download"></span>
+                                <?php esc_html_e('Export CSV Report', 'flexpress'); ?>
+                            </button>
+                        </div>
                         <table class="wp-list-table widefat fixed striped">
                             <thead>
                                 <tr>
@@ -870,6 +877,7 @@ class FlexPress_Affiliate_Settings {
                                     <th><?php esc_html_e('Name', 'flexpress'); ?></th>
                                     <th><?php esc_html_e('Discount', 'flexpress'); ?></th>
                                     <th><?php esc_html_e('Usage', 'flexpress'); ?></th>
+                                    <th><?php esc_html_e('Revenue', 'flexpress'); ?></th>
                                     <th><?php esc_html_e('Status', 'flexpress'); ?></th>
                                     <th><?php esc_html_e('Valid Until', 'flexpress'); ?></th>
                                     <th><?php esc_html_e('Actions', 'flexpress'); ?></th>
@@ -879,6 +887,12 @@ class FlexPress_Affiliate_Settings {
                                 <?php $this->render_promo_codes_table(); ?>
                             </tbody>
                         </table>
+                    </div>
+                    
+                    <!-- Detailed Promo Usage Report -->
+                    <div class="promo-usage-report" style="margin-top: 30px;">
+                        <h3><?php esc_html_e('Detailed Usage Report', 'flexpress'); ?></h3>
+                        <?php $this->render_promo_usage_report(); ?>
                     </div>
                 </div>
 
@@ -2480,9 +2494,12 @@ class FlexPress_Affiliate_Settings {
         );
         
         if (empty($promo_codes)) {
-            echo '<tr><td colspan="8">' . esc_html__('No promo codes found.', 'flexpress') . '</td></tr>';
+            echo '<tr><td colspan="9">' . esc_html__('No promo codes found.', 'flexpress') . '</td></tr>';
             return;
         }
+        
+        $usage_table = $wpdb->prefix . 'flexpress_promo_usage';
+        $transactions_table = $wpdb->prefix . 'flexpress_flowguard_transactions';
         
         foreach ($promo_codes as $promo) {
             $status_class = 'status-' . $promo->status;
@@ -2504,6 +2521,13 @@ class FlexPress_Affiliate_Settings {
                 $usage_display .= ' / ' . $promo->usage_limit;
             }
             
+            // Calculate revenue from transactions
+            $revenue = $wpdb->get_var($wpdb->prepare(
+                "SELECT SUM(amount) FROM {$transactions_table} WHERE promo_code = %s AND status = 'approved'",
+                $promo->code
+            ));
+            $revenue_display = '$' . number_format($revenue ?: 0, 2);
+            
             // Format valid until
             $valid_until_display = 'Never';
             if ($promo->valid_until) {
@@ -2516,6 +2540,7 @@ class FlexPress_Affiliate_Settings {
             echo '<td>' . esc_html($promo->name) . '</td>';
             echo '<td>' . esc_html($discount_display) . '</td>';
             echo '<td>' . esc_html($usage_display) . '</td>';
+            echo '<td><strong>' . esc_html($revenue_display) . '</strong></td>';
             echo '<td><span class="status ' . esc_attr($status_class) . '">' . esc_html($status_label) . '</span></td>';
             echo '<td>' . esc_html($valid_until_display) . '</td>';
             echo '<td>';
@@ -2533,6 +2558,67 @@ class FlexPress_Affiliate_Settings {
             echo '</td>';
             echo '</tr>';
         }
+    }
+    
+    /**
+     * Render detailed promo usage report
+     */
+    public function render_promo_usage_report() {
+        if (!$this->tables_exist()) {
+            echo '<p>' . esc_html__('Database tables not found.', 'flexpress') . '</p>';
+            return;
+        }
+        
+        global $wpdb;
+        $usage_table = $wpdb->prefix . 'flexpress_promo_usage';
+        $transactions_table = $wpdb->prefix . 'flexpress_flowguard_transactions';
+        
+        // Get usage data grouped by promo code
+        $usage_data = $wpdb->get_results("
+            SELECT 
+                promo_code,
+                COUNT(*) as redemptions,
+                COUNT(DISTINCT user_id) as unique_users,
+                MIN(used_at) as first_used,
+                MAX(used_at) as last_used
+            FROM {$usage_table}
+            GROUP BY promo_code
+            ORDER BY redemptions DESC
+            LIMIT 20
+        ");
+        
+        if (empty($usage_data)) {
+            echo '<p>' . esc_html__('No usage data found.', 'flexpress') . '</p>';
+            return;
+        }
+        
+        echo '<table class="wp-list-table widefat fixed striped">';
+        echo '<thead><tr>';
+        echo '<th>' . esc_html__('Promo Code', 'flexpress') . '</th>';
+        echo '<th>' . esc_html__('Redemptions', 'flexpress') . '</th>';
+        echo '<th>' . esc_html__('Unique Users', 'flexpress') . '</th>';
+        echo '<th>' . esc_html__('Revenue', 'flexpress') . '</th>';
+        echo '<th>' . esc_html__('First Used', 'flexpress') . '</th>';
+        echo '<th>' . esc_html__('Last Used', 'flexpress') . '</th>';
+        echo '</tr></thead><tbody>';
+        
+        foreach ($usage_data as $row) {
+            $revenue = $wpdb->get_var($wpdb->prepare(
+                "SELECT SUM(amount) FROM {$transactions_table} WHERE promo_code = %s AND status = 'approved'",
+                $row->promo_code
+            ));
+            
+            echo '<tr>';
+            echo '<td><strong>' . esc_html($row->promo_code) . '</strong></td>';
+            echo '<td>' . esc_html($row->redemptions) . '</td>';
+            echo '<td>' . esc_html($row->unique_users) . '</td>';
+            echo '<td>$' . number_format($revenue ?: 0, 2) . '</td>';
+            echo '<td>' . esc_html(date('M j, Y', strtotime($row->first_used))) . '</td>';
+            echo '<td>' . esc_html(date('M j, Y', strtotime($row->last_used))) . '</td>';
+            echo '</tr>';
+        }
+        
+        echo '</tbody></table>';
     }
     
     /**
@@ -2807,6 +2893,89 @@ class FlexPress_Affiliate_Settings {
         } catch (Exception $e) {
             wp_send_json_error(array('message' => 'Error recreating table: ' . $e->getMessage()));
         }
+    }
+    
+    /**
+     * Export promo code report as CSV
+     */
+    public function export_promo_report_csv() {
+        check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_die('Insufficient permissions');
+        }
+        
+        global $wpdb;
+        $promo_table = $wpdb->prefix . 'flexpress_promo_codes';
+        $usage_table = $wpdb->prefix . 'flexpress_promo_usage';
+        $transactions_table = $wpdb->prefix . 'flexpress_flowguard_transactions';
+        
+        // Get all promo codes with usage data
+        $promo_codes = $wpdb->get_results("SELECT * FROM {$promo_table} ORDER BY created_at DESC");
+        
+        // Set headers for CSV download
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=promo-codes-report-' . date('Y-m-d') . '.csv');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        
+        // Create output stream
+        $output = fopen('php://output', 'w');
+        
+        // Add BOM for Excel UTF-8 support
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+        
+        // Add CSV headers
+        fputcsv($output, array(
+            'Code',
+            'Name',
+            'Discount Type',
+            'Discount Value',
+            'Usage Count',
+            'Usage Limit',
+            'Revenue',
+            'Unique Users',
+            'Status',
+            'Valid Until',
+            'Created At',
+            'First Used',
+            'Last Used'
+        ));
+        
+        // Add data rows
+        foreach ($promo_codes as $promo) {
+            // Get revenue
+            $revenue = $wpdb->get_var($wpdb->prepare(
+                "SELECT SUM(amount) FROM {$transactions_table} WHERE promo_code = %s AND status = 'approved'",
+                $promo->code
+            ));
+            
+            // Get usage stats
+            $usage_stats = $wpdb->get_row($wpdb->prepare(
+                "SELECT COUNT(DISTINCT user_id) as unique_users, MIN(used_at) as first_used, MAX(used_at) as last_used 
+                FROM {$usage_table} WHERE promo_code = %s",
+                $promo->code
+            ));
+            
+            fputcsv($output, array(
+                $promo->code,
+                $promo->name,
+                $promo->discount_type,
+                $promo->discount_value,
+                $promo->usage_count,
+                $promo->usage_limit ?: 'Unlimited',
+                number_format($revenue ?: 0, 2),
+                $usage_stats->unique_users ?: 0,
+                $promo->status,
+                $promo->valid_until ?: 'Never',
+                $promo->created_at,
+                $usage_stats->first_used ?: 'Never',
+                $usage_stats->last_used ?: 'Never'
+            ));
+        }
+        
+        fclose($output);
+        exit;
     }
 }
 

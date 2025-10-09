@@ -1718,6 +1718,33 @@ jQuery(document).ready(function($) {
         };
         return text.replace(/[&<>"']/g, function(m) { return map[m]; });
     }
+    
+    // Export promo report CSV
+    $('#export-promo-report').on('click', function(e) {
+        e.preventDefault();
+        
+        // Create a form and submit it to trigger CSV download
+        const form = $('<form>', {
+            method: 'POST',
+            action: ajaxurl
+        });
+        
+        form.append($('<input>', {
+            type: 'hidden',
+            name: 'action',
+            value: 'export_promo_report_csv'
+        }));
+        
+        form.append($('<input>', {
+            type: 'hidden',
+            name: 'nonce',
+            value: flexpress_affiliate_admin.nonce
+        }));
+        
+        $('body').append(form);
+        form.submit();
+        form.remove();
+    });
 
     } catch (error) {
         console.error('Error in affiliate admin script:', error);

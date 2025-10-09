@@ -96,6 +96,14 @@ class FlexPress_Episode_Ratings {
         
         $user_id = get_current_user_id();
         
+        // Check if user has access to full video
+        $access_info = flexpress_check_episode_access($episode_id, $user_id);
+        if (!$access_info['has_access']) {
+            wp_send_json_error(array(
+                'message' => __('You must unlock this episode before rating it.', 'flexpress')
+            ));
+        }
+        
         // Check if user already rated this episode
         $existing_rating = $this->get_user_rating($episode_id, $user_id);
         
@@ -414,6 +422,13 @@ class FlexPress_Episode_Ratings {
     public function display_rating_form($episode_id) {
         if (!is_user_logged_in()) {
             // Do not show any login prompt; hide the rating UI for logged-out users
+            return '';
+        }
+        
+        // Check if user has access to full video
+        $access_info = flexpress_check_episode_access($episode_id, get_current_user_id());
+        if (!$access_info['has_access']) {
+            // Return empty string - the template will handle showing the access notice
             return '';
         }
         

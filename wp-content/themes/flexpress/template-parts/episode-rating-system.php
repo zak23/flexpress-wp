@@ -9,6 +9,7 @@ if (!defined('ABSPATH')) {
 }
 
 $episode_id = get_the_ID();
+$has_access = get_query_var('has_access', false);
 $ratings_system = new FlexPress_Episode_Ratings();
 
 // Get rating statistics
@@ -33,7 +34,17 @@ $recent_ratings = $ratings_system->get_episode_ratings_paginated($episode_id, 1,
     <?php echo $ratings_system->display_rating_stats($episode_id); ?>
     
     <!-- Rating Form -->
-    <?php echo $ratings_system->display_rating_form($episode_id); ?>
+    <?php if ($has_access): ?>
+        <?php echo $ratings_system->display_rating_form($episode_id); ?>
+    <?php elseif (is_user_logged_in()): ?>
+        <div class="rating-access-notice p-3 bg-dark border border-secondary rounded text-center">
+            <i class="fas fa-lock fa-2x text-secondary mb-2"></i>
+            <h6 class="text-white mb-2"><?php esc_html_e('Unlock Episode to Rate', 'flexpress'); ?></h6>
+            <p class="text-secondary mb-0 small">
+                <?php esc_html_e('You need to unlock this episode before you can rate it.', 'flexpress'); ?>
+            </p>
+        </div>
+    <?php endif; ?>
 </div>
 
 <script>

@@ -326,7 +326,10 @@ while (have_posts()):
                 <div class="col-lg-4">
                     <!-- Episode Rating System (top of sidebar) -->
                     <div class="episode-rating-section mb-4">
-                        <?php get_template_part('template-parts/episode-rating-system'); ?>
+                        <?php 
+                        set_query_var('has_access', $has_access);
+                        get_template_part('template-parts/episode-rating-system'); 
+                        ?>
                     </div>
                     <!-- Episode Actions -->
                     <?php if (!$has_access): ?>

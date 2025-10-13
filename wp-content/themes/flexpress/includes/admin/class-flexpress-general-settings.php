@@ -126,6 +126,15 @@ class FlexPress_General_Settings
             'flexpress_general_section'
         );
 
+        // Add Dolls Downunder Network field
+        add_settings_field(
+            'flexpress_dolls_downunder_network',
+            __('Show Dolls Downunder Network', 'flexpress'),
+            array($this, 'render_dolls_downunder_network_field'),
+            'flexpress_general_settings',
+            'flexpress_general_section'
+        );
+
         // Add Awards Section
         add_settings_section(
             'flexpress_awards_section',
@@ -393,6 +402,27 @@ class FlexPress_General_Settings
             placeholder="17503922">
         <p class="description">
             <?php esc_html_e('Enter your OnlyFans referral code. When set, all OnlyFans links on your site will automatically include ?ref={code} to track referrals.', 'flexpress'); ?>
+        </p>
+    <?php
+    }
+
+    /**
+     * Render Dolls Downunder Network field
+     */
+    public function render_dolls_downunder_network_field()
+    {
+        $options = get_option('flexpress_general_settings');
+        $value = isset($options['dolls_downunder_network']) ? $options['dolls_downunder_network'] : 0;
+    ?>
+        <label>
+            <input type="checkbox"
+                name="flexpress_general_settings[dolls_downunder_network]"
+                value="1"
+                <?php checked($value, 1); ?>>
+            <?php esc_html_e('Display "Part of the Dolls Downunder Network" text in footer', 'flexpress'); ?>
+        </label>
+        <p class="description">
+            <?php esc_html_e('When enabled, displays network affiliation text in the footer.', 'flexpress'); ?>
         </p>
     <?php
     }

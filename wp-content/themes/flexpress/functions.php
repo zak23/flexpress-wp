@@ -915,6 +915,13 @@ function flexpress_sanitize_general_settings($input)
         $sanitized['onlyfans_referral_code'] = sanitize_text_field($input['onlyfans_referral_code']);
     }
 
+    // Sanitize Dolls Downunder Network
+    if (isset($input['dolls_downunder_network'])) {
+        $sanitized['dolls_downunder_network'] = '1';
+    } else {
+        $sanitized['dolls_downunder_network'] = '0';
+    }
+
     // Sanitize awards enabled
     if (isset($input['awards_enabled'])) {
         $sanitized['awards_enabled'] = '1';
@@ -3053,7 +3060,7 @@ function flexpress_handle_flowguard_payment_return()
 function flexpress_process_registration_and_payment()
 {
     // Verify nonce
-    if (!wp_verify_nonce($_POST['nonce'], 'flexpress_join_form')) {
+    if (!wp_verify_nonce($_POST['nonce'], 'flexpress_registration_nonce')) {
         wp_send_json_error(array('message' => 'Security check failed.'));
         return;
     }
@@ -3263,7 +3270,7 @@ function flexpress_process_registration_and_payment()
 function flexpress_process_renewal_and_payment()
 {
     // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'flexpress_join_form')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'flexpress_registration_nonce')) {
         wp_send_json_error(array('message' => 'Security verification failed. Please try again.'));
         return;
     }

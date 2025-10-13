@@ -771,6 +771,16 @@ wp_localize_script($script_handle, 'flexpressPromo', array(
     'ajaxurl' => admin_url('admin-ajax.php'),
     'nonce' => wp_create_nonce('flexpress_promo_nonce')
 ));
+
+// Create a separate script handle for registration operations
+$registration_script_handle = 'flexpress-join-form-script';
+wp_register_script($registration_script_handle, '', array('jquery'), '1.0', true);
+wp_enqueue_script($registration_script_handle);
+
+wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
+    'ajaxurl' => admin_url('admin-ajax.php'),
+    'nonce' => wp_create_nonce('flexpress_registration_nonce')
+));
 ?>
 
 <script>
@@ -1016,7 +1026,7 @@ wp_localize_script($script_handle, 'flexpressPromo', array(
                     type: 'POST',
                     data: {
                         action: 'flexpress_process_registration_and_payment',
-                        nonce: flexpressPromo.nonce,
+                        nonce: flexpressJoinForm.nonce,
                         email: email,
                         password: password,
                         selected_plan: planId,

@@ -795,22 +795,10 @@ class FlexPress_Affiliate_Settings {
                     </div>
                     <p><?php esc_html_e('Manage affiliate applications and accounts.', 'flexpress'); ?></p>
                     
-                    <div class="affiliates-table">
-                        <table class="wp-list-table widefat fixed striped">
-                            <thead>
-                                <tr>
-                                    <th><?php esc_html_e('Affiliate', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Email', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Status', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Commission Rate', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Total Revenue', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Actions', 'flexpress'); ?></th>
-                                </tr>
-                            </thead>
-                            <tbody id="affiliates-list">
-                                <?php $this->render_affiliates_table(); ?>
-                            </tbody>
-                        </table>
+                    <div id="affiliate-admin-app">
+                        <div class="loading-spinner">
+                            <p><?php esc_html_e('Loading affiliate management interface...', 'flexpress'); ?></p>
+                        </div>
                     </div>
                 </div>
 
@@ -900,24 +888,10 @@ class FlexPress_Affiliate_Settings {
                 <div id="transactions" class="tab-content">
                     <h2><?php esc_html_e('Transactions', 'flexpress'); ?></h2>
                     <p><?php esc_html_e('View affiliate transaction history and commissions.', 'flexpress'); ?></p>
-                    <div class="transactions-table">
-                        <table class="wp-list-table widefat fixed striped">
-                            <thead>
-                                <tr>
-                                    <th><?php esc_html_e('Date', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Affiliate', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Type', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Amount', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Commission', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Status', 'flexpress'); ?></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td colspan="6"><?php esc_html_e('No transactions found.', 'flexpress'); ?></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div id="transactions-admin-app">
+                        <div class="loading-spinner">
+                            <p><?php esc_html_e('Loading transactions interface...', 'flexpress'); ?></p>
+                        </div>
                     </div>
                 </div>
 
@@ -931,46 +905,10 @@ class FlexPress_Affiliate_Settings {
                     </div>
                     <p><?php esc_html_e('Manage affiliate payouts and payment processing.', 'flexpress'); ?></p>
                     
-                    <!-- Payout Filters -->
-                    <div class="payout-filters">
-                        <select id="payout-status-filter">
-                            <option value=""><?php esc_html_e('All Statuses', 'flexpress'); ?></option>
-                            <option value="pending"><?php esc_html_e('Pending', 'flexpress'); ?></option>
-                            <option value="processing"><?php esc_html_e('Processing', 'flexpress'); ?></option>
-                            <option value="completed"><?php esc_html_e('Completed', 'flexpress'); ?></option>
-                            <option value="failed"><?php esc_html_e('Failed', 'flexpress'); ?></option>
-                        </select>
-                        <button type="button" class="button" id="refresh-payouts">
-                            <?php esc_html_e('Refresh', 'flexpress'); ?>
-                        </button>
-                    </div>
-                    
-                    <div class="payouts-table">
-                        <table class="wp-list-table widefat fixed striped">
-                            <thead>
-                                <tr>
-                                    <th><?php esc_html_e('Affiliate', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Period', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Amount', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Method', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Status', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Created', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Actions', 'flexpress'); ?></th>
-                                </tr>
-                            </thead>
-                            <tbody id="payouts-list">
-                                <tr>
-                                    <td colspan="7"><?php esc_html_e('Loading payouts...', 'flexpress'); ?></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <!-- Pagination -->
-                    <div class="payout-pagination">
-                        <button type="button" class="button" id="prev-page" disabled><?php esc_html_e('Previous', 'flexpress'); ?></button>
-                        <span id="page-info"><?php esc_html_e('Page 1 of 1', 'flexpress'); ?></span>
-                        <button type="button" class="button" id="next-page" disabled><?php esc_html_e('Next', 'flexpress'); ?></button>
+                    <div id="payouts-admin-app">
+                        <div class="loading-spinner">
+                            <p><?php esc_html_e('Loading payouts interface...', 'flexpress'); ?></p>
+                        </div>
                     </div>
                 </div>
                 <?php endif; ?>
@@ -2010,9 +1948,22 @@ class FlexPress_Affiliate_Settings {
             true
         );
 
+        wp_enqueue_script(
+            'flexpress-admin-affiliate-spa',
+            get_template_directory_uri() . '/assets/js/admin-affiliate-spa.js',
+            array('jquery'),
+            '1.0.0',
+            true
+        );
+
         wp_localize_script('flexpress-affiliate-admin', 'flexpressAffiliate', array(
             'ajaxurl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('flexpress_affiliate_nonce'),
+        ));
+
+        wp_localize_script('flexpress-admin-affiliate-spa', 'flexpress_admin', array(
+            'rest_url' => rest_url(),
+            'nonce' => wp_create_nonce('wp_rest')
         ));
 
         wp_enqueue_style(

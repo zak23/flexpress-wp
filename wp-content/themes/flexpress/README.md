@@ -24,15 +24,16 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Webhook Processing**: Real-time payment confirmations
 - **Flexible Pricing Plans**: Complete control over pricing plan creation, editing, and deletion
 - **No Auto-Recreation**: Deleted pricing plans stay deleted (no automatic regeneration)
-- **Affiliate System**: Complete commission tracking and management system
-- **Affiliate Application Management**: Comprehensive admin interface for managing affiliate applications and accounts
-- **Bulk Operations**: Approve, reject, suspend, or reactivate multiple affiliates at once
-- **Status Notifications**: Automatic email notifications to affiliates when status changes
-- **Performance Tracking**: Real-time statistics and revenue tracking for affiliate accounts
-- **Promo Codes System**: Dedicated promotional code management separate from affiliate codes
-- **Flexible Discount Types**: Percentage, fixed amount, and free trial discounts
-- **Usage Tracking**: Comprehensive analytics and usage limits
-- **Payment Integration**: Seamless integration with Flowguard payment processing
+- **Affiliate Management System**: Complete commission tracking and management system with JWT authentication
+- **Affiliate Registration**: Frontend signup forms with validation and approval workflow
+- **Commission Processing**: Automatic commission calculation from Flowguard payment events
+- **Payout Management**: Request, approve, and process affiliate payouts with CSV export
+- **Tracking System**: 30-day cookie tracking with ?aff and ?promo parameter support
+- **Admin Dashboard**: React-based SPA for comprehensive affiliate management
+- **Affiliate Dashboard**: Secure JWT-protected dashboard for affiliates
+- **Promo Code Integration**: Link promo codes to affiliates with attribution precedence
+- **Security Features**: Encrypted payout details, security headers, and Redis caching rules
+- **REST API**: Complete REST API for affiliate and admin operations
 
 ### 🎥 Video Management
 
@@ -595,17 +596,20 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 
 ---
 
-## 🤝 Affiliate System
+## 🤝 Affiliate Management System
 
 ### Core Features
 
 - **Module Toggle**: Enable/disable entire affiliate system from admin settings
-- **Affiliate Applications**: Public application form with admin approval workflow
-- **Commission Tracking**: Automatic commission calculation and tracking
-- **Promo Code Management**: Create and manage promotional codes with custom pricing
-- **Click Tracking**: 30-day cookie-based attribution system
-- **Advanced Payout Management**: Dynamic form system with method-specific field validation and comprehensive payout processing
-- **Real-time Analytics**: Live statistics and performance tracking
+- **Affiliate Registration**: Frontend signup forms with validation and approval workflow
+- **Commission Processing**: Automatic commission calculation from Flowguard payment events
+- **Payout Management**: Request, approve, and process affiliate payouts with CSV export
+- **Tracking System**: 30-day cookie tracking with ?aff and ?promo parameter support
+- **Admin Dashboard**: React-based SPA for comprehensive affiliate management
+- **Affiliate Dashboard**: Secure JWT-protected dashboard for affiliates
+- **Promo Code Integration**: Link promo codes to affiliates with attribution precedence
+- **Security Features**: Encrypted payout details, security headers, and Redis caching rules
+- **REST API**: Complete REST API for affiliate and admin operations
 
 ### Commission Structure
 
@@ -618,26 +622,23 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 ### Database Schema
 
 - **wp_flexpress_affiliates**: Core affiliate data and statistics
-- **wp_flexpress_affiliate_promo_codes**: Promo code management
+- **wp_flexpress_affiliate_promo_codes**: Promo code management with affiliate mapping
 - **wp_flexpress_affiliate_clicks**: Click tracking and attribution
 - **wp_flexpress_affiliate_transactions**: Commission records
-- **wp_flexpress_affiliate_payouts**: Payout management
+- **wp_flexpress_affiliate_payouts**: Payout management with encrypted details
 
 ### Integration Points
 
-- **Flowguard Webhooks**: Automatic commission processing on payment events
+- **Flowguard Webhooks**: Automatic commission processing on payment events via REST API
 - **Cookie Tracking**: 30-day attribution window with secure cookie management
-- **User Management**: WordPress user system integration
-- **Admin Interface**: Complete management dashboard in FlexPress Settings
-- **Application Management Page**: Dedicated page template for managing affiliate applications (`page-templates/affiliate-applications.php`)
-- **Bulk Operations**: Approve, reject, suspend, or reactivate multiple affiliates simultaneously
-- **Status Management**: Individual and bulk status updates with automatic email notifications
-- **Search & Filtering**: Advanced search by name, email, affiliate code, or status
-- **Real-time Statistics**: Live dashboard with pending applications, active affiliates, and revenue tracking
-- **Export Functionality**: Data export capabilities for reporting and analysis
-- **Dynamic Payout Forms**: Method-specific field collection with real-time validation
-- **Comprehensive Payout Support**: 6 payout methods including international transfers
-- **Fee Management**: Transparent fee structure with automatic deduction
+- **User Management**: WordPress user system integration with custom roles
+- **Admin Interface**: React-based SPA for comprehensive affiliate management
+- **JWT Authentication**: Secure token-based authentication for affiliate dashboard
+- **REST API**: Complete API for affiliate and admin operations
+- **Security Headers**: Cache-control, Vary headers, and CORS protection
+- **Encryption**: Encrypted payout details using WordPress keys
+- **CSV Export**: Payout data export by payment method
+- **Auto-Approval**: 14-day automatic commission approval via cron job
 
 ### Frontend Components
 
@@ -650,8 +651,13 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 
 - **Input Sanitization**: All user input properly sanitized
 - **CSRF Protection**: Nonce verification on all forms
-- **Access Controls**: Role-based permissions
-- **Cookie Security**: Secure, HTTP-only cookies
+- **Access Controls**: Role-based permissions with custom affiliate roles
+- **Cookie Security**: Secure, HTTP-only cookies with 30-day expiration
+- **JWT Security**: HS256 tokens with WordPress AUTH_KEY signing
+- **Encryption**: AES-256-CBC encryption for sensitive payout details
+- **Security Headers**: XSS protection, content type sniffing prevention
+- **Cache Control**: No-cache headers for sensitive affiliate data
+- **Vary Headers**: Proper caching behavior for logged-in users
 - **GDPR Compliance**: Cookie notices and data protection
 
 ---

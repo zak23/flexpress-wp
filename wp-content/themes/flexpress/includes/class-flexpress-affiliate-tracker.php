@@ -69,8 +69,13 @@ class FlexPress_Affiliate_Tracker {
             return;
         }
         
-        // Check for affiliate referral parameters
-        $affiliate_code = sanitize_text_field($_GET['ref'] ?? '');
+        // Check for affiliate referral parameters (support both ?aff and legacy ?ref)
+        $affiliate_code = '';
+        if (isset($_GET['aff']) && $_GET['aff'] !== '') {
+            $affiliate_code = sanitize_text_field($_GET['aff']);
+        } elseif (isset($_GET['ref']) && $_GET['ref'] !== '') {
+            $affiliate_code = sanitize_text_field($_GET['ref']);
+        }
         $promo_code = sanitize_text_field($_GET['promo'] ?? '');
         
         if (!empty($affiliate_code)) {

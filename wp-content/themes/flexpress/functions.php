@@ -42,6 +42,8 @@ require_once FLEXPRESS_PATH . '/includes/flowguard-database.php';
 
 // Discord Notifications
 require_once FLEXPRESS_PATH . '/includes/discord-notifications.php';
+require_once FLEXPRESS_PATH . '/includes/class-flexpress-jwt.php';
+require_once FLEXPRESS_PATH . '/includes/class-flexpress-rest-affiliates.php';
 
 // Email Blacklist System
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-email-blacklist.php';
@@ -7939,6 +7941,10 @@ function flexpress_theme_activation()
 
     // Create affiliate system database tables
     flexpress_affiliate_init_database();
+
+    // Create affiliate roles
+    add_role('affiliate_user', 'Affiliate User', array('read' => true));
+    add_role('affiliate_manager', 'Affiliate Manager', array('read' => true, 'manage_options' => true));
 
     // Set default theme options
     flexpress_set_default_theme_options();

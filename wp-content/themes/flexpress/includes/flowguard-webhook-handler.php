@@ -114,6 +114,11 @@ function flexpress_flowguard_webhook_handler() {
     
     // Process affiliate commissions if system is enabled
     flexpress_process_affiliate_commission_from_webhook($payload);
+
+    // Auto-approve pending affiliate commissions older than 14 days
+    if (!wp_next_scheduled('flexpress_affiliate_auto_approve')) {
+        wp_schedule_event(time() + HOUR_IN_SECONDS, 'daily', 'flexpress_affiliate_auto_approve');
+    }
     
     // Store webhook for analysis
     flexpress_flowguard_store_webhook($payload);
@@ -921,17 +926,50 @@ function flexpress_process_affiliate_commission_from_webhook($payload) {
         return;
     }
     
-    // Get tracking data from cookie
-    $tracker = FlexPress_Affiliate_Tracker::get_instance();
-    $tracking_data = $tracker->get_tracking_data_from_cookie();
-    
-    if (!$tracking_data) {
-        return; // No affiliate tracking
+    // Determine attribution: promo code mapping takes precedence over cookie
+    $affiliate_id = null;
+    $promo_code_id = null;
+    $click_id = null;
+
+    // Attempt to resolve promo code from session or reference
+    $reference_id = $payload['referenceId'] ?? '';
+    $resolved_promo_code = '';
+    if (function_exists('flexpress_flowguard_get_session_by_reference') && !empty($reference_id)) {
+        $session_row = flexpress_flowguard_get_session_by_reference($reference_id);
+        if ($session_row && !empty($session_row['promo_code'])) {
+            $resolved_promo_code = $session_row['promo_code'];
+        }
     }
-    
-    $affiliate_id = $tracking_data['affiliate_id'];
-    $promo_code_id = $tracking_data['promo_code_id'] ?? null;
-    $click_id = $tracking_data['click_id'] ?? null;
+    if (empty($resolved_promo_code) && function_exists('flexpress_flowguard_parse_enhanced_reference')) {
+        $reference_data = flexpress_flowguard_parse_enhanced_reference($reference_id);
+        if (!empty($reference_data['promo_code'])) {
+            $resolved_promo_code = $reference_data['promo_code'];
+        }
+    }
+
+    if (!empty($resolved_promo_code)) {
+        // Map promo code to affiliate
+        $promo_row = flexpress_get_promo_code_by_code($resolved_promo_code);
+        if ($promo_row && !empty($promo_row->affiliate_id)) {
+            $affiliate_id = intval($promo_row->affiliate_id);
+            $promo_code_id = intval($promo_row->id);
+        }
+    }
+
+    // If no affiliate via promo, fall back to tracking cookie
+    if (!$affiliate_id) {
+        $tracker = FlexPress_Affiliate_Tracker::get_instance();
+        $tracking_data = $tracker->get_tracking_data_from_cookie();
+        if ($tracking_data) {
+            $affiliate_id = intval($tracking_data['affiliate_id']);
+            $promo_code_id = $tracking_data['promo_code_id'] ?? $promo_code_id;
+            $click_id = $tracking_data['click_id'] ?? null;
+        }
+    }
+
+    if (!$affiliate_id) {
+        return; // No affiliate attribution available
+    }
     
     // Determine transaction type and plan ID
     $transaction_type = 'initial';
@@ -965,3 +1003,21 @@ function flexpress_process_affiliate_commission_from_webhook($payload) {
 // Register webhook handler
 add_action('wp_ajax_nopriv_flowguard_webhook', 'flexpress_flowguard_webhook_handler');
 add_action('wp_ajax_flowguard_webhook', 'flexpress_flowguard_webhook_handler');
+
+/**
+ * Cron: Auto-approve affiliate commissions older than 14 days
+ */
+add_action('flexpress_affiliate_auto_approve', function () {
+    global $wpdb;
+    $threshold = gmdate('Y-m-d H:i:s', time() - 14 * DAY_IN_SECONDS);
+    $rows = $wpdb->get_col($wpdb->prepare(
+        "SELECT id FROM {$wpdb->prefix}flexpress_affiliate_transactions WHERE status = 'pending' AND created_at <= %s",
+        $threshold
+    ));
+    if (!$rows) {
+        return;
+    }
+    foreach ($rows as $tx_id) {
+        flexpress_approve_affiliate_commission(intval($tx_id));
+    }
+});

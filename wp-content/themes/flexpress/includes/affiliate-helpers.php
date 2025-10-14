@@ -263,10 +263,15 @@ function flexpress_process_affiliate_commission($affiliate_id, $user_id, $transa
         "UPDATE {$wpdb->prefix}flexpress_affiliates SET 
          total_revenue = total_revenue + %f,
          pending_commission = pending_commission + %f,
-         total_signups = total_signups + 1
+         total_signups = total_signups + CASE WHEN %s = 'initial' THEN 1 ELSE 0 END,
+         total_rebills = total_rebills + CASE WHEN %s = 'rebill' THEN 1 ELSE 0 END,
+         total_unlocks = total_unlocks + CASE WHEN %s = 'unlock' THEN 1 ELSE 0 END
          WHERE id = %d",
         $amount,
         $commission_amount,
+        $transaction_type,
+        $transaction_type,
+        $transaction_type,
         $affiliate_id
     ));
     
@@ -524,4 +529,43 @@ function flexpress_get_affiliate_settings() {
  */
 function flexpress_update_affiliate_settings($settings) {
     return update_option('flexpress_affiliate_settings', $settings);
+}
+
+/**
+ * Encrypt sensitive payout details
+ *
+ * @param string $plaintext Plain text
+ * @return string Encrypted base64 string
+ */
+function flexpress_encrypt_payout_details($plaintext) {
+    if ($plaintext === '' || $plaintext === null) {
+        return '';
+    }
+    $key = hash('sha256', AUTH_KEY . AUTH_SALT, true);
+    $iv = substr(hash('sha256', SECURE_AUTH_SALT . NONCE_SALT, true), 0, 16);
+    $ciphertext = openssl_encrypt($plaintext, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+    if ($ciphertext === false) {
+        return '';
+    }
+    return base64_encode($ciphertext);
+}
+
+/**
+ * Decrypt sensitive payout details
+ *
+ * @param string $encoded Base64 string
+ * @return string Decrypted text
+ */
+function flexpress_decrypt_payout_details($encoded) {
+    if ($encoded === '' || $encoded === null) {
+        return '';
+    }
+    $key = hash('sha256', AUTH_KEY . AUTH_SALT, true);
+    $iv = substr(hash('sha256', SECURE_AUTH_SALT . NONCE_SALT, true), 0, 16);
+    $raw = base64_decode($encoded, true);
+    if ($raw === false) {
+        return '';
+    }
+    $plaintext = openssl_decrypt($raw, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+    return $plaintext === false ? '' : $plaintext;
 }

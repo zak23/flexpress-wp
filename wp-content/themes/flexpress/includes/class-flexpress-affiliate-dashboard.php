@@ -183,6 +183,31 @@ class FlexPress_Affiliate_Dashboard {
                         <?php $this->render_payout_history($affiliate->id); ?>
                     </div>
                 </div>
+                
+                <div class="section visits-section">
+                    <h3><?php esc_html_e('Recent Visits', 'flexpress'); ?></h3>
+                    <div id="affiliate-recent-visits">
+                        <p class="no-data"><?php esc_html_e('Loading visits…', 'flexpress'); ?></p>
+                    </div>
+                </div>
+                
+                <div class="section commissions-section">
+                    <h3><?php esc_html_e('Recent Commissions', 'flexpress'); ?></h3>
+                    <div id="affiliate-recent-commissions">
+                        <p class="no-data"><?php esc_html_e('Loading commissions…', 'flexpress'); ?></p>
+                    </div>
+                </div>
+                
+                <div class="section payouts-section">
+                    <h3><?php esc_html_e('Payouts', 'flexpress'); ?></h3>
+                    <div id="affiliate-payouts">
+                        <p class="no-data"><?php esc_html_e('Loading payouts…', 'flexpress'); ?></p>
+                    </div>
+                    <div class="payout-actions">
+                        <button id="request-payout" class="button button-primary"><?php esc_html_e('Request Payout', 'flexpress'); ?></button>
+                        <span id="request-payout-status" style="margin-left: 10px;"></span>
+                    </div>
+                </div>
             </div>
             
             <div class="dashboard-actions">
@@ -211,20 +236,134 @@ class FlexPress_Affiliate_Dashboard {
                 }, 2000);
             });
             
-            // Load additional data via AJAX
-            loadAffiliateStats();
+            // Load additional data via REST
+            initAffiliateDashboard();
+            
+            $('#request-payout').on('click', function() {
+                requestPayout();
+            });
         });
         
-        function loadAffiliateStats() {
-            jQuery.post(ajaxurl, {
-                action: 'get_affiliate_stats',
-                nonce: '<?php echo wp_create_nonce('flexpress_affiliate_nonce'); ?>'
-            }, function(response) {
-                if (response.success) {
-                    // Update stats with real-time data
-                    console.log('Affiliate stats loaded:', response.data);
+        async function initAffiliateDashboard() {
+            try {
+                const token = await mintToken();
+                if (!token) return;
+                const headers = { 'Authorization': 'Bearer ' + token };
+                
+                // Load profile + stats
+                const me = await fetch('<?php echo esc_url_raw( rest_url('flexpress/v1/me') ); ?>', { headers }).then(r => r.json());
+                if (me && me.stats) {
+                    // Optionally update KPI cards if needed
+                    // (Server-rendered values already present; keep as-is for now)
                 }
+                
+                // Load visits
+                const visits = await fetch('<?php echo esc_url_raw( rest_url('flexpress/v1/me/visits') ); ?>', { headers }).then(r => r.json());
+                renderVisits(visits);
+                
+                // Load commissions
+                const commissions = await fetch('<?php echo esc_url_raw( rest_url('flexpress/v1/me/commissions') ); ?>', { headers }).then(r => r.json());
+                renderCommissions(commissions);
+                
+                // Load payouts
+                const payouts = await fetch('<?php echo esc_url_raw( rest_url('flexpress/v1/me/payouts') ); ?>', { headers }).then(r => r.json());
+                renderPayouts(payouts);
+            } catch (e) {
+                console.error('Affiliate dashboard init failed', e);
+            }
+        }
+        
+        async function mintToken() {
+            try {
+                const resp = await fetch('<?php echo esc_url_raw( rest_url('flexpress/v1/auth/mint') ); ?>', { method: 'POST', credentials: 'same-origin' });
+                if (!resp.ok) return '';
+                const data = await resp.json();
+                return data && data.token ? data.token : '';
+            } catch (e) {
+                return '';
+            }
+        }
+        
+        function renderVisits(rows) {
+            const el = document.getElementById('affiliate-recent-visits');
+            if (!rows || !rows.length) {
+                el.innerHTML = '<p class="no-data"><?php echo esc_js(__('No visits yet.', 'flexpress')); ?></p>';
+                return;
+            }
+            let html = '<table class="wp-list-table widefat fixed striped"><thead><tr><th><?php echo esc_js(__('Date', 'flexpress')); ?></th><th><?php echo esc_js(__('Referrer', 'flexpress')); ?></th><th><?php echo esc_js(__('Landing', 'flexpress')); ?></th><th><?php echo esc_js(__('Converted', 'flexpress')); ?></th></tr></thead><tbody>';
+            rows.slice(0, 10).forEach(r => {
+                html += '<tr>' +
+                    '<td>' + (r.created_at || '') + '</td>' +
+                    '<td>' + (r.referrer || '') + '</td>' +
+                    '<td>' + (r.landing_page || '') + '</td>' +
+                    '<td>' + (r.converted ? '✔' : '-') + '</td>' +
+                '</tr>';
             });
+            html += '</tbody></table>';
+            el.innerHTML = html;
+        }
+        
+        function renderCommissions(rows) {
+            const el = document.getElementById('affiliate-recent-commissions');
+            if (!rows || !rows.length) {
+                el.innerHTML = '<p class="no-data"><?php echo esc_js(__('No commissions yet.', 'flexpress')); ?></p>';
+                return;
+            }
+            let html = '<table class="wp-list-table widefat fixed striped"><thead><tr><th><?php echo esc_js(__('Date', 'flexpress')); ?></th><th><?php echo esc_js(__('Type', 'flexpress')); ?></th><th><?php echo esc_js(__('Amount', 'flexpress')); ?></th><th><?php echo esc_js(__('Commission', 'flexpress')); ?></th><th><?php echo esc_js(__('Status', 'flexpress')); ?></th></tr></thead><tbody>';
+            rows.slice(0, 10).forEach(r => {
+                html += '<tr>' +
+                    '<td>' + (r.created_at || '') + '</td>' +
+                    '<td>' + (r.transaction_type || '') + '</td>' +
+                    '<td>$' + (parseFloat(r.revenue_amount || 0).toFixed(2)) + '</td>' +
+                    '<td>$' + (parseFloat(r.commission_amount || 0).toFixed(2)) + '</td>' +
+                    '<td>' + (r.status || '') + '</td>' +
+                '</tr>';
+            });
+            html += '</tbody></table>';
+            el.innerHTML = html;
+        }
+        
+        function renderPayouts(rows) {
+            const el = document.getElementById('affiliate-payouts');
+            if (!rows || !rows.length) {
+                el.innerHTML = '<p class="no-data"><?php echo esc_js(__('No payouts yet.', 'flexpress')); ?></p>';
+                return;
+            }
+            let html = '<table class="wp-list-table widefat fixed striped"><thead><tr><th><?php echo esc_js(__('Period', 'flexpress')); ?></th><th><?php echo esc_js(__('Amount', 'flexpress')); ?></th><th><?php echo esc_js(__('Method', 'flexpress')); ?></th><th><?php echo esc_js(__('Status', 'flexpress')); ?></th></tr></thead><tbody>';
+            rows.slice(0, 10).forEach(r => {
+                html += '<tr>' +
+                    '<td>' + (r.period_start || '') + ' → ' + (r.period_end || '') + '</td>' +
+                    '<td>$' + (parseFloat(r.payout_amount || 0).toFixed(2)) + '</td>' +
+                    '<td>' + (r.payout_method || '') + '</td>' +
+                    '<td>' + (r.status || '') + '</td>' +
+                '</tr>';
+            });
+            html += '</tbody></table>';
+            el.innerHTML = html;
+        }
+        
+        async function requestPayout() {
+            const statusEl = document.getElementById('request-payout-status');
+            statusEl.textContent = '<?php echo esc_js(__('Requesting…', 'flexpress')); ?>';
+            try {
+                const token = await mintToken();
+                if (!token) throw new Error('token');
+                const resp = await fetch('<?php echo esc_url_raw( rest_url('flexpress/v1/me/payouts/request') ); ?>', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!resp.ok) {
+                    statusEl.textContent = '<?php echo esc_js(__('Unable to request payout right now.', 'flexpress')); ?>';
+                    return;
+                }
+                statusEl.textContent = '<?php echo esc_js(__('Payout requested!', 'flexpress')); ?>';
+                // Reload payouts
+                const headers = { 'Authorization': 'Bearer ' + token };
+                const payouts = await fetch('<?php echo esc_url_raw( rest_url('flexpress/v1/me/payouts') ); ?>', { headers }).then(r => r.json());
+                renderPayouts(payouts);
+            } catch (e) {
+                statusEl.textContent = '<?php echo esc_js(__('Unable to request payout right now.', 'flexpress')); ?>';
+            }
         }
         </script>
         <?php

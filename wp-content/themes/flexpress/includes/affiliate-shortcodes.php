@@ -35,6 +35,9 @@ function flexpress_affiliate_application_form_shortcode($atts) {
         return '<p>' . esc_html__('Affiliate system is currently disabled.', 'flexpress') . '</p>';
     }
     
+    // Enqueue validation styles
+    wp_enqueue_style('flexpress-affiliate-validation', get_template_directory_uri() . '/assets/css/affiliate-validation.css', array(), '1.0.0');
+    
     $atts = shortcode_atts(array(
         'title' => __('Apply to Become an Affiliate', 'flexpress'),
         'show_title' => 'true',
@@ -68,6 +71,13 @@ function flexpress_affiliate_application_form_shortcode($atts) {
                     <label for="affiliate_website"><?php esc_html_e('Website/Social Media', 'flexpress'); ?></label>
                     <input type="url" id="affiliate_website" name="affiliate_website" placeholder="https://yourwebsite.com">
                     <small class="form-help"><?php esc_html_e('Your website, blog, or social media profiles where you plan to promote our content.', 'flexpress'); ?></small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="desired_affiliate_id"><?php esc_html_e('Desired Affiliate ID', 'flexpress'); ?> <span class="required">*</span></label>
+                    <input type="text" id="desired_affiliate_id" name="desired_affiliate_id" required pattern="[a-zA-Z0-9]{3,20}" placeholder="your-affiliate-id">
+                    <small class="form-help"><?php esc_html_e('Choose a unique ID (3-20 characters, letters and numbers only). This will be used in your referral links.', 'flexpress'); ?></small>
+                    <div id="affiliate-id-status" class="validation-status"></div>
                 </div>
                 
                 <div class="form-row">
@@ -196,6 +206,44 @@ function flexpress_affiliate_application_form_shortcode($atts) {
     
     <script type="text/javascript">
     jQuery(document).ready(function($) {
+        // Affiliate ID validation
+        $('#desired_affiliate_id').on('blur', function() {
+            var affiliateId = $(this).val();
+            var statusDiv = $('#affiliate-id-status');
+            
+            if (affiliateId.length < 3 || affiliateId.length > 20) {
+                statusDiv.html('<span class="error"><?php esc_html_e('ID must be 3-20 characters', 'flexpress'); ?></span>');
+                return;
+            }
+            
+            if (!/^[a-zA-Z0-9]+$/.test(affiliateId)) {
+                statusDiv.html('<span class="error"><?php esc_html_e('ID can only contain letters and numbers', 'flexpress'); ?></span>');
+                return;
+            }
+            
+            // Check availability via REST API
+            $.ajax({
+                url: '<?php echo esc_url_raw(rest_url('flexpress/v1/admin/affiliates/check-id')); ?>',
+                type: 'POST',
+                headers: {
+                    'X-WP-Nonce': '<?php echo wp_create_nonce('wp_rest'); ?>'
+                },
+                data: {
+                    affiliate_id: affiliateId
+                },
+                success: function(response) {
+                    if (response.available) {
+                        statusDiv.html('<span class="success"><?php esc_html_e('✓ Available', 'flexpress'); ?></span>');
+                    } else {
+                        statusDiv.html('<span class="error"><?php esc_html_e('✗ Already taken', 'flexpress'); ?></span>');
+                    }
+                },
+                error: function() {
+                    statusDiv.html('<span class="error"><?php esc_html_e('Unable to check availability', 'flexpress'); ?></span>');
+                }
+            });
+        });
+        
         $('#affiliate-application-form').on('submit', function(e) {
             e.preventDefault();
             

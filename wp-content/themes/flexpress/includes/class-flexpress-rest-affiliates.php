@@ -100,6 +100,12 @@ class FlexPress_REST_Affiliates {
             'callback' => [__CLASS__, 'admin_payouts_export'],
             'permission_callback' => [__CLASS__, 'require_admin'],
         ]);
+        
+        register_rest_route('flexpress/v1', '/admin/affiliates/check-id', [
+            'methods' => 'POST',
+            'callback' => [__CLASS__, 'admin_check_affiliate_id'],
+            'permission_callback' => '__return_true', // Public endpoint for form validation
+        ]);
     }
 
     public static function get_bearer() {
@@ -437,6 +443,27 @@ class FlexPress_REST_Affiliates {
             'method' => $method ?: 'all',
             'csv' => $csv,
         ];
+    }
+
+    public static function admin_check_affiliate_id(WP_REST_Request $req) {
+        $affiliate_id = sanitize_text_field($req->get_param('affiliate_id'));
+        
+        if (empty($affiliate_id)) {
+            return new WP_Error('bad_request', 'Affiliate ID required', ['status' => 400]);
+        }
+        
+        // Validate format
+        if (!preg_match('/^[a-zA-Z0-9]{3,20}$/', $affiliate_id)) {
+            return ['available' => false, 'reason' => 'Invalid format'];
+        }
+        
+        global $wpdb;
+        $exists = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM {$wpdb->prefix}flexpress_affiliates WHERE affiliate_id = %s",
+            $affiliate_id
+        ));
+        
+        return ['available' => !$exists];
     }
 }
 

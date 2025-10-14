@@ -85,7 +85,7 @@ class FlexPress_Affiliate_Manager {
      */
     public function create_referral_url($affiliate_code, $promo_code = '') {
         $base_url = home_url('/join');
-        $params = array('ref' => $affiliate_code);
+        $params = array('aff' => $affiliate_code); // Use new ?aff parameter
         
         if (!empty($promo_code)) {
             $params['promo'] = $promo_code;
@@ -197,6 +197,7 @@ class FlexPress_Affiliate_Manager {
             'affiliate_name' => sanitize_text_field($_POST['affiliate_name'] ?? ''),
             'affiliate_email' => sanitize_email($_POST['affiliate_email'] ?? ''),
             'affiliate_website' => esc_url_raw($_POST['affiliate_website'] ?? ''),
+            'desired_affiliate_id' => sanitize_text_field($_POST['desired_affiliate_id'] ?? ''),
             'payout_method' => sanitize_text_field($_POST['payout_method'] ?? 'paypal'),
             'payout_details' => sanitize_textarea_field($_POST['payout_details'] ?? ''),
             'tax_info' => sanitize_textarea_field($_POST['tax_info'] ?? ''),
@@ -208,12 +209,28 @@ class FlexPress_Affiliate_Manager {
         );
         
         // Validation
-        if (empty($data['affiliate_name']) || empty($data['affiliate_email'])) {
-            wp_send_json_error(['message' => __('Name and email are required.', 'flexpress')]);
+        if (empty($data['affiliate_name']) || empty($data['affiliate_email']) || empty($data['desired_affiliate_id'])) {
+            wp_send_json_error(['message' => __('Name, email, and affiliate ID are required.', 'flexpress')]);
         }
         
         if (!is_email($data['affiliate_email'])) {
             wp_send_json_error(['message' => __('Please enter a valid email address.', 'flexpress')]);
+        }
+        
+        // Validate affiliate ID format
+        if (!preg_match('/^[a-zA-Z0-9]{3,20}$/', $data['desired_affiliate_id'])) {
+            wp_send_json_error(['message' => __('Affiliate ID must be 3-20 characters and contain only letters and numbers.', 'flexpress')]);
+        }
+        
+        // Check if affiliate ID is already taken
+        global $wpdb;
+        $existing = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM {$wpdb->prefix}flexpress_affiliates WHERE affiliate_id = %s",
+            $data['desired_affiliate_id']
+        ));
+        
+        if ($existing) {
+            wp_send_json_error(['message' => __('This affiliate ID is already taken. Please choose another.', 'flexpress')]);
         }
         
         if (!$data['terms_accepted']) {
@@ -242,8 +259,8 @@ class FlexPress_Affiliate_Manager {
             wp_send_json_error(['message' => __('An application with this email already exists.', 'flexpress')]);
         }
         
-        // Generate unique affiliate code
-        $affiliate_code = $this->generate_affiliate_code();
+        // Use desired affiliate ID as the affiliate code
+        $affiliate_code = $data['desired_affiliate_id'];
         
         // Get default settings
         $settings = get_option('flexpress_affiliate_settings', array());
@@ -253,6 +270,7 @@ class FlexPress_Affiliate_Manager {
         $result = $wpdb->insert(
             $wpdb->prefix . 'flexpress_affiliates',
             array(
+                'affiliate_id' => $affiliate_code,
                 'affiliate_code' => $affiliate_code,
                 'display_name' => $data['affiliate_name'],
                 'email' => $data['affiliate_email'],
@@ -274,7 +292,7 @@ class FlexPress_Affiliate_Manager {
         if ($result) {
             $affiliate_id = $wpdb->insert_id;
             
-            // Create referral URL
+            // Create referral URL using new format
             $referral_url = $this->create_referral_url($affiliate_code);
             $wpdb->update(
                 $wpdb->prefix . 'flexpress_affiliates',

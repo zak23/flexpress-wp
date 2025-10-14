@@ -73,7 +73,7 @@ function flexpress_generate_affiliate_code() {
  */
 function flexpress_create_affiliate_referral_url($affiliate_code, $promo_code = '') {
     $base_url = home_url('/join');
-    $params = array('ref' => $affiliate_code);
+    $params = array('aff' => $affiliate_code); // Use new ?aff parameter
     
     if (!empty($promo_code)) {
         $params['promo'] = $promo_code;

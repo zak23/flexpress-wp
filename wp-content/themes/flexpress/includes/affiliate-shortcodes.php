@@ -52,7 +52,7 @@ function flexpress_affiliate_application_form_shortcode($atts) {
         <?php endif; ?>
         
         <div class="affiliate-form-wrapper">
-            <form id="affiliate-application-form" class="affiliate-form" method="post">
+            <form id="affiliate-application-form" class="affiliate-form" method="post" novalidate>
                 <?php wp_nonce_field('flexpress_affiliate_nonce', 'nonce'); ?>
                 
                 <div class="form-row">
@@ -149,7 +149,7 @@ function flexpress_affiliate_application_form_shortcode($atts) {
                         </div>
                         
                         <!-- Hidden field to store consolidated payout details -->
-                        <input type="hidden" id="payout_details" name="payout_details">
+                        <input type="hidden" id="payout_details" name="payout_details" disabled>
                         
                         <small class="form-help"><?php esc_html_e('Provide the details for your chosen payout method.', 'flexpress'); ?></small>
                     </div>
@@ -257,6 +257,57 @@ function flexpress_affiliate_application_form_shortcode($atts) {
             // Clear previous messages
             messages.empty();
             
+            // Build payout details object based on selected method
+            var payoutDetails = {};
+            var selectedMethod = $('#payout_method').val();
+
+            switch(selectedMethod) {
+                case 'paypal':
+                    payoutDetails = { paypal_email: $('input[name="paypal_email"]').val() };
+                    break;
+                case 'crypto':
+                    payoutDetails = {
+                        crypto_type: $('select[name="crypto_type"]').val(),
+                        crypto_address: $('input[name="crypto_address"]').val(),
+                        crypto_other: $('input[name="crypto_other"]').val()
+                    };
+                    break;
+                case 'aus_bank_transfer':
+                    payoutDetails = {
+                        aus_bank_name: $('input[name="aus_bank_name"]').val(),
+                        aus_bsb: $('input[name="aus_bsb"]').val(),
+                        aus_account_number: $('input[name="aus_account_number"]').val(),
+                        aus_account_holder: $('input[name="aus_account_holder"]').val()
+                    };
+                    break;
+                case 'yoursafe':
+                    payoutDetails = { yoursafe_iban: $('input[name="yoursafe_iban"]').val() };
+                    break;
+                case 'ach':
+                    payoutDetails = {
+                        ach_account_number: $('input[name="ach_account_number"]').val(),
+                        ach_aba: $('input[name="ach_aba"]').val(),
+                        ach_account_holder: $('input[name="ach_account_holder"]').val(),
+                        ach_bank_name: $('input[name="ach_bank_name"]').val()
+                    };
+                    break;
+                case 'swift':
+                    payoutDetails = {
+                        swift_bank_name: $('input[name="swift_bank_name"]').val(),
+                        swift_code: $('input[name="swift_code"]').val(),
+                        swift_iban_account: $('input[name="swift_iban_account"]').val(),
+                        swift_account_holder: $('input[name="swift_account_holder"]').val(),
+                        swift_bank_address: $('textarea[name="swift_bank_address"]').val(),
+                        swift_beneficiary_address: $('textarea[name="swift_beneficiary_address"]').val(),
+                        swift_intermediary_swift: $('input[name="swift_intermediary_swift"]').val(),
+                        swift_intermediary_iban: $('input[name="swift_intermediary_iban"]').val()
+                    };
+                    break;
+            }
+
+            // Set payout details and temporarily enable for serialization
+            $('#payout_details').val(JSON.stringify(payoutDetails)).prop('disabled', false);
+
             // Submit form via AJAX
             $.ajax({
                 url: ajaxurl,
@@ -281,6 +332,8 @@ function flexpress_affiliate_application_form_shortcode($atts) {
                 },
                 complete: function() {
                     submitBtn.prop('disabled', false).text('<?php esc_html_e('Submit Application', 'flexpress'); ?>');
+                    // Re-disable hidden field to avoid HTML5 validation issues
+                    $('#payout_details').prop('disabled', true);
                 }
             });
         });

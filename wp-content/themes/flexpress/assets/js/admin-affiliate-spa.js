@@ -43,6 +43,23 @@
       if (payoutBtn) {
         payoutBtn.addEventListener("click", () => this.showCreatePayoutModal());
       }
+
+      // Modal close handlers
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          const modal = document.getElementById("add-affiliate-modal");
+          if (modal && modal.style.display !== "none") {
+            modal.style.display = "none";
+          }
+        }
+      });
+
+      document.addEventListener("click", (e) => {
+        const modal = document.getElementById("add-affiliate-modal");
+        if (modal && e.target === modal) {
+          modal.style.display = "none";
+        }
+      });
     },
 
     switchTab(tab) {
@@ -215,8 +232,8 @@
                                         </span>
                                     </td>
                                     <td>${affiliate.commission_rate || 0}%</td>
-                                    <td>$${(
-                                      affiliate.total_revenue || 0
+                                    <td>$${Number(
+                                      affiliate.total_revenue ?? 0
                                     ).toFixed(2)}</td>
                                     <td>
                                         <button class="button button-small" onclick="AdminAffiliateApp.editAffiliate(${
@@ -280,11 +297,11 @@
                                     <td>${
                                       transaction.transaction_type || ""
                                     }</td>
-                                    <td>$${(
-                                      transaction.revenue_amount || 0
+                                    <td>$${Number(
+                                      transaction.revenue_amount ?? 0
                                     ).toFixed(2)}</td>
-                                    <td>$${(
-                                      transaction.commission_amount || 0
+                                    <td>$${Number(
+                                      transaction.commission_amount ?? 0
                                     ).toFixed(2)}</td>
                                     <td>
                                         <span class="status-badge status-${
@@ -364,9 +381,9 @@
                                     <td>${payout.period_start || ""} → ${
                                   payout.period_end || ""
                                 }</td>
-                                    <td>$${(payout.payout_amount || 0).toFixed(
-                                      2
-                                    )}</td>
+                                    <td>$${Number(
+                                      payout.payout_amount ?? 0
+                                    ).toFixed(2)}</td>
                                     <td>${payout.payout_method || ""}</td>
                                     <td>
                                         <span class="status-badge status-${
@@ -592,14 +609,21 @@
     },
   };
 
-  // Initialize when DOM is ready
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () =>
-      AdminAffiliateApp.init()
-    );
-  } else {
-    AdminAffiliateApp.init();
-  }
+    // Initialize when DOM is ready and target containers exist
+    function initializeWhenReady() {
+      const hasTargets = document.querySelector('#affiliate-admin-app, #transactions-admin-app, #payouts-admin-app');
+      if (hasTargets) {
+        AdminAffiliateApp.init();
+      } else {
+        setTimeout(initializeWhenReady, 100);
+      }
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initializeWhenReady);
+    } else {
+      initializeWhenReady();
+    }
 
   // Make it globally available
   window.AdminAffiliateApp = AdminAffiliateApp;

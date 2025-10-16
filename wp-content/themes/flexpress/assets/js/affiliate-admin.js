@@ -135,8 +135,9 @@ jQuery(document).ready(function ($) {
       }, 5000);
     }
 
-    // Form submission
-    $("#promo-code-form").on("submit", function (e) {
+    // Form submission - only bind if form exists
+    if ($("#promo-code-form").length) {
+        $("#promo-code-form").on("submit", function (e) {
       e.preventDefault();
 
       const $form = $(this);
@@ -150,6 +151,9 @@ jQuery(document).ready(function ($) {
       clearErrors();
 
       // Validate promo code format
+      const $promoCode = $("#new-promo-code");
+      if (!$promoCode.length) return; // Not on this screen
+
       if (!validatePromoCode($promoCode.val().trim())) {
         showFormError(
           $promoCode,
@@ -233,6 +237,7 @@ jQuery(document).ready(function ($) {
         },
       });
     });
+    }
 
     // Add Affiliate form submission
     $("#add-affiliate-form").on("submit", function (e) {

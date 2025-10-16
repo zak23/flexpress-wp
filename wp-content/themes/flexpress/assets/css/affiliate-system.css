@@ -981,3 +981,90 @@
         min-width: 500px;
     }
 }
+
+/* Modal Styles */
+.affiliate-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 100000;
+}
+
+.affiliate-modal .modal-content {
+    max-width: 640px;
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.affiliate-modal .modal-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    background: none;
+    border: none;
+}
+
+.affiliate-modal .modal-close:hover {
+    color: #333;
+}
+
+.affiliate-modal .modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    position: relative;
+}
+
+.affiliate-modal .modal-body {
+    padding: 20px;
+}
+
+.affiliate-modal .form-field {
+    margin-bottom: 20px;
+}
+
+.affiliate-modal .form-field label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.affiliate-modal .form-field input,
+.affiliate-modal .form-field select,
+.affiliate-modal .form-field textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.affiliate-modal .form-field input:focus,
+.affiliate-modal .form-field select:focus,
+.affiliate-modal .form-field textarea:focus {
+    border-color: #007cba;
+    outline: none;
+}
+
+.affiliate-modal .form-actions {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.affiliate-modal .form-actions .button {
+    margin: 0 10px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .affiliate-modal .modal-content {
+        margin: 20px;
+        max-width: calc(100% - 40px);
+    }
+}

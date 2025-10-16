@@ -38,7 +38,7 @@ if (!defined('ABSPATH')) {
                                 if ($casting_image_id) {
                                     $image_url = wp_get_attachment_url($casting_image_id);
                                     error_log('FlexPress Casting Section: Using uploaded image: ' . ($image_url ? $image_url : 'No URL found'));
-                                    echo wp_get_attachment_image($casting_image_id, 'large', false, array(
+                                    echo wp_get_attachment_image($casting_image_id, 'casting-image', false, array(
                                         'alt' => esc_attr__('Join Our Cast', 'flexpress'),
                                         'class' => 'img-fluid rounded-3 shadow'
                                     ));

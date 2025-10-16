@@ -104,22 +104,7 @@ get_header();
                                     </div>
                                 <?php endif; ?>
                                 
-                                <?php if (get_field('model_birthdate')) : ?>
-                                    <div class="model-detail-item">
-                                        <div class="model-detail-icon">
-                                            <i class="fas fa-birthday-cake"></i>
-                                        </div>
-                                        <div class="model-detail-content">
-                                            <span class="model-detail-label">Date of Birth</span>
-                                            <span class="model-detail-value">
-                                                <?php 
-                                                $date = DateTime::createFromFormat('Y-m-d', get_field('model_birthdate'));
-                                                echo $date ? $date->format('F j, Y') : '';
-                                                ?>
-                                            </span>
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
+                                
                                 
                                 <?php if (get_field('model_height')) : ?>
                                     <div class="model-detail-item">
@@ -133,14 +118,86 @@ get_header();
                                     </div>
                                 <?php endif; ?>
                                 
-                                <?php if (get_field('model_measurements')) : ?>
+                                <?php if (get_field('model_published_age')) : ?>
+                                    <div class="model-detail-item">
+                                        <div class="model-detail-icon">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div class="model-detail-content">
+                                            <span class="model-detail-label">Published Age</span>
+                                            <span class="model-detail-value"><?php echo esc_html(get_field('model_published_age')); ?></span>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if (get_field('model_location')) : ?>
+                                    <div class="model-detail-item">
+                                        <div class="model-detail-icon">
+                                            <i class="fas fa-location-dot"></i>
+                                        </div>
+                                        <div class="model-detail-content">
+                                            <span class="model-detail-label">Location</span>
+                                            <span class="model-detail-value"><?php echo esc_html(get_field('model_location')); ?></span>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if (get_field('model_weight')) : ?>
+                                    <div class="model-detail-item">
+                                        <div class="model-detail-icon">
+                                            <i class="fas fa-weight-hanging"></i>
+                                        </div>
+                                        <div class="model-detail-content">
+                                            <span class="model-detail-label">Weight</span>
+                                            <span class="model-detail-value"><?php echo esc_html(get_field('model_weight')); ?></span>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if (get_field('model_bra_size')) : ?>
+                                    <div class="model-detail-item">
+                                        <div class="model-detail-icon">
+                                            <i class="fas fa-tag"></i>
+                                        </div>
+                                        <div class="model-detail-content">
+                                            <span class="model-detail-label">Bra Size</span>
+                                            <span class="model-detail-value"><?php echo esc_html(get_field('model_bra_size')); ?></span>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if (get_field('model_bust')) : ?>
                                     <div class="model-detail-item">
                                         <div class="model-detail-icon">
                                             <i class="fas fa-chart-line"></i>
                                         </div>
                                         <div class="model-detail-content">
-                                            <span class="model-detail-label">Measurements</span>
-                                            <span class="model-detail-value"><?php echo esc_html(get_field('model_measurements')); ?></span>
+                                            <span class="model-detail-label">Bust</span>
+                                            <span class="model-detail-value"><?php echo esc_html(get_field('model_bust')); ?></span>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if (get_field('model_waist')) : ?>
+                                    <div class="model-detail-item">
+                                        <div class="model-detail-icon">
+                                            <i class="fas fa-chart-line"></i>
+                                        </div>
+                                        <div class="model-detail-content">
+                                            <span class="model-detail-label">Waist</span>
+                                            <span class="model-detail-value"><?php echo esc_html(get_field('model_waist')); ?></span>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php if (get_field('model_hips')) : ?>
+                                    <div class="model-detail-item">
+                                        <div class="model-detail-icon">
+                                            <i class="fas fa-chart-line"></i>
+                                        </div>
+                                        <div class="model-detail-content">
+                                            <span class="model-detail-label">Hips</span>
+                                            <span class="model-detail-value"><?php echo esc_html(get_field('model_hips')); ?></span>
                                         </div>
                                     </div>
                                 <?php endif; ?>

@@ -285,6 +285,10 @@ function flexpress_setup()
 	add_image_size('logo-388', 776, 0, false); // 2x 388px width
 	add_image_size('logo-140', 280, 0, false); // 2x 140px width
 	add_image_size('logo-74', 148, 0, false); // 2x 74px width
+	// Casting and model card images (optimized for actual display sizes)
+
+	add_image_size('casting-image', 500, 0, false); // 500px wide, auto height
+	add_image_size('model-card-alt', 250, 0, false); // 250px wide, auto height
 
     // Register navigation menus
     register_nav_menus(array(

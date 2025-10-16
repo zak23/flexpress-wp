@@ -11,6 +11,23 @@ FlexPress is designed specifically for content websites (primarily adult content
 
 ## 🌟 Core Features
 
+### Model Profiles – Manual Age and Separate Measurements (October 2025)
+
+Model profiles now support explicit, separate ACF fields and a manual “Published Age”:
+
+- Published Age (`model_published_age`) – manual number; not calculated from DOB
+- Location (`model_location`)
+- Height (`model_height`)
+- Weight (`model_weight`)
+- Bra Size (`model_bra_size`)
+- Bust (`model_bust`)
+- Waist (`model_waist`)
+- Hips (`model_hips`)
+
+Legacy combined measurements `model_measurements` remains under a Legacy (Deprecated) tab for backward compatibility and is no longer rendered on the frontend.
+
+Frontend template: `wp-content/themes/flexpress/single-model.php` renders these in order (if present): Published Age, Location, Height, Weight, Bra Size, Bust, Waist, Hips. The existing bio (`model_about`) is unchanged.
+
 ### 💳 Payment Processing
 
 - **Flowguard Integration**: Modern payment processing with embedded forms

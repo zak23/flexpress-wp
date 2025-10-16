@@ -11,10 +11,10 @@
         <?php if (has_post_thumbnail()) : ?>
             <?php 
             $thumbnail_id = get_post_thumbnail_id();
-            echo wp_get_attachment_image($thumbnail_id, 'model-card', false, array(
+            echo wp_get_attachment_image($thumbnail_id, 'model-card-alt', false, array(
                 'class' => 'model-image',
                 'sizes' => '(max-width: 768px) 184px, 368px',
-                'srcset' => wp_get_attachment_image_srcset($thumbnail_id, 'model-card')
+                'srcset' => wp_get_attachment_image_srcset($thumbnail_id, 'model-card-alt')
             )); 
             ?>
         <?php else: ?>

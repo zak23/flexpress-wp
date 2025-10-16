@@ -1,10 +1,16 @@
 /*
 Theme Name: FlexPress
-Theme URI: https://flexpress.com
-Author: Your Name
-Author URI: https://yourwebsite.com
-Description: A modern video membership platform theme with integrated functionality
+Theme URI: https://zakozbourne.com/flexpress/
+Author: Zak Ozbourne
+Author URI: https://zakozbourne.com
+Description: Premium dark WordPress theme for video membership sites with Flowguard, Bunny Stream, Redis, and comprehensive admin systems.
 Version: 1.0.0
-License: Proprietary
+Requires at least: 6.8
+Tested up to: 6.8.2
+Requires PHP: 7.4
+License: GPL-3.0-or-later
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Text Domain: flexpress
-*/ 
+Domain Path: /languages
+Tags: dark, responsive, video, membership, custom-logo, custom-menu, featured-images, threaded-comments
+*/

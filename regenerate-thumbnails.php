@@ -5,8 +5,28 @@
 
 // Load WordPress
 define('WP_USE_THEMES', false);
-require_once('/var/www/html/wp-config.php');
-require_once('/var/www/html/wp-load.php');
+// Try multiple possible locations for wp-config.php
+$wp_config_paths = [
+    '/var/www/html/wp-config.php',
+    __DIR__ . '/wp-config.php',
+    __DIR__ . '/../wp-config.php',
+    __DIR__ . '/wordpress/wp-config.php'
+];
+
+$wp_config_loaded = false;
+foreach ($wp_config_paths as $path) {
+    if (file_exists($path)) {
+        require_once($path);
+        $wp_config_loaded = true;
+        break;
+    }
+}
+
+if (!$wp_config_loaded) {
+    die('Could not find wp-config.php in any of the expected locations.');
+}
+
+require_once(ABSPATH . 'wp-load.php');
 
 // Get all image attachments
 $attachments = get_posts(array(

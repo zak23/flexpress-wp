@@ -45,8 +45,8 @@ cd /path/to/flexpress
 
 4. **Access your WordPress site:**
 
-   - WordPress: http://localhost:8085
-   - phpMyAdmin: http://localhost:8086
+   - WordPress: http://127.0.0.1:8085
+   - phpMyAdmin: http://127.0.0.1:8086
 
 5. **Configure URLs for development:**
 
@@ -63,6 +63,14 @@ cd /path/to/flexpress
 FlexPress is fully containerized and ready for deployment to multiple sites. See [DOCKER_DEPLOYMENT_GUIDE.md](docs/DOCKER_DEPLOYMENT_GUIDE.md) for complete deployment instructions.
 
 ## 🔧 Troubleshooting
+
+### Model Profiles – Manual Age and Separate Measurements (October 2025)
+
+The `Model` post type now includes explicit ACF fields for profile details and a manual-only Published Age. Legacy `model_measurements` is deprecated and no longer displayed.
+
+- Published Age (`model_published_age`), Location (`model_location`), Height (`model_height`), Weight (`model_weight`), Bra Size (`model_bra_size`), Bust (`model_bust`), Waist (`model_waist`), Hips (`model_hips`).
+
+Rendered in `wp-content/themes/flexpress/single-model.php` under “Model Details”.
 
 ### Authentication Issues
 

@@ -609,21 +609,32 @@
     },
   };
 
-    // Initialize when DOM is ready and target containers exist
-    function initializeWhenReady() {
-      const hasTargets = document.querySelector('#affiliate-admin-app, #transactions-admin-app, #payouts-admin-app');
-      if (hasTargets) {
+  // Initialize when DOM is ready and target containers exist
+  function initializeWhenReady() {
+    const hasTargets = document.querySelector(
+      "#affiliate-admin-app, #transactions-admin-app, #payouts-admin-app"
+    );
+    if (hasTargets) {
+      try {
         AdminAffiliateApp.init();
-      } else {
-        setTimeout(initializeWhenReady, 100);
+      } catch (e) {
+        // Ignore third-party MutationObserver errors
+        if (e.message && e.message.includes('Failed to execute \'observe\' on \'MutationObserver\'')) {
+          console.warn('Third-party MutationObserver error ignored');
+        } else {
+          throw e;
+        }
       }
-    }
-
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", initializeWhenReady);
     } else {
-      initializeWhenReady();
+      setTimeout(initializeWhenReady, 100);
     }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initializeWhenReady);
+  } else {
+    initializeWhenReady();
+  }
 
   // Make it globally available
   window.AdminAffiliateApp = AdminAffiliateApp;

@@ -137,106 +137,114 @@ jQuery(document).ready(function ($) {
 
     // Form submission - only bind if form exists
     if ($("#promo-code-form").length) {
-        $("#promo-code-form").on("submit", function (e) {
-      e.preventDefault();
+      $("#promo-code-form").on("submit", function (e) {
+        e.preventDefault();
 
-      const $form = $(this);
-      const $submitButton = $form.find('button[type="submit"]');
-      const $targetPlans = $("#target-plans");
-      const $promoCode = $("#new-promo-code");
-      const $affiliateName = $("#affiliate-name");
-      const $commissionRate = $("#commission-rate");
+        const $form = $(this);
+        const $submitButton = $form.find('button[type="submit"]');
+        const $targetPlans = $("#target-plans");
+        const $promoCode = $("#new-promo-code");
+        const $affiliateName = $("#affiliate-name");
+        const $commissionRate = $("#commission-rate");
 
-      // Clear previous errors
-      clearErrors();
+        // Clear previous errors
+        clearErrors();
 
-      // Validate promo code format
-      const $promoCode = $("#new-promo-code");
-      if (!$promoCode.length) return; // Not on this screen
+        // Validate promo code format
+        if (!$promoCode.length) return; // Not on this screen
 
-      if (!validatePromoCode($promoCode.val().trim())) {
-        showFormError(
-          $promoCode,
-          "Promo code must be 3-20 characters and contain only letters, numbers, and hyphens."
-        );
-        return;
-      }
-
-      // Validate affiliate name
-      if ($affiliateName.val().trim().length < 2) {
-        showFormError(
-          $affiliateName,
-          "Affiliate name must be at least 2 characters."
-        );
-        return;
-      }
-
-      // Validate target plans
-      if (!$targetPlans.val() || $targetPlans.val().length === 0) {
-        showFormError($targetPlans, "Please select at least one target plan.");
-        return;
-      }
-
-      // Validate commission rate
-      const commissionRate = parseFloat($commissionRate.val());
-      if (isNaN(commissionRate) || commissionRate < 0 || commissionRate > 100) {
-        showFormError(
-          $commissionRate,
-          "Commission rate must be between 0 and 100."
-        );
-        return;
-      }
-
-      // Disable form while submitting
-      $form.find("input, select, button").prop("disabled", true);
-
-      const formData = {
-        action: "create_affiliate_code",
-        nonce: flexpressAffiliate.nonce,
-        code: $promoCode.val().trim(),
-        affiliate_name: $affiliateName.val().trim(),
-        target_plans: $targetPlans.val(),
-        commission_rate: commissionRate,
-      };
-
-      // Show loading state
-      $submitButton.html('<span class="spinner is-active"></span> Creating...');
-
-      $.ajax({
-        url: flexpressAffiliate.ajaxurl,
-        type: "POST",
-        data: formData,
-        success: function (response) {
-          if (response.success) {
-            showNotice(
-              response.data.message || flexpressAffiliate.i18n.success,
-              "success"
-            );
-            closeModal();
-            // Reload after a short delay to allow the notice to be seen
-            setTimeout(function () {
-              window.location.reload();
-            }, 1000);
-          } else {
-            showFormError(
-              $promoCode,
-              response.data.message || flexpressAffiliate.i18n.error
-            );
-          }
-        },
-        error: function (xhr, status, error) {
-          console.error("AJAX Error:", status, error);
-          showNotice(
-            flexpressAffiliate.i18n.error + (error ? ": " + error : "")
+        if (!validatePromoCode($promoCode.val().trim())) {
+          showFormError(
+            $promoCode,
+            "Promo code must be 3-20 characters and contain only letters, numbers, and hyphens."
           );
-        },
-        complete: function () {
-          // Re-enable form
-          $form.find("input, select, button").prop("disabled", false);
-          $submitButton.html("Create Promo Code");
-        },
+          return;
+        }
+
+        // Validate affiliate name
+        if ($affiliateName.val().trim().length < 2) {
+          showFormError(
+            $affiliateName,
+            "Affiliate name must be at least 2 characters."
+          );
+          return;
+        }
+
+        // Validate target plans
+        if (!$targetPlans.val() || $targetPlans.val().length === 0) {
+          showFormError(
+            $targetPlans,
+            "Please select at least one target plan."
+          );
+          return;
+        }
+
+        // Validate commission rate
+        const commissionRate = parseFloat($commissionRate.val());
+        if (
+          isNaN(commissionRate) ||
+          commissionRate < 0 ||
+          commissionRate > 100
+        ) {
+          showFormError(
+            $commissionRate,
+            "Commission rate must be between 0 and 100."
+          );
+          return;
+        }
+
+        // Disable form while submitting
+        $form.find("input, select, button").prop("disabled", true);
+
+        const formData = {
+          action: "create_affiliate_code",
+          nonce: flexpressAffiliate.nonce,
+          code: $promoCode.val().trim(),
+          affiliate_name: $affiliateName.val().trim(),
+          target_plans: $targetPlans.val(),
+          commission_rate: commissionRate,
+        };
+
+        // Show loading state
+        $submitButton.html(
+          '<span class="spinner is-active"></span> Creating...'
+        );
+
+        $.ajax({
+          url: flexpressAffiliate.ajaxurl,
+          type: "POST",
+          data: formData,
+          success: function (response) {
+            if (response.success) {
+              showNotice(
+                response.data.message || flexpressAffiliate.i18n.success,
+                "success"
+              );
+              closeModal();
+              // Reload after a short delay to allow the notice to be seen
+              setTimeout(function () {
+                window.location.reload();
+              }, 1000);
+            } else {
+              showFormError(
+                $promoCode,
+                response.data.message || flexpressAffiliate.i18n.error
+              );
+            }
+          },
+          error: function (xhr, status, error) {
+            console.error("AJAX Error:", status, error);
+            showNotice(
+              flexpressAffiliate.i18n.error + (error ? ": " + error : "")
+            );
+          },
+          complete: function () {
+            // Re-enable form
+            $form.find("input, select, button").prop("disabled", false);
+            $submitButton.html("Create Promo Code");
+          },
+        });
       });
-    });
     }
 
     // Add Affiliate form submission

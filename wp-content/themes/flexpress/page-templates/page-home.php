@@ -256,6 +256,9 @@ $hero_episode = new WP_Query($hero_args);
     <!-- Upcoming Episode -->
     <?php get_template_part('template-parts/upcoming-episode'); ?>
 
+    <!-- Recent Extras Section -->
+    <?php get_template_part('template-parts/recent-extras'); ?>
+
     <!-- Featured On Section -->
     <?php get_template_part('template-parts/featured-on'); ?>
 

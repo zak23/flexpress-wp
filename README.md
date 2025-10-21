@@ -2183,6 +2183,180 @@ Episode cards throughout the site automatically display appropriate access indic
 - **Efficient Queries**: Optimized database queries for access checks
 - **Lazy Loading**: Defer access checks until necessary
 
+## 🕒 Unpublished Episode Handling
+
+### Overview
+
+FlexPress automatically manages unpublished episodes based on their `release_date` field. Episodes with future release dates are automatically set to draft status and display differently for logged-in vs logged-out users.
+
+### Automatic Status Management
+
+#### Auto-Draft Functionality
+
+Episodes are automatically set to `post_status = 'draft'` when:
+
+- The `release_date` ACF field is set to a future date/time
+- The episode is saved or updated via the WordPress admin
+
+Episodes are automatically published when:
+
+- The `release_date` passes (becomes past date/time)
+- The episode is saved or updated via the WordPress admin
+
+**Technical Implementation:**
+
+```php
+// Located in functions.php
+add_action('acf/save_post', 'flexpress_auto_update_episode_status', 20);
+```
+
+**Safeguards:**
+
+- Only applies to 'episode' post type
+- Respects trash, pending, and other special statuses (won't override)
+- Only toggles between 'draft' and 'publish' based on release_date
+- Gracefully handles missing release_date (treats as published)
+
+### User Experience by Status
+
+#### Logged-Out Users/Visitors
+
+For unpublished episodes:
+
+- **Cannot see** in episode archives, grids, or listings
+- **Redirected to login** if they access unpublished episode URL directly
+- Episode appears as if it doesn't exist
+
+#### Logged-In Users (No Subscription)
+
+For unpublished episodes:
+
+- **Can see** episodes in archives with "Coming Soon" indicators
+- **Can view** episode page showing trailer video only
+- **See release date** and "unlock when released" messaging
+- **Cannot access** full video (even if episode would normally grant access)
+
+#### Logged-In Users (With Access/Subscription)
+
+For unpublished episodes:
+
+- Same experience as logged-in users without subscription
+- **Trailer only** - no full video access until release date passes
+- UI indicates they'll automatically have access once released
+- No purchase possible until release
+
+### Visual Indicators
+
+#### Coming Soon Alert Banner
+
+- Displays at top of episode page for unreleased content
+- Shows formatted release date: "This episode will be released on **October 25, 2025 at 6:00 PM**"
+- Blue info alert styling with clock icon
+- Dismissible by user
+
+#### Video Player Badge Overlay
+
+- Positioned in top-right corner of video player
+- Purple gradient background with pulsing glow animation
+- Shows release date or "Coming Soon" text
+- Responsive sizing for mobile devices
+
+#### Disabled Purchase Buttons
+
+- Purchase buttons replaced with "Available When Released" disabled button
+- Shows release date below button
+- Gray styling to indicate unavailable status
+
+### Video Display Logic
+
+For unreleased episodes, the video hierarchy is:
+
+1. **Always show trailer** (60-120 seconds)
+2. **Never show full video** (regardless of user access)
+3. **Fallback to preview** if trailer not available (15-30 seconds)
+
+**Technical Implementation:**
+
+```php
+// In flexpress_get_episode_video_for_access()
+if ($access_info['is_unreleased']) {
+    return $trailer_video ?: $preview_video;
+}
+```
+
+### Query Filtering
+
+Episode queries automatically filter by post_status based on user login status:
+
+**Logged-Out Users:**
+
+- Only see episodes with `post_status = 'publish'`
+- Draft episodes completely hidden from queries
+
+**Logged-In Users:**
+
+- See episodes with `post_status = 'publish'` OR `post_status = 'draft'`
+- Can preview upcoming content with coming soon indicators
+
+**Technical Implementation:**
+
+```php
+// In flexpress_add_episode_visibility_to_query()
+if (!is_user_logged_in()) {
+    $args['post_status'] = 'publish';
+} else {
+    $args['post_status'] = array('publish', 'draft');
+}
+```
+
+### Access Control Integration
+
+The unpublished episode system integrates with the existing access control:
+
+**Access Info Array Additions:**
+
+```php
+$access_info['is_unreleased'] = true/false; // Episode release status
+```
+
+**Access Override:**
+
+- For unreleased episodes, access is always denied
+- `has_access` set to `false` regardless of membership or purchases
+- `show_purchase_button` and `show_membership_button` set to `false`
+- `purchase_reason` explains episode is not yet released
+
+### After Release
+
+When an episode's release date passes:
+
+1. **Auto-publishes** on next save (ACF save_post hook)
+2. **Normal access rules** apply based on access_type
+3. **Coming soon indicators** automatically removed
+4. **Full video access** granted based on user's access level
+5. **Purchase buttons** become active (if applicable)
+
+### Helper Functions
+
+Located in `functions.php`:
+
+```php
+// Check if episode is released
+flexpress_is_episode_released($episode_id);
+
+// Returns true if release_date <= current time
+// Returns true if no release_date set (backwards compatibility)
+```
+
+### CSS Styling
+
+Located in `assets/css/main.css`:
+
+- `.coming-soon-badge` - Video player overlay badge
+- `.alert-info` - Coming soon alert styling
+- Responsive breakpoints for mobile devices
+- Pulse glow animation for badge
+
 ## ⚙️ Configuration
 
 ### Environment Variables

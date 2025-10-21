@@ -13,10 +13,12 @@
 ## Recent Fixes
 
 ### Episode Release Date Sync (Oct 2025)
+
 - ACF `release_date` is the source of truth
 - `post_date` updates only when `release_date` changes
 - Non-ACF saves (e.g., tags) do not overwrite the release date
 - One-time tool available: FlexPress → Tools → Sync Episode Dates (`acf_to_wp`)
+
 # Cursor Rules for FlexPress
 
 - Always use IP instead of localhost
@@ -64,3 +66,13 @@
 - Increased timeout to 120 seconds per individual upload
 - Upload queue management prevents multiple simultaneous upload sessions
 - Detailed progress UI shows filename, size, status, and progress bars
+
+## Unpublished Episode Handling (Oct 2025)
+
+- Episodes with future `release_date` automatically set to `post_status = 'draft'`
+- Draft episodes hidden from logged-out users (redirected to login if accessed directly)
+- Logged-in users can see draft episodes with "Coming Soon" indicators
+- Unreleased episodes show trailer video only (never full video, regardless of access)
+- Visual indicators: alert banner, coming soon badge overlay, disabled purchase buttons
+- Auto-publishes when `release_date` passes (handled by ACF save_post hook)
+- Query filtering: logged-out users see only published; logged-in see published + draft

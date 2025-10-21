@@ -1,4 +1,5 @@
 <?php
+
 /**
  * FlexPress Episode Visibility Helper Functions
  *
@@ -15,7 +16,8 @@ if (!defined('ABSPATH')) {
  * @param int $episode_id Episode post ID
  * @return bool True if episode is hidden from public
  */
-function flexpress_is_episode_hidden_from_public($episode_id) {
+function flexpress_is_episode_hidden_from_public($episode_id)
+{
     $hidden = get_field('hidden_from_public', $episode_id);
     return !empty($hidden);
 }
@@ -26,12 +28,13 @@ function flexpress_is_episode_hidden_from_public($episode_id) {
  * @param int $episode_id Episode post ID
  * @return bool True if user can view the episode
  */
-function flexpress_can_user_view_episode($episode_id) {
+function flexpress_can_user_view_episode($episode_id)
+{
     // If episode is not hidden from public, anyone can view it
     if (!flexpress_is_episode_hidden_from_public($episode_id)) {
         return true;
     }
-    
+
     // If episode is hidden, only logged-in users can view it
     return is_user_logged_in();
 }
@@ -41,12 +44,13 @@ function flexpress_can_user_view_episode($episode_id) {
  *
  * @return array Meta query array for WP_Query
  */
-function flexpress_get_episode_visibility_meta_query() {
+function flexpress_get_episode_visibility_meta_query()
+{
     // If user is logged in, show all episodes
     if (is_user_logged_in()) {
         return array();
     }
-    
+
     // For non-logged-in users, exclude hidden episodes
     return array(
         'relation' => 'OR',
@@ -73,11 +77,12 @@ function flexpress_get_episode_visibility_meta_query() {
  * @param array $args WP_Query arguments
  * @return array Modified arguments
  */
-function flexpress_add_episode_visibility_to_query($args) {
+function flexpress_add_episode_visibility_to_query($args)
+{
     // Only apply to episode post type queries
     if (isset($args['post_type']) && $args['post_type'] === 'episode') {
         $visibility_query = flexpress_get_episode_visibility_meta_query();
-        
+
         if (!empty($visibility_query)) {
             // Merge with existing meta_query if it exists
             if (isset($args['meta_query'])) {
@@ -90,8 +95,22 @@ function flexpress_add_episode_visibility_to_query($args) {
                 $args['meta_query'] = $visibility_query;
             }
         }
+
+        // For logged-out users, exclude draft episodes (unreleased)
+        // For logged-in users, include draft episodes (so they can see coming soon content)
+        if (!is_user_logged_in()) {
+            // If post_status is not already set, set it to 'publish' only
+            if (!isset($args['post_status'])) {
+                $args['post_status'] = 'publish';
+            }
+        } else {
+            // For logged-in users, include both published and draft episodes
+            if (!isset($args['post_status'])) {
+                $args['post_status'] = array('publish', 'draft');
+            }
+        }
     }
-    
+
     return $args;
 }
 
@@ -101,7 +120,8 @@ function flexpress_add_episode_visibility_to_query($args) {
  * @param int $episode_id Episode post ID
  * @return bool True if episode should be displayed
  */
-function flexpress_should_display_episode($episode_id) {
+function flexpress_should_display_episode($episode_id)
+{
     return flexpress_can_user_view_episode($episode_id);
 }
 
@@ -111,7 +131,8 @@ function flexpress_should_display_episode($episode_id) {
  * @param array $additional_args Additional WP_Query arguments
  * @return int Number of visible episodes
  */
-function flexpress_get_visible_episodes_count($additional_args = array()) {
+function flexpress_get_visible_episodes_count($additional_args = array())
+{
     $args = array_merge(array(
         'post_type' => 'episode',
         'posts_per_page' => -1,
@@ -125,9 +146,9 @@ function flexpress_get_visible_episodes_count($additional_args = array()) {
             )
         )
     ), $additional_args);
-    
+
     $args = flexpress_add_episode_visibility_to_query($args);
-    
+
     $query = new WP_Query($args);
     return $query->found_posts;
 }
@@ -137,15 +158,16 @@ function flexpress_get_visible_episodes_count($additional_args = array()) {
  *
  * @param string $context Context where notice is displayed (homepage, archive, etc.)
  */
-function flexpress_display_episode_visibility_notice($context = '') {
+function flexpress_display_episode_visibility_notice($context = '')
+{
     if (is_user_logged_in()) {
         return; // No notice needed for logged-in users
     }
-    
+
     $message = __('Some episodes are hidden from public view. Sign up to access all content!', 'flexpress');
     $login_url = wp_login_url(get_permalink());
     $register_url = wp_registration_url();
-    
+
     echo '<div class="alert alert-info episode-visibility-notice">';
     echo '<i class="fas fa-lock me-2"></i>';
     echo esc_html($message);

@@ -3826,6 +3826,81 @@ function flexpress_handle_ppv_webhook()
  */
 
 /**
+ * Check if an episode has been released (release_date is in the past)
+ * 
+ * @param int $episode_id The episode ID
+ * @return bool True if episode is released, false if unreleased
+ */
+function flexpress_is_episode_released($episode_id = null)
+{
+    if (!$episode_id) {
+        $episode_id = get_the_ID();
+    }
+
+    $release_date = get_field('release_date', $episode_id);
+
+    // If no release date is set, treat as released (backwards compatibility)
+    if (!$release_date) {
+        return true;
+    }
+
+    $release_timestamp = strtotime($release_date);
+    $current_timestamp = current_time('timestamp');
+
+    return $release_timestamp <= $current_timestamp;
+}
+
+/**
+ * Auto-update episode post_status based on release_date
+ * Sets to 'draft' if release_date is in future, 'publish' if in past
+ * 
+ * @param int $post_id The post ID being saved
+ */
+function flexpress_auto_update_episode_status($post_id)
+{
+    // Only apply to episode post type
+    if (get_post_type($post_id) !== 'episode') {
+        return;
+    }
+
+    // Don't run on autosaves or revisions
+    if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
+        return;
+    }
+
+    // Get current post status
+    $current_status = get_post_status($post_id);
+
+    // Don't override trash, pending, or other special statuses
+    // Only toggle between draft and publish
+    if (!in_array($current_status, array('draft', 'publish'))) {
+        return;
+    }
+
+    // Check if episode is released
+    $is_released = flexpress_is_episode_released($post_id);
+
+    // Determine what the status should be
+    $desired_status = $is_released ? 'publish' : 'draft';
+
+    // Only update if status needs to change
+    if ($current_status !== $desired_status) {
+        // Unhook this function to prevent infinite loops
+        remove_action('acf/save_post', 'flexpress_auto_update_episode_status', 20);
+
+        // Update the post status
+        wp_update_post(array(
+            'ID' => $post_id,
+            'post_status' => $desired_status
+        ));
+
+        // Re-hook the function
+        add_action('acf/save_post', 'flexpress_auto_update_episode_status', 20);
+    }
+}
+add_action('acf/save_post', 'flexpress_auto_update_episode_status', 20);
+
+/**
  * Check if user has access to an episode based on access type
  * 
  * @param int $episode_id The episode ID
@@ -3860,8 +3935,22 @@ function flexpress_check_episode_access($episode_id = null, $user_id = null, $fo
         'show_purchase_button' => false,
         'show_membership_button' => false,
         'purchase_reason' => '',
-        'membership_notice' => ''
+        'membership_notice' => '',
+        'is_unreleased' => false
     );
+
+    // Check if episode is released
+    $is_released = flexpress_is_episode_released($episode_id);
+    $access_info['is_unreleased'] = !$is_released;
+
+    // For unreleased episodes, force trailer-only access regardless of user status
+    if (!$is_released) {
+        $access_info['has_access'] = false;
+        $access_info['show_purchase_button'] = false;
+        $access_info['show_membership_button'] = false;
+        $access_info['purchase_reason'] = 'This episode has not been released yet. Check back soon!';
+        return $access_info;
+    }
 
     // Check if user is logged in
     $is_logged_in = $user_id > 0;
@@ -4056,6 +4145,12 @@ function flexpress_get_episode_video_for_access($episode_id = null, $user_id = n
     $trailer_video = get_field('trailer_video', $episode_id);
     $preview_video = get_field('preview_video', $episode_id);
 
+    // For unreleased episodes, always show trailer only (never full video)
+    if ($access_info['is_unreleased']) {
+        return $trailer_video ?: $preview_video;
+    }
+
+    // For released episodes, use normal access hierarchy
     if ($access_info['has_access'] && $full_video) {
         return $full_video;
     } elseif ($trailer_video) {

@@ -18,6 +18,15 @@ while (have_posts()):
         }
     }
 
+    // Check if episode is unreleased (draft status)
+    $is_unreleased = !flexpress_is_episode_released(get_the_ID());
+
+    // Redirect logged-out users trying to view unpublished episodes
+    if ($is_unreleased && !is_user_logged_in()) {
+        wp_redirect(wp_login_url(get_permalink()));
+        exit;
+    }
+
     $preview_video = get_field('preview_video');
     $trailer_video = get_field('trailer_video');
     $full_video = get_field('full_video');
@@ -29,12 +38,12 @@ while (have_posts()):
     // Check for PPV unlock success message
     $ppv_unlocked = isset($_GET['ppv']) && $_GET['ppv'] === 'unlocked';
     $payment_cancelled = isset($_GET['payment']) && $_GET['payment'] === 'cancelled';
-    
+
     // If this is a fresh unlock, clear any relevant caches to ensure fresh access check
     if ($ppv_unlocked) {
         // Clear WordPress object cache for current user's meta data
         wp_cache_delete(get_current_user_id(), 'user_meta');
-        
+
         // Clear any episode-specific caches
         wp_cache_delete('episode_access_' . get_the_ID() . '_' . get_current_user_id(), 'flexpress');
     }
@@ -108,6 +117,25 @@ while (have_posts()):
                 </div>
             <?php endif; ?>
 
+            <?php if ($is_unreleased): ?>
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="fas fa-clock me-2"></i>
+                    <strong><?php esc_html_e('Coming Soon!', 'flexpress'); ?></strong>
+                    <?php
+                    if ($release_date) {
+                        $release_timestamp = strtotime($release_date);
+                        printf(
+                            esc_html__('This episode will be released on %s. Watch the trailer below!', 'flexpress'),
+                            '<strong>' . esc_html(date('F j, Y \a\t g:i A', $release_timestamp)) . '</strong>'
+                        );
+                    } else {
+                        esc_html_e('This episode has not been released yet. Watch the trailer below!', 'flexpress');
+                    }
+                    ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
+
             <!-- Full Width Video Player -->
             <div class="row">
                 <div class="col-12">
@@ -157,6 +185,19 @@ while (have_posts()):
                                     allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
                                     allowfullscreen="true">
                                 </iframe>
+                                <?php if ($is_unreleased): ?>
+                                    <div class="coming-soon-badge">
+                                        <i class="fas fa-clock me-2"></i>
+                                        <?php
+                                        if ($release_date) {
+                                            $release_timestamp = strtotime($release_date);
+                                            echo esc_html(date('M j, Y', $release_timestamp));
+                                        } else {
+                                            esc_html_e('Coming Soon', 'flexpress');
+                                        }
+                                        ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         <?php elseif ($preview_video): ?>
                             <?php
@@ -326,9 +367,9 @@ while (have_posts()):
                 <div class="col-lg-4">
                     <!-- Episode Rating System (top of sidebar) -->
                     <div class="episode-rating-section mb-4">
-                        <?php 
+                        <?php
                         set_query_var('has_access', $has_access);
-                        get_template_part('template-parts/episode-rating-system'); 
+                        get_template_part('template-parts/episode-rating-system');
                         ?>
                     </div>
                     <!-- Episode Actions -->
@@ -338,7 +379,7 @@ while (have_posts()):
                                 <div class="mb-3">
                                     <h5 class="text-white mb-3 text-center">
                                         <i class="fas fa-unlock me-2"></i>
-                                        <?php 
+                                        <?php
                                         if ($access_info['show_membership_button']) {
                                             esc_html_e('Membership Required', 'flexpress');
                                         } else {
@@ -413,6 +454,25 @@ while (have_posts()):
                                                 <i class="fas fa-shopping-cart me-2"></i>
                                                 <?php esc_html_e('Unlock Now', 'flexpress'); ?>
                                             </button>
+                                        <?php elseif ($is_unreleased): ?>
+                                            <!-- Unreleased episodes show different messaging -->
+                                            <div class="text-center mb-3">
+                                                <button class="btn btn-secondary w-100 mb-3" disabled>
+                                                    <i class="fas fa-clock me-2"></i>
+                                                    <?php esc_html_e('Available When Released', 'flexpress'); ?>
+                                                </button>
+                                                <small class="text-secondary">
+                                                    <?php
+                                                    if ($release_date) {
+                                                        $release_timestamp = strtotime($release_date);
+                                                        printf(
+                                                            esc_html__('This episode will be available on %s', 'flexpress'),
+                                                            '<br><strong>' . esc_html(date('F j, Y', $release_timestamp)) . '</strong>'
+                                                        );
+                                                    }
+                                                    ?>
+                                                </small>
+                                            </div>
                                         <?php else: ?>
                                             <a href="<?php echo esc_url(home_url('/login?redirect_to=' . urlencode(get_permalink()))); ?>"
                                                 class="btn btn-primary w-100 mb-3">
@@ -489,7 +549,7 @@ while (have_posts()):
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
-                    
+
                 </div>
             </div>
 

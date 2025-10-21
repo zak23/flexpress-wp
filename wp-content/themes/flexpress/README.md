@@ -713,6 +713,7 @@ Access the earnings dashboard at **FlexPress → Earnings** in the WordPress adm
 ### Key Metrics
 
 #### Revenue Summary Cards
+
 - **Gross Revenue**: Total earnings before affiliate commissions
 - **Net Revenue**: Final earnings after affiliate commission deductions
 - **Total Transactions**: Count of successful payments
@@ -725,18 +726,22 @@ Access the earnings dashboard at **FlexPress → Earnings** in the WordPress adm
 The dashboard categorizes all transactions into five types:
 
 1. **New Subscriptions** (🎉)
+
    - Initial subscription purchases
    - Cross-referenced: `order_type='subscription'` + `event_type='approved'`
 
 2. **Rebills** (🔄)
+
    - Recurring subscription payments
    - Identified by: `event_type='rebill'`
 
 3. **PPV Unlocks** (🔓)
+
    - One-time episode purchases
    - Cross-referenced: `order_type='purchase'` + `event_type='approved'`
 
 4. **Refunds** (💸)
+
    - Customer refund requests
    - Identified by: `event_type='credit'`
    - Displayed as negative amounts
@@ -749,6 +754,7 @@ The dashboard categorizes all transactions into five types:
 ### Time Period Filtering
 
 Select from multiple time periods:
+
 - **Today**: Current day's transactions
 - **Last 7 Days**: One week of activity
 - **Last 30 Days**: Monthly overview (default)
@@ -760,10 +766,12 @@ Select from multiple time periods:
 Three interactive Chart.js charts provide visual insights:
 
 1. **Revenue Over Time** (Line Chart)
+
    - Daily revenue trends
    - Shows positive revenue minus refunds/chargebacks
 
 2. **Transaction Breakdown** (Doughnut Chart)
+
    - Distribution by transaction type
    - Color-coded segments for easy identification
 
@@ -774,6 +782,7 @@ Three interactive Chart.js charts provide visual insights:
 ### Detailed Transaction Table
 
 Paginated table showing:
+
 - Transaction date and time
 - Unique transaction ID
 - User name and email
@@ -786,6 +795,7 @@ Paginated table showing:
 ### CSV Export
 
 Export functionality provides:
+
 - Complete transaction history for selected period
 - Summary section with all key metrics
 - Transaction breakdown by type
@@ -793,6 +803,7 @@ Export functionality provides:
 - UTF-8 encoded for international character support
 
 **Export includes**:
+
 - Date and time
 - Transaction ID
 - User name and email
@@ -804,10 +815,12 @@ Export functionality provides:
 The earnings system queries three tables:
 
 1. **`wp_flexpress_flowguard_transactions`**
+
    - Primary transaction data
    - Amount, currency, status, order type
 
 2. **`wp_flexpress_flowguard_webhooks`**
+
    - Event type classification
    - Maps transactions to webhook events (approved, rebill, chargeback, credit)
 
@@ -818,18 +831,21 @@ The earnings system queries three tables:
 ### Calculation Logic
 
 **Gross Revenue**: Sum of all approved transactions
+
 ```
 subscriptions + rebills + unlocks
 ```
 
 **Affiliate Commissions**: Sum of approved/paid commissions
+
 ```
-SELECT SUM(commission_amount) 
-FROM affiliate_transactions 
+SELECT SUM(commission_amount)
+FROM affiliate_transactions
 WHERE status IN ('approved', 'paid')
 ```
 
 **Net Revenue**: Gross minus commissions and losses
+
 ```
 gross_revenue - affiliate_commissions - refunds - chargebacks
 ```

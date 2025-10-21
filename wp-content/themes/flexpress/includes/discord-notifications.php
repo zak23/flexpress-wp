@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Discord Notifications System
  * 
@@ -16,40 +17,42 @@ if (!defined('ABSPATH')) {
 /**
  * Discord Notifications Service
  */
-class FlexPress_Discord_Notifications {
-    
+class FlexPress_Discord_Notifications
+{
+
     /**
      * Discord webhook URLs for different notification types
      * 
      * @var array
      */
     private $webhook_urls;
-    
+
     /**
      * Site name for notifications
      * 
      * @var string
      */
     private $site_name;
-    
+
     /**
      * Constructor
      */
-    public function __construct() {
+    public function __construct()
+    {
         $discord_settings = get_option('flexpress_discord_settings', []);
-        
+
         // Support both legacy single webhook and new multi-webhook system
         $default_webhook = $discord_settings['webhook_url'] ?? '';
-        
+
         $this->webhook_urls = [
             'default' => $default_webhook,
             'financial' => $discord_settings['webhook_url_financial'] ?? $default_webhook,
             'contact' => $discord_settings['webhook_url_contact'] ?? $default_webhook
         ];
-        
+
         $this->site_name = get_bloginfo('name');
     }
-    
+
     /**
      * Send Discord notification
      * 
@@ -58,22 +61,23 @@ class FlexPress_Discord_Notifications {
      * @param string $channel_type Channel type (subscriptions, payments, talent, general, default)
      * @return bool Success status
      */
-    public function send_notification($embed, $content = '', $channel_type = 'default') {
+    public function send_notification($embed, $content = '', $channel_type = 'default')
+    {
         $webhook_url = $this->webhook_urls[$channel_type] ?? $this->webhook_urls['default'];
-        
+
         if (empty($webhook_url)) {
             error_log('Discord: No webhook URL configured for channel type: ' . $channel_type);
             return false;
         }
-        
+
         // Validate embed data before sending
         $embed = $this->validate_embed_data($embed);
-        
+
         $payload = [
             'content' => $content,
             'embeds' => [$embed]
         ];
-        
+
         $response = wp_remote_post($webhook_url, [
             'headers' => [
                 'Content-Type' => 'application/json',
@@ -82,44 +86,45 @@ class FlexPress_Discord_Notifications {
             'body' => json_encode($payload),
             'timeout' => 10
         ]);
-        
+
         if (is_wp_error($response)) {
             error_log('Discord notification failed: ' . $response->get_error_message());
             return false;
         }
-        
+
         $status_code = wp_remote_retrieve_response_code($response);
         $response_body = wp_remote_retrieve_body($response);
-        
+
         if ($status_code >= 200 && $status_code < 300) {
             return true;
         }
-        
+
         // Enhanced error logging for debugging
         error_log('Discord notification failed with status: ' . $status_code);
         error_log('Discord response body: ' . $response_body);
         error_log('Discord payload: ' . json_encode($payload));
-        
+
         return false;
     }
-    
+
     /**
      * Validate embed data to prevent Discord 400 errors
      * 
      * @param array $embed Discord embed data
      * @return array Validated embed data
      */
-    private function validate_embed_data($embed) {
+    private function validate_embed_data($embed)
+    {
         // Ensure title is not too long (256 char limit)
         if (isset($embed['title']) && strlen($embed['title']) > 256) {
             $embed['title'] = substr($embed['title'], 0, 253) . '...';
         }
-        
+
         // Ensure description is not too long (4096 char limit)
         if (isset($embed['description']) && strlen($embed['description']) > 4096) {
             $embed['description'] = substr($embed['description'], 0, 4093) . '...';
         }
-        
+
         // Validate fields
         if (isset($embed['fields']) && is_array($embed['fields'])) {
             $validated_fields = [];
@@ -128,31 +133,31 @@ class FlexPress_Discord_Notifications {
                 if (isset($field['name']) && strlen($field['name']) > 256) {
                     $field['name'] = substr($field['name'], 0, 253) . '...';
                 }
-                
+
                 // Ensure field value is not too long (1024 char limit)
                 if (isset($field['value']) && strlen($field['value']) > 1024) {
                     $field['value'] = substr($field['value'], 0, 1021) . '...';
                 }
-                
+
                 $validated_fields[] = $field;
             }
-            
+
             // Limit to 25 fields max
             if (count($validated_fields) > 25) {
                 $validated_fields = array_slice($validated_fields, 0, 25);
             }
-            
+
             $embed['fields'] = $validated_fields;
         }
-        
+
         // Ensure footer text is not too long (2048 char limit)
         if (isset($embed['footer']['text']) && strlen($embed['footer']['text']) > 2048) {
             $embed['footer']['text'] = substr($embed['footer']['text'], 0, 2045) . '...';
         }
-        
+
         return $embed;
     }
-    
+
     /**
      * Create subscription approved embed
      * 
@@ -160,10 +165,11 @@ class FlexPress_Discord_Notifications {
      * @param int $user_id User ID
      * @return array Discord embed
      */
-    public function create_subscription_approved_embed($payload, $user_id) {
+    public function create_subscription_approved_embed($payload, $user_id)
+    {
         $user = get_userdata($user_id);
         $user_display_name = flexpress_get_user_display_name($user_id);
-        
+
         $embed = [
             'title' => '🎉 New Member Signup!',
             'color' => 0x00ff00, // Green
@@ -206,7 +212,7 @@ class FlexPress_Discord_Notifications {
             ],
             'timestamp' => date('c')
         ];
-        
+
         // Build footer with optional icon
         $footer = ['text' => $this->site_name . ' • Flowguard'];
         $site_icon = get_site_icon_url();
@@ -214,7 +220,7 @@ class FlexPress_Discord_Notifications {
             $footer['icon_url'] = $site_icon;
         }
         $embed['footer'] = $footer;
-        
+
         // Add promo code if used during signup
         $applied_promo_code = get_user_meta($user_id, 'applied_promo_code', true);
         if (!empty($applied_promo_code)) {
@@ -224,7 +230,7 @@ class FlexPress_Discord_Notifications {
                 'inline' => true
             ];
         }
-        
+
         // Add next charge date for recurring subscriptions
         if ($payload['subscriptionType'] ?? 'unknown' === 'recurring' && !empty($payload['nextChargeOn'])) {
             $embed['fields'][] = [
@@ -233,7 +239,7 @@ class FlexPress_Discord_Notifications {
                 'inline' => true
             ];
         }
-        
+
         // Add expiration date for one-time subscriptions only
         if (($payload['subscriptionType'] ?? 'unknown') === 'one-time' && isset($payload['expiresOn']) && !empty($payload['expiresOn'])) {
             $embed['fields'][] = [
@@ -242,10 +248,10 @@ class FlexPress_Discord_Notifications {
                 'inline' => true
             ];
         }
-        
+
         return $embed;
     }
-    
+
     /**
      * Create subscription rebill embed
      * 
@@ -253,9 +259,10 @@ class FlexPress_Discord_Notifications {
      * @param int $user_id User ID
      * @return array Discord embed
      */
-    public function create_subscription_rebill_embed($payload, $user_id) {
+    public function create_subscription_rebill_embed($payload, $user_id)
+    {
         $user_display_name = flexpress_get_user_display_name($user_id);
-        
+
         $embed = [
             'title' => '💰 Subscription Rebill Success',
             'color' => 0x00ff00, // Green
@@ -293,7 +300,7 @@ class FlexPress_Discord_Notifications {
             ],
             'timestamp' => date('c')
         ];
-        
+
         // Build footer with optional icon
         $footer = ['text' => $this->site_name . ' • Flowguard'];
         $site_icon = get_site_icon_url();
@@ -301,7 +308,7 @@ class FlexPress_Discord_Notifications {
             $footer['icon_url'] = $site_icon;
         }
         $embed['footer'] = $footer;
-        
+
         // Add promo code if used during original signup
         $applied_promo_code = get_user_meta($user_id, 'applied_promo_code', true);
         if (!empty($applied_promo_code)) {
@@ -311,10 +318,10 @@ class FlexPress_Discord_Notifications {
                 'inline' => true
             ];
         }
-        
+
         return $embed;
     }
-    
+
     /**
      * Create subscription cancel embed
      * 
@@ -322,9 +329,10 @@ class FlexPress_Discord_Notifications {
      * @param int $user_id User ID
      * @return array Discord embed
      */
-    public function create_subscription_cancel_embed($payload, $user_id) {
+    public function create_subscription_cancel_embed($payload, $user_id)
+    {
         $user_display_name = flexpress_get_user_display_name($user_id);
-        
+
         $embed = [
             'title' => '❌ Subscription Cancelled',
             'color' => 0xff6b35, // Orange
@@ -352,7 +360,7 @@ class FlexPress_Discord_Notifications {
             ],
             'timestamp' => date('c')
         ];
-        
+
         // Build footer with optional icon
         $footer = ['text' => $this->site_name . ' • Flowguard'];
         $site_icon = get_site_icon_url();
@@ -360,7 +368,7 @@ class FlexPress_Discord_Notifications {
             $footer['icon_url'] = $site_icon;
         }
         $embed['footer'] = $footer;
-        
+
         // Add expiration date for one-time subscriptions only
         if (($payload['subscriptionType'] ?? 'unknown') === 'one-time' && isset($payload['expiresOn']) && !empty($payload['expiresOn'])) {
             $embed['fields'][] = [
@@ -369,10 +377,10 @@ class FlexPress_Discord_Notifications {
                 'inline' => true
             ];
         }
-        
+
         return $embed;
     }
-    
+
     /**
      * Create subscription expiry embed
      * 
@@ -380,9 +388,10 @@ class FlexPress_Discord_Notifications {
      * @param int $user_id User ID
      * @return array Discord embed
      */
-    public function create_subscription_expiry_embed($payload, $user_id) {
+    public function create_subscription_expiry_embed($payload, $user_id)
+    {
         $user_display_name = flexpress_get_user_display_name($user_id);
-        
+
         $embed = [
             'title' => '⏰ Subscription Expired',
             'color' => 0xff0000, // Red
@@ -410,7 +419,7 @@ class FlexPress_Discord_Notifications {
             ],
             'timestamp' => date('c')
         ];
-        
+
         // Build footer with optional icon
         $footer = ['text' => $this->site_name . ' • Flowguard'];
         $site_icon = get_site_icon_url();
@@ -418,10 +427,10 @@ class FlexPress_Discord_Notifications {
             $footer['icon_url'] = $site_icon;
         }
         $embed['footer'] = $footer;
-        
+
         return $embed;
     }
-    
+
     /**
      * Create subscription extend embed
      * 
@@ -429,9 +438,10 @@ class FlexPress_Discord_Notifications {
      * @param int $user_id User ID
      * @return array Discord embed
      */
-    public function create_subscription_extend_embed($payload, $user_id) {
+    public function create_subscription_extend_embed($payload, $user_id)
+    {
         $user_display_name = flexpress_get_user_display_name($user_id);
-        
+
         $embed = [
             'title' => '🔄 Subscription Extended',
             'color' => 0x00bfff, // Deep Sky Blue
@@ -469,7 +479,7 @@ class FlexPress_Discord_Notifications {
             ],
             'timestamp' => date('c')
         ];
-        
+
         // Build footer with optional icon
         $footer = ['text' => $this->site_name . ' • Flowguard'];
         $site_icon = get_site_icon_url();
@@ -477,7 +487,7 @@ class FlexPress_Discord_Notifications {
             $footer['icon_url'] = $site_icon;
         }
         $embed['footer'] = $footer;
-        
+
         // Add promo code if used during original signup
         $applied_promo_code = get_user_meta($user_id, 'applied_promo_code', true);
         if (!empty($applied_promo_code)) {
@@ -487,7 +497,7 @@ class FlexPress_Discord_Notifications {
                 'inline' => true
             ];
         }
-        
+
         // Add next charge date for recurring subscriptions
         if ($payload['subscriptionType'] ?? 'unknown' === 'recurring' && !empty($payload['nextChargeOn'])) {
             $embed['fields'][] = [
@@ -496,7 +506,7 @@ class FlexPress_Discord_Notifications {
                 'inline' => true
             ];
         }
-        
+
         // Add expiration date for one-time subscriptions
         if (($payload['subscriptionType'] ?? 'unknown') === 'one-time' && isset($payload['expiresOn']) && !empty($payload['expiresOn'])) {
             $embed['fields'][] = [
@@ -505,10 +515,10 @@ class FlexPress_Discord_Notifications {
                 'inline' => true
             ];
         }
-        
+
         return $embed;
     }
-    
+
     /**
      * Create purchase approved embed (PPV)
      * 
@@ -517,9 +527,10 @@ class FlexPress_Discord_Notifications {
      * @param int $episode_id Episode ID
      * @return array Discord embed
      */
-    public function create_purchase_approved_embed($payload, $user_id, $episode_id = 0) {
+    public function create_purchase_approved_embed($payload, $user_id, $episode_id = 0)
+    {
         $user_display_name = flexpress_get_user_display_name($user_id);
-        
+
         $embed = [
             'title' => '🎬 PPV Purchase Approved',
             'color' => 0x0099ff, // Blue
@@ -547,7 +558,7 @@ class FlexPress_Discord_Notifications {
             ],
             'timestamp' => date('c')
         ];
-        
+
         // Build footer with optional icon
         $footer = ['text' => $this->site_name . ' • Flowguard'];
         $site_icon = get_site_icon_url();
@@ -555,7 +566,7 @@ class FlexPress_Discord_Notifications {
             $footer['icon_url'] = $site_icon;
         }
         $embed['footer'] = $footer;
-        
+
         // Add episode information if available
         if ($episode_id > 0) {
             $episode = get_post($episode_id);
@@ -565,7 +576,7 @@ class FlexPress_Discord_Notifications {
                     'value' => $episode->post_title,
                     'inline' => true
                 ];
-                
+
                 $embed['fields'][] = [
                     'name' => 'Episode Link',
                     'value' => '[View Episode](' . get_permalink($episode_id) . ')',
@@ -573,10 +584,10 @@ class FlexPress_Discord_Notifications {
                 ];
             }
         }
-        
+
         return $embed;
     }
-    
+
     /**
      * Create refund embed
      * 
@@ -584,10 +595,11 @@ class FlexPress_Discord_Notifications {
      * @param int $user_id User ID
      * @return array Discord embed
      */
-    public function create_refund_embed($payload, $user_id) {
+    public function create_refund_embed($payload, $user_id)
+    {
         $user_display_name = flexpress_get_user_display_name($user_id);
         $refund_type = $payload['postbackType']; // chargeback or credit
-        
+
         // Differentiate between refund and chargeback
         if ($refund_type === 'chargeback') {
             $title = '🚨 Chargeback Dispute';
@@ -596,7 +608,7 @@ class FlexPress_Discord_Notifications {
             $title = '💰 Refund Processed';
             $color = 0xffa500; // Orange - less urgent
         }
-        
+
         $embed = [
             'title' => $title,
             'color' => $color,
@@ -629,7 +641,7 @@ class FlexPress_Discord_Notifications {
             ],
             'timestamp' => date('c')
         ];
-        
+
         // Build footer with optional icon
         $footer = ['text' => $this->site_name . ' • Flowguard'];
         $site_icon = get_site_icon_url();
@@ -637,17 +649,18 @@ class FlexPress_Discord_Notifications {
             $footer['icon_url'] = $site_icon;
         }
         $embed['footer'] = $footer;
-        
+
         return $embed;
     }
-    
+
     /**
      * Create talent application embed
      * 
      * @param array $form_data Form submission data
      * @return array Discord embed
      */
-    public function create_talent_application_embed($form_data) {
+    public function create_talent_application_embed($form_data)
+    {
         $embed = [
             'title' => '🌟 New Talent Application',
             'color' => 0xffd700, // Gold
@@ -685,7 +698,7 @@ class FlexPress_Discord_Notifications {
             ],
             'timestamp' => date('c')
         ];
-        
+
         // Build footer with optional icon
         $footer = ['text' => $this->site_name . ' • Talent Applications'];
         $site_icon = get_site_icon_url();
@@ -693,7 +706,7 @@ class FlexPress_Discord_Notifications {
             $footer['icon_url'] = $site_icon;
         }
         $embed['footer'] = $footer;
-        
+
         // Add bio if provided
         if (!empty($form_data['bio'])) {
             $embed['fields'][] = [
@@ -702,10 +715,10 @@ class FlexPress_Discord_Notifications {
                 'inline' => false
             ];
         }
-        
+
         return $embed;
     }
-    
+
     /**
      * Create general notification embed
      * 
@@ -715,7 +728,8 @@ class FlexPress_Discord_Notifications {
      * @param array $fields Additional fields
      * @return array Discord embed
      */
-    public function create_general_embed($title, $description, $color = 0x0099ff, $fields = []) {
+    public function create_general_embed($title, $description, $color = 0x0099ff, $fields = [])
+    {
         $embed = [
             'title' => $title,
             'description' => $description,
@@ -723,7 +737,7 @@ class FlexPress_Discord_Notifications {
             'fields' => $fields,
             'timestamp' => date('c')
         ];
-        
+
         // Build footer with optional icon
         $footer = ['text' => $this->site_name];
         $site_icon = get_site_icon_url();
@@ -731,7 +745,7 @@ class FlexPress_Discord_Notifications {
             $footer['icon_url'] = $site_icon;
         }
         $embed['footer'] = $footer;
-        
+
         return $embed;
     }
 }
@@ -742,15 +756,16 @@ class FlexPress_Discord_Notifications {
  * @param array $payload Flowguard webhook payload
  * @param int $user_id User ID
  */
-function flexpress_discord_notify_subscription_approved($payload, $user_id) {
+function flexpress_discord_notify_subscription_approved($payload, $user_id)
+{
     $discord_settings = get_option('flexpress_discord_settings', []);
     if (empty($discord_settings['webhook_url']) || !$discord_settings['notify_subscriptions']) {
         return;
     }
-    
+
     $discord = new FlexPress_Discord_Notifications();
     $embed = $discord->create_subscription_approved_embed($payload, $user_id);
-    
+
     $discord->send_notification($embed, '🎉 **New member signed up!**', 'financial');
 }
 
@@ -760,15 +775,16 @@ function flexpress_discord_notify_subscription_approved($payload, $user_id) {
  * @param array $payload Flowguard webhook payload
  * @param int $user_id User ID
  */
-function flexpress_discord_notify_subscription_rebill($payload, $user_id) {
+function flexpress_discord_notify_subscription_rebill($payload, $user_id)
+{
     $discord_settings = get_option('flexpress_discord_settings', []);
     if (empty($discord_settings['webhook_url']) || !$discord_settings['notify_rebills']) {
         return;
     }
-    
+
     $discord = new FlexPress_Discord_Notifications();
     $embed = $discord->create_subscription_rebill_embed($payload, $user_id);
-    
+
     $discord->send_notification($embed, '💰 **Subscription rebill successful!**', 'financial');
 }
 
@@ -778,15 +794,16 @@ function flexpress_discord_notify_subscription_rebill($payload, $user_id) {
  * @param array $payload Flowguard webhook payload
  * @param int $user_id User ID
  */
-function flexpress_discord_notify_subscription_cancel($payload, $user_id) {
+function flexpress_discord_notify_subscription_cancel($payload, $user_id)
+{
     $discord_settings = get_option('flexpress_discord_settings', []);
     if (empty($discord_settings['webhook_url']) || !$discord_settings['notify_cancellations']) {
         return;
     }
-    
+
     $discord = new FlexPress_Discord_Notifications();
     $embed = $discord->create_subscription_cancel_embed($payload, $user_id);
-    
+
     $discord->send_notification($embed, '❌ **Subscription cancelled!**', 'financial');
 }
 
@@ -796,15 +813,16 @@ function flexpress_discord_notify_subscription_cancel($payload, $user_id) {
  * @param array $payload Flowguard webhook payload
  * @param int $user_id User ID
  */
-function flexpress_discord_notify_subscription_expiry($payload, $user_id) {
+function flexpress_discord_notify_subscription_expiry($payload, $user_id)
+{
     $discord_settings = get_option('flexpress_discord_settings', []);
     if (empty($discord_settings['webhook_url']) || !$discord_settings['notify_expirations']) {
         return;
     }
-    
+
     $discord = new FlexPress_Discord_Notifications();
     $embed = $discord->create_subscription_expiry_embed($payload, $user_id);
-    
+
     $discord->send_notification($embed, '⏰ **Subscription expired!**', 'financial');
 }
 
@@ -814,22 +832,23 @@ function flexpress_discord_notify_subscription_expiry($payload, $user_id) {
  * @param array $payload Flowguard webhook payload
  * @param int $user_id User ID
  */
-function flexpress_discord_notify_subscription_extend($payload, $user_id) {
+function flexpress_discord_notify_subscription_extend($payload, $user_id)
+{
     $discord_settings = get_option('flexpress_discord_settings', []);
-    
+
     // Debug logging
     error_log('Discord Extend: Checking settings - webhook_url: ' . (empty($discord_settings['webhook_url']) ? 'empty' : 'set') . ', notify_extensions: ' . ($discord_settings['notify_extensions'] ?? 'not set'));
-    
+
     if (empty($discord_settings['webhook_url']) || !($discord_settings['notify_extensions'] ?? true)) {
         error_log('Discord Extend: Notification skipped - webhook_url empty or notify_extensions disabled');
         return;
     }
-    
+
     error_log('Discord Extend: Sending notification for user ' . $user_id);
-    
+
     $discord = new FlexPress_Discord_Notifications();
     $embed = $discord->create_subscription_extend_embed($payload, $user_id);
-    
+
     $result = $discord->send_notification($embed, '🔄 **Subscription extended!**', 'financial');
     error_log('Discord Extend: Notification result: ' . ($result ? 'success' : 'failed'));
 }
@@ -841,15 +860,16 @@ function flexpress_discord_notify_subscription_extend($payload, $user_id) {
  * @param int $user_id User ID
  * @param int $episode_id Episode ID
  */
-function flexpress_discord_notify_purchase_approved($payload, $user_id, $episode_id = 0) {
+function flexpress_discord_notify_purchase_approved($payload, $user_id, $episode_id = 0)
+{
     $discord_settings = get_option('flexpress_discord_settings', []);
     if (empty($discord_settings['webhook_url']) || !$discord_settings['notify_ppv']) {
         return;
     }
-    
+
     $discord = new FlexPress_Discord_Notifications();
     $embed = $discord->create_purchase_approved_embed($payload, $user_id, $episode_id);
-    
+
     $discord->send_notification($embed, '🎬 **PPV purchase successful!**', 'financial');
 }
 
@@ -859,15 +879,16 @@ function flexpress_discord_notify_purchase_approved($payload, $user_id, $episode
  * @param array $payload Flowguard webhook payload
  * @param int $user_id User ID
  */
-function flexpress_discord_notify_refund($payload, $user_id) {
+function flexpress_discord_notify_refund($payload, $user_id)
+{
     $discord_settings = get_option('flexpress_discord_settings', []);
     if (empty($discord_settings['webhook_url']) || !$discord_settings['notify_refunds']) {
         return;
     }
-    
+
     $discord = new FlexPress_Discord_Notifications();
     $embed = $discord->create_refund_embed($payload, $user_id);
-    
+
     $refund_type = $payload['postbackType'];
     if ($refund_type === 'chargeback') {
         $message = '🚨 **Chargeback dispute filed!** Immediate attention required.';
@@ -882,15 +903,16 @@ function flexpress_discord_notify_refund($payload, $user_id) {
  * 
  * @param array $form_data Form submission data
  */
-function flexpress_discord_notify_talent_application($form_data) {
+function flexpress_discord_notify_talent_application($form_data)
+{
     $discord_settings = get_option('flexpress_discord_settings', []);
     if (empty($discord_settings['webhook_url']) || !$discord_settings['notify_talent_applications']) {
         return;
     }
-    
+
     $discord = new FlexPress_Discord_Notifications();
     $embed = $discord->create_talent_application_embed($form_data);
-    
+
     $discord->send_notification($embed, '🌟 **New talent application received!**', 'contact');
 }
 
@@ -903,15 +925,16 @@ function flexpress_discord_notify_talent_application($form_data) {
  * @param array $fields Additional fields
  * @param string $content Optional message content
  */
-function flexpress_discord_send_custom_notification($title, $description, $color = 0x0099ff, $fields = [], $content = '', $channel_type = 'default') {
+function flexpress_discord_send_custom_notification($title, $description, $color = 0x0099ff, $fields = [], $content = '', $channel_type = 'default')
+{
     $discord_settings = get_option('flexpress_discord_settings', []);
     if (empty($discord_settings['webhook_url'])) {
         return false;
     }
-    
+
     $discord = new FlexPress_Discord_Notifications();
     $embed = $discord->create_general_embed($title, $description, $color, $fields);
-    
+
     return $discord->send_notification($embed, $content, $channel_type);
 }
 
@@ -920,12 +943,13 @@ function flexpress_discord_send_custom_notification($title, $description, $color
  * 
  * @return bool Success status
  */
-function flexpress_discord_test_connection() {
+function flexpress_discord_test_connection()
+{
     $discord_settings = get_option('flexpress_discord_settings', []);
     if (empty($discord_settings['webhook_url'])) {
         return false;
     }
-    
+
     $discord = new FlexPress_Discord_Notifications();
     $embed = $discord->create_general_embed(
         '🧪 Discord Test Notification',
@@ -944,6 +968,6 @@ function flexpress_discord_test_connection() {
             ]
         ]
     );
-    
+
     return $discord->send_notification($embed, '🧪 **Discord webhook test successful!**', 'default');
 }

@@ -7,6 +7,7 @@ FlexPress is a premium WordPress theme for adult content websites with integrate
 ## Code Style
 
 ### PHP
+
 - Indentation: 4 spaces
 - Max line length: 120 characters
 - Quote style: Single quotes preferred
@@ -15,6 +16,7 @@ FlexPress is a premium WordPress theme for adult content websites with integrate
 - Use meaningful variable and function names
 
 ### CSS
+
 - Indentation: 2 spaces
 - Max line length: 80 characters
 - Quote style: Double quotes
@@ -22,6 +24,7 @@ FlexPress is a premium WordPress theme for adult content websites with integrate
 - Follow BEM methodology for class naming
 
 ### JavaScript
+
 - Indentation: 2 spaces
 - Max line length: 100 characters
 - Quote style: Single quotes
@@ -31,6 +34,7 @@ FlexPress is a premium WordPress theme for adult content websites with integrate
 ## Architecture Guidelines
 
 ### Theme Structure
+
 ```
 wp-content/themes/flexpress/
 ├── assets/              # Theme assets (CSS, JS, images)
@@ -44,7 +48,8 @@ wp-content/themes/flexpress/
 ```
 
 ### Database Design
-- Use WordPress naming conventions (wp_ prefix)
+
+- Use WordPress naming conventions (wp\_ prefix)
 - Always include created_at and updated_at timestamps
 - Use proper indexes for performance
 - Follow referential integrity principles
@@ -52,6 +57,7 @@ wp-content/themes/flexpress/
 ## Feature Implementation Rules
 
 ### Affiliate System
+
 - **Core Files:** `affiliate-helpers.php`, `class-flexpress-affiliate-settings.php`
 - **Templates:** `affiliate-signup.php`, `affiliate-dashboard.php`
 - **Database:** Three-table architecture (affiliates, commissions, payouts)
@@ -59,18 +65,21 @@ wp-content/themes/flexpress/
 - **Security:** Multi-layer validation, sanitization, and fraud prevention
 
 ### Payment Processing
+
 - **Verotel Integration:** Use official FlexPay client library
 - **Webhook Security:** Signature validation with fallback mechanisms
 - **Commission Tracking:** Dual system for legacy promo codes and new affiliates
 - **Error Handling:** Comprehensive logging and error recovery
 
 ### Video Integration
+
 - **BunnyCDN:** Secure token-signed URLs with configurable cache duration
 - **Thumbnails:** API-based retrieval with intelligent fallback system
 - **Hero Videos:** Thumbnail-first loading with smooth video transitions
 - **Access Control:** Flexible system (free/PPV/membership/mixed)
 
 ### Gallery System
+
 - **Episode Integration:** Galleries attached to episode post types
 - **BunnyCDN Storage:** Direct upload to CDN with automatic optimization
 - **Image Processing:** Multiple sizes (thumbnail, medium, large, full)
@@ -79,6 +88,7 @@ wp-content/themes/flexpress/
 - **Performance:** CDN delivery with lazy loading and caching
 
 ### Content Management
+
 - **Episodes:** Custom post type with ACF integration
 - **Models:** Relationship fields with social media integration
 - **Legal Pages:** Dynamic content generation with ACF settings
@@ -87,6 +97,7 @@ wp-content/themes/flexpress/
 ## Development Standards
 
 ### Security Requirements
+
 - Sanitize all user inputs
 - Escape all outputs
 - Use prepared statements for database queries
@@ -94,12 +105,14 @@ wp-content/themes/flexpress/
 - Follow WordPress security best practices
 
 ### Performance Optimization
+
 - Use WordPress caching mechanisms (transients, object cache)
 - Optimize database queries with proper indexing
 - Implement lazy loading for images and videos
 - Minimize HTTP requests and optimize assets
 
 ### Responsive Design
+
 - Mobile-first approach
 - Bootstrap 5.0+ framework integration
 - Consistent breakpoints across all components
@@ -108,6 +121,7 @@ wp-content/themes/flexpress/
 ## Integration Points
 
 ### Third-Party Services
+
 - **BunnyCDN:** Video delivery and thumbnail generation
 - **Verotel:** Payment processing and subscription management
 - **Chart.js:** Analytics and performance visualization
@@ -116,6 +130,7 @@ wp-content/themes/flexpress/
   - Discord API rejects embeds with `"icon_url": false` - omit the field entirely if no site icon exists
 
 ### WordPress Integration
+
 - **ACF:** Custom fields for content management
 - **Custom Post Types:** Episodes, models, legal pages
 - **User Roles:** Extended capabilities for affiliate management
@@ -124,12 +139,14 @@ wp-content/themes/flexpress/
 ## Testing Requirements
 
 ### Automated Testing
+
 - Unit tests for all helper functions
 - Integration tests for payment workflows
 - Performance tests for database operations
 - Security tests for user input validation
 
 ### Manual Testing Checklist
+
 - [ ] Responsive design across all breakpoints
 - [ ] Payment processing workflows
 - [ ] Affiliate commission tracking
@@ -140,12 +157,14 @@ wp-content/themes/flexpress/
 ## Documentation Standards
 
 ### Code Documentation
+
 - All functions must have PHPDoc comments
 - Complex algorithms require inline comments
 - Database schema changes must be documented
 - API endpoints need comprehensive documentation
 
 ### User Documentation
+
 - README.md must reflect all current features
 - Installation and configuration guides
 - Troubleshooting documentation
@@ -154,6 +173,7 @@ wp-content/themes/flexpress/
 ## Future Development Guidelines
 
 ### Affiliate System Roadmap
+
 - **Phase 2:** Tiered commission structures and bonus events
 - **Phase 3:** Multi-method payout system with crypto support
 - **Phase 4:** Discord notifications and email automation
@@ -161,6 +181,7 @@ wp-content/themes/flexpress/
 - **Phase 6:** Third-party marketing platform integrations
 
 ### Technical Debt Management
+
 - Regular code reviews and refactoring
 - Performance monitoring and optimization
 - Security audits and updates
@@ -169,12 +190,14 @@ wp-content/themes/flexpress/
 ## Deployment Rules
 
 ### File Exclusions
+
 - Development files (node_modules, vendor)
 - Configuration files (docker-compose.yml, .env)
 - Documentation files (except README.md)
 - Build artifacts and logs
 
 ### Required Checks
+
 - [ ] Theme metadata in style.css
 - [ ] All required WordPress theme files
 - [ ] Screenshot.png (880x660px)
@@ -185,12 +208,14 @@ wp-content/themes/flexpress/
 ## Error Handling
 
 ### Logging Strategy
+
 - Use WordPress debug logging for development
 - Implement custom logging for production
 - Log all payment and commission transactions
 - Monitor affiliate system performance
 
 ### Graceful Degradation
+
 - Fallback mechanisms for all external services
 - Progressive enhancement for JavaScript features
 - Alternative content for failed video loads
@@ -199,13 +224,15 @@ wp-content/themes/flexpress/
 ## Compliance Requirements
 
 ### Legal Considerations
+
 - GDPR/CCPA data privacy compliance
 - FTC affiliate disclosure requirements
 - Adult content regulations and age verification
 - International tax reporting obligations
 
 ### Security Compliance
+
 - Regular security updates and patches
 - Vulnerability scanning and monitoring
 - Secure credential management
-- Data encryption for sensitive information 
+- Data encryption for sensitive information

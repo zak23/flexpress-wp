@@ -367,7 +367,7 @@ function flexpress_enqueue_scripts_and_styles()
         wp_enqueue_style('slick-css', 'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css', array(), '1.8.1');
         wp_enqueue_style('slick-theme-css', 'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css', array('slick-css'), '1.8.1');
         wp_enqueue_script('slick-js', 'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js', array('jquery'), '1.8.1', true);
-        wp_script_add_data('slick-js', 'defer', true);
+        // Remove defer to ensure Slick loads before initialization script
     }
 
     // Enqueue jQuery with defer

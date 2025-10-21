@@ -7731,27 +7731,46 @@ body.page-template-casting .site-main .alert-info {
     color: inherit;
 }
 
-/* Slick Slider Customization for Featured On */
-.featured-on-section .slick-slider {
-    position: relative;
-}
-
-.featured-on-section .slick-list {
-    overflow: hidden;
-    margin: 0 -1rem;
-}
-
-.featured-on-section .slick-track {
+/* Single slide display when carousel is not needed */
+.featured-on-section .media-slider.single-slide {
     display: flex;
+    justify-content: center;
     align-items: center;
 }
 
-.featured-on-section .slick-slide {
-    height: auto;
+.featured-on-section .media-slider.single-slide .media-slide {
+    flex: 0 0 auto;
+    max-width: 300px;
 }
 
-.featured-on-section .slick-slide > div {
-    height: 100%;
+/* Ensure proper display before carousel initialization */
+.featured-on-section .media-slider:not(.slick-initialized) .media-slide {
+    display: none;
+}
+
+.featured-on-section .media-slider:not(.slick-initialized) .media-slide:first-child {
+    display: block;
+    text-align: center;
+}
+
+/* Fix for potential stacking issues during initialization */
+.featured-on-section .media-slider {
+    min-height: 120px;
+    overflow: hidden;
+}
+
+/* Fallback display when carousel fails to initialize */
+.featured-on-section .media-slider.fallback-display {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.featured-on-section .media-slider.fallback-display .media-slide {
+    flex: 0 0 auto;
+    max-width: 200px;
+    display: block !important;
 }
 
 /* Slick Dots */

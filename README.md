@@ -2,6 +2,13 @@
 
 A modern WordPress website running in Docker containers with MySQL database and phpMyAdmin for database management.
 
+## 🔧 Recent Fixes
+
+### Extras Post Type Issues (Fixed)
+
+- **Post Overwriting Bug**: Fixed issue where creating new extras posts would overwrite existing ones due to incorrect post ID handling in gallery uploads
+- **Gallery Grid Display**: Restored proper grid layout for gallery images in extras admin area (was displaying as vertical list)
+
 ## 🚀 Quick Start
 
 ### Prerequisites

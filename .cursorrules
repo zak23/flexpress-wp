@@ -10,6 +10,14 @@
 - PHP indent: 4 spaces; JS: 2 spaces; CSS: 2 spaces
 - Do not alter `.wakatime-project` once created
 
+## Recent Fixes (Dec 2024)
+
+### Extras Post Type Issues Fixed
+
+- Fixed post overwriting bug: Gallery uploads now use correct post ID (`$post->ID` instead of `get_the_ID()`)
+- Fixed gallery grid display: Added missing CSS styles to `render_extras_gallery_meta_box()` function
+- Gallery images now display in proper grid layout instead of vertical list
+
 ## Model Profiles – Manual Age & Separate Measurements (Oct 2025)
 
 - Age is manual-only (`model_published_age`); do not calculate from DOB

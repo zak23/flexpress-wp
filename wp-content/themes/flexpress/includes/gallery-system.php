@@ -27,12 +27,12 @@ class FlexPress_Gallery_System
         } else {
             add_action('init', array($this, 'init_gallery_system'));
         }
-        
+
         // Add meta boxes immediately if we're in admin
         if (is_admin()) {
             add_action('add_meta_boxes', array($this, 'add_gallery_meta_box'));
         }
-        
+
         add_action('save_post', array($this, 'save_gallery_data'));
         add_action('wp_ajax_flexpress_upload_gallery_image', array($this, 'ajax_upload_gallery_image'));
         add_action('wp_ajax_flexpress_delete_gallery_image', array($this, 'ajax_delete_gallery_image'));
@@ -48,7 +48,7 @@ class FlexPress_Gallery_System
     {
         // Add gallery support to episodes
         add_post_type_support('episode', 'gallery');
-        
+
         // Add gallery support to extras
         add_post_type_support('extras', 'gallery');
 
@@ -87,7 +87,7 @@ class FlexPress_Gallery_System
             'normal',
             'high'
         );
-        
+
         add_meta_box(
             'extras_gallery',
             __('Extras Gallery', 'flexpress'),
@@ -379,7 +379,7 @@ class FlexPress_Gallery_System
         if (!is_array($gallery_images)) {
             $gallery_images = array();
         }
-?>
+    ?>
         <div class="flexpress-gallery-manager">
             <div class="gallery-upload-section">
                 <h4><?php _e('Upload Gallery Images', 'flexpress'); ?></h4>
@@ -489,6 +489,142 @@ class FlexPress_Gallery_System
                 </table>
             </div>
         </div>
+
+        <style>
+            .flexpress-gallery-manager {
+                margin: 20px 0;
+            }
+
+            .gallery-upload-area {
+                border: 2px dashed #ddd;
+                border-radius: 8px;
+                padding: 40px;
+                text-align: center;
+                background: #f9f9f9;
+                transition: all 0.3s ease;
+            }
+
+            .gallery-upload-area.dragover {
+                border-color: #0073aa;
+                background: #f0f8ff;
+            }
+
+            .upload-prompt .dashicons {
+                font-size: 48px;
+                color: #666;
+                margin-bottom: 10px;
+            }
+
+            .upload-progress {
+                margin: 20px 0;
+            }
+
+            .progress-bar {
+                width: 100%;
+                height: 20px;
+                background: #eee;
+                border-radius: 10px;
+                overflow: hidden;
+            }
+
+            .progress-fill {
+                height: 100%;
+                background: #0073aa;
+                width: 0%;
+                transition: width 0.3s ease;
+            }
+
+            .gallery-images-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+
+            .gallery-images-header h4 {
+                margin: 0;
+            }
+
+            .gallery-images-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 20px;
+                margin: 20px 0;
+            }
+
+            .gallery-image-item {
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                overflow: hidden;
+                background: white;
+            }
+
+            .image-preview {
+                position: relative;
+                height: 200px;
+                overflow: hidden;
+            }
+
+            .image-preview img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .image-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            .gallery-image-item:hover .image-overlay {
+                opacity: 1;
+            }
+
+            .image-info {
+                padding: 15px;
+            }
+
+            .image-info input {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .image-order {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 15px;
+                background: #f9f9f9;
+                border-top: 1px solid #eee;
+            }
+
+            .order-number {
+                font-weight: bold;
+                color: #666;
+            }
+
+            .order-controls {
+                display: flex;
+                gap: 5px;
+            }
+
+            .no-images {
+                text-align: center;
+                color: #666;
+                font-style: italic;
+                padding: 40px;
+            }
+        </style>
     <?php
     }
 
@@ -498,7 +634,7 @@ class FlexPress_Gallery_System
     public function save_gallery_data($post_id)
     {
         $post_type = get_post_type($post_id);
-        
+
         // Check nonce based on post type
         if ($post_type === 'episode') {
             if (
@@ -607,7 +743,7 @@ class FlexPress_Gallery_System
 
         $post_id = intval($_POST['post_id']);
         $post_type = get_post_type($post_id);
-        
+
         if (!$post_id || !in_array($post_type, array('episode', 'extras'))) {
             error_log("❌ Invalid post ID: $post_id or post type: $post_type");
             wp_die('Invalid post ID or post type');
@@ -866,7 +1002,7 @@ class FlexPress_Gallery_System
         $random_string = wp_generate_password(8, false);
         $unix_timestamp = time();
         $filename = $original_filename . '-' . $random_string . '-' . $unix_timestamp . '.jpg';
-        $remote_path = ($post_type === 'episode') ? 
+        $remote_path = ($post_type === 'episode') ?
             'episodes/galleries/' . $post_id . '/' . $filename :
             'extras/galleries/' . $post_id . '/' . $filename;
 
@@ -956,7 +1092,7 @@ class FlexPress_Gallery_System
 
         // Generate thumbnail filename with correct path based on post type
         $thumbnail_filename = 'thumb_' . $original_filename;
-        $thumbnail_remote_path = ($post_type === 'episode') ? 
+        $thumbnail_remote_path = ($post_type === 'episode') ?
             'episodes/galleries/' . $post_id . '/thumbs/' . $thumbnail_filename :
             'extras/galleries/' . $post_id . '/thumbs/' . $thumbnail_filename;
 
@@ -1186,7 +1322,7 @@ class FlexPress_Gallery_System
                 'deleteNonce' => wp_create_nonce('flexpress_gallery_delete'),
                 'deleteAllNonce' => wp_create_nonce('flexpress_gallery_delete_all'),
                 'reorderNonce' => wp_create_nonce('flexpress_gallery_reorder'),
-                'postId' => get_the_ID(),
+                'postId' => isset($post->ID) ? $post->ID : get_the_ID(),
                 'strings' => array(
                     'uploading' => __('Uploading...', 'flexpress'),
                     'uploadComplete' => __('Upload complete!', 'flexpress'),

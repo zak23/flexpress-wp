@@ -99,7 +99,7 @@ class FlexPress_Earnings_Settings
 
         // Calculate date range
         $date_condition = $this->get_date_condition($period, $start_date, $end_date, 't');
-        
+
         // Get all transactions with webhook event types
         $transactions = $wpdb->get_results("
             SELECT 
@@ -121,7 +121,7 @@ class FlexPress_Earnings_Settings
             WHERE {$date_condition}
             ORDER BY t.created_at DESC
         ", ARRAY_A);
-        
+
         // Get affiliate commissions for the period
         $date_condition_affiliate = $this->get_date_condition($period, $start_date, $end_date, '');
         $commissions = $wpdb->get_var("
@@ -238,7 +238,7 @@ class FlexPress_Earnings_Settings
     private function get_date_condition($period, $start_date = null, $end_date = null, $table_alias = 't')
     {
         global $wpdb;
-        
+
         // Add dot if alias is provided
         $prefix = $table_alias ? $table_alias . '.' : '';
 
@@ -582,4 +582,9 @@ class FlexPress_Earnings_Settings
         </script>
 <?php
     }
+}
+
+// Initialize the earnings settings page only in admin
+if (is_admin()) {
+    new FlexPress_Earnings_Settings();
 }

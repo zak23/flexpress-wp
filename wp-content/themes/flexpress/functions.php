@@ -337,7 +337,7 @@ function flexpress_enqueue_scripts_and_styles()
     wp_enqueue_style('bootstrap-css', 'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css', array(), '5.1.3');
 
     // Enqueue Font Awesome with preload
-    wp_enqueue_style('font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', array(), time());
+    wp_enqueue_style('font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', array(), '6.4.2');
 
     // Enqueue theme CSS files
     wp_enqueue_style('flexpress-variables', get_template_directory_uri() . '/assets/css/variables.css', array(), wp_get_theme()->get('Version'));

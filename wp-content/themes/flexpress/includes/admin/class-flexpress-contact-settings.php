@@ -1,4 +1,5 @@
 <?php
+
 /**
  * FlexPress Contact & Social Media Settings
  *
@@ -12,11 +13,13 @@ if (!defined('ABSPATH')) {
 /**
  * FlexPress Contact & Social Media Settings Class
  */
-class FlexPress_Contact_Settings {
+class FlexPress_Contact_Settings
+{
     /**
      * Constructor
      */
-    public function __construct() {
+    public function __construct()
+    {
         add_action('admin_menu', array($this, 'add_contact_settings_page'));
         add_action('admin_init', array($this, 'register_contact_settings'));
     }
@@ -24,7 +27,8 @@ class FlexPress_Contact_Settings {
     /**
      * Add the contact settings page to admin menu
      */
-    public function add_contact_settings_page() {
+    public function add_contact_settings_page()
+    {
         add_submenu_page(
             'flexpress-settings',
             __('Contact & Social', 'flexpress'),
@@ -38,7 +42,8 @@ class FlexPress_Contact_Settings {
     /**
      * Register settings
      */
-    public function register_contact_settings() {
+    public function register_contact_settings()
+    {
         register_setting('flexpress_contact_settings', 'flexpress_contact_settings', array(
             'sanitize_callback' => array($this, 'sanitize_contact_settings')
         ));
@@ -138,7 +143,8 @@ class FlexPress_Contact_Settings {
     /**
      * Get social media platforms configuration
      */
-    private function get_social_platforms() {
+    private function get_social_platforms()
+    {
         return array(
             'facebook' => array(
                 'label' => __('Facebook', 'flexpress'),
@@ -153,7 +159,7 @@ class FlexPress_Contact_Settings {
             'twitter' => array(
                 'label' => __('Twitter / X', 'flexpress'),
                 'placeholder' => 'https://twitter.com/username',
-                'icon' => 'fab fa-twitter'
+                'icon' => 'fab fa-x-twitter'
             ),
             'youtube' => array(
                 'label' => __('YouTube', 'flexpress'),
@@ -241,9 +247,10 @@ class FlexPress_Contact_Settings {
     /**
      * Sanitize contact settings
      */
-    public function sanitize_contact_settings($input) {
+    public function sanitize_contact_settings($input)
+    {
         $sanitized = array();
-        
+
         // Sanitize business information
         $business_fields = array('parent_company', 'business_number', 'business_address');
         foreach ($business_fields as $field) {
@@ -251,7 +258,7 @@ class FlexPress_Contact_Settings {
                 $sanitized[$field] = sanitize_text_field($input[$field]);
             }
         }
-        
+
         // Sanitize email addresses
         $email_fields = array('support_email', 'contact_email', 'billing_email');
         foreach ($email_fields as $field) {
@@ -259,7 +266,7 @@ class FlexPress_Contact_Settings {
                 $sanitized[$field] = sanitize_email($input[$field]);
             }
         }
-        
+
         // Sanitize social media URLs
         $social_platforms = array_keys($this->get_social_platforms());
         foreach ($social_platforms as $platform) {
@@ -268,158 +275,169 @@ class FlexPress_Contact_Settings {
                 $sanitized[$field] = esc_url_raw($input[$field]);
             }
         }
-        
+
         return $sanitized;
     }
 
     /**
      * Render business info section description
      */
-    public function render_business_info_section() {
+    public function render_business_info_section()
+    {
         echo '<p>' . esc_html__('Configure your business information including company name, registration number, and address.', 'flexpress') . '</p>';
     }
 
     /**
      * Render parent company field
      */
-    public function render_parent_company_field() {
+    public function render_parent_company_field()
+    {
         $options = get_option('flexpress_contact_settings', array());
         $value = isset($options['parent_company']) ? $options['parent_company'] : '';
-        ?>
-        <input type="text" 
-               name="flexpress_contact_settings[parent_company]" 
-               value="<?php echo esc_attr($value); ?>" 
-               class="regular-text"
-               placeholder="Company Name Pty Ltd">
+?>
+        <input type="text"
+            name="flexpress_contact_settings[parent_company]"
+            value="<?php echo esc_attr($value); ?>"
+            class="regular-text"
+            placeholder="Company Name Pty Ltd">
         <p class="description"><?php esc_html_e('Your parent company or business name.', 'flexpress'); ?></p>
-        <?php
+    <?php
     }
 
     /**
      * Render business number field
      */
-    public function render_business_number_field() {
+    public function render_business_number_field()
+    {
         $options = get_option('flexpress_contact_settings', array());
         $value = isset($options['business_number']) ? $options['business_number'] : '';
-        ?>
-        <input type="text" 
-               name="flexpress_contact_settings[business_number]" 
-               value="<?php echo esc_attr($value); ?>" 
-               class="regular-text"
-               placeholder="ABN 12 345 678 901">
+    ?>
+        <input type="text"
+            name="flexpress_contact_settings[business_number]"
+            value="<?php echo esc_attr($value); ?>"
+            class="regular-text"
+            placeholder="ABN 12 345 678 901">
         <p class="description"><?php esc_html_e('Your business registration number (ABN, TIN, EIN, etc.).', 'flexpress'); ?></p>
-        <?php
+    <?php
     }
 
     /**
      * Render business address field
      */
-    public function render_business_address_field() {
+    public function render_business_address_field()
+    {
         $options = get_option('flexpress_contact_settings', array());
         $value = isset($options['business_address']) ? $options['business_address'] : '';
-        ?>
-        <textarea name="flexpress_contact_settings[business_address]" 
-                  rows="3" 
-                  class="large-text"
-                  placeholder="Suite 123, 45 Business Street, City, State, 12345, Country"><?php echo esc_textarea($value); ?></textarea>
+    ?>
+        <textarea name="flexpress_contact_settings[business_address]"
+            rows="3"
+            class="large-text"
+            placeholder="Suite 123, 45 Business Street, City, State, 12345, Country"><?php echo esc_textarea($value); ?></textarea>
         <p class="description"><?php esc_html_e('Your complete business address.', 'flexpress'); ?></p>
-        <?php
+    <?php
     }
 
     /**
      * Render contact emails section description
      */
-    public function render_contact_emails_section() {
+    public function render_contact_emails_section()
+    {
         echo '<p>' . esc_html__('Configure contact email addresses that will be used throughout your site templates.', 'flexpress') . '</p>';
     }
 
     /**
      * Render social media section description
      */
-    public function render_social_media_section() {
+    public function render_social_media_section()
+    {
         echo '<p>' . esc_html__('Add your social media profile links. Leave blank to hide specific platforms.', 'flexpress') . '</p>';
     }
 
     /**
      * Render support email field
      */
-    public function render_support_email_field() {
+    public function render_support_email_field()
+    {
         $options = get_option('flexpress_contact_settings', array());
         $site_domain = parse_url(home_url(), PHP_URL_HOST);
         $default_value = 'support@' . $site_domain;
         $value = isset($options['support_email']) && !empty($options['support_email']) ? $options['support_email'] : $default_value;
-        ?>
-        <input type="email" 
-               name="flexpress_contact_settings[support_email]" 
-               value="<?php echo esc_attr($value); ?>" 
-               class="regular-text">
+    ?>
+        <input type="email"
+            name="flexpress_contact_settings[support_email]"
+            value="<?php echo esc_attr($value); ?>"
+            class="regular-text">
         <p class="description"><?php esc_html_e('Email address for customer support inquiries.', 'flexpress'); ?></p>
-        <?php
+    <?php
     }
 
     /**
      * Render contact email field
      */
-    public function render_contact_email_field() {
+    public function render_contact_email_field()
+    {
         $options = get_option('flexpress_contact_settings', array());
         $site_domain = parse_url(home_url(), PHP_URL_HOST);
         $default_value = 'contact@' . $site_domain;
         $value = isset($options['contact_email']) && !empty($options['contact_email']) ? $options['contact_email'] : $default_value;
-        ?>
-        <input type="email" 
-               name="flexpress_contact_settings[contact_email]" 
-               value="<?php echo esc_attr($value); ?>" 
-               class="regular-text">
+    ?>
+        <input type="email"
+            name="flexpress_contact_settings[contact_email]"
+            value="<?php echo esc_attr($value); ?>"
+            class="regular-text">
         <p class="description"><?php esc_html_e('General contact email address for inquiries.', 'flexpress'); ?></p>
-        <?php
+    <?php
     }
 
     /**
      * Render billing email field
      */
-    public function render_billing_email_field() {
+    public function render_billing_email_field()
+    {
         $options = get_option('flexpress_contact_settings', array());
         $site_domain = parse_url(home_url(), PHP_URL_HOST);
         $default_value = 'billing@' . $site_domain;
         $value = isset($options['billing_email']) && !empty($options['billing_email']) ? $options['billing_email'] : $default_value;
-        ?>
-        <input type="email" 
-               name="flexpress_contact_settings[billing_email]" 
-               value="<?php echo esc_attr($value); ?>" 
-               class="regular-text">
+    ?>
+        <input type="email"
+            name="flexpress_contact_settings[billing_email]"
+            value="<?php echo esc_attr($value); ?>"
+            class="regular-text">
         <p class="description"><?php esc_html_e('Email address for billing and payment related inquiries.', 'flexpress'); ?></p>
-        <?php
+    <?php
     }
 
     /**
      * Render social media field
      */
-    public function render_social_field($args) {
+    public function render_social_field($args)
+    {
         $platform = $args['platform'];
         $data = $args['data'];
         $options = get_option('flexpress_contact_settings', array());
         $field_name = 'social_' . $platform;
         $value = isset($options[$field_name]) ? $options[$field_name] : '';
-        ?>
+    ?>
         <div style="display: flex; align-items: center; gap: 10px;">
             <i class="<?php echo esc_attr($data['icon']); ?>" style="width: 20px; text-align: center; color: #666;"></i>
-            <input type="url" 
-                   name="flexpress_contact_settings[<?php echo esc_attr($field_name); ?>]" 
-                   value="<?php echo esc_attr($value); ?>" 
-                   class="regular-text"
-                   placeholder="<?php echo esc_attr($data['placeholder']); ?>">
+            <input type="url"
+                name="flexpress_contact_settings[<?php echo esc_attr($field_name); ?>]"
+                value="<?php echo esc_attr($value); ?>"
+                class="regular-text"
+                placeholder="<?php echo esc_attr($data['placeholder']); ?>">
         </div>
-        <?php
+    <?php
     }
 
     /**
      * Render the contact settings page
      */
-    public function render_contact_settings_page() {
-        ?>
+    public function render_contact_settings_page()
+    {
+    ?>
         <div class="wrap">
             <h1><?php echo esc_html__('Contact & Social Media Settings', 'flexpress'); ?></h1>
-            
+
             <form method="post" action="options.php">
                 <?php
                 settings_fields('flexpress_contact_settings');
@@ -427,11 +445,11 @@ class FlexPress_Contact_Settings {
                 submit_button();
                 ?>
             </form>
-            
+
             <?php if (isset($_GET['regenerated'])): ?>
                 <div class="notice notice-<?php echo $_GET['regenerated'] === 'success' ? 'success' : 'error'; ?> is-dismissible">
                     <p>
-                        <?php 
+                        <?php
                         if ($_GET['regenerated'] === 'success') {
                             esc_html_e('Legal page content has been regenerated successfully with your updated contact information.', 'flexpress');
                         } else {
@@ -441,39 +459,39 @@ class FlexPress_Contact_Settings {
                     </p>
                 </div>
             <?php endif; ?>
-            
+
             <div class="card" style="max-width: 800px; margin-top: 30px;">
                 <h2><?php esc_html_e('Legal Page Content Update', 'flexpress'); ?></h2>
                 <p><?php esc_html_e('After updating your contact information, you can regenerate your Privacy Policy and Terms & Conditions pages to include the updated details:', 'flexpress'); ?></p>
-                
+
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-bottom: 20px;">
                     <?php wp_nonce_field('regenerate_legal_content', 'regenerate_legal_nonce'); ?>
                     <input type="hidden" name="action" value="regenerate_legal_content">
                     <input type="hidden" name="page_type" value="both">
-                    
+
                     <input type="submit" class="button button-primary" value="<?php esc_attr_e('Regenerate Legal Pages with Updated Info', 'flexpress'); ?>">
                 </form>
-                
+
                 <div class="notice notice-info inline">
                     <p><strong><?php esc_html_e('Note:', 'flexpress'); ?></strong> <?php esc_html_e('This will update the content of your Privacy Policy and Terms & Conditions pages with your current contact information and business details. Any custom edits to these pages will be overwritten.', 'flexpress'); ?></p>
                 </div>
             </div>
-            
+
             <div class="card" style="max-width: 800px; margin-top: 30px;">
                 <h2><?php esc_html_e('Usage in Templates', 'flexpress'); ?></h2>
                 <p><?php esc_html_e('Use these helper functions in your templates to access the contact and social media settings:', 'flexpress'); ?></p>
-                
+
                 <h3><?php esc_html_e('Business Information', 'flexpress'); ?></h3>
                 <code style="display: block; margin: 10px 0; padding: 10px; background: #f5f5f5;">
                     // Get parent company<br>
                     $company = flexpress_get_business_info('parent_company');<br><br>
-                    
+
                     // Get business number<br>
                     $business_number = flexpress_get_business_info('business_number');<br><br>
-                    
+
                     // Get business address<br>
                     $address = flexpress_get_business_info('business_address');<br><br>
-                    
+
                     // Get formatted business info line<br>
                     $business_line = flexpress_get_formatted_business_info();
                 </code>
@@ -482,40 +500,41 @@ class FlexPress_Contact_Settings {
                 <code style="display: block; margin: 10px 0; padding: 10px; background: #f5f5f5;">
                     // Get support email<br>
                     $support_email = flexpress_get_contact_email('support');<br><br>
-                    
+
                     // Get general contact email<br>
                     $contact_email = flexpress_get_contact_email('contact');<br><br>
-                    
+
                     // Get billing email<br>
                     $billing_email = flexpress_get_contact_email('billing');
                 </code>
-                
+
                 <h3><?php esc_html_e('Social Media Links', 'flexpress'); ?></h3>
                 <code style="display: block; margin: 10px 0; padding: 10px; background: #f5f5f5;">
                     // Get specific social media URL<br>
                     $facebook_url = flexpress_get_social_media_url('facebook');<br><br>
-                    
+
                     // Get all social media links<br>
                     $all_social = flexpress_get_all_social_media_links();<br><br>
-                    
+
                     // Display social media links with icons<br>
                     flexpress_display_social_media_links();
                 </code>
             </div>
         </div>
-        
+
         <style>
-        .form-table th {
-            width: 200px;
-        }
-        .form-table input[type="email"],
-        .form-table input[type="url"] {
-            width: 400px;
-        }
+            .form-table th {
+                width: 200px;
+            }
+
+            .form-table input[type="email"],
+            .form-table input[type="url"] {
+                width: 400px;
+            }
         </style>
-        <?php
+<?php
     }
 }
 
 // Initialize the contact settings
-new FlexPress_Contact_Settings(); 
+new FlexPress_Contact_Settings();

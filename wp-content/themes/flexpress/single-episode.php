@@ -126,7 +126,7 @@ while (have_posts()):
                         $release_timestamp = strtotime($release_date);
                         printf(
                             esc_html__('This episode will be released on %s. Watch the trailer below!', 'flexpress'),
-                            '<strong>' . esc_html(date('F j, Y \a\t g:i A', $release_timestamp)) . '</strong>'
+                            '<strong>' . esc_html(date('j F Y \a\t g:i A', $release_timestamp)) . '</strong>'
                         );
                     } else {
                         esc_html_e('This episode has not been released yet. Watch the trailer below!', 'flexpress');
@@ -191,7 +191,7 @@ while (have_posts()):
                                         <?php
                                         if ($release_date) {
                                             $release_timestamp = strtotime($release_date);
-                                            echo esc_html(date('M j, Y', $release_timestamp));
+                                            echo esc_html(date('j M Y', $release_timestamp));
                                         } else {
                                             esc_html_e('Coming Soon', 'flexpress');
                                         }
@@ -467,7 +467,7 @@ while (have_posts()):
                                                         $release_timestamp = strtotime($release_date);
                                                         printf(
                                                             esc_html__('This episode will be available on %s', 'flexpress'),
-                                                            '<br><strong>' . esc_html(date('F j, Y', $release_timestamp)) . '</strong>'
+                                                            '<br><strong>' . esc_html(date('j F Y', $release_timestamp)) . '</strong>'
                                                         );
                                                     }
                                                     ?>

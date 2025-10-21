@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Template part for displaying extras cards - Gallery-focused design
  */
@@ -28,13 +29,13 @@ $thumbnail = flexpress_get_extras_thumbnail(get_the_ID(), 'medium');
         <div class="card-img-top">
             <div class="preview-container"></div>
             <?php if ($thumbnail): ?>
-                <img src="<?php echo esc_url($thumbnail['url']); ?>" 
-                     alt="<?php echo esc_attr($thumbnail['alt']); ?>" 
-                     class="extras-thumbnail">
+                <img src="<?php echo esc_url($thumbnail['url']); ?>"
+                    alt="<?php echo esc_attr($thumbnail['alt']); ?>"
+                    class="extras-thumbnail">
             <?php else: ?>
                 <?php flexpress_display_extras_thumbnail('medium', 'extras-thumbnail'); ?>
             <?php endif; ?>
-            
+
             <div class="extras-overlay">
                 <div class="extras-play-button">
                     <?php if ($content_format === 'video'): ?>
@@ -44,14 +45,14 @@ $thumbnail = flexpress_get_extras_thumbnail(get_the_ID(), 'medium');
                     <?php endif; ?>
                 </div>
             </div>
-            
+
             <!-- Content Type Badge -->
             <?php if ($content_type): ?>
                 <div class="video-duration-badge">
                     <i class="fas fa-tag me-1"></i>
                     <?php echo esc_html(ucwords(str_replace('_', ' ', $content_type))); ?>
                 </div>
-            <?php elseif ($content_format === 'gallery'): 
+                <?php elseif ($content_format === 'gallery'):
                 $gallery = flexpress_get_extras_gallery(get_the_ID());
                 if (!empty($gallery)): ?>
                     <div class="gallery-count-badge">
@@ -62,7 +63,7 @@ $thumbnail = flexpress_get_extras_thumbnail(get_the_ID(), 'medium');
             <?php endif; ?>
         </div>
     </a>
-    
+
     <!-- Extras Information Below Thumbnail -->
     <div class="extras-info">
         <div class="extras-info-row">
@@ -70,25 +71,25 @@ $thumbnail = flexpress_get_extras_thumbnail(get_the_ID(), 'medium');
                 <a href="<?php the_permalink(); ?>" class="extras-title-link"><?php the_title(); ?></a>
             </h5>
         </div>
-        
+
         <div class="extras-info-row">
             <?php if ($featured_models && !empty($featured_models)): ?>
-            <div class="extras-performers">
-                <?php 
-                $model_links = array();
-                foreach ($featured_models as $model) {
-                    $model_links[] = '<a href="' . esc_url(get_permalink($model->ID)) . '" class="model-link">' . esc_html($model->post_title) . '</a>';
-                }
-                echo implode(', ', $model_links);
-                ?>
-            </div>
+                <div class="extras-performers">
+                    <?php
+                    $model_links = array();
+                    foreach ($featured_models as $model) {
+                        $model_links[] = '<a href="' . esc_url(get_permalink($model->ID)) . '" class="model-link">' . esc_html($model->post_title) . '</a>';
+                    }
+                    echo implode(', ', $model_links);
+                    ?>
+                </div>
             <?php endif; ?>
-            
-            <?php 
+
+            <?php
             if ($release_date) {
                 // Handle multiple date formats
                 $timestamp = false;
-                
+
                 // Try different date formats
                 if (preg_match('/(\d{2})\/(\d{2})\/(\d{4})/', $release_date, $matches)) {
                     // UK format: dd/mm/yyyy
@@ -97,29 +98,29 @@ $thumbnail = flexpress_get_extras_thumbnail(get_the_ID(), 'medium');
                     // Try standard strtotime
                     $timestamp = strtotime($release_date);
                 }
-                
+
                 if ($timestamp && $timestamp > 0) {
-                    $formatted_date = strtoupper(date('F d, Y', $timestamp));
+                    $formatted_date = strtoupper(date('j F Y', $timestamp));
                 } else {
                     // Fall back to WordPress post date
-                    $formatted_date = strtoupper(get_the_date('F d, Y'));
+                    $formatted_date = strtoupper(get_the_date('j F Y'));
                 }
             } else {
                 // Fall back to WordPress post date
-                $formatted_date = strtoupper(get_the_date('F d, Y'));
+                $formatted_date = strtoupper(get_the_date('j F Y'));
             }
             ?>
             <span class="extras-date"><?php echo esc_html($formatted_date); ?></span>
         </div>
-        
+
         <!-- Price Display -->
         <?php if ($price): ?>
-        <div class="extras-info-row">
-            <span class="extras-price">
-                <i class="fas fa-tag me-1"></i>
-                $<?php echo number_format($price, 2); ?>
-            </span>
-        </div>
+            <div class="extras-info-row">
+                <span class="extras-price">
+                    <i class="fas fa-tag me-1"></i>
+                    $<?php echo number_format($price, 2); ?>
+                </span>
+            </div>
         <?php endif; ?>
     </div>
 </div>

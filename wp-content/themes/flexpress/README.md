@@ -11,6 +11,15 @@ FlexPress is designed specifically for content websites (primarily adult content
 
 ## 🌟 Core Features
 
+### Date Format Standardization (October 2025)
+
+- **Australian/European Date Format**: All episode dates now display in day-first format
+  - Full format: "9 November 2025" (`j F Y`)
+  - Abbreviated format: "9 Nov 2025" (`j M Y`)
+  - With time: "9 November 2025 at 12:01 PM" (`j F Y \a\t g:i A`)
+  - Standardized across: single episode pages, episode cards, extras cards, coming soon badges
+  - Removed American month-first format for consistency
+
 ### JavaScript MutationObserver Error Fix (October 2025)
 
 - **Fixed TypeError**: Resolved `Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'` error

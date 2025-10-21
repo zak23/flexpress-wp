@@ -4,6 +4,19 @@ A modern WordPress website running in Docker containers with MySQL database and 
 
 ## 🔧 Recent Fixes
 
+### Date Format Standardization (October 2025)
+
+- **Australian/European Date Format**: All episode dates now display in day-first format for consistency
+  - Full format: "9 November 2025" (`j F Y`)
+  - Abbreviated format: "9 Nov 2025" (`j M Y`)
+  - With time: "9 November 2025 at 12:01 PM" (`j F Y \a\t g:i A`)
+  - Standardized across single episode pages, episode cards, extras cards, and coming soon badges
+  - Removed American month-first format (e.g., "November 9, 2025") for consistency
+- **Files Updated**:
+  - `wp-content/themes/flexpress/single-episode.php` - 3 date format instances
+  - `wp-content/themes/flexpress/template-parts/content-episode-card.php` - 4 date format instances
+  - `wp-content/themes/flexpress/template-parts/content-extras-card.php` - 4 date format instances
+
 ### Earnings Dashboard (New Feature - October 2025)
 
 - **Comprehensive Revenue Tracking**: New admin dashboard at FlexPress → Earnings provides complete financial oversight

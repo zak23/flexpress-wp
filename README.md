@@ -8,12 +8,16 @@ A modern WordPress website running in Docker containers with MySQL database and 
 
 - **Simplified Episode Management**: Cleaned up the episode list columns in WordPress admin for better clarity
   - Renamed "Episode Status" to "Access Type" for clearer understanding
+  - Access Type now displays ACF field value (not taxonomy) with color-coded badges
+  - Badge colors: Free (cyan), Membership Only (blue), PPV Only (yellow), Membership+PPV (green), Members Discount (purple)
   - Removed "Video Preview" column to reduce visual clutter
   - Retained essential columns: Title, Tags, Access Type, Date
+  - Access Type column is sortable for easy filtering
   - Video thumbnails still visible when editing individual episodes
 - **Files Updated**:
-  - `wp-content/themes/flexpress/includes/post-types.php` - Taxonomy label update
+  - `wp-content/themes/flexpress/includes/post-types.php` - Custom column implementation with ACF integration
   - `wp-content/themes/flexpress/includes/bunnycdn.php` - Removed video preview column functions
+  - `wp-content/themes/flexpress/assets/css/admin.css` - Added badge styling for access types
 
 ### Date Format Standardization (October 2025)
 

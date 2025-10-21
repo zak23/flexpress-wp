@@ -15,8 +15,11 @@
 ### Episode Admin Columns (Oct 2025)
 
 - Renamed "Episode Status" column to "Access Type" in episodes admin list
+- Access Type now displays ACF field value (not taxonomy) with color-coded badges
+- Badge colors: Free (cyan), Membership Only (blue), PPV Only (yellow), Membership+PPV (green), Members Discount (purple)
 - Removed "Video Preview" column from episodes admin list
 - Retained columns: Title, Tags, Access Type, Date
+- Access Type column is sortable
 - Video thumbnails still visible when editing individual episodes
 
 ### Date Format Standardization (Oct 2025)

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Register Custom Post Types
  */
@@ -6,7 +7,8 @@
 /**
  * Register Episodes Post Type
  */
-function flexpress_register_episode_post_type() {
+function flexpress_register_episode_post_type()
+{
     $labels = array(
         'name'                  => _x('Episodes', 'Post Type General Name', 'flexpress'),
         'singular_name'         => _x('Episode', 'Post Type Singular Name', 'flexpress'),
@@ -28,12 +30,12 @@ function flexpress_register_episode_post_type() {
         'not_found_in_trash'   => __('Not found in Trash', 'flexpress'),
         'featured_image'       => __('Featured Image', 'flexpress'),
         'set_featured_image'   => __('Set featured image', 'flexpress'),
-        'remove_featured_image'=> __('Remove featured image', 'flexpress'),
+        'remove_featured_image' => __('Remove featured image', 'flexpress'),
         'use_featured_image'   => __('Use as featured image', 'flexpress'),
         'insert_into_item'     => __('Insert into episode', 'flexpress'),
-        'uploaded_to_this_item'=> __('Uploaded to this episode', 'flexpress'),
+        'uploaded_to_this_item' => __('Uploaded to this episode', 'flexpress'),
         'items_list'           => __('Episodes list', 'flexpress'),
-        'items_list_navigation'=> __('Episodes list navigation', 'flexpress'),
+        'items_list_navigation' => __('Episodes list navigation', 'flexpress'),
         'filter_items_list'    => __('Filter episodes list', 'flexpress'),
     );
 
@@ -81,7 +83,7 @@ function flexpress_register_episode_post_type() {
         'hierarchical'      => true,
         'labels'            => $status_labels,
         'show_ui'           => true,
-        'show_admin_column' => true,
+        'show_admin_column' => false, // Hidden - using ACF field instead
         'query_var'         => true,
         'rewrite'           => array('slug' => 'status'),
         'show_in_rest'      => true,
@@ -89,12 +91,82 @@ function flexpress_register_episode_post_type() {
 
     register_taxonomy('episode_status', array('episode'), $status_args);
 }
-add_action('init', 'flexpress_register_episode_post_type'); 
+add_action('init', 'flexpress_register_episode_post_type');
+
+/**
+ * Customize episode admin columns
+ */
+function flexpress_customize_episode_columns($columns) {
+    // Remove the taxonomy column
+    unset($columns['taxonomy-episode_status']);
+    
+    // Add custom Access Type column (before date)
+    $new_columns = array();
+    foreach ($columns as $key => $value) {
+        if ($key === 'date') {
+            $new_columns['access_type'] = __('Access Type', 'flexpress');
+        }
+        $new_columns[$key] = $value;
+    }
+    
+    return $new_columns;
+}
+add_filter('manage_episode_posts_columns', 'flexpress_customize_episode_columns');
+
+/**
+ * Display Access Type column content
+ */
+function flexpress_display_access_type_column($column, $post_id) {
+    if ($column === 'access_type') {
+        if (function_exists('get_field')) {
+            $access_type = get_field('access_type', $post_id);
+            
+            // Map of access type values to display labels
+            $access_labels = array(
+                'free' => 'Free for Everyone',
+                'membership_only' => 'Membership Only',
+                'ppv_only' => 'Pay-Per-View Only',
+                'membership' => 'Membership + PPV',
+                'mixed' => 'Members Get Discount',
+            );
+            
+            if ($access_type && isset($access_labels[$access_type])) {
+                echo '<span class="access-type-badge access-type-' . esc_attr($access_type) . '">';
+                echo esc_html($access_labels[$access_type]);
+                echo '</span>';
+            } else {
+                echo '—';
+            }
+        }
+    }
+}
+add_action('manage_episode_posts_custom_column', 'flexpress_display_access_type_column', 10, 2);
+
+/**
+ * Make Access Type column sortable
+ */
+function flexpress_make_access_type_sortable($columns) {
+    $columns['access_type'] = 'access_type';
+    return $columns;
+}
+add_filter('manage_edit-episode_sortable_columns', 'flexpress_make_access_type_sortable');
+
+/**
+ * Enqueue admin styles for episode list
+ */
+function flexpress_enqueue_episode_admin_styles($hook) {
+    // Only on episode list page
+    if ($hook === 'edit.php' && isset($_GET['post_type']) && $_GET['post_type'] === 'episode') {
+        wp_enqueue_style('flexpress-admin', get_template_directory_uri() . '/assets/css/admin.css', array(), '1.0.0');
+    }
+}
+add_action('admin_enqueue_scripts', 'flexpress_enqueue_episode_admin_styles');
 
 /**
  * Register Models Post Type
  */
-function flexpress_register_model_post_type() {
+function flexpress_register_model_post_type()
+{
     $labels = array(
         'name'                  => _x('Models', 'Post Type General Name', 'flexpress'),
         'singular_name'         => _x('Model', 'Post Type Singular Name', 'flexpress'),
@@ -116,12 +188,12 @@ function flexpress_register_model_post_type() {
         'not_found_in_trash'   => __('Not found in Trash', 'flexpress'),
         'featured_image'       => __('Profile Photo', 'flexpress'),
         'set_featured_image'   => __('Set profile photo', 'flexpress'),
-        'remove_featured_image'=> __('Remove profile photo', 'flexpress'),
+        'remove_featured_image' => __('Remove profile photo', 'flexpress'),
         'use_featured_image'   => __('Use as profile photo', 'flexpress'),
         'insert_into_item'     => __('Insert into model', 'flexpress'),
-        'uploaded_to_this_item'=> __('Uploaded to this model', 'flexpress'),
+        'uploaded_to_this_item' => __('Uploaded to this model', 'flexpress'),
         'items_list'           => __('Models list', 'flexpress'),
-        'items_list_navigation'=> __('Models list navigation', 'flexpress'),
+        'items_list_navigation' => __('Models list navigation', 'flexpress'),
         'filter_items_list'    => __('Filter models list', 'flexpress'),
     );
 
@@ -155,7 +227,8 @@ add_action('init', 'flexpress_register_model_post_type');
 /**
  * Register Extras Post Type
  */
-function flexpress_register_extras_post_type() {
+function flexpress_register_extras_post_type()
+{
     // Check if Extras are enabled in settings
     if (!flexpress_is_extras_enabled()) {
         return;
@@ -181,12 +254,12 @@ function flexpress_register_extras_post_type() {
         'not_found_in_trash'   => __('Not found in Trash', 'flexpress'),
         'featured_image'       => __('Featured Image', 'flexpress'),
         'set_featured_image'   => __('Set featured image', 'flexpress'),
-        'remove_featured_image'=> __('Remove featured image', 'flexpress'),
+        'remove_featured_image' => __('Remove featured image', 'flexpress'),
         'use_featured_image'   => __('Use as featured image', 'flexpress'),
         'insert_into_item'     => __('Insert into extra', 'flexpress'),
-        'uploaded_to_this_item'=> __('Uploaded to this extra', 'flexpress'),
+        'uploaded_to_this_item' => __('Uploaded to this extra', 'flexpress'),
         'items_list'           => __('Extras list', 'flexpress'),
-        'items_list_navigation'=> __('Extras list navigation', 'flexpress'),
+        'items_list_navigation' => __('Extras list navigation', 'flexpress'),
         'filter_items_list'    => __('Filter extras list', 'flexpress'),
     );
 
@@ -245,4 +318,4 @@ function flexpress_register_extras_post_type() {
 
     register_taxonomy('extras_status', array('extras'), $status_args);
 }
-add_action('init', 'flexpress_register_extras_post_type'); 
+add_action('init', 'flexpress_register_extras_post_type');

@@ -9090,7 +9090,7 @@ function flexpress_preview_delete_transactions()
     global $wpdb;
     
     // Get filter criteria
-    $transaction_id = sanitize_text_field($_POST['transaction_id'] ?? '');
+    $transaction_ids = is_array($_POST['transaction_ids']) ? array_map('sanitize_text_field', $_POST['transaction_ids']) : array();
     $date_from = sanitize_text_field($_POST['date_from'] ?? '');
     $date_to = sanitize_text_field($_POST['date_to'] ?? '');
     $amount_max = floatval($_POST['amount_max'] ?? 0);
@@ -9100,9 +9100,10 @@ function flexpress_preview_delete_transactions()
     // Build WHERE clause
     $where_conditions = array('1=1');
     
-    // If transaction_id is provided, ignore all other filters
-    if (!empty($transaction_id)) {
-        $where_conditions = array($wpdb->prepare('t.transaction_id = %s', $transaction_id));
+    // If transaction_ids are provided, ignore all other filters
+    if (!empty($transaction_ids)) {
+        $placeholders = implode(',', array_fill(0, count($transaction_ids), '%s'));
+        $where_conditions = array($wpdb->prepare("t.transaction_id IN ($placeholders)", ...$transaction_ids));
     } else {
         if (!empty($date_from)) {
             $where_conditions[] = $wpdb->prepare('DATE(t.created_at) >= %s', $date_from);
@@ -9196,7 +9197,7 @@ function flexpress_delete_transactions()
     global $wpdb;
     
     // Get filter criteria
-    $transaction_id = sanitize_text_field($_POST['transaction_id'] ?? '');
+    $transaction_ids = is_array($_POST['transaction_ids']) ? array_map('sanitize_text_field', $_POST['transaction_ids']) : array();
     $date_from = sanitize_text_field($_POST['date_from'] ?? '');
     $date_to = sanitize_text_field($_POST['date_to'] ?? '');
     $amount_max = floatval($_POST['amount_max'] ?? 0);
@@ -9206,9 +9207,10 @@ function flexpress_delete_transactions()
     // Build WHERE clause (same as preview)
     $where_conditions = array('1=1');
     
-    // If transaction_id is provided, ignore all other filters
-    if (!empty($transaction_id)) {
-        $where_conditions = array($wpdb->prepare('t.transaction_id = %s', $transaction_id));
+    // If transaction_ids are provided, ignore all other filters
+    if (!empty($transaction_ids)) {
+        $placeholders = implode(',', array_fill(0, count($transaction_ids), '%s'));
+        $where_conditions = array($wpdb->prepare("t.transaction_id IN ($placeholders)", ...$transaction_ids));
     } else {
         if (!empty($date_from)) {
             $where_conditions[] = $wpdb->prepare('DATE(t.created_at) >= %s', $date_from);

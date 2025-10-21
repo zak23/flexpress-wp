@@ -487,10 +487,10 @@ class FlexPress_Settings
                         </td>
                     </tr>
                     <tr>
-                        <th><label for="delete_transaction_id"><?php esc_html_e('Transaction ID', 'flexpress'); ?></label></th>
+                        <th><label for="delete_transaction_id"><?php esc_html_e('Transaction ID(s)', 'flexpress'); ?></label></th>
                         <td>
-                            <input type="text" id="delete_transaction_id" class="regular-text" placeholder="e.g., txn_abc123..." />
-                            <p class="description"><?php esc_html_e('Delete a specific transaction by ID (exact match). When set, all other filters are ignored.', 'flexpress'); ?></p>
+                            <textarea id="delete_transaction_id" class="large-text" rows="3" placeholder="e.g., 105567718, 105568327, 105568445&#10;Or one per line"></textarea>
+                            <p class="description"><?php esc_html_e('Delete specific transactions by ID. Enter multiple IDs separated by commas or new lines. When set, all other filters are ignored.', 'flexpress'); ?></p>
                         </td>
                     </tr>
                 </table>
@@ -527,8 +527,14 @@ class FlexPress_Settings
                     const dateTo = $('#delete_date_to').val();
                     const amountMax = $('#delete_amount_max').val();
                     const userId = $('#delete_user_id').val();
-                    const transactionId = $('#delete_transaction_id').val();
+                    const transactionIdRaw = $('#delete_transaction_id').val();
                     const types = [];
+                    
+                    // Parse transaction IDs (split by comma, newline, or space)
+                    const transactionIds = transactionIdRaw
+                        .split(/[\n,\s]+/)
+                        .map(id => id.trim())
+                        .filter(id => id.length > 0);
                     
                     if ($('#delete_subscriptions').is(':checked')) types.push('subscription');
                     if ($('#delete_purchases').is(':checked')) types.push('purchase');
@@ -546,7 +552,7 @@ class FlexPress_Settings
                             date_to: dateTo,
                             amount_max: amountMax,
                             user_id: userId,
-                            transaction_id: transactionId,
+                            transaction_ids: transactionIds,
                             types: types
                         },
                         success: function(response) {
@@ -602,8 +608,14 @@ class FlexPress_Settings
                     const dateTo = $('#delete_date_to').val();
                     const amountMax = $('#delete_amount_max').val();
                     const userId = $('#delete_user_id').val();
-                    const transactionId = $('#delete_transaction_id').val();
+                    const transactionIdRaw = $('#delete_transaction_id').val();
                     const types = [];
+                    
+                    // Parse transaction IDs (split by comma, newline, or space)
+                    const transactionIds = transactionIdRaw
+                        .split(/[\n,\s]+/)
+                        .map(id => id.trim())
+                        .filter(id => id.length > 0);
                     
                     if ($('#delete_subscriptions').is(':checked')) types.push('subscription');
                     if ($('#delete_purchases').is(':checked')) types.push('purchase');
@@ -621,7 +633,7 @@ class FlexPress_Settings
                             date_to: dateTo,
                             amount_max: amountMax,
                             user_id: userId,
-                            transaction_id: transactionId,
+                            transaction_ids: transactionIds,
                             types: types
                         },
                         success: function(response) {

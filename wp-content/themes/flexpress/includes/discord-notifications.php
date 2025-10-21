@@ -204,12 +204,16 @@ class FlexPress_Discord_Notifications {
                     'inline' => true
                 ]
             ],
-            'footer' => [
-                'text' => $this->site_name . ' • Flowguard',
-                'icon_url' => get_site_icon_url()
-            ],
             'timestamp' => date('c')
         ];
+        
+        // Build footer with optional icon
+        $footer = ['text' => $this->site_name . ' • Flowguard'];
+        $site_icon = get_site_icon_url();
+        if ($site_icon) {
+            $footer['icon_url'] = $site_icon;
+        }
+        $embed['footer'] = $footer;
         
         // Add promo code if used during signup
         $applied_promo_code = get_user_meta($user_id, 'applied_promo_code', true);
@@ -287,12 +291,16 @@ class FlexPress_Discord_Notifications {
                     'inline' => true
                 ]
             ],
-            'footer' => [
-                'text' => $this->site_name . ' • Flowguard',
-                'icon_url' => get_site_icon_url()
-            ],
             'timestamp' => date('c')
         ];
+        
+        // Build footer with optional icon
+        $footer = ['text' => $this->site_name . ' • Flowguard'];
+        $site_icon = get_site_icon_url();
+        if ($site_icon) {
+            $footer['icon_url'] = $site_icon;
+        }
+        $embed['footer'] = $footer;
         
         // Add promo code if used during original signup
         $applied_promo_code = get_user_meta($user_id, 'applied_promo_code', true);
@@ -342,12 +350,16 @@ class FlexPress_Discord_Notifications {
                     'inline' => true
                 ]
             ],
-            'footer' => [
-                'text' => $this->site_name . ' • Flowguard',
-                'icon_url' => get_site_icon_url()
-            ],
             'timestamp' => date('c')
         ];
+        
+        // Build footer with optional icon
+        $footer = ['text' => $this->site_name . ' • Flowguard'];
+        $site_icon = get_site_icon_url();
+        if ($site_icon) {
+            $footer['icon_url'] = $site_icon;
+        }
+        $embed['footer'] = $footer;
         
         // Add expiration date for one-time subscriptions only
         if (($payload['subscriptionType'] ?? 'unknown') === 'one-time' && isset($payload['expiresOn']) && !empty($payload['expiresOn'])) {
@@ -396,12 +408,16 @@ class FlexPress_Discord_Notifications {
                     'inline' => true
                 ]
             ],
-            'footer' => [
-                'text' => $this->site_name . ' • Flowguard',
-                'icon_url' => get_site_icon_url()
-            ],
             'timestamp' => date('c')
         ];
+        
+        // Build footer with optional icon
+        $footer = ['text' => $this->site_name . ' • Flowguard'];
+        $site_icon = get_site_icon_url();
+        if ($site_icon) {
+            $footer['icon_url'] = $site_icon;
+        }
+        $embed['footer'] = $footer;
         
         return $embed;
     }
@@ -451,12 +467,16 @@ class FlexPress_Discord_Notifications {
                     'inline' => true
                 ]
             ],
-            'footer' => [
-                'text' => $this->site_name . ' • Flowguard',
-                'icon_url' => get_site_icon_url()
-            ],
             'timestamp' => date('c')
         ];
+        
+        // Build footer with optional icon
+        $footer = ['text' => $this->site_name . ' • Flowguard'];
+        $site_icon = get_site_icon_url();
+        if ($site_icon) {
+            $footer['icon_url'] = $site_icon;
+        }
+        $embed['footer'] = $footer;
         
         // Add promo code if used during original signup
         $applied_promo_code = get_user_meta($user_id, 'applied_promo_code', true);
@@ -525,12 +545,16 @@ class FlexPress_Discord_Notifications {
                     'inline' => true
                 ]
             ],
-            'footer' => [
-                'text' => $this->site_name . ' • Flowguard',
-                'icon_url' => get_site_icon_url()
-            ],
             'timestamp' => date('c')
         ];
+        
+        // Build footer with optional icon
+        $footer = ['text' => $this->site_name . ' • Flowguard'];
+        $site_icon = get_site_icon_url();
+        if ($site_icon) {
+            $footer['icon_url'] = $site_icon;
+        }
+        $embed['footer'] = $footer;
         
         // Add episode information if available
         if ($episode_id > 0) {
@@ -603,12 +627,16 @@ class FlexPress_Discord_Notifications {
                     'inline' => true
                 ]
             ],
-            'footer' => [
-                'text' => $this->site_name . ' • Flowguard',
-                'icon_url' => get_site_icon_url()
-            ],
             'timestamp' => date('c')
         ];
+        
+        // Build footer with optional icon
+        $footer = ['text' => $this->site_name . ' • Flowguard'];
+        $site_icon = get_site_icon_url();
+        if ($site_icon) {
+            $footer['icon_url'] = $site_icon;
+        }
+        $embed['footer'] = $footer;
         
         return $embed;
     }
@@ -655,12 +683,16 @@ class FlexPress_Discord_Notifications {
                     'inline' => true
                 ]
             ],
-            'footer' => [
-                'text' => $this->site_name . ' • Talent Applications',
-                'icon_url' => get_site_icon_url()
-            ],
             'timestamp' => date('c')
         ];
+        
+        // Build footer with optional icon
+        $footer = ['text' => $this->site_name . ' • Talent Applications'];
+        $site_icon = get_site_icon_url();
+        if ($site_icon) {
+            $footer['icon_url'] = $site_icon;
+        }
+        $embed['footer'] = $footer;
         
         // Add bio if provided
         if (!empty($form_data['bio'])) {
@@ -689,12 +721,16 @@ class FlexPress_Discord_Notifications {
             'description' => $description,
             'color' => $color,
             'fields' => $fields,
-            'footer' => [
-                'text' => $this->site_name,
-                'icon_url' => get_site_icon_url()
-            ],
             'timestamp' => date('c')
         ];
+        
+        // Build footer with optional icon
+        $footer = ['text' => $this->site_name];
+        $site_icon = get_site_icon_url();
+        if ($site_icon) {
+            $footer['icon_url'] = $site_icon;
+        }
+        $embed['footer'] = $footer;
         
         return $embed;
     }

@@ -4,6 +4,13 @@ A modern WordPress website running in Docker containers with MySQL database and 
 
 ## 🔧 Recent Fixes
 
+### JavaScript MutationObserver Error (Fixed)
+
+- **TypeError Fix**: Resolved `Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'` error in `model-social.js`
+  - Root cause: `observer.observe(this)` was being called on a jQuery object instead of a DOM node
+  - Solution: Changed to `observer.observe(this[0])` to convert jQuery object to DOM node
+  - This fix ensures IntersectionObserver works correctly for social icon animations
+
 ### Extras Post Type Issues (Fixed)
 
 - **Post Overwriting Bug**: Fixed issue where creating new extras posts would overwrite existing ones due to incorrect post ID handling in gallery uploads

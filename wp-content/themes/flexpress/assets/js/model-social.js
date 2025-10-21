@@ -135,7 +135,7 @@
         transform: "translateY(20px)",
         transition: "opacity 0.5s ease, transform 0.5s ease",
       });
-      observer.observe(this);
+      observer.observe(this[0]); // Convert jQuery object to DOM node
     });
   }
 })(jQuery);

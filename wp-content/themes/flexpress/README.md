@@ -11,6 +11,13 @@ FlexPress is designed specifically for content websites (primarily adult content
 
 ## 🌟 Core Features
 
+### JavaScript MutationObserver Error Fix (October 2025)
+
+- **Fixed TypeError**: Resolved `Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'` error
+- **Root Cause**: `observer.observe(this)` was being called on a jQuery object instead of a DOM node in `model-social.js`
+- **Solution**: Changed to `observer.observe(this[0])` to properly convert jQuery object to DOM node
+- **Impact**: Ensures IntersectionObserver works correctly for social icon scroll animations
+
 ### Episode Release Date Sync (October 2025)
 
 - ACF `release_date` is the source of truth for scheduling.

@@ -7,6 +7,8 @@ A modern WordPress website running in Docker containers with MySQL database and 
 ### Extras Post Type Issues (Fixed)
 
 - **Post Overwriting Bug**: Fixed issue where creating new extras posts would overwrite existing ones due to incorrect post ID handling in gallery uploads
+  - Root cause: Missing `global $post;` declaration in `enqueue_admin_scripts()` function
+  - Solution: Added proper global variable access and autosave protection
 - **Gallery Grid Display**: Restored proper grid layout for gallery images in extras admin area (was displaying as vertical list)
 
 ## 🚀 Quick Start
@@ -577,6 +579,36 @@ No field keys or names changed; existing data remains intact.
   - Plunk: now only under `FlexPress → Plunk`
   - Flowguard: removed standalone top-level; now only `FlexPress → Flowguard`
   - Discord: removed standalone top-level; now only `FlexPress → Discord`
+
+### Episode Gallery Sort Order Fix (January 2025)
+
+- **Fixed gallery sort order**: Episode galleries now maintain proper sequence based on filename patterns
+- **Automatic sorting**: Images are automatically sorted by filename both on upload and display
+- **Numeric sequence support**: Handles numbered filenames (001, 002, 003, etc.) with proper numeric sorting
+- **Fallback sorting**: Images without numbers are sorted alphabetically by filename
+- **Migration script**: Created `scripts/sort-existing-galleries.php` to sort all existing galleries
+- **Implementation details**:
+  - Added `filename` field to gallery image data during upload
+  - Created `flexpress_sort_gallery_images_by_filename()` helper function
+  - Applied sorting in `ajax_upload_gallery_image()` and `flexpress_display_episode_gallery()`
+  - Extracts numeric sequences using regex pattern `/(\d+)(?=\.[^.]*$)/`
+  - Safe to run migration script multiple times (idempotent)
+
+### Gallery Upload Reliability Fix (January 2025)
+
+- **Fixed bulk upload failures**: Resolved issue where ~20 images would fail to upload due to race conditions
+- **Sequential uploads**: Replaced parallel uploads with sequential processing to prevent server overload
+- **Per-file progress tracking**: Added detailed progress UI showing individual file status and progress bars
+- **Retry mechanism**: Automatic retry for failed uploads plus manual retry buttons for persistent failures
+- **Enhanced error handling**: Clear, actionable error messages with specific failure reasons
+- **Improved timeout handling**: Increased individual upload timeout to 120 seconds with better error reporting
+- **Better UX**: No unexpected page reloads, clear progress indication, and ability to retry only failed uploads
+- **Implementation details**:
+  - Refactored `uploadFiles()` to use sequential queue processing instead of parallel `forEach`
+  - Added upload queue management with status tracking (pending, uploading, success, failed)
+  - Created detailed progress UI with status icons, progress bars, and retry buttons
+  - Enhanced server-side validation with specific error codes and messages
+  - Added `set_time_limit(120)` to individual upload handler for better timeout handling
 - Updated admin enqueue hooks to match correct page hooks (`flexpress-settings_page_*`)
 
 New menu structure:

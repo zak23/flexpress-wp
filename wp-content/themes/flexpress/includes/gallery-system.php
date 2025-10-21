@@ -635,6 +635,11 @@ class FlexPress_Gallery_System
     {
         $post_type = get_post_type($post_id);
 
+        // If this is an autosave, don't do anything
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
+        }
+
         // Check nonce based on post type
         if ($post_type === 'episode') {
             if (
@@ -728,6 +733,9 @@ class FlexPress_Gallery_System
      */
     public function ajax_upload_gallery_image()
     {
+        // Increase timeout for individual uploads
+        set_time_limit(120);
+
         error_log("=== FLEXPRESS AJAX GALLERY UPLOAD START ===");
         error_log("POST data: " . print_r($_POST, true));
         error_log("FILES data: " . print_r($_FILES, true));
@@ -738,7 +746,7 @@ class FlexPress_Gallery_System
             !current_user_can('upload_files')
         ) {
             error_log("❌ Unauthorized upload attempt");
-            wp_die('Unauthorized');
+            wp_send_json_error('Unauthorized upload attempt');
         }
 
         $post_id = intval($_POST['post_id']);
@@ -746,7 +754,7 @@ class FlexPress_Gallery_System
 
         if (!$post_id || !in_array($post_type, array('episode', 'extras'))) {
             error_log("❌ Invalid post ID: $post_id or post type: $post_type");
-            wp_die('Invalid post ID or post type');
+            wp_send_json_error('Invalid post ID or post type');
         }
 
         error_log("✅ Valid upload request for $post_type ID: $post_id");
@@ -754,10 +762,40 @@ class FlexPress_Gallery_System
         // Handle file upload
         if (!isset($_FILES['image'])) {
             error_log("❌ No file uploaded");
-            wp_die('No file uploaded');
+            wp_send_json_error('No file uploaded');
         }
 
         $file = $_FILES['image'];
+
+        // Enhanced file validation
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            $error_messages = array(
+                UPLOAD_ERR_INI_SIZE => 'File too large (server limit)',
+                UPLOAD_ERR_FORM_SIZE => 'File too large (form limit)',
+                UPLOAD_ERR_PARTIAL => 'File upload was incomplete',
+                UPLOAD_ERR_NO_FILE => 'No file was uploaded',
+                UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary folder',
+                UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
+                UPLOAD_ERR_EXTENSION => 'File upload stopped by extension'
+            );
+            $error_message = isset($error_messages[$file['error']]) ? $error_messages[$file['error']] : 'Unknown upload error';
+            error_log("❌ Upload error: " . $error_message);
+            wp_send_json_error($error_message);
+        }
+
+        // Validate file type
+        $allowed_types = array('image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp');
+        if (!in_array($file['type'], $allowed_types)) {
+            error_log("❌ Invalid file type: " . $file['type']);
+            wp_send_json_error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.');
+        }
+
+        // Validate file size (max 10MB)
+        if ($file['size'] > 10 * 1024 * 1024) {
+            error_log("❌ File too large: " . $file['size'] . " bytes");
+            wp_send_json_error('File too large. Maximum size is 10MB.');
+        }
+
         error_log("File details:");
         error_log("  Name: " . $file['name']);
         error_log("  Size: " . $file['size'] . " bytes");
@@ -768,7 +806,7 @@ class FlexPress_Gallery_System
 
         if (isset($upload['error'])) {
             error_log("❌ WordPress upload error: " . $upload['error']);
-            wp_die($upload['error']);
+            wp_send_json_error('WordPress upload failed: ' . $upload['error']);
         }
 
         error_log("✅ WordPress upload successful:");
@@ -788,7 +826,7 @@ class FlexPress_Gallery_System
 
         if (is_wp_error($attachment_id)) {
             error_log("❌ Failed to create attachment: " . $attachment_id->get_error_message());
-            wp_die('Failed to create attachment');
+            wp_send_json_error('Failed to create attachment: ' . $attachment_id->get_error_message());
         }
 
         error_log("✅ Attachment created with ID: $attachment_id");
@@ -822,6 +860,7 @@ class FlexPress_Gallery_System
             'title' => sanitize_text_field($_POST['title']),
             'alt' => sanitize_text_field($_POST['alt']),
             'caption' => sanitize_text_field($_POST['caption']),
+            'filename' => sanitize_file_name($file['name']),
             'thumbnail' => $thumbnail_url,
             'medium' => $medium_url,
             'large' => $large_url,
@@ -833,9 +872,13 @@ class FlexPress_Gallery_System
 
         error_log("Gallery image data:");
         error_log("  WordPress URLs: thumbnail=$thumbnail_url, medium=$medium_url, large=$large_url, full=$full_url");
-        error_log("  BunnyCDN URL: " . ($bunnycdn_url ?: 'NOT SET'));
+        error_log("  BunnyCDN URL: " . ($bunnycdn_result ?: 'NOT SET'));
 
         $gallery_images[] = $new_image;
+
+        // Sort gallery images by filename
+        $gallery_images = flexpress_sort_gallery_images_by_filename($gallery_images);
+
         update_post_meta($post_id, $meta_key, $gallery_images);
         error_log("✅ Gallery updated with " . count($gallery_images) . " images");
 
@@ -1297,7 +1340,7 @@ class FlexPress_Gallery_System
      */
     public function enqueue_admin_scripts($hook)
     {
-        global $post_type;
+        global $post_type, $post;
 
         // Debug logging
         error_log("FlexPress Gallery: Hook = $hook, Post Type = $post_type");
@@ -1341,6 +1384,50 @@ class FlexPress_Gallery_System
 new FlexPress_Gallery_System();
 
 /**
+ * Sort gallery images by filename with numeric sequence extraction
+ * 
+ * @param array $images Array of gallery images
+ * @return array Sorted array of gallery images
+ */
+function flexpress_sort_gallery_images_by_filename($images)
+{
+    if (!is_array($images) || empty($images)) {
+        return $images;
+    }
+
+    usort($images, function ($a, $b) {
+        // Get filenames, fallback to title if filename not available
+        $filename_a = isset($a['filename']) ? $a['filename'] : (isset($a['title']) ? $a['title'] : '');
+        $filename_b = isset($b['filename']) ? $b['filename'] : (isset($b['title']) ? $b['title'] : '');
+
+        // Extract numeric sequences from filenames
+        preg_match('/(\d+)(?=\.[^.]*$)/', $filename_a, $matches_a);
+        preg_match('/(\d+)(?=\.[^.]*$)/', $filename_b, $matches_b);
+
+        $num_a = isset($matches_a[1]) ? intval($matches_a[1]) : null;
+        $num_b = isset($matches_b[1]) ? intval($matches_b[1]) : null;
+
+        // If both have numbers, sort by number
+        if ($num_a !== null && $num_b !== null) {
+            return $num_a - $num_b;
+        }
+
+        // If only one has a number, prioritize it
+        if ($num_a !== null && $num_b === null) {
+            return -1;
+        }
+        if ($num_a === null && $num_b !== null) {
+            return 1;
+        }
+
+        // If neither has numbers, sort alphabetically by filename
+        return strcmp($filename_a, $filename_b);
+    });
+
+    return $images;
+}
+
+/**
  * Get episode gallery images
  */
 function flexpress_get_episode_gallery($post_id = null)
@@ -1374,6 +1461,9 @@ function flexpress_display_episode_gallery($post_id = null, $columns = null, $ha
     if (empty($gallery_images)) {
         return;
     }
+
+    // Sort gallery images by filename
+    $gallery_images = flexpress_sort_gallery_images_by_filename($gallery_images);
 
     // Check access if not provided
     if ($has_access === null) {
@@ -1475,6 +1565,30 @@ function flexpress_display_episode_gallery($post_id = null, $columns = null, $ha
                 </div>
             <?php endforeach; ?>
         </div>
+
+        <?php if ($preview_mode): ?>
+            <div class="gallery-preview-notice text-center mt-3">
+                <p class="text-muted">
+                    <i class="fas fa-lock me-2"></i>
+                    Showing 5 of <?php echo count($gallery_images); ?> images.
+                    <?php
+                    // Use the same logic as the 5th image overlay
+                    if (is_user_logged_in()) {
+                        if ($access_info['show_purchase_button']) {
+                            // User can purchase - link to purchase section
+                            echo '<a href="#purchase-section" class="text-white">Purchase to view all</a>';
+                        } else {
+                            // User needs membership - link to join page
+                            echo '<a href="' . esc_url(home_url('/join')) . '" class="text-white">Get membership to view all</a>';
+                        }
+                    } else {
+                        // User not logged in - link to login
+                        echo '<a href="' . esc_url(home_url('/login?redirect_to=' . urlencode(get_permalink($post_id)))) . '" class="text-white">Login to view all</a>';
+                    }
+                    ?>
+                </p>
+            </div>
+        <?php endif; ?>
     </div>
 <?php
 }

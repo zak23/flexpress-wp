@@ -3465,47 +3465,55 @@ function flexpress_create_ppv_purchase()
 
     // Get and validate parameters
     $episode_id = isset($_POST['episode_id']) ? intval($_POST['episode_id']) : 0;
+    $extras_id = isset($_POST['extras_id']) ? intval($_POST['extras_id']) : 0;
     $final_price = isset($_POST['final_price']) ? floatval($_POST['final_price']) : 0;
     $base_price = isset($_POST['base_price']) ? floatval($_POST['base_price']) : 0;
     $member_discount = isset($_POST['member_discount']) ? floatval($_POST['member_discount']) : 0;
 
+    // Determine content type and ID
+    $content_id = $episode_id ?: $extras_id;
+    $content_type = $episode_id ? 'episode' : 'extras';
+
     // Debug logging
-    error_log('FlexPress PPV Debug: Episode ID=' . $episode_id . ', Final Price=' . $final_price . ', Base Price=' . $base_price . ', Member Discount=' . $member_discount);
+    error_log('FlexPress PPV Debug: Content ID=' . $content_id . ', Content Type=' . $content_type . ', Final Price=' . $final_price . ', Base Price=' . $base_price . ', Member Discount=' . $member_discount);
 
-    if (!$episode_id || !$final_price) {
-        wp_send_json_error(array('message' => __('Invalid episode or price data', 'flexpress')));
+    if (!$content_id || !$final_price) {
+        wp_send_json_error(array('message' => __('Invalid content or price data', 'flexpress')));
         return;
     }
 
-    // Verify episode exists and has a price
-    $episode = get_post($episode_id);
-    if (!$episode || $episode->post_type !== 'episode') {
-        wp_send_json_error(array('message' => __('Episode not found', 'flexpress')));
+    // Verify content exists and has a price
+    $content = get_post($content_id);
+    if (!$content || !in_array($content->post_type, ['episode', 'extras'])) {
+        wp_send_json_error(array('message' => __('Content not found', 'flexpress')));
         return;
     }
 
-    $episode_price = get_field('episode_price', $episode_id);
-    if (!$episode_price) {
-        wp_send_json_error(array('message' => __('Episode not available for purchase', 'flexpress')));
+    // Get price field based on content type
+    $price_field = $content_type === 'episode' ? 'episode_price' : 'extras_price';
+    $content_price = get_field($price_field, $content_id);
+    if (!$content_price) {
+        wp_send_json_error(array('message' => __('Content not available for purchase', 'flexpress')));
         return;
     }
 
     // Debug logging for price validation
-    error_log('FlexPress PPV Price Validation: Episode Price=' . $episode_price . ', Base Price=' . $base_price . ', Match=' . (floatval($episode_price) === $base_price ? 'YES' : 'NO'));
+    error_log('FlexPress PPV Price Validation: Content Price=' . $content_price . ', Base Price=' . $base_price . ', Match=' . (floatval($content_price) === $base_price ? 'YES' : 'NO'));
 
-    // Validate that the base price matches the episode price (before any discounts)
-    if (floatval($episode_price) !== $base_price) {
-        error_log('FlexPress PPV Price Mismatch: Episode Price=' . $episode_price . ', Base Price=' . $base_price);
+    // Validate that the base price matches the content price (before any discounts)
+    if (floatval($content_price) !== $base_price) {
+        error_log('FlexPress PPV Price Mismatch: Content Price=' . $content_price . ', Base Price=' . $base_price);
         wp_send_json_error(array('message' => __('Price mismatch. Please refresh and try again.', 'flexpress')));
         return;
     }
 
-    // Check if user already owns this episode
+    // Check if user already owns this content
     $user_id = get_current_user_id();
     if ($user_id) {
-        $already_purchased = get_user_meta($user_id, 'purchased_episode_' . $episode_id, true);
+        $meta_key = $content_type === 'episode' ? 'purchased_episode_' . $content_id : 'purchased_extras_' . $content_id;
+        $already_purchased = get_user_meta($user_id, $meta_key, true);
         if ($already_purchased) {
-            wp_send_json_error(array('message' => __('You already own this episode', 'flexpress')));
+            wp_send_json_error(array('message' => __('You already own this content', 'flexpress')));
             return;
         }
 
@@ -3523,7 +3531,7 @@ function flexpress_create_ppv_purchase()
     }
 
     // Create unique transaction reference
-    $transaction_ref = 'ppv_' . $episode_id . '_' . ($user_id ?: 'guest') . '_' . time();
+    $transaction_ref = 'ppv_' . $content_type . '_' . $content_id . '_' . ($user_id ?: 'guest') . '_' . time();
 
     // Initialize Flowguard for one-time payment
     try {
@@ -3531,14 +3539,14 @@ function flexpress_create_ppv_purchase()
 
         // Prepare payment arguments for one-time purchase
         $payment_args = array(
-            'successURL' => home_url('/wp-admin/admin-ajax.php?action=flexpress_ppv_payment_return&episode_id=' . $episode_id . '&user_id=' . $user_id . '&ref=' . $transaction_ref),
-            'declineURL' => get_permalink($episode_id) . '?payment=cancelled',
+            'successURL' => home_url('/wp-admin/admin-ajax.php?action=flexpress_ppv_payment_return&content_id=' . $content_id . '&content_type=' . $content_type . '&user_id=' . $user_id . '&ref=' . $transaction_ref),
+            'declineURL' => get_permalink($content_id) . '?payment=cancelled',
             'ipnUrl' => home_url('/wp-admin/admin-ajax.php?action=flexpress_ppv_webhook'),
             'referenceID' => $transaction_ref, // Unique reference for this purchase
-            'custom1' => $episode_id, // Episode ID
+            'custom1' => $content_id, // Content ID
             'custom2' => $user_id, // User ID  
             'custom3' => $transaction_ref, // Transaction reference
-            'productDescription' => 'Episode: ' . get_the_title($episode_id)
+            'productDescription' => ucfirst($content_type) . ': ' . get_the_title($content_id)
         );
 
         // Add user email if logged in
@@ -3550,10 +3558,10 @@ function flexpress_create_ppv_purchase()
         }
 
         // Log payment creation for debugging
-        error_log('FlexPress PPV: Creating payment for episode ' . $episode_id . ', user ' . $user_id . ', price $' . $final_price);
+        error_log('FlexPress PPV: Creating payment for ' . $content_type . ' ' . $content_id . ', user ' . $user_id . ', price $' . $final_price);
 
         // Create Flowguard PPV purchase with final price
-        $result = flexpress_flowguard_create_ppv_purchase($user_id, $episode_id, $final_price);
+        $result = flexpress_flowguard_create_ppv_purchase($user_id, $content_id, $final_price, $content_type);
 
         if (!$result['success']) {
             error_log('FlexPress PPV: Failed to create Flowguard purchase: ' . $result['error']);
@@ -3570,7 +3578,8 @@ function flexpress_create_ppv_purchase()
         // Store transaction reference for validation
         if ($user_id) {
             update_user_meta($user_id, 'pending_ppv_' . $transaction_ref, array(
-                'episode_id' => $episode_id,
+                'content_id' => $content_id,
+                'content_type' => $content_type,
                 'price' => $final_price,
                 'created' => current_time('mysql')
             ));
@@ -4419,21 +4428,45 @@ function flexpress_display_extras_gallery($extras_id = null, $columns = null, $h
                             <?php endif; ?>
                         </a>
                     <?php else: ?>
-                        <!-- 5th image with remaining count overlay -->
-                        <div class="gallery-preview-last">
+                        <!-- 5th image with remaining count overlay - clickable with proper login/unlock logic -->
+                        <?php
+                        // Copy the exact logic from the unlock button in single-episode.php
+                        if (is_user_logged_in()) {
+                            // User is logged in - show purchase button (same as unlock button)
+                            $cta_url = '#';
+                            $cta_text = __('Click to unlock', 'flexpress');
+                            $cta_class = 'gallery-preview-purchase';
+                        } else {
+                            // User is not logged in - redirect to login (same as unlock button)
+                            $cta_url = home_url('/login?redirect_to=' . urlencode(get_permalink($extras_id)));
+                            $cta_text = __('Login to unlock', 'flexpress');
+                            $cta_class = '';
+                        }
+                        ?>
+                        <a href="<?php echo esc_url($cta_url); ?>"
+                            class="gallery-preview-last gallery-preview-cta <?php echo $cta_class; ?>"
+                            <?php if ($cta_class === 'gallery-preview-purchase'): ?>
+                            data-extras-id="<?php echo $extras_id; ?>"
+                            data-price="<?php echo isset($access_info['final_price']) ? esc_attr($access_info['final_price']) : ''; ?>"
+                            data-original-price="<?php echo isset($access_info['price']) ? esc_attr($access_info['price']) : ''; ?>"
+                            data-discount="<?php echo isset($access_info['discount']) ? esc_attr($access_info['discount']) : ''; ?>"
+                            data-access-type="<?php echo isset($access_info['access_type']) ? esc_attr($access_info['access_type']) : ''; ?>"
+                            data-is-active-member="<?php echo isset($access_info['is_member']) && $access_info['is_member'] ? 'true' : 'false'; ?>"
+                            <?php endif; ?>>
                             <img src="<?php echo esc_url($thumbnail_url); ?>"
                                 alt="<?php echo esc_attr($image['alt'] ?? ''); ?>"
                                 loading="lazy">
                             <div class="gallery-preview-overlay">
                                 <div class="preview-overlay-content">
                                     <div class="remaining-count">
-                                        <i class="fas fa-lock fa-2x mb-2"></i>
-                                        <p class="mb-0"><?php echo esc_html($remaining_count); ?> more images</p>
-                                        <small>Purchase to unlock</small>
+                                        +<?php echo $remaining_count; ?>
+                                    </div>
+                                    <div class="cta-hint">
+                                        <?php echo esc_html($cta_text); ?>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
@@ -4444,7 +4477,21 @@ function flexpress_display_extras_gallery($extras_id = null, $columns = null, $h
                 <p class="text-muted">
                     <i class="fas fa-lock me-2"></i>
                     Showing 5 of <?php echo count($gallery); ?> images.
-                    <a href="#purchase-section" class="text-white">Purchase to view all</a>
+                    <?php
+                    // Use the same logic as the 5th image overlay
+                    if (is_user_logged_in()) {
+                        if ($access_info['show_purchase_button']) {
+                            // User can purchase - link to purchase section
+                            echo '<a href="#purchase-section" class="text-white">Purchase to view all</a>';
+                        } else {
+                            // User needs membership - link to join page
+                            echo '<a href="' . esc_url(home_url('/join')) . '" class="text-white">Get membership to view all</a>';
+                        }
+                    } else {
+                        // User not logged in - link to login
+                        echo '<a href="' . esc_url(home_url('/login?redirect_to=' . urlencode(get_permalink($extras_id)))) . '" class="text-white">Login to view all</a>';
+                    }
+                    ?>
                 </p>
             </div>
         <?php endif; ?>

@@ -17,6 +17,11 @@
       this.imagesGrid = $(`#${prefix}gallery-images-grid`);
       this.selectButton = $(`#select-${prefix}gallery-images`);
 
+      // Upload queue management
+      this.uploadQueue = [];
+      this.isUploading = false;
+      this.currentUploadIndex = 0;
+
       this.init();
     }
 
@@ -54,6 +59,30 @@
       $(document).on("click", `#delete-all-${prefix}gallery-images`, (e) => {
         console.log("Delete all button clicked");
         this.deleteAllImages(e);
+      });
+
+      // Upload control buttons
+      $(document).on("click", ".retry-failed", (e) => {
+        e.preventDefault();
+        this.retryFailedUploads();
+      });
+
+      $(document).on("click", ".retry-single", (e) => {
+        e.preventDefault();
+        const itemId = $(e.target).closest(".upload-item").data("id");
+        this.retrySingleUpload(itemId);
+      });
+
+      $(document).on("click", ".cancel-upload", (e) => {
+        e.preventDefault();
+        this.cancelUpload();
+      });
+
+      $(document).on("click", ".done-upload", (e) => {
+        e.preventDefault();
+        const prefix = flexpressGallery.postType === "extras" ? "extras-" : "";
+        $(`#${prefix}upload-progress-items`).hide();
+        this.refreshGallery();
       });
     }
 
@@ -100,69 +129,327 @@
     }
 
     uploadFiles(files) {
+      if (this.isUploading) {
+        console.log("Upload already in progress, ignoring new files");
+        return;
+      }
+
+      // Create upload queue items
+      this.uploadQueue = Array.from(files).map((file, index) => ({
+        id: "upload_" + Date.now() + "_" + index,
+        file: file,
+        filename: file.name,
+        size: file.size,
+        status: "pending",
+        error: null,
+        retryCount: 0,
+      }));
+
+      this.isUploading = true;
+      this.currentUploadIndex = 0;
+
       this.showProgress();
+      this.createProgressItems();
+      this.processUploadQueue();
+    }
 
-      let uploaded = 0;
-      const total = files.length;
+    createProgressItems() {
+      const prefix = flexpressGallery.postType === "extras" ? "extras-" : "";
+      const progressContainer = $(`#${prefix}upload-progress-items`);
 
-      Array.from(files).forEach((file, index) => {
-        this.uploadFile(file, (success) => {
-          uploaded++;
-          this.updateProgress((uploaded / total) * 100);
+      if (progressContainer.length === 0) {
+        // Create progress container if it doesn't exist
+        this.progressBar.after(`
+          <div id="${prefix}upload-progress-items" class="upload-progress-items" style="display: none;">
+            <div class="upload-items-header">
+              <h4>Upload Progress</h4>
+              <div class="upload-actions">
+                <button type="button" class="button retry-failed" style="display: none;">Retry Failed</button>
+                <button type="button" class="button cancel-upload">Cancel</button>
+              </div>
+            </div>
+            <div class="upload-items-list"></div>
+          </div>
+        `);
+      }
 
-          if (uploaded === total) {
-            this.hideProgress();
-            this.refreshGallery();
-          }
+      const itemsList = $(`#${prefix}upload-progress-items .upload-items-list`);
+      itemsList.empty();
+
+      this.uploadQueue.forEach((item) => {
+        const itemHtml = `
+          <div class="upload-item" data-id="${item.id}">
+            <div class="upload-item-info">
+              <span class="upload-status-icon">⏳</span>
+              <span class="upload-filename">${item.filename}</span>
+              <span class="upload-size">(${this.formatFileSize(
+                item.size
+              )})</span>
+            </div>
+            <div class="upload-item-progress">
+              <div class="upload-item-bar">
+                <div class="upload-item-fill" style="width: 0%"></div>
+              </div>
+              <span class="upload-item-status">Pending</span>
+            </div>
+            <div class="upload-item-actions" style="display: none;">
+              <button type="button" class="button button-small retry-single">Retry</button>
+            </div>
+          </div>
+        `;
+        itemsList.append(itemHtml);
+      });
+
+      $(`#${prefix}upload-progress-items`).show();
+    }
+
+    formatFileSize(bytes) {
+      if (bytes === 0) return "0 Bytes";
+      const k = 1024;
+      const sizes = ["Bytes", "KB", "MB", "GB"];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    }
+
+    async processUploadQueue() {
+      for (let i = 0; i < this.uploadQueue.length; i++) {
+        if (!this.isUploading) {
+          console.log("Upload cancelled by user");
+          break;
+        }
+
+        this.currentUploadIndex = i;
+        const item = this.uploadQueue[i];
+
+        this.updateItemStatus(item.id, "uploading", "Uploading...");
+        this.updateItemProgress(item.id, 0);
+
+        try {
+          await this.uploadFileSequential(item);
+        } catch (error) {
+          console.error("Upload failed for", item.filename, error);
+          this.updateItemStatus(
+            item.id,
+            "failed",
+            error.message || "Upload failed"
+          );
+        }
+      }
+
+      this.updateOverallProgress();
+      this.checkUploadComplete();
+    }
+
+    uploadFileSequential(item) {
+      return new Promise((resolve, reject) => {
+        // Validate file type
+        if (!item.file.type.startsWith("image/")) {
+          reject(new Error("Invalid file type: " + item.file.type));
+          return;
+        }
+
+        // Validate file size (max 10MB)
+        if (item.file.size > 10 * 1024 * 1024) {
+          reject(
+            new Error("File too large: " + this.formatFileSize(item.file.size))
+          );
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("action", "flexpress_upload_gallery_image");
+        formData.append("nonce", flexpressGallery.nonce);
+        formData.append("post_id", flexpressGallery.postId);
+        formData.append("image", item.file);
+        formData.append("title", item.filename.replace(/\.[^/.]+$/, ""));
+        formData.append("alt", item.filename.replace(/\.[^/.]+$/, ""));
+        formData.append("caption", "");
+        formData.append("description", "");
+
+        $.ajax({
+          url: flexpressGallery.ajaxUrl,
+          type: "POST",
+          data: formData,
+          processData: false,
+          contentType: false,
+          xhr: () => {
+            const xhr = new window.XMLHttpRequest();
+            xhr.upload.addEventListener(
+              "progress",
+              (evt) => {
+                if (evt.lengthComputable) {
+                  const percentComplete = (evt.loaded / evt.total) * 100;
+                  this.updateItemProgress(item.id, percentComplete);
+                }
+              },
+              false
+            );
+            return xhr;
+          },
+          success: (response) => {
+            if (response.success) {
+              console.log("Upload successful:", response.data);
+              this.updateItemStatus(item.id, "success", "Upload complete");
+              this.updateItemProgress(item.id, 100);
+              resolve(response.data);
+            } else {
+              reject(new Error(response.data || "Upload failed"));
+            }
+          },
+          error: (xhr, status, error) => {
+            console.error("Upload error:", error);
+            reject(new Error(`Upload failed: ${error}`));
+          },
         });
       });
     }
 
-    uploadFile(file, callback) {
-      // Validate file type
-      if (!file.type.startsWith("image/")) {
-        console.error("Invalid file type:", file.type);
-        callback(false);
-        return;
+    updateItemStatus(itemId, status, message) {
+      const item = this.uploadQueue.find((q) => q.id === itemId);
+      if (item) {
+        item.status = status;
+        item.error = status === "failed" ? message : null;
       }
 
-      // Validate file size (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        console.error("File too large:", file.size);
-        callback(false);
-        return;
+      const $item = $(`.upload-item[data-id="${itemId}"]`);
+      const $icon = $item.find(".upload-status-icon");
+      const $status = $item.find(".upload-item-status");
+      const $actions = $item.find(".upload-item-actions");
+
+      // Update icon
+      $icon.removeClass("pending uploading success failed");
+      $icon.addClass(status);
+
+      switch (status) {
+        case "pending":
+          $icon.text("⏳");
+          break;
+        case "uploading":
+          $icon.text("🔵");
+          break;
+        case "success":
+          $icon.text("✅");
+          break;
+        case "failed":
+          $icon.text("❌");
+          $actions.show();
+          break;
       }
 
-      const formData = new FormData();
-      formData.append("action", "flexpress_upload_gallery_image");
-      formData.append("nonce", flexpressGallery.nonce);
-      formData.append("post_id", flexpressGallery.postId);
-      formData.append("image", file);
-      formData.append("title", file.name.replace(/\.[^/.]+$/, ""));
-      formData.append("alt", file.name.replace(/\.[^/.]+$/, ""));
-      formData.append("caption", "");
-      formData.append("description", "");
+      $status.text(message);
+    }
 
-      $.ajax({
-        url: flexpressGallery.ajaxUrl,
-        type: "POST",
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: (response) => {
-          if (response.success) {
-            console.log("Upload successful:", response.data);
-            callback(true);
-          } else {
-            console.error("Upload failed:", response.data);
-            callback(false);
-          }
-        },
-        error: (xhr, status, error) => {
-          console.error("Upload error:", error);
-          callback(false);
-        },
+    updateItemProgress(itemId, percent) {
+      const $item = $(`.upload-item[data-id="${itemId}"]`);
+      $item.find(".upload-item-fill").css("width", percent + "%");
+    }
+
+    updateOverallProgress() {
+      const total = this.uploadQueue.length;
+      const completed = this.uploadQueue.filter(
+        (item) => item.status === "success"
+      ).length;
+      const percentage = total > 0 ? (completed / total) * 100 : 0;
+
+      this.updateProgress(percentage);
+    }
+
+    checkUploadComplete() {
+      const total = this.uploadQueue.length;
+      const completed = this.uploadQueue.filter(
+        (item) => item.status === "success"
+      ).length;
+      const failed = this.uploadQueue.filter(
+        (item) => item.status === "failed"
+      ).length;
+
+      if (completed === total) {
+        // All uploads successful
+        this.hideProgress();
+        this.refreshGallery();
+        this.showSuccessMessage(`All ${total} images uploaded successfully!`);
+      } else if (failed > 0) {
+        // Some uploads failed
+        this.showRetryButton();
+        this.showErrorMessage(
+          `${failed} of ${total} uploads failed. You can retry the failed uploads.`
+        );
+      }
+    }
+
+    showSuccessMessage(message) {
+      const prefix = flexpressGallery.postType === "extras" ? "extras-" : "";
+      $(`#${prefix}upload-progress-items`).append(`
+        <div class="upload-complete-message success">
+          <strong>✅ ${message}</strong>
+          <button type="button" class="button button-primary done-upload">Done</button>
+        </div>
+      `);
+    }
+
+    showErrorMessage(message) {
+      const prefix = flexpressGallery.postType === "extras" ? "extras-" : "";
+      $(`#${prefix}upload-progress-items`).append(`
+        <div class="upload-complete-message error">
+          <strong>❌ ${message}</strong>
+        </div>
+      `);
+    }
+
+    showRetryButton() {
+      $(".retry-failed").show();
+    }
+
+    retryFailedUploads() {
+      const failedItems = this.uploadQueue.filter(
+        (item) => item.status === "failed"
+      );
+      if (failedItems.length === 0) return;
+
+      this.isUploading = true;
+      this.currentUploadIndex = 0;
+
+      // Reset failed items to pending
+      failedItems.forEach((item) => {
+        item.status = "pending";
+        item.retryCount++;
+        this.updateItemStatus(item.id, "pending", "Retrying...");
       });
+
+      this.processUploadQueue();
+    }
+
+    retrySingleUpload(itemId) {
+      const item = this.uploadQueue.find((q) => q.id === itemId);
+      if (!item || item.status !== "failed") return;
+
+      item.status = "pending";
+      item.retryCount++;
+      this.updateItemStatus(item.id, "pending", "Retrying...");
+
+      this.uploadFileSequential(item)
+        .then(() => {
+          this.updateItemStatus(item.id, "success", "Upload complete");
+          this.updateItemProgress(item.id, 100);
+          this.updateOverallProgress();
+          this.checkUploadComplete();
+        })
+        .catch((error) => {
+          this.updateItemStatus(
+            item.id,
+            "failed",
+            error.message || "Upload failed"
+          );
+          this.updateOverallProgress();
+          this.checkUploadComplete();
+        });
+    }
+
+    cancelUpload() {
+      this.isUploading = false;
+      this.hideProgress();
+      const prefix = flexpressGallery.postType === "extras" ? "extras-" : "";
+      $(`#${prefix}upload-progress-items`).hide();
     }
 
     showProgress() {
@@ -180,7 +467,9 @@
     }
 
     refreshGallery() {
-      // Reload the page to show new images
+      // Instead of reloading the page, we could fetch the updated gallery
+      // For now, we'll reload to ensure we have the latest data
+      // TODO: Implement dynamic gallery update without page reload
       location.reload();
     }
 

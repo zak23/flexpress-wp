@@ -15,6 +15,8 @@
 ### Extras Post Type Issues Fixed
 
 - Fixed post overwriting bug: Gallery uploads now use correct post ID (`$post->ID` instead of `get_the_ID()`)
+  - Added `global $post;` declaration to `enqueue_admin_scripts()` function
+  - Added autosave protection to `save_gallery_data()` function
 - Fixed gallery grid display: Added missing CSS styles to `render_extras_gallery_meta_box()` function
 - Gallery images now display in proper grid layout instead of vertical list
 
@@ -24,3 +26,22 @@
 - Separate fields: `model_location`, `model_weight`, `model_bra_size`, `model_bust`, `model_waist`, `model_hips`
 - Legacy `model_measurements` retained under Legacy tab; not displayed
 - Render order in `single-model.php`: Published Age, Location, Height, Weight, Bra Size, Bust, Waist, Hips
+
+## Episode Gallery Sort Order (Jan 2025)
+
+- Episode galleries automatically sort by filename with numeric sequence extraction
+- Handles numbered filenames (001, 002, 003, etc.) with proper numeric sorting
+- Images without numbers fall back to alphabetical filename sorting
+- Sorting applied both on upload (`ajax_upload_gallery_image()`) and display (`flexpress_display_episode_gallery()`)
+- Migration script available: `scripts/sort-existing-galleries.php` (safe to run multiple times)
+- Gallery images now include `filename` field for consistent sorting
+
+## Gallery Upload Reliability (Jan 2025)
+
+- Sequential uploads prevent race conditions and server overload (no more parallel uploads)
+- Per-file progress tracking with status indicators (pending, uploading, success, failed)
+- Automatic retry for failed uploads plus manual retry buttons
+- Enhanced error handling with specific error messages and codes
+- Increased timeout to 120 seconds per individual upload
+- Upload queue management prevents multiple simultaneous upload sessions
+- Detailed progress UI shows filename, size, status, and progress bars

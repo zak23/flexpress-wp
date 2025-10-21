@@ -265,15 +265,21 @@
 
       const $link = $(e.currentTarget);
       const episodeId = $link.data("episode-id");
+      const extrasId = $link.data("extras-id");
       const finalPrice = parseFloat($link.data("price"));
       const basePrice = parseFloat($link.data("original-price"));
       const discount = parseFloat($link.data("discount")) || 0;
       const accessType = $link.data("access-type");
       const isActiveMember = $link.data("is-active-member") === "true";
 
+      // Determine if this is an episode or extras purchase
+      const contentId = episodeId || extrasId;
+      const contentType = episodeId ? "episode" : "extras";
+
       // Debug logging
       console.log("Gallery PPV Purchase Debug:", {
-        episodeId: episodeId,
+        contentId: contentId,
+        contentType: contentType,
         finalPrice: finalPrice,
         basePrice: basePrice,
         discount: discount,
@@ -281,15 +287,15 @@
         isActiveMember: isActiveMember,
       });
 
-      if (!episodeId || !finalPrice || !basePrice) {
-        alert("Invalid episode data. Please refresh the page and try again.");
+      if (!contentId || !finalPrice || !basePrice) {
+        alert("Invalid content data. Please refresh the page and try again.");
         return;
       }
 
       // Check if user is logged in first - REQUIRED for PPV purchases
       if (!FlexPressData.isLoggedIn) {
         alert(
-          "You must be logged in to purchase episodes. Redirecting to login..."
+          "You must be logged in to purchase content. Redirecting to login..."
         );
         window.location.href =
           "/login?redirect_to=" + encodeURIComponent(window.location.href);
@@ -306,6 +312,7 @@
         data: {
           action: "flexpress_create_ppv_purchase",
           episode_id: episodeId,
+          extras_id: extrasId,
           final_price: finalPrice,
           base_price: basePrice,
           member_discount: discount,

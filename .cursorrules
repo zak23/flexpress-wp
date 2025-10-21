@@ -12,6 +12,18 @@
 
 ## Recent Fixes
 
+### Earnings Dashboard (Oct 2025)
+
+- Comprehensive revenue tracking in FlexPress → Earnings admin tab
+- Real-time statistics: gross revenue, net revenue (after commissions), transaction counts
+- Transaction type breakdown: subscriptions, rebills, PPV unlocks, refunds, chargebacks
+- Time period filtering: today, last 7 days, last 30 days, last year, custom date range
+- Interactive Chart.js visualizations: revenue over time, transaction distribution, gross vs net comparison
+- Detailed transaction table with user info, amounts, and status
+- CSV export functionality for all time periods with complete transaction data
+- Automatic affiliate commission deduction from gross to calculate net revenue
+- Cross-references `wp_flexpress_flowguard_transactions`, `wp_flexpress_flowguard_webhooks`, and `wp_flexpress_affiliate_transactions` tables
+
 ### Episode Release Date Sync (Oct 2025)
 
 - ACF `release_date` is the source of truth

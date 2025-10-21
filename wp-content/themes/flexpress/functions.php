@@ -130,6 +130,7 @@ require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-video-settings.ph
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-membership-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-flowguard-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-flowguard-reference-manager.php';
+require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-earnings-settings.php';
 // Verotel settings removed - Flowguard settings are now primary
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-pricing-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-affiliate-settings.php';

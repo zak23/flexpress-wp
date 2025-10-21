@@ -67,6 +67,12 @@ Frontend template: `wp-content/themes/flexpress/single-model.php` renders these 
 - **Promo Code Integration**: Link promo codes to affiliates with attribution precedence
 - **Security Features**: Encrypted payout details, security headers, and Redis caching rules
 - **REST API**: Complete REST API for affiliate and admin operations
+- **Earnings Dashboard**: Comprehensive revenue tracking with daily/weekly/monthly/yearly breakdowns
+  - Gross and net revenue calculations (after affiliate commissions)
+  - Transaction type breakdown (subscriptions, rebills, PPV unlocks, refunds, chargebacks)
+  - Interactive charts and visualizations (Chart.js)
+  - CSV export for accounting and reporting
+  - Real-time statistics and detailed transaction history
 
 ### 🎥 Video Management
 
@@ -605,7 +611,8 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 - **General**: Logo, colors, basic configuration
 - **Video**: BunnyCDN Stream integration
 - **Membership**: User management and access control
-- **Verotel**: Payment processing configuration
+- **Flowguard**: Modern payment processing configuration
+- **Earnings**: Revenue tracking and financial reporting dashboard
 - **Pricing**: Episode pricing and discount management
 - **Affiliate**: Complete affiliate and promo-code management system
 - **Contact & Social**: Business information and social media
@@ -692,6 +699,160 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 - **Cache Control**: No-cache headers for sensitive affiliate data
 - **Vary Headers**: Proper caching behavior for logged-in users
 - **GDPR Compliance**: Cookie notices and data protection
+
+---
+
+## 💰 Earnings Dashboard
+
+The Earnings Dashboard provides comprehensive revenue tracking and financial reporting for site administrators.
+
+### Overview
+
+Access the earnings dashboard at **FlexPress → Earnings** in the WordPress admin. The dashboard displays real-time revenue statistics, transaction breakdowns, and historical trends.
+
+### Key Metrics
+
+#### Revenue Summary Cards
+- **Gross Revenue**: Total earnings before affiliate commissions
+- **Net Revenue**: Final earnings after affiliate commission deductions
+- **Total Transactions**: Count of successful payments
+- **Affiliate Commissions**: Total paid to affiliates in the period
+- **Average Transaction**: Mean transaction value
+- **Refunds & Chargebacks**: Total losses from payment disputes
+
+### Transaction Types
+
+The dashboard categorizes all transactions into five types:
+
+1. **New Subscriptions** (🎉)
+   - Initial subscription purchases
+   - Cross-referenced: `order_type='subscription'` + `event_type='approved'`
+
+2. **Rebills** (🔄)
+   - Recurring subscription payments
+   - Identified by: `event_type='rebill'`
+
+3. **PPV Unlocks** (🔓)
+   - One-time episode purchases
+   - Cross-referenced: `order_type='purchase'` + `event_type='approved'`
+
+4. **Refunds** (💸)
+   - Customer refund requests
+   - Identified by: `event_type='credit'`
+   - Displayed as negative amounts
+
+5. **Chargebacks** (⚠️)
+   - Payment disputes and reversals
+   - Identified by: `event_type='chargeback'`
+   - Displayed as negative amounts
+
+### Time Period Filtering
+
+Select from multiple time periods:
+- **Today**: Current day's transactions
+- **Last 7 Days**: One week of activity
+- **Last 30 Days**: Monthly overview (default)
+- **Last Year**: Annual performance
+- **Custom Range**: Specify exact date range
+
+### Visualizations
+
+Three interactive Chart.js charts provide visual insights:
+
+1. **Revenue Over Time** (Line Chart)
+   - Daily revenue trends
+   - Shows positive revenue minus refunds/chargebacks
+
+2. **Transaction Breakdown** (Doughnut Chart)
+   - Distribution by transaction type
+   - Color-coded segments for easy identification
+
+3. **Gross vs Net Comparison** (Bar Chart)
+   - Side-by-side comparison of gross revenue, commissions, and net revenue
+   - Visualizes affiliate commission impact
+
+### Detailed Transaction Table
+
+Paginated table showing:
+- Transaction date and time
+- Unique transaction ID
+- User name and email
+- Transaction type/event
+- Amount and currency
+- Payment status
+
+**Note**: Display limited to first 50 transactions. Export CSV for complete data.
+
+### CSV Export
+
+Export functionality provides:
+- Complete transaction history for selected period
+- Summary section with all key metrics
+- Transaction breakdown by type
+- Detailed transaction list with full user information
+- UTF-8 encoded for international character support
+
+**Export includes**:
+- Date and time
+- Transaction ID
+- User name and email
+- Transaction type and event
+- Amount, currency, and status
+
+### Database Integration
+
+The earnings system queries three tables:
+
+1. **`wp_flexpress_flowguard_transactions`**
+   - Primary transaction data
+   - Amount, currency, status, order type
+
+2. **`wp_flexpress_flowguard_webhooks`**
+   - Event type classification
+   - Maps transactions to webhook events (approved, rebill, chargeback, credit)
+
+3. **`wp_flexpress_affiliate_transactions`**
+   - Commission calculations
+   - Approved and paid commission totals
+
+### Calculation Logic
+
+**Gross Revenue**: Sum of all approved transactions
+```
+subscriptions + rebills + unlocks
+```
+
+**Affiliate Commissions**: Sum of approved/paid commissions
+```
+SELECT SUM(commission_amount) 
+FROM affiliate_transactions 
+WHERE status IN ('approved', 'paid')
+```
+
+**Net Revenue**: Gross minus commissions and losses
+```
+gross_revenue - affiliate_commissions - refunds - chargebacks
+```
+
+### Performance Optimization
+
+- **Caching**: Results cached with 5-minute transients (future enhancement)
+- **Indexed Queries**: Leverages existing database indexes on `created_at`
+- **Pagination**: Detailed table limits to 50 rows for performance
+
+### Security
+
+- **Access Control**: Requires `manage_options` capability
+- **Nonce Verification**: All AJAX requests protected
+- **Input Sanitization**: Date inputs and period selections sanitized
+- **Output Escaping**: All displayed data properly escaped
+
+### Technical Files
+
+- **Class**: `includes/admin/class-flexpress-earnings-settings.php`
+- **CSS**: `assets/css/admin-earnings.css`
+- **JavaScript**: `assets/js/admin-earnings.js`
+- **Chart Library**: Chart.js 4.4.0 (CDN)
 
 ---
 

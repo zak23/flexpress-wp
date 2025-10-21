@@ -4,6 +4,22 @@ A modern WordPress website running in Docker containers with MySQL database and 
 
 ## 🔧 Recent Fixes
 
+### Earnings Dashboard (New Feature - October 2025)
+
+- **Comprehensive Revenue Tracking**: New admin dashboard at FlexPress → Earnings provides complete financial oversight
+  - Real-time statistics: gross revenue, net revenue (after affiliate commissions), transaction counts
+  - Transaction type breakdown: subscriptions, rebills, PPV unlocks, refunds, chargebacks
+  - Time period filtering: today, last 7 days, last 30 days, last year, custom date range
+  - Interactive Chart.js visualizations: revenue over time, transaction distribution, gross vs net comparison
+  - Detailed transaction table with user information, amounts, and payment status
+  - CSV export functionality for accounting and reporting
+  - Automatic affiliate commission deduction calculations
+  - Cross-references Flowguard transactions, webhooks, and affiliate commission tables
+- **Files Created**:
+  - `wp-content/themes/flexpress/includes/admin/class-flexpress-earnings-settings.php`
+  - `wp-content/themes/flexpress/assets/css/admin-earnings.css`
+  - `wp-content/themes/flexpress/assets/js/admin-earnings.js`
+
 ### Discord Notifications 400 Error (Fixed - October 2025)
 
 - **Root Cause**: Discord webhook notifications were failing with HTTP 400 Bad Request error

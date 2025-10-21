@@ -139,6 +139,23 @@ class FlexPress_Settings {
             }
         );
 
+        // Add Earnings submenu
+        add_submenu_page(
+            $this->page_slug,
+            __('Earnings', 'flexpress'),
+            __('Earnings', 'flexpress'),
+            'manage_options',
+            'flexpress-earnings',
+            function() {
+                if (class_exists('FlexPress_Earnings_Settings')) {
+                    $obj = new FlexPress_Earnings_Settings();
+                    $obj->render_earnings_page();
+                } else {
+                    echo '<div class="wrap"><h1>Earnings</h1><p>Earnings settings class not found.</p></div>';
+                }
+            }
+        );
+
         // Add Tools submenu
         add_submenu_page(
             $this->page_slug,

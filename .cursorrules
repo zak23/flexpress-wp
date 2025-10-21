@@ -10,6 +10,25 @@
 - PHP indent: 4 spaces; JS: 2 spaces; CSS: 2 spaces
 - Do not alter `.wakatime-project` once created
 
+## Recent Fixes
+
+### Episode Release Date Sync (Oct 2025)
+- ACF `release_date` is the source of truth
+- `post_date` updates only when `release_date` changes
+- Non-ACF saves (e.g., tags) do not overwrite the release date
+- One-time tool available: FlexPress → Tools → Sync Episode Dates (`acf_to_wp`)
+# Cursor Rules for FlexPress
+
+- Always use IP instead of localhost
+- Never use port 3000 (reserved for MCP tools)
+- WordPress on port 8085; phpMyAdmin on 8086
+- All theme work inside `wp-content/themes/flexpress/`
+- Update `README.md` in project root and theme for any feature changes
+- Cache: Redis enabled; logged-in HTML private/no-store; add `Vary: Cookie`; never cache HTML via service worker
+- Use Puppeteer tests against the test site; prefer IPs for navigation and screenshots
+- PHP indent: 4 spaces; JS: 2 spaces; CSS: 2 spaces
+- Do not alter `.wakatime-project` once created
+
 ## Recent Fixes (Dec 2024)
 
 ### Extras Post Type Issues Fixed

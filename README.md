@@ -31,6 +31,16 @@ A modern WordPress website running in Docker containers with MySQL database and 
 - Models archive updated to restrict tag list to model-assigned tags with model-only counts.
 - Extras and Episodes archives retain the same pattern for accuracy and consistency.
 
+### Pricing Plans – Verotel Compliance (October 2025)
+
+- **Minimum Trial Period**: Trial periods now enforce a minimum of 3 days to meet Verotel payment processor requirements.
+  - Frontend validation prevents trials less than 3 days when duration unit is set to "days"
+  - Backend validation enforces 3-day minimum on save
+  - Monthly trials have minimum of 1 month (no special restriction)
+  - HTML input field has dynamic `min` attribute that adjusts based on selected duration unit
+  - Clear error messaging: "Trial period must be at least 3 days (Verotel requirement)"
+  - Validation applies in both JavaScript (`pricing-admin.js`) and PHP (`class-flexpress-pricing-settings.php`)
+
 ## 🚀 Quick Start
 
 ### Prerequisites

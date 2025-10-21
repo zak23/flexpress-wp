@@ -76,3 +76,12 @@
 - Visual indicators: alert banner, coming soon badge overlay, disabled purchase buttons
 - Auto-publishes when `release_date` passes (handled by ACF save_post hook)
 - Query filtering: logged-out users see only published; logged-in see published + draft
+
+## Pricing Plans – Verotel Compliance (Oct 2025)
+
+- Trial periods must be minimum 3 days (Verotel requirement)
+- Frontend validation prevents creation of trials < 3 days when unit is "days"
+- Backend validation enforces 3-day minimum on save
+- Monthly trials have minimum of 1 month (no restriction)
+- HTML input field has dynamic `min` attribute based on selected duration unit
+- Error message: "Trial period must be at least 3 days (Verotel requirement)"

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * FlexPress Pricing Settings
  *
@@ -12,11 +13,13 @@ if (!defined('ABSPATH')) {
 /**
  * FlexPress Pricing Settings Class
  */
-class FlexPress_Pricing_Settings {
+class FlexPress_Pricing_Settings
+{
     /**
      * Constructor
      */
-    public function __construct() {
+    public function __construct()
+    {
         add_action('admin_menu', array($this, 'add_pricing_settings_page'));
         add_action('admin_init', array($this, 'register_pricing_settings'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
@@ -31,7 +34,8 @@ class FlexPress_Pricing_Settings {
     /**
      * Add the pricing settings page to admin menu
      */
-    public function add_pricing_settings_page() {
+    public function add_pricing_settings_page()
+    {
         add_submenu_page(
             'flexpress-settings',
             __('Pricing Plans', 'flexpress'),
@@ -45,7 +49,8 @@ class FlexPress_Pricing_Settings {
     /**
      * Register settings
      */
-    public function register_pricing_settings() {
+    public function register_pricing_settings()
+    {
         register_setting('flexpress_pricing_settings', 'flexpress_pricing_plans', array(
             'sanitize_callback' => array($this, 'sanitize_pricing_plans')
         ));
@@ -54,7 +59,8 @@ class FlexPress_Pricing_Settings {
     /**
      * Sanitize pricing plans data
      */
-    public function sanitize_pricing_plans($input) {
+    public function sanitize_pricing_plans($input)
+    {
         if (!is_array($input)) {
             return array();
         }
@@ -89,12 +95,13 @@ class FlexPress_Pricing_Settings {
     /**
      * Render the pricing settings page
      */
-    public function render_pricing_settings_page() {
+    public function render_pricing_settings_page()
+    {
         $pricing_plans = get_option('flexpress_pricing_plans', array());
-        ?>
+?>
         <div class="wrap">
             <h1><?php echo esc_html__('Pricing Plans Management', 'flexpress'); ?></h1>
-            
+
             <div class="notice notice-info">
                 <p><?php esc_html_e('Manage your subscription pricing plans. Changes will be reflected on the join page and throughout the site.', 'flexpress'); ?></p>
                 <p><strong><?php esc_html_e('Flowguard Integration:', 'flexpress'); ?></strong> <?php esc_html_e('Plans are now integrated with Flowguard payment processing. Make sure your Flowguard settings are configured.', 'flexpress'); ?></p>
@@ -141,207 +148,248 @@ class FlexPress_Pricing_Settings {
         </div>
 
         <style>
-        .pricing-plans-container {
-            margin-top: 20px;
-        }
-        .pricing-plans-header {
-            margin-bottom: 20px;
-        }
-        .pricing-plan-card {
-            background: #fff;
-            border: 1px solid #ccd0d4;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            padding: 20px;
-            position: relative;
-        }
-        .pricing-plan-card.featured {
-            border-color: #007cba;
-            box-shadow: 0 0 0 1px #007cba;
-        }
-        .pricing-plan-card.inactive {
-            opacity: 0.6;
-        }
-        .pricing-plan-card.plan-one-time {
-            border-color: #28a745;
-            box-shadow: 0 0 0 1px #28a745;
-        }
-        .plan-badge.one-time {
-            background: #28a745;
-        }
-        .plan-badge.featured {
-            background: #007cba;
-        }
-        .plan-badge.inactive {
-            background: #666;
-        }
-        .plan-pricing {
-            text-align: right;
-        }
-        .plan-price {
-            font-size: 24px;
-            font-weight: bold;
-            color: #007cba;
-        }
-        .plan-duration {
-            font-size: 14px;
-            color: #666;
-            margin-top: 5px;
-        }
-        .plan-trial {
-            font-size: 12px;
-            color: #28a745;
-            margin-top: 5px;
-        }
-        .plan-description {
-            margin: 10px 0;
-            color: #666;
-        }
-        .plan-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
-        .plan-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin: 0;
-        }
-        .plan-price {
-            font-size: 24px;
-            font-weight: bold;
-            color: #007cba;
-        }
-        .plan-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        .plan-actions {
-            display: flex;
-            gap: 10px;
-        }
-        .plan-badge {
-            background: #007cba;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 12px;
-            margin-left: 10px;
-        }
-        .plan-badge.inactive {
-            background: #666;
-        }
-        .plan-badge.lifetime {
-            background: #28a745;
-        }
-        .form-row input.error,
-        .form-row select.error,
-        .form-row textarea.error {
-            border-color: #dc3232;
-            box-shadow: 0 0 2px rgba(220, 50, 50, 0.8);
-        }
-        .error-message {
-            color: #dc3232;
-            font-size: 12px;
-            margin-top: 5px;
-            display: block;
-        }
-        .pricing-modal {
-            position: fixed;
-            z-index: 100000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-        }
-        .pricing-modal-content {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 0;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 800px;
-            border-radius: 4px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        .pricing-modal-header {
-            padding: 20px;
-            background: #f1f1f1;
-            border-bottom: 1px solid #ddd;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .pricing-modal-header h2 {
-            margin: 0;
-        }
-        .pricing-modal-close {
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .pricing-modal-close:hover {
-            color: #000;
-        }
-        .pricing-modal-body {
-            padding: 20px;
-        }
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        .form-section {
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 4px;
-        }
-        .form-section h3 {
-            margin-top: 0;
-            font-size: 16px;
-        }
-        .form-row {
-            margin-bottom: 15px;
-        }
-        .form-row label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-        .form-row input, .form-row select, .form-row textarea {
-            width: 100%;
-        }
-        .checkbox-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .checkbox-row input[type="checkbox"] {
-            width: auto;
-        }
+            .pricing-plans-container {
+                margin-top: 20px;
+            }
+
+            .pricing-plans-header {
+                margin-bottom: 20px;
+            }
+
+            .pricing-plan-card {
+                background: #fff;
+                border: 1px solid #ccd0d4;
+                border-radius: 4px;
+                margin-bottom: 15px;
+                padding: 20px;
+                position: relative;
+            }
+
+            .pricing-plan-card.featured {
+                border-color: #007cba;
+                box-shadow: 0 0 0 1px #007cba;
+            }
+
+            .pricing-plan-card.inactive {
+                opacity: 0.6;
+            }
+
+            .pricing-plan-card.plan-one-time {
+                border-color: #28a745;
+                box-shadow: 0 0 0 1px #28a745;
+            }
+
+            .plan-badge.one-time {
+                background: #28a745;
+            }
+
+            .plan-badge.featured {
+                background: #007cba;
+            }
+
+            .plan-badge.inactive {
+                background: #666;
+            }
+
+            .plan-pricing {
+                text-align: right;
+            }
+
+            .plan-price {
+                font-size: 24px;
+                font-weight: bold;
+                color: #007cba;
+            }
+
+            .plan-duration {
+                font-size: 14px;
+                color: #666;
+                margin-top: 5px;
+            }
+
+            .plan-trial {
+                font-size: 12px;
+                color: #28a745;
+                margin-top: 5px;
+            }
+
+            .plan-description {
+                margin: 10px 0;
+                color: #666;
+            }
+
+            .plan-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-bottom: 15px;
+            }
+
+            .plan-title {
+                font-size: 18px;
+                font-weight: 600;
+                margin: 0;
+            }
+
+            .plan-price {
+                font-size: 24px;
+                font-weight: bold;
+                color: #007cba;
+            }
+
+            .plan-details {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+                margin-bottom: 15px;
+            }
+
+            .plan-actions {
+                display: flex;
+                gap: 10px;
+            }
+
+            .plan-badge {
+                background: #007cba;
+                color: white;
+                padding: 2px 8px;
+                border-radius: 3px;
+                font-size: 12px;
+                margin-left: 10px;
+            }
+
+            .plan-badge.inactive {
+                background: #666;
+            }
+
+            .plan-badge.lifetime {
+                background: #28a745;
+            }
+
+            .form-row input.error,
+            .form-row select.error,
+            .form-row textarea.error {
+                border-color: #dc3232;
+                box-shadow: 0 0 2px rgba(220, 50, 50, 0.8);
+            }
+
+            .error-message {
+                color: #dc3232;
+                font-size: 12px;
+                margin-top: 5px;
+                display: block;
+            }
+
+            .pricing-modal {
+                position: fixed;
+                z-index: 100000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+            }
+
+            .pricing-modal-content {
+                background-color: #fefefe;
+                margin: 5% auto;
+                padding: 0;
+                border: 1px solid #888;
+                width: 80%;
+                max-width: 800px;
+                border-radius: 4px;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+
+            .pricing-modal-header {
+                padding: 20px;
+                background: #f1f1f1;
+                border-bottom: 1px solid #ddd;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .pricing-modal-header h2 {
+                margin: 0;
+            }
+
+            .pricing-modal-close {
+                color: #aaa;
+                font-size: 28px;
+                font-weight: bold;
+                cursor: pointer;
+            }
+
+            .pricing-modal-close:hover {
+                color: #000;
+            }
+
+            .pricing-modal-body {
+                padding: 20px;
+            }
+
+            .form-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 20px;
+            }
+
+            .form-section {
+                background: #f9f9f9;
+                padding: 15px;
+                border-radius: 4px;
+            }
+
+            .form-section h3 {
+                margin-top: 0;
+                font-size: 16px;
+            }
+
+            .form-row {
+                margin-bottom: 15px;
+            }
+
+            .form-row label {
+                display: block;
+                margin-bottom: 5px;
+                font-weight: 600;
+            }
+
+            .form-row input,
+            .form-row select,
+            .form-row textarea {
+                width: 100%;
+            }
+
+            .checkbox-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .checkbox-row input[type="checkbox"] {
+                width: auto;
+            }
         </style>
-        <?php
+    <?php
     }
 
     /**
      * Render a pricing plan card
      */
-    private function render_pricing_plan_card($plan_id, $plan) {
+    private function render_pricing_plan_card($plan_id, $plan)
+    {
         $is_featured = !empty($plan['featured']);
         $is_active = !empty($plan['active']);
         $is_one_time = isset($plan['plan_type']) && $plan['plan_type'] === 'one_time';
         $is_lifetime = isset($plan['plan_type']) && $plan['plan_type'] === 'lifetime';
         $plan_type_class = $is_one_time ? 'plan-one-time' : ($is_lifetime ? 'plan-lifetime' : 'plan-recurring');
-        ?>
-        <div class="pricing-plan-card <?php echo $is_featured ? 'featured' : ''; ?> <?php echo !$is_active ? 'inactive' : ''; ?> <?php echo $plan_type_class; ?>" 
-             data-plan-id="<?php echo esc_attr($plan_id); ?>"
-             data-plan-type="<?php echo esc_attr($plan['plan_type'] ?? 'recurring'); ?>">
+    ?>
+        <div class="pricing-plan-card <?php echo $is_featured ? 'featured' : ''; ?> <?php echo !$is_active ? 'inactive' : ''; ?> <?php echo $plan_type_class; ?>"
+            data-plan-id="<?php echo esc_attr($plan_id); ?>"
+            data-plan-type="<?php echo esc_attr($plan['plan_type'] ?? 'recurring'); ?>">
             <div class="plan-header">
                 <div>
                     <h3 class="plan-title">
@@ -360,7 +408,7 @@ class FlexPress_Pricing_Settings {
                     </h3>
                     <p class="plan-description"><?php echo esc_html($plan['description'] ?? ''); ?></p>
                 </div>
-                
+
                 <div class="plan-pricing">
                     <div class="plan-price">
                         <?php echo esc_html($plan['currency'] ?? '$'); ?><?php echo number_format($plan['price'] ?? 0, 2); ?>
@@ -389,7 +437,7 @@ class FlexPress_Pricing_Settings {
                     <?php endif; ?>
                 </div>
             </div>
-            
+
             <div class="plan-actions">
                 <button type="button" class="button edit-plan" data-plan-id="<?php echo esc_attr($plan_id); ?>">
                     <?php esc_html_e('Edit', 'flexpress'); ?>
@@ -402,36 +450,37 @@ class FlexPress_Pricing_Settings {
                 </button>
             </div>
         </div>
-        <?php
+    <?php
     }
 
     /**
      * Render the plan form
      */
-    private function render_plan_form() {
-        ?>
+    private function render_plan_form()
+    {
+    ?>
         <form id="pricing-plan-form">
             <input type="hidden" id="plan-id" name="plan_id" value="">
-            
+
             <div class="form-grid">
                 <div class="form-section">
                     <h3><?php esc_html_e('Basic Information', 'flexpress'); ?></h3>
-                    
+
                     <div class="form-row">
                         <label for="plan-name"><?php esc_html_e('Plan Name', 'flexpress'); ?></label>
                         <input type="text" id="plan-name" name="name" required>
                     </div>
-                    
+
                     <div class="form-row">
                         <label for="plan-description"><?php esc_html_e('Description', 'flexpress'); ?></label>
                         <textarea id="plan-description" name="description" rows="3"></textarea>
                     </div>
-                    
+
                     <div class="form-row">
                         <label for="plan-price"><?php esc_html_e('Price', 'flexpress'); ?></label>
                         <input type="number" id="plan-price" name="price" step="0.01" min="0" required>
                     </div>
-                    
+
                     <div class="form-row">
                         <label for="plan-currency"><?php esc_html_e('Currency', 'flexpress'); ?></label>
                         <select id="plan-currency" name="currency" required>
@@ -450,15 +499,15 @@ class FlexPress_Pricing_Settings {
                         </select>
                     </div>
                 </div>
-                
+
                 <div class="form-section" id="duration-section">
                     <h3><?php esc_html_e('Duration Settings', 'flexpress'); ?></h3>
-                    
+
                     <div class="form-row">
                         <label for="plan-duration" id="plan-duration-label"><?php esc_html_e('Duration', 'flexpress'); ?></label>
                         <input type="number" id="plan-duration" name="duration" min="1" required>
                     </div>
-                    
+
                     <div class="form-row">
                         <label for="plan-duration-unit"><?php esc_html_e('Duration Unit', 'flexpress'); ?></label>
                         <select id="plan-duration-unit" name="duration_unit" required>
@@ -470,32 +519,32 @@ class FlexPress_Pricing_Settings {
                             <?php esc_html_e('For lifetime access plans, duration is automatically set to 999 years.', 'flexpress'); ?>
                         </p>
                     </div>
-                    
+
                     <div class="form-row">
                         <label for="plan-sort-order"><?php esc_html_e('Sort Order', 'flexpress'); ?></label>
                         <input type="number" id="plan-sort-order" name="sort_order" min="0" value="0">
                     </div>
                 </div>
-                
+
                 <div class="form-section">
                     <h3><?php esc_html_e('Trial Settings', 'flexpress'); ?></h3>
-                    
+
                     <div class="form-row checkbox-row">
                         <input type="checkbox" id="trial-enabled" name="trial_enabled">
                         <label for="trial-enabled"><?php esc_html_e('Enable Trial Period', 'flexpress'); ?></label>
                     </div>
-                    
+
                     <div class="trial-settings" style="display: none;">
                         <div class="form-row">
                             <label for="trial-price"><?php esc_html_e('Trial Price', 'flexpress'); ?></label>
                             <input type="number" id="trial-price" name="trial_price" step="0.01" min="0">
                         </div>
-                        
+
                         <div class="form-row">
                             <label for="trial-duration"><?php esc_html_e('Trial Duration', 'flexpress'); ?></label>
-                            <input type="number" id="trial-duration" name="trial_duration" min="1">
+                            <input type="number" id="trial-duration" name="trial_duration" min="3">
                         </div>
-                        
+
                         <div class="form-row">
                             <label for="trial-duration-unit"><?php esc_html_e('Trial Duration Unit', 'flexpress'); ?></label>
                             <select id="trial-duration-unit" name="trial_duration_unit">
@@ -505,31 +554,31 @@ class FlexPress_Pricing_Settings {
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="form-section">
                     <h3><?php esc_html_e('Flowguard Integration', 'flexpress'); ?></h3>
-                    
+
                     <div class="form-row">
                         <label for="flowguard-shop-id"><?php esc_html_e('Flowguard Shop ID', 'flexpress'); ?></label>
                         <input type="text" id="flowguard-shop-id" name="flowguard_shop_id" placeholder="134837">
                         <p class="description"><?php esc_html_e('Optional: Override global Shop ID for this plan', 'flexpress'); ?></p>
                     </div>
-                    
+
                     <div class="form-row">
                         <label for="flowguard-product-id"><?php esc_html_e('Flowguard Product ID', 'flexpress'); ?></label>
                         <input type="text" id="flowguard-product-id" name="flowguard_product_id" placeholder="plan_monthly_995">
                         <p class="description"><?php esc_html_e('Optional: Custom product identifier for this plan', 'flexpress'); ?></p>
                     </div>
                 </div>
-                
+
                 <div class="form-section">
                     <h3><?php esc_html_e('Display Options', 'flexpress'); ?></h3>
-                    
+
                     <div class="form-row checkbox-row">
                         <input type="checkbox" id="plan-featured" name="featured">
                         <label for="plan-featured"><?php esc_html_e('Featured Plan', 'flexpress'); ?></label>
                     </div>
-                    
+
                     <div class="form-row checkbox-row">
                         <input type="checkbox" id="plan-active" name="active" checked>
                         <label for="plan-active"><?php esc_html_e('Active', 'flexpress'); ?></label>
@@ -549,7 +598,7 @@ class FlexPress_Pricing_Settings {
                     </div>
                 </div>
             </div>
-            
+
             <div style="margin-top: 20px; text-align: right;">
                 <button type="button" class="button" id="cancel-plan-edit">
                     <?php esc_html_e('Cancel', 'flexpress'); ?>
@@ -559,16 +608,19 @@ class FlexPress_Pricing_Settings {
                 </button>
             </div>
         </form>
-        <?php
+<?php
     }
 
     /**
      * Enqueue admin scripts
      */
-    public function enqueue_admin_scripts($hook) {
+    public function enqueue_admin_scripts($hook)
+    {
         // Check for multiple possible hook names
-        if ($hook !== 'flexpress-settings_page_flexpress-pricing-settings' && 
-            $hook !== 'flexpress_page_flexpress-pricing-settings') {
+        if (
+            $hook !== 'flexpress-settings_page_flexpress-pricing-settings' &&
+            $hook !== 'flexpress_page_flexpress-pricing-settings'
+        ) {
             return;
         }
 
@@ -593,11 +645,12 @@ class FlexPress_Pricing_Settings {
     /**
      * AJAX handler to save pricing plan
      */
-    public function save_pricing_plan() {
+    public function save_pricing_plan()
+    {
         // Debug: Log the incoming request
         error_log('FlexPress Pricing: Save plan request received');
         error_log('FlexPress Pricing: POST data: ' . print_r($_POST, true));
-        
+
         check_ajax_referer('flexpress_pricing_nonce', 'nonce');
 
         if (!current_user_can('manage_options')) {
@@ -626,6 +679,12 @@ class FlexPress_Pricing_Settings {
             'sort_order' => intval($_POST['sort_order'] ?? 0),
         );
 
+        // Verotel compliance: Trial periods must be at least 3 days
+        if ($plan_data['trial_enabled'] && $plan_data['trial_duration_unit'] === 'days' && $plan_data['trial_duration'] < 3) {
+            wp_send_json_error('Trial period must be at least 3 days (Verotel requirement)');
+            return;
+        }
+
         $pricing_plans = get_option('flexpress_pricing_plans', array());
         $plan_id = sanitize_text_field($_POST['plan_id'] ?? '');
 
@@ -636,12 +695,12 @@ class FlexPress_Pricing_Settings {
 
         $pricing_plans[$plan_id] = $plan_data;
         $update_result = update_option('flexpress_pricing_plans', $pricing_plans);
-        
+
         // Debug: Log the save result
         error_log('FlexPress Pricing: Plan data prepared: ' . print_r($plan_data, true));
         error_log('FlexPress Pricing: Update result: ' . ($update_result ? 'SUCCESS' : 'FAILED'));
         error_log('FlexPress Pricing: Plan ID: ' . $plan_id);
-        
+
         // Debug: Verify the data was actually saved
         $saved_plans = get_option('flexpress_pricing_plans', array());
         error_log('FlexPress Pricing: Saved plans count: ' . count($saved_plans));
@@ -665,7 +724,8 @@ class FlexPress_Pricing_Settings {
     /**
      * AJAX handler to delete pricing plan
      */
-    public function delete_pricing_plan() {
+    public function delete_pricing_plan()
+    {
         check_ajax_referer('flexpress_pricing_nonce', 'nonce');
 
         if (!current_user_can('manage_options')) {
@@ -688,7 +748,8 @@ class FlexPress_Pricing_Settings {
     /**
      * AJAX handler to toggle plan status
      */
-    public function toggle_plan_status() {
+    public function toggle_plan_status()
+    {
         check_ajax_referer('flexpress_pricing_nonce', 'nonce');
 
         if (!current_user_can('manage_options')) {
@@ -702,7 +763,7 @@ class FlexPress_Pricing_Settings {
         if (isset($pricing_plans[$plan_id])) {
             $pricing_plans[$plan_id]['active'] = empty($pricing_plans[$plan_id]['active']) ? 1 : 0;
             update_option('flexpress_pricing_plans', $pricing_plans);
-            
+
             $status = $pricing_plans[$plan_id]['active'] ? 'activated' : 'deactivated';
             wp_send_json_success(sprintf(__('Pricing plan %s successfully.', 'flexpress'), $status));
         } else {
@@ -713,7 +774,8 @@ class FlexPress_Pricing_Settings {
     /**
      * AJAX handler to get individual pricing plan data for editing
      */
-    public function get_pricing_plan() {
+    public function get_pricing_plan()
+    {
         check_ajax_referer('flexpress_pricing_nonce', 'nonce');
 
         if (!current_user_can('manage_options')) {
@@ -734,7 +796,8 @@ class FlexPress_Pricing_Settings {
     /**
      * AJAX handler to test Flowguard connection
      */
-    public function test_flowguard_connection() {
+    public function test_flowguard_connection()
+    {
         check_ajax_referer('flexpress_pricing_nonce', 'nonce');
 
         if (!current_user_can('manage_options')) {
@@ -804,7 +867,8 @@ class FlexPress_Pricing_Settings {
     /**
      * AJAX handler to validate pricing plans
      */
-    public function validate_pricing_plans() {
+    public function validate_pricing_plans()
+    {
         check_ajax_referer('flexpress_pricing_nonce', 'nonce');
 
         if (!current_user_can('manage_options')) {
@@ -869,10 +933,10 @@ class FlexPress_Pricing_Settings {
             'total_warnings' => count($warnings),
             'summary' => array(
                 'total_plans' => count($pricing_plans),
-                'plans_with_errors' => count(array_filter($validation_results, function($result) {
+                'plans_with_errors' => count(array_filter($validation_results, function ($result) {
                     return !empty($result['errors']);
                 })),
-                'plans_with_warnings' => count(array_filter($validation_results, function($result) {
+                'plans_with_warnings' => count(array_filter($validation_results, function ($result) {
                     return !empty($result['warnings']);
                 }))
             )
@@ -887,4 +951,4 @@ class FlexPress_Pricing_Settings {
 }
 
 // Initialize the pricing settings class
-new FlexPress_Pricing_Settings(); 
+new FlexPress_Pricing_Settings();

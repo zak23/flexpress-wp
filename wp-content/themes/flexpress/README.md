@@ -50,6 +50,7 @@ Frontend template: `wp-content/themes/flexpress/single-model.php` renders these 
 - **Comprehensive Validation System**: Real-time field validation with user-friendly error messages
 - **Error Handling & Recovery**: Automatic retry mechanisms and graceful error recovery
 - **Verotel FlexPay Integration**: Legacy payment processing system (being phased out)
+- **Verotel Compliance**: Trial periods enforced at minimum 3 days (payment processor requirement)
 - **Subscription Management**: Recurring billing and membership tiers
 - **Pay-Per-View (PPV)**: Individual episode purchases with unlock buttons
 - **Member Discounts**: Flexible pricing for subscribers

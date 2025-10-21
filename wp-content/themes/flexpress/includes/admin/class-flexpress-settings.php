@@ -486,6 +486,13 @@ class FlexPress_Settings
                             <p class="description"><?php esc_html_e('Delete transactions for a specific user only', 'flexpress'); ?></p>
                         </td>
                     </tr>
+                    <tr>
+                        <th><label for="delete_transaction_id"><?php esc_html_e('Transaction ID', 'flexpress'); ?></label></th>
+                        <td>
+                            <input type="text" id="delete_transaction_id" class="regular-text" placeholder="e.g., txn_abc123..." />
+                            <p class="description"><?php esc_html_e('Delete a specific transaction by ID (exact match). When set, all other filters are ignored.', 'flexpress'); ?></p>
+                        </td>
+                    </tr>
                 </table>
                 
                 <div style="margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 5px;">
@@ -520,6 +527,7 @@ class FlexPress_Settings
                     const dateTo = $('#delete_date_to').val();
                     const amountMax = $('#delete_amount_max').val();
                     const userId = $('#delete_user_id').val();
+                    const transactionId = $('#delete_transaction_id').val();
                     const types = [];
                     
                     if ($('#delete_subscriptions').is(':checked')) types.push('subscription');
@@ -538,6 +546,7 @@ class FlexPress_Settings
                             date_to: dateTo,
                             amount_max: amountMax,
                             user_id: userId,
+                            transaction_id: transactionId,
                             types: types
                         },
                         success: function(response) {
@@ -593,6 +602,7 @@ class FlexPress_Settings
                     const dateTo = $('#delete_date_to').val();
                     const amountMax = $('#delete_amount_max').val();
                     const userId = $('#delete_user_id').val();
+                    const transactionId = $('#delete_transaction_id').val();
                     const types = [];
                     
                     if ($('#delete_subscriptions').is(':checked')) types.push('subscription');
@@ -611,6 +621,7 @@ class FlexPress_Settings
                             date_to: dateTo,
                             amount_max: amountMax,
                             user_id: userId,
+                            transaction_id: transactionId,
                             types: types
                         },
                         success: function(response) {

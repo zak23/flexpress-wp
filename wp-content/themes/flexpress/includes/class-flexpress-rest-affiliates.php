@@ -106,6 +106,16 @@ class FlexPress_REST_Affiliates {
             'callback' => [__CLASS__, 'admin_check_affiliate_id'],
             'permission_callback' => '__return_true', // Public endpoint for form validation
         ]);
+
+        // Update affiliate (status, basic fields) via PATCH
+        register_rest_route('flexpress/v1', '/admin/affiliates/(?P<id>\d+)', [
+            'methods' => 'PATCH',
+            'callback' => [__CLASS__, 'admin_update_affiliate'],
+            'permission_callback' => [__CLASS__, 'require_admin'],
+            'args' => [
+                'id' => [ 'validate_callback' => function($param){ return is_numeric($param) && intval($param) > 0; } ],
+            ],
+        ]);
     }
 
     public static function get_bearer() {
@@ -317,6 +327,46 @@ class FlexPress_REST_Affiliates {
         // Mirror existing handler (reads php://input). Ensure body passthrough works.
         flexpress_flowguard_webhook_handler();
         return ['ok' => true];
+    }
+
+    /**
+     * Admin: Update affiliate (currently supports status)
+     */
+    public static function admin_update_affiliate(WP_REST_Request $req) {
+        self::set_security_headers();
+        global $wpdb;
+
+        $affiliate_id = intval($req->get_param('id'));
+        if ($affiliate_id <= 0) {
+            return new WP_Error('bad_request', 'Invalid affiliate id', ['status' => 400]);
+        }
+
+        $allowed_status = ['pending', 'active', 'suspended', 'rejected'];
+        $status = $req->get_param('status');
+
+        $data = [];
+        $format = [];
+
+        if ($status !== null) {
+            $status = sanitize_text_field($status);
+            if (!in_array($status, $allowed_status, true)) {
+                return new WP_Error('bad_request', 'Invalid status', ['status' => 400]);
+            }
+            $data['status'] = $status;
+            $format[] = '%s';
+        }
+
+        if (!$data) {
+            return new WP_Error('bad_request', 'No updatable fields provided', ['status' => 400]);
+        }
+
+        $table = $wpdb->prefix . 'flexpress_affiliates';
+        $updated = $wpdb->update($table, $data, ['id' => $affiliate_id], $format, ['%d']);
+        if ($updated === false) {
+            return new WP_Error('server_error', 'Failed to update affiliate', ['status' => 500]);
+        }
+
+        return [ 'ok' => true, 'id' => $affiliate_id, 'updated' => (int)$updated ];
     }
 
     // New affiliate endpoints

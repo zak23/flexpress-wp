@@ -1000,8 +1000,8 @@ class FlexPress_Affiliate_Settings {
                                         <input type="text" name="swift_intermediary_iban" placeholder="<?php esc_attr_e('Intermediary IBAN or Account (if required)', 'flexpress'); ?>" class="payout-detail-field">
                                     </div>
                                     
-                                    <!-- Hidden field to store consolidated payout details -->
-                                    <textarea id="add-affiliate-payout-details" name="payout_details" style="display: none;" required></textarea>
+                                    <!-- Hidden field to store consolidated payout details (managed via JS) -->
+                                    <textarea id="add-affiliate-payout-details" name="payout_details" style="display: none;" disabled></textarea>
                                 </div>
                                 <div class="form-field">
                                     <label for="add-affiliate-tax-info"><?php esc_html_e('Tax Information', 'flexpress'); ?></label>

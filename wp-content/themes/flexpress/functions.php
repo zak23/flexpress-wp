@@ -267,28 +267,28 @@ function flexpress_setup()
         'caption',
     ));
 
-	// Register responsive image sizes used across the theme
-	// Default thumbnail for posts/cards
-	set_post_thumbnail_size(640, 360, true);
-	// Hero banners (optimized for actual display sizes)
-	add_image_size('hero-desktop', 776, 436, true); // 2x 388x218
-	add_image_size('hero-mobile', 1080, 1350, true);
-	// Model/profile imagery (optimized for actual display sizes)
-	add_image_size('model-portrait', 776, 1164, true); // 2x 388x582
-	add_image_size('model-card', 368, 552, true); // 2x 184x276
-	add_image_size('model-card-small', 368, 490, true); // 2x 184x245
-	// Episode cards and grids (optimized for actual display sizes)
-	add_image_size('episode-card', 776, 436, true); // 2x 388x218
-	// Utility squares and logos (optimized for actual display sizes)
-	add_image_size('square-300', 300, 300, true);
-	add_image_size('square-600', 600, 600, true);
-	add_image_size('logo-388', 776, 0, false); // 2x 388px width
-	add_image_size('logo-140', 280, 0, false); // 2x 140px width
-	add_image_size('logo-74', 148, 0, false); // 2x 74px width
-	// Casting and model card images (optimized for actual display sizes)
+    // Register responsive image sizes used across the theme
+    // Default thumbnail for posts/cards
+    set_post_thumbnail_size(640, 360, true);
+    // Hero banners (optimized for actual display sizes)
+    add_image_size('hero-desktop', 776, 436, true); // 2x 388x218
+    add_image_size('hero-mobile', 1080, 1350, true);
+    // Model/profile imagery (optimized for actual display sizes)
+    add_image_size('model-portrait', 776, 1164, true); // 2x 388x582
+    add_image_size('model-card', 368, 552, true); // 2x 184x276
+    add_image_size('model-card-small', 368, 490, true); // 2x 184x245
+    // Episode cards and grids (optimized for actual display sizes)
+    add_image_size('episode-card', 776, 436, true); // 2x 388x218
+    // Utility squares and logos (optimized for actual display sizes)
+    add_image_size('square-300', 300, 300, true);
+    add_image_size('square-600', 600, 600, true);
+    add_image_size('logo-388', 776, 0, false); // 2x 388px width
+    add_image_size('logo-140', 280, 0, false); // 2x 140px width
+    add_image_size('logo-74', 148, 0, false); // 2x 74px width
+    // Casting and model card images (optimized for actual display sizes)
 
-	add_image_size('casting-image', 500, 0, false); // 500px wide, auto height
-	add_image_size('model-card-alt', 250, 0, false); // 250px wide, auto height
+    add_image_size('casting-image', 500, 0, false); // 500px wide, auto height
+    add_image_size('model-card-alt', 250, 0, false); // 250px wide, auto height
 
     // Register navigation menus
     register_nav_menus(array(
@@ -332,7 +332,7 @@ function flexpress_enqueue_scripts_and_styles()
 {
     // Preload critical external resources
     add_action('wp_head', 'flexpress_preload_critical_resources', 1);
-    
+
     // Enqueue Bootstrap CSS with preload
     wp_enqueue_style('bootstrap-css', 'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css', array(), '5.1.3');
 
@@ -454,7 +454,7 @@ function flexpress_enqueue_scripts_and_styles()
     if (is_singular('episode')) {
         wp_enqueue_script('flexpress-episode-ratings', get_template_directory_uri() . '/assets/js/episode-ratings.js', array('jquery'), wp_get_theme()->get('Version'), true);
         wp_script_add_data('flexpress-episode-ratings', 'defer', true);
-        
+
         // Localize episode ratings script
         wp_localize_script('flexpress-episode-ratings', 'flexpress_ajax', array(
             'ajax_url' => admin_url('admin-ajax.php'),
@@ -594,21 +594,22 @@ add_action('wp_enqueue_scripts', 'flexpress_enqueue_scripts_and_styles');
 /**
  * Preload critical external resources for better performance
  */
-function flexpress_preload_critical_resources() {
+function flexpress_preload_critical_resources()
+{
     // Preload critical external CSS
     echo '<link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">' . "\n";
     echo '<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"></noscript>' . "\n";
-    
+
     echo '<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">' . "\n";
     echo '<noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"></noscript>' . "\n";
-    
+
     // Preload critical theme CSS
     echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/css/variables.css" as="style">' . "\n";
     echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/css/main.css" as="style">' . "\n";
-    
+
     // Preload critical JavaScript
     echo '<link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" as="script">' . "\n";
-    
+
     // DNS prefetch for external domains
     echo '<link rel="dns-prefetch" href="//cdn.jsdelivr.net">' . "\n";
     echo '<link rel="dns-prefetch" href="//cdnjs.cloudflare.com">' . "\n";
@@ -618,14 +619,15 @@ function flexpress_preload_critical_resources() {
 /**
  * Add defer attribute to script tags
  */
-function flexpress_add_defer_to_scripts($tag, $handle, $src) {
+function flexpress_add_defer_to_scripts($tag, $handle, $src)
+{
     // Get script data
     $defer = wp_scripts()->get_data($handle, 'defer');
-    
+
     if ($defer) {
         return str_replace('<script ', '<script defer ', $tag);
     }
-    
+
     return $tag;
 }
 add_filter('script_loader_tag', 'flexpress_add_defer_to_scripts', 10, 3);
@@ -689,22 +691,24 @@ add_action('wp_head', 'flexpress_debug_accent_color');
 /**
  * Detect if we're in development mode
  */
-function flexpress_is_development() {
+function flexpress_is_development()
+{
     return defined('WP_DEBUG') && WP_DEBUG;
 }
 
 /**
  * Add caching headers for WordPress caching detection
  */
-function flexpress_add_caching_headers() {
+function flexpress_add_caching_headers()
+{
     // Only add headers if not in admin and not doing AJAX
     if (is_admin() || wp_doing_ajax()) {
         return;
     }
-    
+
     // Shorter cache duration in development
     $cache_duration = flexpress_is_development() ? 300 : 3600; // 5 min vs 1 hour
-    
+
     // Add Cache-Control header for HTML pages
     if (!headers_sent()) {
         if (is_user_logged_in()) {
@@ -714,11 +718,11 @@ function flexpress_add_caching_headers() {
             header('Expires: 0');
         } else {
             header('Cache-Control: public, max-age=' . $cache_duration);
-            
+
             // Add ETag header
             $etag = md5(get_the_ID() . get_the_modified_time('U'));
             header('ETag: "' . $etag . '"');
-            
+
             // Add Last-Modified header
             if (is_singular()) {
                 $last_modified = get_the_modified_time('D, d M Y H:i:s \G\M\T');
@@ -726,14 +730,14 @@ function flexpress_add_caching_headers() {
                     header('Last-Modified: ' . $last_modified);
                 }
             }
-            
+
             // Add custom headers that WordPress caching plugins use
             header('X-Cache-Enabled: true');
             header('X-Cache-Status: HIT');
-            
+
             // Add Age header (simulated)
             header('Age: 0');
-            
+
             // Add development indicator
             if (flexpress_is_development()) {
                 header('X-Development-Mode: true');
@@ -1041,7 +1045,8 @@ function flexpress_sanitize_general_settings($input)
  *
  * @return string|null The referral code or null if not set
  */
-function flexpress_get_onlyfans_referral_code() {
+function flexpress_get_onlyfans_referral_code()
+{
     $options = get_option('flexpress_general_settings');
     $referral_code = isset($options['onlyfans_referral_code']) ? trim($options['onlyfans_referral_code']) : '';
     return !empty($referral_code) ? $referral_code : null;
@@ -1053,7 +1058,8 @@ function flexpress_get_onlyfans_referral_code() {
  * @param string $url The OnlyFans URL
  * @return string The URL with referral code appended if applicable
  */
-function flexpress_append_onlyfans_referral($url) {
+function flexpress_append_onlyfans_referral($url)
+{
     // Check if URL is empty
     if (empty($url)) {
         return $url;
@@ -1066,7 +1072,7 @@ function flexpress_append_onlyfans_referral($url) {
 
     // Get the referral code
     $referral_code = flexpress_get_onlyfans_referral_code();
-    
+
     // If no referral code is set, return the original URL
     if (empty($referral_code)) {
         return $url;
@@ -2104,10 +2110,11 @@ add_filter('register_url', 'flexpress_custom_registration_url');
 /**
  * Create banned page with the banned.php template
  */
-function flexpress_create_banned_page() {
+function flexpress_create_banned_page()
+{
     // Check if banned page already exists
     $banned_page = get_page_by_path('banned');
-    
+
     if (!$banned_page) {
         $page_data = array(
             'post_title' => 'Account Suspended',
@@ -2118,9 +2125,9 @@ function flexpress_create_banned_page() {
             'post_author' => 1,
             'page_template' => 'page-templates/banned.php'
         );
-        
+
         $page_id = wp_insert_post($page_data);
-        
+
         if ($page_id) {
             update_post_meta($page_id, '_wp_page_template', 'page-templates/banned.php');
             error_log('FlexPress: Created banned page with ID ' . $page_id);
@@ -2945,7 +2952,7 @@ function flexpress_set_featured_image_from_profile_image($value, $post_id, $fiel
 
             // Set as featured image
             set_post_thumbnail($post_id, $attachment_id);
-            
+
             // Log the action
             error_log("FlexPress: Set featured image for model {$post_id} from profile image {$attachment_id}");
         }
@@ -3830,7 +3837,7 @@ function flexpress_check_episode_access($episode_id = null, $user_id = null, $fo
         if ($force_fresh) {
             wp_cache_delete($user_id, 'user_meta');
         }
-        
+
         $membership_status = get_user_meta($user_id, 'membership_status', true);
         $is_active_member = in_array($membership_status, ['active', 'cancelled']);
         $access_info['is_member'] = $is_active_member;
@@ -3839,7 +3846,7 @@ function flexpress_check_episode_access($episode_id = null, $user_id = null, $fo
         $purchased_episode_meta = get_user_meta($user_id, 'purchased_episode_' . $episode_id, true);
         $ppv_purchases = get_user_meta($user_id, 'ppv_purchases', true) ?: [];
         $access_info['is_purchased'] = (bool) $purchased_episode_meta || in_array($episode_id, $ppv_purchases);
-        
+
         // Log access check for debugging when forcing fresh
         if ($force_fresh) {
             error_log('FlexPress Fresh Access Check - Episode: ' . $episode_id . ', User: ' . $user_id . ', Purchased Meta: ' . ($purchased_episode_meta ? 'Yes' : 'No') . ', PPV Purchases: ' . implode(',', $ppv_purchases));
@@ -4369,7 +4376,7 @@ function flexpress_display_extras_gallery($extras_id = null, $columns = null, $h
     if ($columns === null) {
         $columns = get_field('gallery_columns', $extras_id) ?: 3;
     }
-    
+
     $lightbox = get_field('gallery_lightbox', $extras_id) ?: true;
 
     // Determine if we should show preview mode (only first 5 images)
@@ -4377,10 +4384,10 @@ function flexpress_display_extras_gallery($extras_id = null, $columns = null, $h
     $display_images = $preview_mode ? array_slice($gallery, 0, 5) : $gallery;
     $remaining_count = $preview_mode ? count($gallery) - 5 : 0;
 
-    ?>
+?>
     <div class="extras-gallery" data-columns="<?php echo esc_attr($columns); ?>"
-         data-lightbox="<?php echo $lightbox ? 'true' : 'false'; ?>"
-         data-autoplay="false">
+        data-lightbox="<?php echo $lightbox ? 'true' : 'false'; ?>"
+        data-autoplay="false">
         <div class="gallery-grid" style="grid-template-columns: repeat(<?php echo esc_attr($columns); ?>, 1fr);">
             <?php foreach ($display_images as $index => $image) : ?>
                 <?php
@@ -4392,7 +4399,7 @@ function flexpress_display_extras_gallery($extras_id = null, $columns = null, $h
                 $large_url = !empty($image['bunnycdn_url']) ?
                     FlexPress_Gallery_System::generate_bunnycdn_token_url($image['bunnycdn_url'], 24) :
                     $image['large'];
-                
+
                 // Check if this is the 5th image in preview mode
                 $is_last_preview = $preview_mode && $index === 4;
                 ?>
@@ -4431,18 +4438,18 @@ function flexpress_display_extras_gallery($extras_id = null, $columns = null, $h
                 </div>
             <?php endforeach; ?>
         </div>
-        
+
         <?php if ($preview_mode): ?>
             <div class="gallery-preview-notice text-center mt-3">
                 <p class="text-muted">
                     <i class="fas fa-lock me-2"></i>
-                    Showing 5 of <?php echo count($gallery); ?> images. 
+                    Showing 5 of <?php echo count($gallery); ?> images.
                     <a href="#purchase-section" class="text-white">Purchase to view all</a>
                 </p>
             </div>
         <?php endif; ?>
     </div>
-    <?php
+<?php
 }
 
 /**
@@ -4474,7 +4481,7 @@ function flexpress_get_extras_thumbnail($extras_id = null, $size = 'medium')
             } else {
                 $url = $first_image['full'] ?? '';
             }
-            
+
             return array(
                 'url' => $url,
                 'alt' => $first_image['alt'] ?? '',
@@ -5578,7 +5585,7 @@ function flexpress_get_custom_logo($size = 'full', $type = 'primary')
 {
     // Check for FlexPress custom logo first
     $flexpress_settings = get_option('flexpress_general_settings', array());
-    
+
     // Determine which logo to use based on type
     if ($type === 'secondary') {
         $flexpress_logo_id = isset($flexpress_settings['secondary_logo']) ? $flexpress_settings['secondary_logo'] : '';
@@ -7036,7 +7043,7 @@ function flexpress_add_promo_url_rewrites()
         'index.php?pagename=join&promo=$matches[1]',
         'top'
     );
-    
+
     // Add rewrite rule for /membership/{promo_code}
     add_rewrite_rule(
         '^membership/([^/]+)/?$',
@@ -7476,7 +7483,8 @@ add_action('admin_post_nopriv_register_user', 'flexpress_handle_simple_registrat
 /**
  * Handle simple user registration (no membership required)
  */
-function flexpress_handle_simple_registration() {
+function flexpress_handle_simple_registration()
+{
     // Verify nonce
     if (!wp_verify_nonce($_POST['register_nonce'], 'register_user')) {
         wp_redirect(home_url('/register?register=failed&error=security'));
@@ -7975,7 +7983,7 @@ function flexpress_check_db_version()
         // Run migrations
         flexpress_flowguard_create_tables();
         flexpress_affiliate_init_database();
-        
+
         // Update version
         update_option('flexpress_db_version', $target_version);
         error_log('FlexPress DB upgraded to ' . $target_version);
@@ -8280,7 +8288,7 @@ function flexpress_update_membership_status($user_id, $status)
 function flexpress_ajax_create_flowguard_payment()
 {
     error_log('FlexPress: AJAX create Flowguard payment called - FUNCTION ENTERED');
-    
+
     // Verify nonce
     if (!wp_verify_nonce($_POST['nonce'], 'flexpress_payment_nonce')) {
         error_log('FlexPress: Invalid nonce in AJAX request');

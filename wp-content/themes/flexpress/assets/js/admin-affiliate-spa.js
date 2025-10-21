@@ -619,8 +619,13 @@
         AdminAffiliateApp.init();
       } catch (e) {
         // Ignore third-party MutationObserver errors
-        if (e.message && e.message.includes('Failed to execute \'observe\' on \'MutationObserver\'')) {
-          console.warn('Third-party MutationObserver error ignored');
+        if (
+          e.message &&
+          e.message.includes(
+            "Failed to execute 'observe' on 'MutationObserver'"
+          )
+        ) {
+          console.warn("Third-party MutationObserver error ignored");
         } else {
           throw e;
         }

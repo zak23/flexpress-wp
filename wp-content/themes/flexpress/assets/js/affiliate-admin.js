@@ -153,7 +153,7 @@ jQuery(document).ready(function ($) {
         // Validate promo code format
         if (!$promoCode.length) return; // Not on this screen
 
-        if (!validatePromoCode($promoCode.val().trim())) {
+        if (!validatePromoCode(String($promoCode.val() || "").trim())) {
           showFormError(
             $promoCode,
             "Promo code must be 3-20 characters and contain only letters, numbers, and hyphens."
@@ -162,7 +162,7 @@ jQuery(document).ready(function ($) {
         }
 
         // Validate affiliate name
-        if ($affiliateName.val().trim().length < 2) {
+        if (String($affiliateName.val() || "").trim().length < 2) {
           showFormError(
             $affiliateName,
             "Affiliate name must be at least 2 characters."
@@ -199,8 +199,8 @@ jQuery(document).ready(function ($) {
         const formData = {
           action: "create_affiliate_code",
           nonce: flexpressAffiliate.nonce,
-          code: $promoCode.val().trim(),
-          affiliate_name: $affiliateName.val().trim(),
+          code: String($promoCode.val() || "").trim(),
+          affiliate_name: String($affiliateName.val() || "").trim(),
           target_plans: $targetPlans.val(),
           commission_rate: commissionRate,
         };
@@ -254,15 +254,17 @@ jQuery(document).ready(function ($) {
       const $form = $(this);
       const $submitButton = $form.find('button[type="submit"]');
       const $affiliateName = $("#add-affiliate-name");
-      const $affiliateEmail = $("#affiliate-email");
-      const $payoutMethod = $("#payout-method");
-      const $payoutDetails = $("#payout-details");
+      const $affiliateEmail = $("#add-affiliate-email");
+      const $payoutMethod = $("#add-affiliate-payout-method");
+      const $payoutDetails = $("#add-affiliate-payout-details");
+
+      console.log("[AffiliateAdmin] AddAffiliate submit clicked");
 
       // Clear previous errors
       clearErrors();
 
       // Validate affiliate name
-      if ($affiliateName.val().trim().length < 2) {
+      if (String($affiliateName.val() || "").trim().length < 2) {
         showFormError(
           $affiliateName,
           "Affiliate name must be at least 2 characters."
@@ -271,10 +273,8 @@ jQuery(document).ready(function ($) {
       }
 
       // Validate email
-      if (
-        !$affiliateEmail.val().trim() ||
-        !isValidEmail($affiliateEmail.val().trim())
-      ) {
+      var _emailVal = String($affiliateEmail.val() || "").trim();
+      if (!_emailVal || !isValidEmail(_emailVal)) {
         showFormError($affiliateEmail, "Please enter a valid email address.");
         return;
       }
@@ -285,8 +285,15 @@ jQuery(document).ready(function ($) {
         return;
       }
 
+      // Ensure hidden payout_details reflects current visible fields before validating
+      updateConsolidatedPayoutDetails($form.find(".payout-details-container"));
+      console.log(
+        "[AffiliateAdmin] payout_details after consolidate:",
+        String($payoutDetails.val() || "").slice(0, 500)
+      );
+
       // Validate payout details
-      if (!$payoutDetails.val().trim()) {
+      if (!String($payoutDetails.val() || "").trim()) {
         showFormError($payoutDetails, "Please enter payout details.");
         return;
       }
@@ -294,21 +301,35 @@ jQuery(document).ready(function ($) {
       // Disable form while submitting
       $form.find("input, select, textarea, button").prop("disabled", true);
 
+      const statusVal = $("#add-affiliate-status").length
+        ? $("#add-affiliate-status").val()
+        : "pending";
+
       const formData = {
         action: "add_affiliate",
         nonce: flexpressAffiliate.nonce,
-        display_name: $affiliateName.val().trim(),
-        email: $affiliateEmail.val().trim(),
-        website: $("#affiliate-website").val().trim(),
+        display_name: String($affiliateName.val() || "").trim(),
+        email: _emailVal,
+        website: String($("#add-affiliate-website").val() || "").trim(),
         payout_method: $payoutMethod.val(),
-        payout_details: $payoutDetails.val().trim(),
-        commission_initial: parseFloat($("#commission-initial").val()) || 25,
-        commission_rebill: parseFloat($("#commission-rebill").val()) || 10,
-        commission_unlock: parseFloat($("#commission-unlock").val()) || 15,
-        payout_threshold: parseFloat($("#payout-threshold").val()) || 100,
-        status: $("#affiliate-status").val(),
-        notes: $("#affiliate-notes").val().trim(),
+        payout_details: String($payoutDetails.val() || "").trim(),
+        commission_initial:
+          parseFloat($("#add-affiliate-commission-initial").val()) || 25,
+        commission_rebill:
+          parseFloat($("#add-affiliate-commission-rebill").val()) || 10,
+        commission_unlock:
+          parseFloat($("#add-affiliate-commission-unlock").val()) || 15,
+        payout_threshold:
+          parseFloat($("#add-affiliate-payout-threshold").val()) || 100,
+        status: statusVal,
+        notes: String($("#affiliate-notes").val() || "").trim(),
       };
+
+      console.log("[AffiliateAdmin] AddAffiliate payload:", {
+        ...formData,
+        nonce: formData.nonce ? "[present]" : "[missing]",
+        payout_details: String(formData.payout_details || "").slice(0, 500),
+      });
 
       // Show loading state
       $submitButton.html('<span class="spinner is-active"></span> Adding...');
@@ -317,8 +338,19 @@ jQuery(document).ready(function ($) {
         url: flexpressAffiliate.ajaxurl,
         type: "POST",
         data: formData,
+        beforeSend: function () {
+          console.log(
+            "[AffiliateAdmin] AJAX →",
+            flexpressAffiliate.ajaxurl,
+            "action=add_affiliate"
+          );
+        },
         success: function (response) {
-          if (response.success) {
+          console.log(
+            "[AffiliateAdmin] AddAffiliate success response:",
+            response
+          );
+          if (response && response.success) {
             showNotice(
               response.data.message || "Affiliate added successfully!",
               "success"
@@ -329,6 +361,7 @@ jQuery(document).ready(function ($) {
               window.location.reload();
             }, 1000);
           } else {
+            console.warn("[AffiliateAdmin] Server returned error:", response);
             showNotice(
               response.data.message || "Error adding affiliate",
               "error"
@@ -336,13 +369,26 @@ jQuery(document).ready(function ($) {
           }
         },
         error: function (xhr, status, error) {
-          console.error("AJAX Error:", status, error);
+          console.error(
+            "[AffiliateAdmin] AddAffiliate AJAX error:",
+            status,
+            error
+          );
+          try {
+            console.error(
+              "[AffiliateAdmin] Response text:",
+              xhr && xhr.responseText
+                ? xhr.responseText.substring(0, 2000)
+                : "<none>"
+            );
+          } catch (e) {}
           showNotice("Error adding affiliate: " + error);
         },
         complete: function () {
           // Re-enable form
           $form.find("input, select, textarea, button").prop("disabled", false);
           $submitButton.html("Add Affiliate");
+          console.log("[AffiliateAdmin] AddAffiliate request complete");
         },
       });
     });
@@ -736,7 +782,7 @@ jQuery(document).ready(function ($) {
         const $payoutMethod = $("#edit-payout-method");
         const $payoutDetails = $("#edit-payout-details");
 
-        if ($affiliateName.val().trim().length < 2) {
+        if (String($affiliateName.val() || "").trim().length < 2) {
           showFormError(
             $affiliateName,
             "Affiliate name must be at least 2 characters."
@@ -744,10 +790,8 @@ jQuery(document).ready(function ($) {
           return;
         }
 
-        if (
-          !$affiliateEmail.val().trim() ||
-          !isValidEmail($affiliateEmail.val().trim())
-        ) {
+        var _editEmailVal = String($affiliateEmail.val() || "").trim();
+        if (!_editEmailVal || !isValidEmail(_editEmailVal)) {
           showFormError($affiliateEmail, "Please enter a valid email address.");
           return;
         }
@@ -757,7 +801,7 @@ jQuery(document).ready(function ($) {
           return;
         }
 
-        if (!$payoutDetails.val().trim()) {
+        if (!String($payoutDetails.val() || "").trim()) {
           showFormError($payoutDetails, "Please enter payout details.");
           return;
         }
@@ -769,11 +813,11 @@ jQuery(document).ready(function ($) {
           action: "update_affiliate",
           nonce: flexpressAffiliate.nonce,
           affiliate_id: affiliateId,
-          display_name: $affiliateName.val().trim(),
-          email: $affiliateEmail.val().trim(),
-          website: $("#edit-affiliate-website").val().trim(),
+          display_name: String($affiliateName.val() || "").trim(),
+          email: _editEmailVal,
+          website: String($("#edit-affiliate-website").val() || "").trim(),
           payout_method: $payoutMethod.val(),
-          payout_details: $payoutDetails.val().trim(),
+          payout_details: String($payoutDetails.val() || "").trim(),
           commission_initial:
             parseFloat($("#edit-commission-initial").val()) || 25,
           commission_rebill:
@@ -783,7 +827,7 @@ jQuery(document).ready(function ($) {
           payout_threshold:
             parseFloat($("#edit-payout-threshold").val()) || 100,
           status: $("#edit-affiliate-status").val(),
-          notes: $("#edit-affiliate-notes").val().trim(),
+          notes: String($("#edit-affiliate-notes").val() || "").trim(),
         };
 
         // Show loading state
@@ -1156,7 +1200,7 @@ jQuery(document).ready(function ($) {
         clearErrors();
 
         // Validate affiliate name
-        if ($affiliateName.val().trim().length < 2) {
+        if (String($affiliateName.val() || "").trim().length < 2) {
           showFormError(
             $affiliateName,
             "Affiliate name must be at least 2 characters."
@@ -1194,7 +1238,7 @@ jQuery(document).ready(function ($) {
           action: "update_affiliate_code",
           nonce: flexpressAffiliate.nonce,
           code: code,
-          affiliate_name: $affiliateName.val().trim(),
+          affiliate_name: String($affiliateName.val() || "").trim(),
           target_plans: $targetPlans.val(),
           commission_rate: commissionRate,
         };
@@ -1353,7 +1397,7 @@ jQuery(document).ready(function ($) {
         affiliate_id: $affiliate.val(),
         period_start: $periodStart.val(),
         period_end: $periodEnd.val(),
-        notes: $("#payout-notes").val().trim(),
+        notes: String($("#payout-notes").val() || "").trim(),
       };
 
       // Show loading state
@@ -1416,8 +1460,8 @@ jQuery(document).ready(function ($) {
         nonce: flexpressAffiliate.nonce,
         payout_id: $("#update-payout-id").val(),
         status: $status.val(),
-        reference_id: $("#update-payout-reference").val().trim(),
-        notes: $("#update-payout-notes").val().trim(),
+        reference_id: String($("#update-payout-reference").val() || "").trim(),
+        notes: String($("#update-payout-notes").val() || "").trim(),
       };
 
       // Show loading state
@@ -1966,7 +2010,7 @@ jQuery(document).ready(function ($) {
       $activeFields.find(".payout-detail-field").each(function () {
         const $field = $(this);
         const fieldName = $field.attr("name");
-        const fieldValue = $field.val().trim();
+        const fieldValue = String($field.val() || "").trim();
 
         if (fieldValue) {
           payoutData[fieldName] = fieldValue;

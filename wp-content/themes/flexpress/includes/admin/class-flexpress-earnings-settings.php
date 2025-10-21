@@ -98,8 +98,8 @@ class FlexPress_Earnings_Settings
         $affiliate_transactions_table = $wpdb->prefix . 'flexpress_affiliate_transactions';
 
         // Calculate date range
-        $date_condition = $this->get_date_condition($period, $start_date, $end_date);
-
+        $date_condition = $this->get_date_condition($period, $start_date, $end_date, 't');
+        
         // Get all transactions with webhook event types
         $transactions = $wpdb->get_results("
             SELECT 
@@ -121,12 +121,13 @@ class FlexPress_Earnings_Settings
             WHERE {$date_condition}
             ORDER BY t.created_at DESC
         ", ARRAY_A);
-
+        
         // Get affiliate commissions for the period
+        $date_condition_affiliate = $this->get_date_condition($period, $start_date, $end_date, '');
         $commissions = $wpdb->get_var("
             SELECT COALESCE(SUM(commission_amount), 0)
             FROM {$affiliate_transactions_table}
-            WHERE {$date_condition}
+            WHERE {$date_condition_affiliate}
             AND status IN ('approved', 'paid')
         ");
 
@@ -231,37 +232,41 @@ class FlexPress_Earnings_Settings
      * @param string $period Period type
      * @param string $start_date Start date for custom
      * @param string $end_date End date for custom
+     * @param string $table_alias Table alias (e.g., 't.' or empty string)
      * @return string SQL WHERE condition
      */
-    private function get_date_condition($period, $start_date = null, $end_date = null)
+    private function get_date_condition($period, $start_date = null, $end_date = null, $table_alias = 't')
     {
         global $wpdb;
+        
+        // Add dot if alias is provided
+        $prefix = $table_alias ? $table_alias . '.' : '';
 
         switch ($period) {
             case 'today':
-                return "DATE(created_at) = CURDATE()";
+                return "DATE({$prefix}created_at) = CURDATE()";
 
             case 'week':
-                return "created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
+                return "{$prefix}created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
 
             case 'month':
-                return "created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
+                return "{$prefix}created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
 
             case 'year':
-                return "created_at >= DATE_SUB(NOW(), INTERVAL 365 DAY)";
+                return "{$prefix}created_at >= DATE_SUB(NOW(), INTERVAL 365 DAY)";
 
             case 'custom':
                 if ($start_date && $end_date) {
                     return $wpdb->prepare(
-                        "DATE(created_at) BETWEEN %s AND %s",
+                        "DATE({$prefix}created_at) BETWEEN %s AND %s",
                         $start_date,
                         $end_date
                     );
                 }
-                return "created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
+                return "{$prefix}created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
 
             default:
-                return "created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
+                return "{$prefix}created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
         }
     }
 

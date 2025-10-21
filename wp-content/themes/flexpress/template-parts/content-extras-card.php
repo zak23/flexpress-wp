@@ -10,6 +10,30 @@ $featured_models = get_field('featured_models');
 $content_type = get_field('content_type');
 $content_format = get_field('content_format') ?: 'gallery';
 
+// Parse release date properly to handle European format (dd/mm/yyyy)
+if ($release_date) {
+    // Check if it's in European format (dd/mm/yyyy hh:mm am/pm)
+    if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{1,2}):(\d{2})\s+(am|pm)$/i', $release_date, $matches)) {
+        // European format: dd/mm/yyyy
+        $day = $matches[1];
+        $month = $matches[2];
+        $year = $matches[3];
+        $hour = $matches[4];
+        $minute = $matches[5];
+        $ampm = strtolower($matches[6]);
+
+        // Convert to 24-hour format
+        if ($ampm === 'pm' && $hour != 12) {
+            $hour += 12;
+        } elseif ($ampm === 'am' && $hour == 12) {
+            $hour = 0;
+        }
+
+        // Create ISO format that strtotime can handle unambiguously
+        $release_date = sprintf('%04d-%02d-%02d %02d:%02d:00', $year, $month, $day, $hour, $minute);
+    }
+}
+
 // Get performer names from the relationship field
 $performers = '';
 if ($featured_models && !empty($featured_models)) {

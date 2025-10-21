@@ -96,10 +96,11 @@ add_action('init', 'flexpress_register_episode_post_type');
 /**
  * Customize episode admin columns
  */
-function flexpress_customize_episode_columns($columns) {
+function flexpress_customize_episode_columns($columns)
+{
     // Remove the taxonomy column
     unset($columns['taxonomy-episode_status']);
-    
+
     // Add custom Access Type column (before date)
     $new_columns = array();
     foreach ($columns as $key => $value) {
@@ -108,7 +109,7 @@ function flexpress_customize_episode_columns($columns) {
         }
         $new_columns[$key] = $value;
     }
-    
+
     return $new_columns;
 }
 add_filter('manage_episode_posts_columns', 'flexpress_customize_episode_columns');
@@ -116,11 +117,12 @@ add_filter('manage_episode_posts_columns', 'flexpress_customize_episode_columns'
 /**
  * Display Access Type column content
  */
-function flexpress_display_access_type_column($column, $post_id) {
+function flexpress_display_access_type_column($column, $post_id)
+{
     if ($column === 'access_type') {
         if (function_exists('get_field')) {
             $access_type = get_field('access_type', $post_id);
-            
+
             // Map of access type values to display labels
             $access_labels = array(
                 'free' => 'Free for Everyone',
@@ -129,7 +131,7 @@ function flexpress_display_access_type_column($column, $post_id) {
                 'membership' => 'Membership + PPV',
                 'mixed' => 'Members Get Discount',
             );
-            
+
             if ($access_type && isset($access_labels[$access_type])) {
                 echo '<span class="access-type-badge access-type-' . esc_attr($access_type) . '">';
                 echo esc_html($access_labels[$access_type]);
@@ -145,7 +147,8 @@ add_action('manage_episode_posts_custom_column', 'flexpress_display_access_type_
 /**
  * Make Access Type column sortable
  */
-function flexpress_make_access_type_sortable($columns) {
+function flexpress_make_access_type_sortable($columns)
+{
     $columns['access_type'] = 'access_type';
     return $columns;
 }
@@ -154,7 +157,8 @@ add_filter('manage_edit-episode_sortable_columns', 'flexpress_make_access_type_s
 /**
  * Enqueue admin styles for episode list
  */
-function flexpress_enqueue_episode_admin_styles($hook) {
+function flexpress_enqueue_episode_admin_styles($hook)
+{
     // Only on episode list page
     if ($hook === 'edit.php' && isset($_GET['post_type']) && $_GET['post_type'] === 'episode') {
         wp_enqueue_style('flexpress-admin', get_template_directory_uri() . '/assets/css/admin.css', array(), '1.0.0');

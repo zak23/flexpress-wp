@@ -30,6 +30,10 @@
 - With time: "9 November 2025 at 12:01 PM" (`j F Y \a\t g:i A`)
 - Standardized across: single episode pages, episode cards, extras cards, coming soon badges
 - Removed American format (month-first) for consistency
+- Fixed ACF date parsing: European format dates (dd/mm/yyyy) are now correctly interpreted instead of being misread as American format (mm/dd/yyyy)
+- Added date parsing logic to all episode templates to handle European date format from ACF fields
+- Fixed `flexpress_is_episode_released()` function to properly parse European dates for auto-publishing
+- Episodes with past release dates now correctly auto-publish when saved (previously remained in Draft due to date misinterpretation)
 
 ### Earnings Dashboard (Oct 2025)
 

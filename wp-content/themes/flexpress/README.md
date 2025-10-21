@@ -19,6 +19,12 @@ FlexPress is designed specifically for content websites (primarily adult content
   - With time: "9 November 2025 at 12:01 PM" (`j F Y \a\t g:i A`)
   - Standardized across: single episode pages, episode cards, extras cards, coming soon badges
   - Removed American month-first format for consistency
+- **Fixed ACF Date Parsing**: European format dates (dd/mm/yyyy) from ACF now correctly interpreted
+  - Added regex-based parsing to convert European format to ISO format
+  - Prevents misinterpretation (e.g., "11/09/2025" now correctly shows as "11 September 2025" instead of "9 November 2025")
+- **Fixed Auto-Publishing**: Episodes with past release dates now auto-publish correctly
+  - Updated `flexpress_is_episode_released()` function with proper date parsing
+  - Episodes no longer remain stuck in Draft status after their release date passes
 
 ### JavaScript MutationObserver Error Fix (October 2025)
 

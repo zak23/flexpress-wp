@@ -27,10 +27,22 @@ A modern WordPress website running in Docker containers with MySQL database and 
   - With time: "9 November 2025 at 12:01 PM" (`j F Y \a\t g:i A`)
   - Standardized across single episode pages, episode cards, extras cards, and coming soon badges
   - Removed American month-first format (e.g., "November 9, 2025") for consistency
+- **Fixed ACF Date Parsing**: European format dates (dd/mm/yyyy) from ACF fields are now correctly interpreted
+  - Previously, dates like "11/09/2025" (11 September 2025) were misread as "November 9, 2025" due to PHP's default American date interpretation
+  - Added regex-based date parsing to convert European format to ISO format before processing
+  - Ensures dates display correctly when stored in ACF's date_time_picker field
+- **Fixed Auto-Publishing**: Episodes with past release dates now automatically publish when saved
+  - Updated `flexpress_is_episode_released()` function to use proper European date parsing
+  - Previously, episodes would remain in Draft status even after their release date passed
+  - Auto-publish mechanism now correctly identifies released episodes and updates status accordingly
 - **Files Updated**:
-  - `wp-content/themes/flexpress/single-episode.php` - 3 date format instances
-  - `wp-content/themes/flexpress/template-parts/content-episode-card.php` - 4 date format instances
-  - `wp-content/themes/flexpress/template-parts/content-extras-card.php` - 4 date format instances
+  - `wp-content/themes/flexpress/functions.php` - Fixed `flexpress_is_episode_released()` date parsing
+  - `wp-content/themes/flexpress/single-episode.php` - Date format + parsing logic
+  - `wp-content/themes/flexpress/template-parts/content-episode-card.php` - Date format + parsing logic
+  - `wp-content/themes/flexpress/template-parts/content-extras-card.php` - Date format + parsing logic
+  - `wp-content/themes/flexpress/template-parts/episode-grid.php` - Date parsing logic
+  - `wp-content/themes/flexpress/template-parts/content-featured-episode.php` - Date parsing logic
+  - `wp-content/themes/flexpress/template-parts/content-episode-card-home.php` - Date parsing logic
 
 ### Earnings Dashboard (New Feature - October 2025)
 

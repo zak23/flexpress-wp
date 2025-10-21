@@ -2926,6 +2926,33 @@ function flexpress_update_post_date_from_acf($value, $post_id, $field)
 add_filter('acf/update_value/name=release_date', 'flexpress_update_post_date_from_acf', 10, 3);
 
 /**
+ * Preserve existing model content when an empty submission occurs (e.g., tag-only save)
+ * Prevents accidental data loss when editor fails to render on first load
+ *
+ * @param array $data    Sanitized post data to be inserted.
+ * @param array $postarr Raw post data.
+ * @return array Filtered post data.
+ */
+function flexpress_preserve_model_content_on_empty_submission($data, $postarr)
+{
+    if (isset($data['post_type']) && $data['post_type'] === 'model') {
+        $post_id = isset($postarr['ID']) ? intval($postarr['ID']) : 0;
+        if ($post_id > 0) {
+            // If incoming content is empty but existing content is non-empty, keep existing content
+            $incoming_content = isset($data['post_content']) ? trim($data['post_content']) : '';
+            if ($incoming_content === '') {
+                $existing = get_post($post_id);
+                if ($existing && !empty($existing->post_content)) {
+                    $data['post_content'] = $existing->post_content;
+                }
+            }
+        }
+    }
+    return $data;
+}
+add_filter('wp_insert_post_data', 'flexpress_preserve_model_content_on_empty_submission', 10, 2);
+
+/**
  * Automatically set featured image when model profile image is uploaded
  * 
  * @param mixed $value The field value

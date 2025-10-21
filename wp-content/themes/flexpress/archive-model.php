@@ -244,20 +244,41 @@ $models_query = new WP_Query($models_args);
                                         <?php esc_html_e('Categories', 'flexpress'); ?>
                                     </div>
                                     <?php
+                                    // Get tags actually used by model posts and count only models per tag
+                                    $model_ids = get_posts(array(
+                                        'post_type' => 'model',
+                                        'posts_per_page' => -1,
+                                        'fields' => 'ids'
+                                    ));
+
                                     $model_tags = get_terms(array(
                                         'taxonomy' => 'post_tag',
                                         'hide_empty' => true,
                                         'orderby' => 'name',
-                                        'order' => 'ASC'
+                                        'order' => 'ASC',
+                                        'object_ids' => $model_ids,
                                     ));
 
                                     if (!empty($model_tags) && !is_wp_error($model_tags)):
+                                        global $wpdb;
                                         foreach ($model_tags as $tag):
+                                            // Count only published model posts for this tag
+                                            $tag_count = (int) $wpdb->get_var($wpdb->prepare(
+                                                "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p
+                                                INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+                                                INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                                                WHERE p.post_type = 'model' AND p.post_status = 'publish' AND tt.term_id = %d",
+                                                $tag->term_id
+                                            ));
+
+                                            if ($tag_count === 0) {
+                                                continue;
+                                            }
                                     ?>
                                             <a href="<?php echo esc_url(add_query_arg(array('filter_type' => 'category', 'filter_value' => $tag->slug))); ?>"
                                                 class="filter-item <?php echo ($filter_type === 'category' && $filter_value === $tag->slug) ? 'active' : ''; ?>">
                                                 <?php echo esc_html($tag->name); ?>
-                                                <span class="filter-count">(<?php echo $tag->count; ?>)</span>
+                                                <span class="filter-count">(<?php echo $tag_count; ?>)</span>
                                             </a>
                                     <?php
                                         endforeach;

@@ -2,15 +2,22 @@
 # This configuration adds proper caching headers for WordPress detection
 
 zakspov.com {
-    # Reverse proxy to WordPress Docker container
-    reverse_proxy 172.17.0.1:8085 {
-        # Add proper headers for WordPress caching detection
+    reverse_proxy 192.168.1.238:8085 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
         header_up X-Forwarded-Proto {scheme}
+
+        # Increase timeouts for cold starts
+        transport http {
+            dial_timeout 30s
+            response_header_timeout 60s
+            expect_continue_timeout 10s
+            keepalive 90s
+            keepalive_idle_conns 10
+        }
     }
-    
+
     # Add caching headers that WordPress expects to see
     header {
         # Cache-Control header for static assets
@@ -28,33 +35,56 @@ zakspov.com {
             path *.ttf
             path *.eot
         }
-        
-        # Cache-Control for HTML pages (shorter cache)
-        Cache-Control "public, max-age=3600" {
-            path /
-            path /*.html
-        }
-        
+
+        # NOTE: Do not cache HTML globally; admin/logged-in responses are explicitly bypassed below
+
         # Add ETag header for better caching
         ETag {http.response.header.content-length}
-        
+
         # Add Last-Modified header
         Last-Modified {http.response.header.date}
-        
+
         # Add Age header (calculated by Caddy)
         Age {http.response.header.age}
-        
+
         # Custom headers that WordPress caching plugins often use
         X-Cache-Enabled "true"
         X-Cache-Status "HIT"
-        
+
         # Remove server signature for security
         -Server
     }
-    
+
+    # No-cache for admin, REST, login, and AJAX endpoints
+    @noCacheAdmin {
+        path /wp-admin/*
+        path /wp-login.php
+        path /wp-cron.php
+        path /wp-json/*
+        path /xmlrpc.php
+        path /wp-admin/admin-ajax.php
+    }
+    header @noCacheAdmin {
+        Cache-Control "private, no-store, max-age=0"
+        Pragma "no-cache"
+        Vary "Cookie"
+        X-Cache-Status "BYPASS"
+        -Server
+    }
+
+    # No-cache for any request with a logged-in cookie
+    @loggedin header_regexp LoggedIn Cookie (wordpress_logged_in_|wordpress_sec_)
+    header @loggedin {
+        Cache-Control "private, no-store, max-age=0"
+        Pragma "no-cache"
+        Vary "Cookie"
+        X-Cache-Status "BYPASS"
+        -Server
+    }
+
     # Enable gzip compression
     encode gzip
-    
+
     # Security headers
     header {
         # Security headers
@@ -62,11 +92,11 @@ zakspov.com {
         X-Frame-Options "SAMEORIGIN"
         X-XSS-Protection "1; mode=block"
         Referrer-Policy "strict-origin-when-cross-origin"
-        
+
         # Remove server signature
         -Server
     }
-    
+
     # Logging
     log {
         output file /var/log/caddy/flexpress.log

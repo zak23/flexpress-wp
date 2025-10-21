@@ -17,6 +17,13 @@ A modern WordPress website running in Docker containers with MySQL database and 
 - Source of truth is the ACF `release_date`. WordPress `post_date` updates only when `release_date` is changed (or when initializing if empty).
 - One-time sync tool available under FlexPress Tools: use direction `acf_to_wp` to push ACF release dates to WordPress post dates if needed.
 
+### Context-Aware Archive Filters (October 2025)
+
+- Episodes, Extras, and Models archives now show only tag filters that are actually used by that post type.
+- Tag counts reflect only the respective post type (no cross-type inflation).
+- Models archive updated to restrict tag list to model-assigned tags with model-only counts.
+- Extras and Episodes archives retain the same pattern for accuracy and consistency.
+
 ## 🚀 Quick Start
 
 ### Prerequisites

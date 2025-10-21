@@ -1,0 +1,11 @@
+{
+  "name": "flexpress-puppeteer-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node test-archives.mjs"
+  },
+  "devDependencies": {
+    "puppeteer": "^23.7.0"
+  }
+}

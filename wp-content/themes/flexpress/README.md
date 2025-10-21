@@ -1465,7 +1465,7 @@ Enabled
 - **Advanced Filtering System:**
   - Dropdown-based filter type selection (Category/Models)
   - Dynamic content display based on selected filter type
-  - Smart category filtering by post tags with episode counts
+  - Smart category filtering by post tags with episode-only counts
   - Model-based filtering using ACF relationship fields
   - Alphabetical filtering (A-Z) for episodes by title
 - **Sorting Options:**
@@ -1663,12 +1663,28 @@ Enabled
   - Professional hover effects and transitions
 - **Advanced Filtering System:**
   - Dropdown-based filter type selection (Category/Content Type/Models)
-  - **Context-Aware Filtering:** Only shows tags and models used in extras posts
+  - **Context-Aware Filtering:** Only shows tags and models used in extras posts; tag counts are extras-only
   - Dynamic content display based on selected filter type
+
+### Models Archive System (October 2025)
+
+Modern, responsive models archive page with context-aware tag filtering.
+
+#### Recent Update
+
+- Tag filters are now scoped to `model` posts only, and counts reflect published models only. This prevents episode-only tags from appearing in the models filter list.
+
+#### Technical Implementation
+
+- Template: `archive-model.php`
+- Tag list uses `get_terms()` with `object_ids` limited to model IDs
+- Counts computed via SQL to include only published `model` posts per term
+
   - Smart category filtering by post tags with accurate extras counts
   - Content type filtering (Behind Scenes, Bloopers, Interviews, Photo Shoots, Making Of, Deleted Scenes, Extended Cuts, Other)
   - Model-based filtering using ACF relationship fields
   - Alphabetical filtering (A-Z) for extras by title
+
 - **Sorting Options:**
   - Compact button-based sort controls
   - Newest/Oldest extras sorting

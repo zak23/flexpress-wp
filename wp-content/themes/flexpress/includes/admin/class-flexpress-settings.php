@@ -443,6 +443,203 @@ class FlexPress_Settings
                         onclick="return confirm('<?php esc_attr_e('Are you sure you want to test the refund webhook? This will process a refund for the specified reference.', 'flexpress'); ?>');" />
                 </form>
             </div>
+            
+            <div class="card" style="max-width: 800px; margin-top: 20px;">
+                <h2><?php esc_html_e('🗑️ Transaction Management', 'flexpress'); ?></h2>
+                <p><?php esc_html_e('Delete test transactions and clean up your earnings data. Use with caution - this action cannot be undone!', 'flexpress'); ?></p>
+                
+                <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0;">
+                    <p style="margin: 0;"><strong>⚠️ Warning:</strong> Deleted transactions cannot be recovered. Always export a CSV backup from the Earnings dashboard before bulk deletions.</p>
+                </div>
+                
+                <h3><?php esc_html_e('Filter Transactions to Delete', 'flexpress'); ?></h3>
+                
+                <table class="form-table">
+                    <tr>
+                        <th><label for="delete_date_from"><?php esc_html_e('Date Range', 'flexpress'); ?></label></th>
+                        <td>
+                            <input type="date" id="delete_date_from" class="regular-text" />
+                            <span> to </span>
+                            <input type="date" id="delete_date_to" class="regular-text" />
+                            <p class="description"><?php esc_html_e('Leave empty to delete from all dates', 'flexpress'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="delete_amount_max"><?php esc_html_e('Maximum Amount', 'flexpress'); ?></label></th>
+                        <td>
+                            <input type="number" id="delete_amount_max" step="0.01" min="0" class="regular-text" placeholder="e.g., 1.00" />
+                            <p class="description"><?php esc_html_e('Delete only transactions up to this amount (useful for test transactions like $0.01, $0.50, $1.00)', 'flexpress'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label><?php esc_html_e('Transaction Types', 'flexpress'); ?></label></th>
+                        <td>
+                            <label><input type="checkbox" id="delete_subscriptions" value="subscription" /> <?php esc_html_e('Subscriptions', 'flexpress'); ?></label><br>
+                            <label><input type="checkbox" id="delete_purchases" value="purchase" /> <?php esc_html_e('PPV Purchases', 'flexpress'); ?></label><br>
+                            <p class="description"><?php esc_html_e('Leave unchecked to delete all transaction types', 'flexpress'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="delete_user_id"><?php esc_html_e('Specific User ID', 'flexpress'); ?></label></th>
+                        <td>
+                            <input type="number" id="delete_user_id" min="1" class="regular-text" placeholder="Optional" />
+                            <p class="description"><?php esc_html_e('Delete transactions for a specific user only', 'flexpress'); ?></p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 5px;">
+                    <h4 style="margin-top: 0;"><?php esc_html_e('Preview:', 'flexpress'); ?></h4>
+                    <div id="transaction-delete-preview">
+                        <p><em><?php esc_html_e('Click "Preview Deletion" to see what will be deleted', 'flexpress'); ?></em></p>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <button type="button" id="preview-delete-transactions" class="button button-secondary">
+                        <?php esc_html_e('Preview Deletion', 'flexpress'); ?>
+                    </button>
+                    
+                    <button type="button" id="confirm-delete-transactions" class="button button-primary" style="display: none; margin-left: 10px;" 
+                            onclick="return confirm('⚠️ ARE YOU ABSOLUTELY SURE?\n\nThis will PERMANENTLY DELETE the selected transactions.\n\nThis action CANNOT be undone!\n\nHave you exported a backup from the Earnings dashboard?');">
+                        <?php esc_html_e('⚠️ Permanently Delete Transactions', 'flexpress'); ?>
+                    </button>
+                    
+                    <span id="delete-transactions-loading" style="display: none; margin-left: 10px;">
+                        <span class="spinner is-active" style="float: none;"></span> <?php esc_html_e('Processing...', 'flexpress'); ?>
+                    </span>
+                </div>
+                
+                <div id="transaction-delete-results" style="margin-top: 20px;"></div>
+            </div>
+            
+            <script type="text/javascript">
+            jQuery(document).ready(function($) {
+                $('#preview-delete-transactions').on('click', function() {
+                    const dateFrom = $('#delete_date_from').val();
+                    const dateTo = $('#delete_date_to').val();
+                    const amountMax = $('#delete_amount_max').val();
+                    const userId = $('#delete_user_id').val();
+                    const types = [];
+                    
+                    if ($('#delete_subscriptions').is(':checked')) types.push('subscription');
+                    if ($('#delete_purchases').is(':checked')) types.push('purchase');
+                    
+                    $('#transaction-delete-preview').html('<p><span class="spinner is-active" style="float: none;"></span> Loading preview...</p>');
+                    $('#confirm-delete-transactions').hide();
+                    
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'flexpress_preview_delete_transactions',
+                            nonce: '<?php echo wp_create_nonce('flexpress_delete_transactions'); ?>',
+                            date_from: dateFrom,
+                            date_to: dateTo,
+                            amount_max: amountMax,
+                            user_id: userId,
+                            types: types
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                const data = response.data;
+                                let html = '<p><strong>Transactions to be deleted: ' + data.count + '</strong></p>';
+                                html += '<p>Total amount: $' + parseFloat(data.total_amount).toFixed(2) + '</p>';
+                                
+                                if (data.count > 0) {
+                                    html += '<h5>Breakdown:</h5><ul>';
+                                    html += '<li>Flowguard Transactions: ' + data.flowguard_count + '</li>';
+                                    html += '<li>Flowguard Webhooks: ' + data.webhooks_count + '</li>';
+                                    html += '<li>Affiliate Commissions: ' + data.affiliate_count + '</li>';
+                                    html += '</ul>';
+                                    
+                                    if (data.sample_transactions && data.sample_transactions.length > 0) {
+                                        html += '<h5>Sample transactions (first 5):</h5>';
+                                        html += '<table class="widefat"><thead><tr><th>Date</th><th>ID</th><th>Amount</th><th>Type</th></tr></thead><tbody>';
+                                        data.sample_transactions.forEach(function(t) {
+                                            html += '<tr><td>' + t.created_at + '</td><td><code>' + t.transaction_id + '</code></td><td>$' + parseFloat(t.amount).toFixed(2) + '</td><td>' + t.order_type + '</td></tr>';
+                                        });
+                                        html += '</tbody></table>';
+                                    }
+                                    
+                                    $('#confirm-delete-transactions').show();
+                                } else {
+                                    html += '<p><em>No transactions match the selected criteria.</em></p>';
+                                }
+                                
+                                $('#transaction-delete-preview').html(html);
+                            } else {
+                                $('#transaction-delete-preview').html('<p style="color: red;">Error: ' + response.data + '</p>');
+                            }
+                        },
+                        error: function() {
+                            $('#transaction-delete-preview').html('<p style="color: red;">Error loading preview</p>');
+                        }
+                    });
+                });
+                
+                $('#confirm-delete-transactions').on('click', function() {
+                    if (!confirm('⚠️ FINAL WARNING!\n\nThis will PERMANENTLY DELETE the transactions shown above.\n\nType DELETE in the next prompt to confirm.')) {
+                        return;
+                    }
+                    
+                    const confirmation = prompt('Type DELETE to confirm permanent deletion:');
+                    if (confirmation !== 'DELETE') {
+                        alert('Deletion cancelled - confirmation text did not match.');
+                        return;
+                    }
+                    
+                    const dateFrom = $('#delete_date_from').val();
+                    const dateTo = $('#delete_date_to').val();
+                    const amountMax = $('#delete_amount_max').val();
+                    const userId = $('#delete_user_id').val();
+                    const types = [];
+                    
+                    if ($('#delete_subscriptions').is(':checked')) types.push('subscription');
+                    if ($('#delete_purchases').is(':checked')) types.push('purchase');
+                    
+                    $(this).hide();
+                    $('#delete-transactions-loading').show();
+                    
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'flexpress_delete_transactions',
+                            nonce: '<?php echo wp_create_nonce('flexpress_delete_transactions'); ?>',
+                            date_from: dateFrom,
+                            date_to: dateTo,
+                            amount_max: amountMax,
+                            user_id: userId,
+                            types: types
+                        },
+                        success: function(response) {
+                            $('#delete-transactions-loading').hide();
+                            
+                            if (response.success) {
+                                const data = response.data;
+                                let html = '<div class="notice notice-success inline"><p><strong>✅ Deletion Complete!</strong></p>';
+                                html += '<p>Deleted ' + data.deleted_count + ' transactions</p>';
+                                html += '<ul>';
+                                html += '<li>Flowguard Transactions: ' + data.flowguard_deleted + '</li>';
+                                html += '<li>Flowguard Webhooks: ' + data.webhooks_deleted + '</li>';
+                                html += '<li>Affiliate Commissions: ' + data.affiliate_deleted + '</li>';
+                                html += '</ul></div>';
+                                
+                                $('#transaction-delete-results').html(html);
+                                $('#transaction-delete-preview').html('<p><em>Deletion complete. Click "Preview Deletion" to run another query.</em></p>');
+                            } else {
+                                $('#transaction-delete-results').html('<div class="notice notice-error inline"><p>Error: ' + response.data + '</p></div>');
+                            }
+                        },
+                        error: function() {
+                            $('#delete-transactions-loading').hide();
+                            $('#transaction-delete-results').html('<div class="notice notice-error inline"><p>Error during deletion</p></div>');
+                        }
+                    });
+                });
+            });
+            </script>
         </div>
     <?php
     }

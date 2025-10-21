@@ -11,6 +11,12 @@ A modern WordPress website running in Docker containers with MySQL database and 
   - Solution: Added proper global variable access and autosave protection
 - **Gallery Grid Display**: Restored proper grid layout for gallery images in extras admin area (was displaying as vertical list)
 
+### Episode Release Date Sync (Fixed)
+
+- Prevented episode release dates from reverting when saving unrelated changes (e.g., tags).
+- Source of truth is the ACF `release_date`. WordPress `post_date` updates only when `release_date` is changed (or when initializing if empty).
+- One-time sync tool available under FlexPress Tools: use direction `acf_to_wp` to push ACF release dates to WordPress post dates if needed.
+
 ## 🚀 Quick Start
 
 ### Prerequisites

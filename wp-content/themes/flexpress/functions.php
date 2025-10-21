@@ -2868,21 +2868,22 @@ function flexpress_sync_post_date_with_release_date($post_id, $post, $update)
             }
         }
 
-        if ($new_release_date && !empty($new_release_date) && $new_release_date != $wp_post_date) {
-            // Update the post date
-            wp_update_post(array(
-                'ID' => $post_id,
-                'post_date' => $new_release_date,
-                'post_date_gmt' => get_gmt_from_date($new_release_date)
-            ));
+        if ($new_release_date && !empty($new_release_date)) {
+            // Normalize to WordPress datetime format
+            $formatted_date = date('Y-m-d H:i:s', strtotime($new_release_date));
+
+            if ($formatted_date && $formatted_date != $wp_post_date) {
+                // Update the post date
+                wp_update_post(array(
+                    'ID' => $post_id,
+                    'post_date' => $formatted_date,
+                    'post_date_gmt' => get_gmt_from_date($formatted_date)
+                ));
+            }
         }
     }
     // If ACF release date is empty, update it with the WordPress post date
     elseif (empty($acf_release_date)) {
-        update_field('release_date', $wp_post_date, $post_id);
-    }
-    // If we're updating from the editor and the post dates differ, update ACF release date
-    elseif ($update && !empty($_POST['action']) && $_POST['action'] === 'editpost') {
         update_field('release_date', $wp_post_date, $post_id);
     }
 }

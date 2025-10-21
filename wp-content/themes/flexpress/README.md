@@ -11,6 +11,14 @@ FlexPress is designed specifically for content websites (primarily adult content
 
 ## 🌟 Core Features
 
+### Episode Release Date Sync (October 2025)
+
+- ACF `release_date` is the source of truth for scheduling.
+- WordPress `post_date` is updated via ACF save only.
+- Unrelated admin saves (tags, meta, etc.) no longer overwrite the release date.
+- If an episode has no `release_date` yet, it will be initialized from the current `post_date` once.
+- Admin tool: FlexPress → Tools → Sync Episode Dates supports `acf_to_wp` for one-time correction.
+
 ### Model Profiles – Manual Age and Separate Measurements (October 2025)
 
 Model profiles now support explicit, separate ACF fields and a manual “Published Age”:

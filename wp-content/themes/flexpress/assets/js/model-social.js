@@ -130,12 +130,15 @@
     );
 
     $(".social-icon-link").each(function () {
-      $(this).css({
-        opacity: "0",
-        transform: "translateY(20px)",
-        transition: "opacity 0.5s ease, transform 0.5s ease",
-      });
-      observer.observe(this[0]); // Convert jQuery object to DOM node
+      // Check if the DOM element exists before observing
+      if (this && this instanceof Element) {
+        $(this).css({
+          opacity: "0",
+          transform: "translateY(20px)",
+          transition: "opacity 0.5s ease, transform 0.5s ease",
+        });
+        observer.observe(this);
+      }
     });
   }
 })(jQuery);

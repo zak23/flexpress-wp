@@ -4499,9 +4499,11 @@ function flexpress_display_extras_gallery($extras_id = null, $columns = null, $h
         return;
     }
 
-    // Check access if not provided
+    // Always get access info (needed for purchase buttons and CTAs)
+    $access_info = flexpress_check_extras_access($extras_id);
+
+    // Use provided has_access or get from access_info
     if ($has_access === null) {
-        $access_info = flexpress_check_extras_access($extras_id);
         $has_access = $access_info['has_access'];
     }
 
@@ -9082,13 +9084,13 @@ add_action('wp_ajax_flexpress_preview_delete_transactions', 'flexpress_preview_d
 function flexpress_preview_delete_transactions()
 {
     check_ajax_referer('flexpress_delete_transactions', 'nonce');
-    
+
     if (!current_user_can('manage_options')) {
         wp_send_json_error('Unauthorized');
     }
-    
+
     global $wpdb;
-    
+
     // Get filter criteria
     $transaction_ids = is_array($_POST['transaction_ids']) ? array_map('sanitize_text_field', $_POST['transaction_ids']) : array();
     $date_from = sanitize_text_field($_POST['date_from'] ?? '');
@@ -9096,10 +9098,10 @@ function flexpress_preview_delete_transactions()
     $amount_max = floatval($_POST['amount_max'] ?? 0);
     $user_id = intval($_POST['user_id'] ?? 0);
     $types = is_array($_POST['types']) ? array_map('sanitize_text_field', $_POST['types']) : array();
-    
+
     // Build WHERE clause
     $where_conditions = array('1=1');
-    
+
     // If transaction_ids are provided, ignore all other filters
     if (!empty($transaction_ids)) {
         $placeholders = implode(',', array_fill(0, count($transaction_ids), '%s'));
@@ -9108,42 +9110,42 @@ function flexpress_preview_delete_transactions()
         if (!empty($date_from)) {
             $where_conditions[] = $wpdb->prepare('DATE(t.created_at) >= %s', $date_from);
         }
-        
+
         if (!empty($date_to)) {
             $where_conditions[] = $wpdb->prepare('DATE(t.created_at) <= %s', $date_to);
         }
-        
+
         if ($amount_max > 0) {
             $where_conditions[] = $wpdb->prepare('t.amount <= %f', $amount_max);
         }
-        
+
         if ($user_id > 0) {
             $where_conditions[] = $wpdb->prepare('t.user_id = %d', $user_id);
         }
-        
+
         if (!empty($types)) {
             $placeholders = implode(',', array_fill(0, count($types), '%s'));
             $where_conditions[] = $wpdb->prepare("t.order_type IN ($placeholders)", ...$types);
         }
     }
-    
+
     $where_clause = implode(' AND ', $where_conditions);
-    
+
     // Count transactions
     $transactions_table = $wpdb->prefix . 'flexpress_flowguard_transactions';
     $webhooks_table = $wpdb->prefix . 'flexpress_flowguard_webhooks';
     $affiliate_table = $wpdb->prefix . 'flexpress_affiliate_transactions';
-    
+
     $count_query = "SELECT COUNT(*) FROM {$transactions_table} t WHERE {$where_clause}";
     $count = $wpdb->get_var($count_query);
-    
+
     $total_query = "SELECT SUM(amount) FROM {$transactions_table} t WHERE {$where_clause}";
     $total_amount = $wpdb->get_var($total_query);
-    
+
     // Get transaction IDs for related records
     $ids_query = "SELECT t.transaction_id FROM {$transactions_table} t WHERE {$where_clause}";
     $transaction_ids = $wpdb->get_col($ids_query);
-    
+
     // Count related webhooks
     $webhooks_count = 0;
     if (!empty($transaction_ids)) {
@@ -9153,7 +9155,7 @@ function flexpress_preview_delete_transactions()
             ...$transaction_ids
         ));
     }
-    
+
     // Count related affiliate commissions
     $affiliate_count = 0;
     if (!empty($transaction_ids)) {
@@ -9163,7 +9165,7 @@ function flexpress_preview_delete_transactions()
             ...$transaction_ids
         ));
     }
-    
+
     // Get sample transactions
     $sample_query = "SELECT t.transaction_id, t.amount, t.order_type, t.created_at 
                      FROM {$transactions_table} t 
@@ -9171,7 +9173,7 @@ function flexpress_preview_delete_transactions()
                      ORDER BY t.created_at DESC 
                      LIMIT 5";
     $sample_transactions = $wpdb->get_results($sample_query, ARRAY_A);
-    
+
     wp_send_json_success(array(
         'count' => intval($count),
         'total_amount' => floatval($total_amount ?: 0),
@@ -9189,13 +9191,13 @@ add_action('wp_ajax_flexpress_delete_transactions', 'flexpress_delete_transactio
 function flexpress_delete_transactions()
 {
     check_ajax_referer('flexpress_delete_transactions', 'nonce');
-    
+
     if (!current_user_can('manage_options')) {
         wp_send_json_error('Unauthorized');
     }
-    
+
     global $wpdb;
-    
+
     // Get filter criteria
     $transaction_ids = is_array($_POST['transaction_ids']) ? array_map('sanitize_text_field', $_POST['transaction_ids']) : array();
     $date_from = sanitize_text_field($_POST['date_from'] ?? '');
@@ -9203,10 +9205,10 @@ function flexpress_delete_transactions()
     $amount_max = floatval($_POST['amount_max'] ?? 0);
     $user_id = intval($_POST['user_id'] ?? 0);
     $types = is_array($_POST['types']) ? array_map('sanitize_text_field', $_POST['types']) : array();
-    
+
     // Build WHERE clause (same as preview)
     $where_conditions = array('1=1');
-    
+
     // If transaction_ids are provided, ignore all other filters
     if (!empty($transaction_ids)) {
         $placeholders = implode(',', array_fill(0, count($transaction_ids), '%s'));
@@ -9215,36 +9217,36 @@ function flexpress_delete_transactions()
         if (!empty($date_from)) {
             $where_conditions[] = $wpdb->prepare('DATE(t.created_at) >= %s', $date_from);
         }
-        
+
         if (!empty($date_to)) {
             $where_conditions[] = $wpdb->prepare('DATE(t.created_at) <= %s', $date_to);
         }
-        
+
         if ($amount_max > 0) {
             $where_conditions[] = $wpdb->prepare('t.amount <= %f', $amount_max);
         }
-        
+
         if ($user_id > 0) {
             $where_conditions[] = $wpdb->prepare('t.user_id = %d', $user_id);
         }
-        
+
         if (!empty($types)) {
             $placeholders = implode(',', array_fill(0, count($types), '%s'));
             $where_conditions[] = $wpdb->prepare("t.order_type IN ($placeholders)", ...$types);
         }
     }
-    
+
     $where_clause = implode(' AND ', $where_conditions);
-    
+
     // Get tables
     $transactions_table = $wpdb->prefix . 'flexpress_flowguard_transactions';
     $webhooks_table = $wpdb->prefix . 'flexpress_flowguard_webhooks';
     $affiliate_table = $wpdb->prefix . 'flexpress_affiliate_transactions';
-    
+
     // Get transaction IDs first
     $ids_query = "SELECT t.transaction_id FROM {$transactions_table} t WHERE {$where_clause}";
     $transaction_ids = $wpdb->get_col($ids_query);
-    
+
     if (empty($transaction_ids)) {
         wp_send_json_success(array(
             'deleted_count' => 0,
@@ -9253,24 +9255,24 @@ function flexpress_delete_transactions()
             'affiliate_deleted' => 0
         ));
     }
-    
+
     // Delete related webhooks first
     $placeholders = implode(',', array_fill(0, count($transaction_ids), '%s'));
     $webhooks_deleted = $wpdb->query($wpdb->prepare(
         "DELETE FROM {$webhooks_table} WHERE transaction_id IN ($placeholders)",
         ...$transaction_ids
     ));
-    
+
     // Delete related affiliate commissions
     $affiliate_deleted = $wpdb->query($wpdb->prepare(
         "DELETE FROM {$affiliate_table} WHERE flowguard_transaction_id IN ($placeholders)",
         ...$transaction_ids
     ));
-    
+
     // Delete main transactions
     $delete_query = "DELETE t FROM {$transactions_table} t WHERE {$where_clause}";
     $flowguard_deleted = $wpdb->query($delete_query);
-    
+
     // Log deletion
     error_log(sprintf(
         'FlexPress: Deleted %d transactions (webhooks: %d, affiliates: %d) by user %d',
@@ -9279,7 +9281,7 @@ function flexpress_delete_transactions()
         $affiliate_deleted,
         get_current_user_id()
     ));
-    
+
     wp_send_json_success(array(
         'deleted_count' => intval($flowguard_deleted),
         'flowguard_deleted' => intval($flowguard_deleted),

@@ -322,30 +322,8 @@ function flexpress_clear_all_bunnycdn_video_cache() {
     return $result;
 }
 
-/**
- * Add video preview column to episode list
- */
-function flexpress_add_video_preview_column($columns) {
-    $columns['video_preview'] = __('Video Preview', 'flexpress');
-    return $columns;
-}
-add_filter('manage_episode_posts_columns', 'flexpress_add_video_preview_column');
-
-/**
- * Display video preview in column
- */
-function flexpress_display_video_preview_column($column, $post_id) {
-    if ($column === 'video_preview') {
-        $video_id = get_post_meta($post_id, 'video_id', true);
-        if ($video_id) {
-            $thumbnail_url = flexpress_get_bunnycdn_thumbnail_url($video_id);
-            if ($thumbnail_url) {
-                echo '<img src="' . esc_url($thumbnail_url) . '" alt="Video thumbnail" style="max-width: 100px;">';
-            }
-        }
-    }
-}
-add_action('manage_episode_posts_custom_column', 'flexpress_display_video_preview_column', 10, 2);
+// Video Preview column removed for cleaner admin interface
+// Thumbnails can still be viewed when editing individual episodes
 
 /**
  * Display the episode thumbnail

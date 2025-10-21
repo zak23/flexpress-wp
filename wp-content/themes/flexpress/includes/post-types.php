@@ -62,19 +62,19 @@ function flexpress_register_episode_post_type() {
 
     register_post_type('episode', $args);
 
-    // Register Episode Status Taxonomy
+    // Register Access Type Taxonomy (formerly Episode Status)
     $status_labels = array(
-        'name'              => _x('Episode Status', 'taxonomy general name', 'flexpress'),
-        'singular_name'     => _x('Status', 'taxonomy singular name', 'flexpress'),
-        'search_items'      => __('Search Statuses', 'flexpress'),
-        'all_items'         => __('All Statuses', 'flexpress'),
-        'parent_item'       => __('Parent Status', 'flexpress'),
-        'parent_item_colon' => __('Parent Status:', 'flexpress'),
-        'edit_item'         => __('Edit Status', 'flexpress'),
-        'update_item'       => __('Update Status', 'flexpress'),
-        'add_new_item'      => __('Add New Status', 'flexpress'),
-        'new_item_name'     => __('New Status Name', 'flexpress'),
-        'menu_name'         => __('Status', 'flexpress'),
+        'name'              => _x('Access Type', 'taxonomy general name', 'flexpress'),
+        'singular_name'     => _x('Access Type', 'taxonomy singular name', 'flexpress'),
+        'search_items'      => __('Search Access Types', 'flexpress'),
+        'all_items'         => __('All Access Types', 'flexpress'),
+        'parent_item'       => __('Parent Access Type', 'flexpress'),
+        'parent_item_colon' => __('Parent Access Type:', 'flexpress'),
+        'edit_item'         => __('Edit Access Type', 'flexpress'),
+        'update_item'       => __('Update Access Type', 'flexpress'),
+        'add_new_item'      => __('Add New Access Type', 'flexpress'),
+        'new_item_name'     => __('New Access Type Name', 'flexpress'),
+        'menu_name'         => __('Access Type', 'flexpress'),
     );
 
     $status_args = array(

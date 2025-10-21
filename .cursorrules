@@ -12,6 +12,13 @@
 
 ## Recent Fixes
 
+### Episode Admin Columns (Oct 2025)
+
+- Renamed "Episode Status" column to "Access Type" in episodes admin list
+- Removed "Video Preview" column from episodes admin list
+- Retained columns: Title, Tags, Access Type, Date
+- Video thumbnails still visible when editing individual episodes
+
 ### Date Format Standardization (Oct 2025)
 
 - All episode dates now display in Australian/European format (day-first)

@@ -4,6 +4,17 @@ A modern WordPress website running in Docker containers with MySQL database and 
 
 ## 🔧 Recent Fixes
 
+### Episode Admin Columns (October 2025)
+
+- **Simplified Episode Management**: Cleaned up the episode list columns in WordPress admin for better clarity
+  - Renamed "Episode Status" to "Access Type" for clearer understanding
+  - Removed "Video Preview" column to reduce visual clutter
+  - Retained essential columns: Title, Tags, Access Type, Date
+  - Video thumbnails still visible when editing individual episodes
+- **Files Updated**:
+  - `wp-content/themes/flexpress/includes/post-types.php` - Taxonomy label update
+  - `wp-content/themes/flexpress/includes/bunnycdn.php` - Removed video preview column functions
+
 ### Date Format Standardization (October 2025)
 
 - **Australian/European Date Format**: All episode dates now display in day-first format for consistency

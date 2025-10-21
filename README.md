@@ -4,6 +4,17 @@ A modern WordPress website running in Docker containers with MySQL database and 
 
 ## 🔧 Recent Fixes
 
+### Discord Notifications 400 Error (Fixed - October 2025)
+
+- **Root Cause**: Discord webhook notifications were failing with HTTP 400 Bad Request error
+  - The `get_site_icon_url()` function returns `false` when no site icon is configured
+  - Discord's API rejects embeds with `"icon_url": false` in the footer
+  - Error message from Discord: `{"embeds": ["0"]}`
+- **Solution**: Updated all 9 embed creation methods to conditionally include `icon_url` only when a valid URL exists
+  - Modified methods: `create_subscription_approved_embed()`, `create_subscription_rebill_embed()`, `create_subscription_cancel_embed()`, `create_subscription_expiry_embed()`, `create_refund_embed()`, `create_purchase_approved_embed()`, `create_subscription_extend_embed()`, `create_talent_application_embed()`, `create_general_embed()`
+  - Now builds footer array dynamically, adding `icon_url` only when `get_site_icon_url()` returns a valid URL
+- **Impact**: All Discord notifications (subscriptions, rebills, cancellations, expirations, PPV purchases, refunds, chargebacks, talent applications) now work correctly regardless of WordPress site icon configuration
+
 ### JavaScript MutationObserver Error (Fixed)
 
 - **TypeError Fix**: Resolved `Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'` error in `model-social.js`

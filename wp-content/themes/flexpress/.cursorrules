@@ -111,7 +111,9 @@ wp-content/themes/flexpress/
 - **BunnyCDN:** Video delivery and thumbnail generation
 - **Verotel:** Payment processing and subscription management
 - **Chart.js:** Analytics and performance visualization
-- **Discord:** Future notification system integration
+- **Discord:** Real-time webhook notifications for subscriptions, payments, refunds, and form submissions
+  - **Implementation Note:** Always conditionally include `icon_url` in embed footers to avoid 400 errors when site icon is not configured
+  - Discord API rejects embeds with `"icon_url": false` - omit the field entirely if no site icon exists
 
 ### WordPress Integration
 - **ACF:** Custom fields for content management

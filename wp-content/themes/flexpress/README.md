@@ -2575,6 +2575,15 @@ Enabled
 - **Play Button**: Circular, centered, white border, glass effect with backdrop-filter
 - **Transition**: 0.3s ease for smooth animations
 
+**Mobile Behavior (November 2025):**
+
+- On mobile/no-hover devices (Home, Archives, Search):
+  - Center-first activation: the episode thumbnail nearest the viewport center swaps `src` to its `data-preview-url` webP
+  - Exactly one active preview at a time; previous card reverts to `data-original-src`
+  - Auto-advance every 10s among visible cards when no new center candidate appears
+  - Keep-last-active: if nothing is “middle-ish,” the last active preview stays until it leaves the viewport
+  - Implemented in `assets/js/main.js` (`mobileCardPreviews`)
+
 #### Model Cards
 
 ```css

@@ -359,6 +359,14 @@ FlexPress implements intelligent console log management for optimal development 
 
 For detailed caching configuration, see [CACHING_CONFIGURATION.md](docs/CACHING_CONFIGURATION.md) and [REDIS_OBJECT_CACHE.md](docs/REDIS_OBJECT_CACHE.md).
 
+### Mobile Episode Card Previews (November 2025)
+
+- On mobile/no-hover devices, episode cards on Home, Archives, and Search automatically preview:
+  - Center-first activation (thumbnail closest to viewport center swaps to its `data-preview-url` webP)
+  - Exactly one active preview at a time
+  - 10s auto-advance among visible cards; when nothing is centered, keep last active until it leaves the viewport
+  - No PHP changes required; uses existing `data-preview-url` and `data-original-src` attributes on `img.episode-thumbnail`
+
 ## 📧 Email Configuration
 
 ### Google SMTP Integration

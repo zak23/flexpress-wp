@@ -524,6 +524,173 @@ async function generateBunnyCDNToken(videoId) {
   });
 })(jQuery);
 
+// Mobile episode card webP previews (center-first + 10s auto-advance)
+const mobileCardPreviews = (() => {
+  let images = [];
+  let visibleIdxs = [];
+  let current = -1;
+  let timer = null;
+  let io = null;
+  let ticking = false;
+
+  const CENTER_BAND_RATIO = 0.25; // middle-ish band: 25% viewport height
+
+  const isMobile = () =>
+    window.matchMedia &&
+    window.matchMedia('(hover: none)').matches &&
+    window.matchMedia('(pointer: coarse)').matches;
+
+  const isEligiblePage = () => {
+    const cls = document.body.classList;
+    const has = (...c) => c.some((x) => cls.contains(x));
+    const starts = (p) => Array.from(cls).some((c) => c.startsWith(p));
+    return (
+      has('home', 'archive', 'search', 'page-template-page-home') ||
+      starts('post-type-archive') ||
+      starts('tax-')
+    );
+  };
+
+  const swapToPreview = (img) => {
+    const p = img && img.dataset ? img.dataset.previewUrl : null;
+    if (p && img.src !== p) img.src = p;
+  };
+
+  const swapToOriginal = (img) => {
+    const o = img && img.dataset ? img.dataset.originalSrc : null;
+    if (o && img.src !== o) img.src = o;
+  };
+
+  const computeCenterCandidate = () => {
+    if (!visibleIdxs.length) return -1;
+    const vpCenterY = window.innerHeight / 2;
+    const bandPx = window.innerHeight * CENTER_BAND_RATIO;
+
+    let bestIdx = -1;
+    let bestDist = Infinity;
+    visibleIdxs.forEach((i) => {
+      const r = images[i].getBoundingClientRect();
+      const centerY = r.top + r.height / 2;
+      const dist = Math.abs(centerY - vpCenterY);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = i;
+      }
+    });
+
+    return bestDist <= bandPx ? bestIdx : -1;
+  };
+
+  const setActive = (idx) => {
+    if (idx === current) return;
+    if (current !== -1 && images[current]) swapToOriginal(images[current]);
+    current = idx;
+    if (current !== -1 && images[current]) swapToPreview(images[current]);
+  };
+
+  const advance = () => {
+    if (!visibleIdxs.length) return;
+    // Prefer center candidate if available
+    const centerIdx = computeCenterCandidate();
+    if (centerIdx !== -1) {
+      setActive(centerIdx);
+      return;
+    }
+
+    // Otherwise, keep-last-active and rotate every 10s among visibles
+    const pos = Math.max(0, visibleIdxs.indexOf(current));
+    const nextIdx = visibleIdxs[(pos + 1) % visibleIdxs.length];
+    setActive(nextIdx);
+  };
+
+  const start = () => {
+    stop();
+    timer = setInterval(advance, 10000);
+  };
+
+  const stop = () => {
+    if (timer) clearInterval(timer);
+    timer = null;
+  };
+
+  const onScrollOrResize = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const centerIdx = computeCenterCandidate();
+      if (centerIdx !== -1) setActive(centerIdx);
+      // If none centered, keep current per keep-last-active rule
+      ticking = false;
+    });
+  };
+
+  const observe = () => {
+    if (!('IntersectionObserver' in window)) {
+      visibleIdxs = images.map((_, i) => i);
+      return;
+    }
+    io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          const idx = images.indexOf(e.target);
+          if (idx === -1) return;
+          if (e.isIntersecting && e.intersectionRatio >= 0.6) {
+            if (!visibleIdxs.includes(idx)) visibleIdxs.push(idx);
+          } else {
+            visibleIdxs = visibleIdxs.filter((i) => i !== idx);
+            if (idx === current) {
+              swapToOriginal(images[current]);
+              current = -1;
+            }
+          }
+        });
+        // After visibility changes, try to align to center
+        const centerIdx = computeCenterCandidate();
+        if (centerIdx !== -1) setActive(centerIdx);
+      },
+      { threshold: [0, 0.6, 1] }
+    );
+    images.forEach((img) => io.observe(img));
+  };
+
+  const init = () => {
+    // Mobile/no-hover only and only on home/archive/search templates
+    if (!isMobile() || !isEligiblePage()) return;
+    images = Array.from(
+      document.querySelectorAll(
+        '.episode-card img[data-preview-url][data-original-src]'
+      )
+    );
+    if (!images.length) return;
+
+    observe();
+    // Initial alignment
+    const centerIdx = computeCenterCandidate();
+    if (centerIdx !== -1) setActive(centerIdx);
+    start();
+
+    document.addEventListener('visibilitychange', () =>
+      document.hidden ? stop() : start()
+    );
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize);
+    window.addEventListener('orientationchange', onScrollOrResize);
+  };
+
+  return { init };
+})();
+
+// Bootstrap mobile previews
+if (typeof jQuery !== 'undefined') {
+  jQuery(function () {
+    mobileCardPreviews.init();
+  });
+} else if (document.readyState !== 'loading') {
+  mobileCardPreviews.init();
+} else {
+  document.addEventListener('DOMContentLoaded', mobileCardPreviews.init);
+}
+
 /**
  * FlexPress Main JavaScript
  * Handles video preview and other interactive elements

@@ -18,6 +18,13 @@ async function run() {
   const page = await browser.newPage();
   page.setDefaultTimeout(30000);
 
+  // Emulate a mobile device (hover: none, coarse pointer)
+  await page.emulateMediaFeatures([
+    { name: 'hover', value: 'none' },
+    { name: 'pointer', value: 'coarse' }
+  ]);
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+
   // Episodes: ensure category filter shows at least one tag and items have counts
   await page.goto(url("/episodes/"));
   await page.waitForSelector("#category-filters");

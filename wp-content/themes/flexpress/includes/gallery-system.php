@@ -1342,11 +1342,15 @@ class FlexPress_Gallery_System
     {
         global $post_type, $post;
 
-        // Debug logging
-        error_log("FlexPress Gallery: Hook = $hook, Post Type = $post_type");
+        // Debug logging only in debug mode
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("FlexPress Gallery: Hook = $hook, Post Type = $post_type");
+        }
 
         if (($hook === 'post.php' || $hook === 'post-new.php') && in_array($post_type, array('episode', 'extras'))) {
-            error_log("FlexPress Gallery: Enqueuing scripts for {$post_type} page");
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("FlexPress Gallery: Enqueuing scripts for {$post_type} page");
+            }
             wp_enqueue_media();
             wp_enqueue_script('jquery-ui-sortable');
 

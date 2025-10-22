@@ -33,17 +33,14 @@ if (!defined('ABSPATH')) {
                                 $general_settings = get_option('flexpress_general_settings', array());
                                 $casting_image_id = isset($general_settings['casting_image']) ? $general_settings['casting_image'] : '';
 
-                                error_log('FlexPress Casting Section: Loading casting image with ID: ' . $casting_image_id);
 
                                 if ($casting_image_id) {
                                     $image_url = wp_get_attachment_url($casting_image_id);
-                                    error_log('FlexPress Casting Section: Using uploaded image: ' . ($image_url ? $image_url : 'No URL found'));
                                     echo wp_get_attachment_image($casting_image_id, 'casting-image', false, array(
                                         'alt' => esc_attr__('Join Our Cast', 'flexpress'),
                                         'class' => 'img-fluid rounded-3 shadow'
                                     ));
                                 } else {
-                                    error_log('FlexPress Casting Section: No casting image ID, using default SVG placeholder');
                                     // Fallback to a default image or placeholder
                                     echo '<img src="' . get_template_directory_uri() . '/assets/images/casting-default.svg" alt="' . esc_attr__('Join Our Cast', 'flexpress') . '" class="img-fluid rounded-3 shadow">';
                                 }

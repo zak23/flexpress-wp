@@ -217,19 +217,26 @@ function flexpress_add_performance_monitoring()
         window.addEventListener("load", function() {
             if (window.performance && window.performance.timing) {
                 const timing = window.performance.timing;
-                const loadTime = timing.loadEventEnd - timing.navigationStart;
-                const domReady = timing.domContentLoadedEventEnd - timing.navigationStart;
                 
-                console.log("Page Load Time: " + loadTime + "ms");
-                console.log("DOM Ready Time: " + domReady + "ms");
-                
-                // Log to server if needed
-                if (loadTime > 3000) {
-                    fetch("' . admin_url('admin-ajax.php') . '", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                        body: "action=log_slow_page&load_time=" + loadTime + "&url=" + encodeURIComponent(window.location.href)
-                    });
+                // Only calculate if timing data is valid (loadEventEnd > 0)
+                if (timing.loadEventEnd > 0) {
+                    const loadTime = timing.loadEventEnd - timing.navigationStart;
+                    const domReady = timing.domContentLoadedEventEnd - timing.navigationStart;
+                    
+                    // Only log in debug mode
+                    if (' . (defined('WP_DEBUG') && WP_DEBUG ? 'true' : 'false') . ') {
+                        console.log("Page Load Time: " + loadTime + "ms");
+                        console.log("DOM Ready Time: " + domReady + "ms");
+                    }
+                    
+                    // Log to server if needed (always check for slow pages)
+                    if (loadTime > 3000) {
+                        fetch("' . admin_url('admin-ajax.php') . '", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                            body: "action=log_slow_page&load_time=" + loadTime + "&url=" + encodeURIComponent(window.location.href)
+                        });
+                    }
                 }
             }
         });
@@ -332,10 +339,14 @@ function flexpress_add_service_worker()
             window.addEventListener("load", function() {
                 navigator.serviceWorker.register("' . get_template_directory_uri() . '/sw.js")
                     .then(function(registration) {
-                        console.log("ServiceWorker registration successful");
+                        // Only log success in debug mode
+                        if (' . (defined('WP_DEBUG') && WP_DEBUG ? 'true' : 'false') . ') {
+                            console.log("ServiceWorker registration successful");
+                        }
                     })
                     .catch(function(err) {
-                        console.log("ServiceWorker registration failed");
+                        // Always log errors (important for debugging)
+                        console.log("ServiceWorker registration failed: " + err.message);
                     });
             });
         }
@@ -349,6 +360,13 @@ add_action('wp_footer', 'flexpress_add_service_worker');
  */
 function flexpress_create_service_worker()
 {
+    $sw_file = get_template_directory() . '/sw.js';
+
+    // Only create service worker if it doesn't exist
+    if (file_exists($sw_file)) {
+        return;
+    }
+
     $sw_content = '
 // FlexPress Service Worker
 // - Never cache HTML
@@ -410,8 +428,6 @@ self.addEventListener("fetch", (event) => {
 });
 ';
 
-    $sw_file = get_template_directory() . '/sw.js';
-
     // Check if file is writable before attempting to write
     if (!is_writable($sw_file) && file_exists($sw_file)) {
         error_log('FlexPress: Service worker file is not writable at ' . $sw_file . '. Please check file permissions.');
@@ -421,8 +437,6 @@ self.addEventListener("fetch", (event) => {
     $result = file_put_contents($sw_file, $sw_content);
     if ($result === false) {
         error_log('FlexPress: Failed to write service worker file at ' . $sw_file . '. Check file permissions.');
-    } else {
-        error_log('FlexPress: Service worker file updated successfully at ' . $sw_file);
     }
 }
 // Create service worker on admin init instead of theme setup to avoid header conflicts

@@ -151,20 +151,14 @@ require_once FLEXPRESS_PATH . '/includes/class-flexpress-smtp2go.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-smtp2go-settings.php';
 
 // Debug: Log that SMTP classes are loaded
-error_log('FlexPress: Google SMTP classes loaded successfully');
-error_log('FlexPress: SMTP2Go classes loaded successfully');
 
 // Initialize SMTP2Go settings in admin
 if (is_admin()) {
-    error_log('FlexPress: Initializing SMTP2Go Settings in admin');
     new FlexPress_SMTP2Go_Settings();
-} else {
-    error_log('FlexPress: Not in admin, skipping SMTP2Go Settings initialization');
 }
 
 // Initialize General Settings in admin
 if (is_admin()) {
-    error_log('FlexPress: Initializing General Settings in admin');
     new FlexPress_General_Settings();
 }
 
@@ -374,6 +368,9 @@ function flexpress_enqueue_scripts_and_styles()
     // Enqueue jQuery with defer
     wp_enqueue_script('jquery');
     wp_script_add_data('jquery', 'defer', true);
+
+    // Add global error handler and jQuery Migrate configuration
+    add_action('wp_footer', 'flexpress_add_console_cleanup');
 
     // Enqueue Bootstrap JS with defer
     wp_enqueue_script('bootstrap-js', 'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js', array(), '5.1.3', true);
@@ -1005,34 +1002,50 @@ function flexpress_sanitize_general_settings($input)
     if (isset($input['casting_image'])) {
         $casting_image_id = absint($input['casting_image']);
         $sanitized['casting_image'] = $casting_image_id;
-        error_log('FlexPress General Settings: Casting image being saved with ID: ' . $casting_image_id);
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('FlexPress General Settings: Casting image being saved with ID: ' . $casting_image_id);
+        }
 
         // Log the current value being saved
         if ($casting_image_id > 0) {
             $image_url = wp_get_attachment_url($casting_image_id);
-            error_log('FlexPress General Settings: Casting image URL: ' . ($image_url ? $image_url : 'No URL found'));
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('FlexPress General Settings: Casting image URL: ' . ($image_url ? $image_url : 'No URL found'));
+            }
         } else {
-            error_log('FlexPress General Settings: Casting image ID is 0, will use default placeholder');
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('FlexPress General Settings: Casting image ID is 0, will use default placeholder');
+            }
         }
     } else {
-        error_log('FlexPress General Settings: No casting_image in input data');
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('FlexPress General Settings: No casting_image in input data');
+        }
     }
 
     // Sanitize join CTA image
     if (isset($input['join_cta_image'])) {
         $join_cta_image_id = absint($input['join_cta_image']);
         $sanitized['join_cta_image'] = $join_cta_image_id;
-        error_log('FlexPress General Settings: Join CTA image being saved with ID: ' . $join_cta_image_id);
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('FlexPress General Settings: Join CTA image being saved with ID: ' . $join_cta_image_id);
+        }
 
         // Log the current value being saved
         if ($join_cta_image_id > 0) {
             $image_url = wp_get_attachment_url($join_cta_image_id);
-            error_log('FlexPress General Settings: Join CTA image URL: ' . ($image_url ? $image_url : 'No URL found'));
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('FlexPress General Settings: Join CTA image URL: ' . ($image_url ? $image_url : 'No URL found'));
+            }
         } else {
-            error_log('FlexPress General Settings: Join CTA image ID is 0, will use default image');
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('FlexPress General Settings: Join CTA image ID is 0, will use default image');
+            }
         }
     } else {
-        error_log('FlexPress General Settings: No join_cta_image in input data');
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('FlexPress General Settings: No join_cta_image in input data');
+        }
     }
 
     // Log the complete sanitized data for debugging
@@ -9309,4 +9322,38 @@ function flexpress_delete_transactions()
         'webhooks_deleted' => intval($webhooks_deleted),
         'affiliate_deleted' => intval($affiliate_deleted)
     ));
+}
+
+/**
+ * Add console cleanup and error suppression for production
+ */
+function flexpress_add_console_cleanup()
+{
+    // Only add in production (when WP_DEBUG is false)
+    if (!defined('WP_DEBUG') || !WP_DEBUG) {
+        echo '<script>
+        // Suppress third-party MutationObserver errors
+        window.addEventListener("error", function(event) {
+            if (event.error && event.error.message && 
+                event.error.message.includes("Failed to execute \'observe\' on \'MutationObserver\'")) {
+                event.preventDefault();
+                return false;
+            }
+        });
+        
+        // Suppress jQuery Migrate warnings in production
+        if (typeof jQuery !== "undefined" && jQuery.migrateWarnings) {
+            jQuery.migrateWarnings = false;
+        }
+        
+        // Suppress specific third-party script errors
+        window.addEventListener("unhandledrejection", function(event) {
+            if (event.reason && event.reason.message && 
+                event.reason.message.includes("Failed to execute \'observe\' on \'MutationObserver\'")) {
+                event.preventDefault();
+                return false;
+            }
+        });
+        </script>';
+    }
 }

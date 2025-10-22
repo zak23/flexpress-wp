@@ -20,7 +20,6 @@ class FlexPress_General_Settings
      */
     public function __construct()
     {
-        error_log('FlexPress General Settings: Constructor called');
         add_action('admin_init', array($this, 'register_settings'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_media_scripts'));
     }
@@ -30,7 +29,6 @@ class FlexPress_General_Settings
      */
     public function register_settings()
     {
-        error_log('FlexPress General Settings: register_settings called');
         // Register the settings option with validation
         register_setting(
             'flexpress_general_settings',
@@ -46,7 +44,6 @@ class FlexPress_General_Settings
             array($this, 'render_section_description'),
             'flexpress_general_settings'
         );
-        error_log('FlexPress General Settings: General section added');
 
         // Add settings fields here
         add_settings_field(
@@ -229,7 +226,6 @@ class FlexPress_General_Settings
             'flexpress_general_settings',
             'flexpress_casting_section'
         );
-        error_log('FlexPress General Settings: Casting image field added');
 
         // Add Join CTA Section
         add_settings_section(
@@ -247,7 +243,6 @@ class FlexPress_General_Settings
             'flexpress_general_settings',
             'flexpress_join_cta_section'
         );
-        error_log('FlexPress General Settings: Join CTA image field added');
     }
 
     /**
@@ -1269,23 +1264,19 @@ class FlexPress_General_Settings
      */
     public function render_casting_image_field()
     {
-        error_log('FlexPress General Settings: render_casting_image_field called');
         $options = get_option('flexpress_general_settings');
         $casting_image_id = isset($options['casting_image']) ? $options['casting_image'] : '';
 
-        error_log('FlexPress General Settings: Current casting image ID from options: ' . $casting_image_id);
 
         // Display the current image if it exists
         if (!empty($casting_image_id)) {
             $image_url = wp_get_attachment_image_url($casting_image_id, 'medium');
-            error_log('FlexPress General Settings: Image URL for ID ' . $casting_image_id . ': ' . ($image_url ? $image_url : 'No URL found'));
             if ($image_url) {
                 echo '<div class="flexpress-casting-image-preview">';
                 echo '<img src="' . esc_url($image_url) . '" style="max-width: 300px; height: auto; margin-bottom: 10px;" />';
                 echo '</div>';
             }
         } else {
-            error_log('FlexPress General Settings: No casting image ID found, will show upload button');
         }
     ?>
         <input type="hidden" name="flexpress_general_settings[casting_image]" id="flexpress_casting_image" value="<?php echo esc_attr($casting_image_id); ?>" />
@@ -1350,7 +1341,7 @@ class FlexPress_General_Settings
                 });
             });
         </script>
-<?php
+    <?php
     }
 
     /**
@@ -1370,23 +1361,19 @@ class FlexPress_General_Settings
      */
     public function render_join_cta_image_field()
     {
-        error_log('FlexPress General Settings: render_join_cta_image_field called');
         $options = get_option('flexpress_general_settings');
         $join_cta_image_id = isset($options['join_cta_image']) ? $options['join_cta_image'] : '';
 
-        error_log('FlexPress General Settings: Current join CTA image ID from options: ' . $join_cta_image_id);
 
         // Display the current image if it exists
         if (!empty($join_cta_image_id)) {
             $image_url = wp_get_attachment_image_url($join_cta_image_id, 'medium');
-            error_log('FlexPress General Settings: Image URL for ID ' . $join_cta_image_id . ': ' . ($image_url ? $image_url : 'No URL found'));
             if ($image_url) {
                 echo '<div class="flexpress-join-cta-image-preview">';
                 echo '<img src="' . esc_url($image_url) . '" style="max-width: 300px; height: auto; margin-bottom: 10px;" />';
                 echo '</div>';
             }
         } else {
-            error_log('FlexPress General Settings: No join CTA image ID found, will show upload button');
         }
     ?>
         <input type="hidden" name="flexpress_general_settings[join_cta_image]" id="flexpress_join_cta_image" value="<?php echo esc_attr($join_cta_image_id); ?>" />

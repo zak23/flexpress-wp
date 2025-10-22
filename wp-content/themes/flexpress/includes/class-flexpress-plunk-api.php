@@ -1,4 +1,5 @@
 <?php
+
 /**
  * FlexPress Plunk API Integration
  *
@@ -12,7 +13,8 @@ if (!defined('ABSPATH')) {
 /**
  * FlexPress Plunk API Class
  */
-class FlexPress_Plunk_API {
+class FlexPress_Plunk_API
+{
     /**
      * API Key
      *
@@ -37,7 +39,8 @@ class FlexPress_Plunk_API {
     /**
      * Constructor
      */
-    public function __construct() {
+    public function __construct()
+    {
         $options = get_option('flexpress_plunk_settings', array());
         $this->public_api_key = $options['public_api_key'] ?? '';
         $this->secret_api_key = $options['secret_api_key'] ?? '';
@@ -47,14 +50,16 @@ class FlexPress_Plunk_API {
     /**
      * Check if API is configured
      */
-    public function is_configured() {
+    public function is_configured()
+    {
         return !empty($this->public_api_key) && !empty($this->secret_api_key) && !empty($this->install_url);
     }
 
     /**
      * Make API request
      */
-    private function make_request($endpoint, $args = array()) {
+    private function make_request($endpoint, $args = array())
+    {
         if (!$this->is_configured()) {
             return new WP_Error('plunk_not_configured', 'Plunk API is not configured');
         }
@@ -85,13 +90,16 @@ class FlexPress_Plunk_API {
             'secret_key' => $masked_secret,
             'public_key' => $masked_public
         );
-        error_log('[FlexPress][Plunk][Request] ' . wp_json_encode($log_context));
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('[FlexPress][Plunk][Request] ' . wp_json_encode($log_context));
+        }
 
         $start_time = microtime(true);
         $response = wp_remote_request($url, $args);
         $duration_ms = (microtime(true) - $start_time) * 1000.0;
 
         if (is_wp_error($response)) {
+            // Always log errors (not just in debug mode)
             error_log('[FlexPress][Plunk][Response][WP_Error] ' . $response->get_error_message());
             return $response;
         }
@@ -101,11 +109,13 @@ class FlexPress_Plunk_API {
 
         $status_code = (int) wp_remote_retrieve_response_code($response);
         $logged_body = is_string($body) ? substr($body, 0, 600) : '';
-        error_log('[FlexPress][Plunk][Response] ' . wp_json_encode(array(
-            'status' => $status_code,
-            'duration_ms' => round($duration_ms, 1),
-            'body_snippet' => $logged_body
-        )));
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('[FlexPress][Plunk][Response] ' . wp_json_encode(array(
+                'status' => $status_code,
+                'duration_ms' => round($duration_ms, 1),
+                'body_snippet' => $logged_body
+            )));
+        }
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             return new WP_Error('plunk_invalid_response', 'Invalid JSON response from Plunk API');
@@ -117,13 +127,14 @@ class FlexPress_Plunk_API {
     /**
      * Add new contact
      */
-    public function add_contact($data) {
+    public function add_contact($data)
+    {
         $contact_data = array(
             'email' => $data['email'],
             'subscribed' => $data['subscribed'] ?? false,
             'data' => $data['data'] ?? array()
         );
-        
+
         return $this->make_request('/api/v1/contacts', array(
             'method' => 'POST',
             'body' => json_encode($contact_data)
@@ -133,28 +144,30 @@ class FlexPress_Plunk_API {
     /**
      * Get contact by email
      */
-    public function get_contact_by_email($email) {
+    public function get_contact_by_email($email)
+    {
         $result = $this->make_request('/api/v1/contacts?' . http_build_query(array('email' => $email)), array(
             'method' => 'GET'
         ));
-        
+
         if (is_wp_error($result) || empty($result)) {
             return new WP_Error('contact_not_found', 'Contact not found');
         }
-        
+
         foreach ($result as $contact) {
             if ($contact['email'] === $email) {
                 return $contact;
             }
         }
-        
+
         return new WP_Error('contact_not_found', 'Contact not found');
     }
 
     /**
      * Get contact by ID
      */
-    public function get_contact_by_id($contact_id) {
+    public function get_contact_by_id($contact_id)
+    {
         return $this->make_request('/api/v1/contacts/' . $contact_id, array(
             'method' => 'GET'
         ));
@@ -163,7 +176,8 @@ class FlexPress_Plunk_API {
     /**
      * Update contact
      */
-    public function update_contact($contact_id, $data) {
+    public function update_contact($contact_id, $data)
+    {
         return $this->make_request('/api/v1/contacts/' . $contact_id, array(
             'method' => 'PUT',
             'body' => json_encode($data)
@@ -173,7 +187,8 @@ class FlexPress_Plunk_API {
     /**
      * Delete contact
      */
-    public function delete_contact($contact_id) {
+    public function delete_contact($contact_id)
+    {
         return $this->make_request('/api/v1/contacts/' . $contact_id, array(
             'method' => 'DELETE'
         ));
@@ -182,7 +197,8 @@ class FlexPress_Plunk_API {
     /**
      * Subscribe contact
      */
-    public function subscribe_contact($contact_id, $email) {
+    public function subscribe_contact($contact_id, $email)
+    {
         return $this->make_request('/api/v1/contacts/subscribe', array(
             'method' => 'POST',
             'body' => json_encode(array('id' => $contact_id))
@@ -192,7 +208,8 @@ class FlexPress_Plunk_API {
     /**
      * Unsubscribe contact
      */
-    public function unsubscribe_contact($contact_id, $email) {
+    public function unsubscribe_contact($contact_id, $email)
+    {
         return $this->make_request('/api/v1/contacts/unsubscribe', array(
             'method' => 'POST',
             'body' => json_encode(array('id' => $contact_id))
@@ -202,7 +219,8 @@ class FlexPress_Plunk_API {
     /**
      * Track event
      */
-    public function track_event($contact_id, $event_name, $email, $event_data = array()) {
+    public function track_event($contact_id, $event_name, $email, $event_data = array())
+    {
         $event_payload = array(
             'contactId' => $contact_id,
             'event' => $event_name,
@@ -222,7 +240,8 @@ class FlexPress_Plunk_API {
     /**
      * Get all contacts
      */
-    public function get_contacts($limit = 100, $offset = 0) {
+    public function get_contacts($limit = 100, $offset = 0)
+    {
         return $this->make_request('/api/v1/contacts?' . http_build_query(array(
             'limit' => $limit,
             'offset' => $offset
@@ -234,7 +253,8 @@ class FlexPress_Plunk_API {
     /**
      * Test API connection
      */
-    public function test_connection() {
+    public function test_connection()
+    {
         $result = $this->make_request('/api/v1/contacts?limit=1', array(
             'method' => 'GET'
         ));
@@ -250,7 +270,8 @@ class FlexPress_Plunk_API {
     /**
      * Sync existing WordPress users with Plunk
      */
-    public function sync_existing_users($limit = 50) {
+    public function sync_existing_users($limit = 50)
+    {
         $users = get_users(array(
             'number' => $limit,
             'meta_query' => array(
@@ -262,7 +283,7 @@ class FlexPress_Plunk_API {
         ));
 
         $results = array();
-        
+
         foreach ($users as $user) {
             $contact_data = array(
                 'email' => $user->user_email,
@@ -275,9 +296,9 @@ class FlexPress_Plunk_API {
                     'membershipStatus' => 'unknown'
                 )
             );
-            
+
             $result = $this->add_contact($contact_data);
-            
+
             if (!is_wp_error($result) && isset($result['id'])) {
                 update_user_meta($user->ID, 'plunk_contact_id', $result['id']);
                 $results[$user->ID] = array('success' => true, 'contact_id' => $result['id']);
@@ -285,14 +306,15 @@ class FlexPress_Plunk_API {
                 $results[$user->ID] = array('success' => false, 'error' => $result->get_error_message());
             }
         }
-        
+
         return $results;
     }
 
     /**
      * Get contact events
      */
-    public function get_contact_events($contact_id) {
+    public function get_contact_events($contact_id)
+    {
         return $this->make_request('/api/v1/contacts/' . $contact_id . '/events', array(
             'method' => 'GET'
         ));
@@ -301,9 +323,10 @@ class FlexPress_Plunk_API {
     /**
      * Bulk update contacts
      */
-    public function bulk_update_contacts($updates) {
+    public function bulk_update_contacts($updates)
+    {
         $results = array();
-        
+
         foreach ($updates as $update) {
             $result = $this->update_contact($update['contact_id'], $update['data']);
             $results[] = array(
@@ -312,7 +335,7 @@ class FlexPress_Plunk_API {
                 'error' => is_wp_error($result) ? $result->get_error_message() : null
             );
         }
-        
+
         return $results;
     }
 }

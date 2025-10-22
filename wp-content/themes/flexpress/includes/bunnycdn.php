@@ -229,7 +229,10 @@ function flexpress_get_bunnycdn_video_details($video_id, $force_refresh = false)
         $video_id
     );
 
-    error_log('BunnyCDN API Request: ' . $api_url);
+    // Only log API requests in debug mode
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('BunnyCDN API Request: ' . $api_url);
+    }
 
     $response = wp_remote_get(
         $api_url,
@@ -257,20 +260,26 @@ function flexpress_get_bunnycdn_video_details($video_id, $force_refresh = false)
     $body = wp_remote_retrieve_body($response);
     $data = json_decode($body, true);
 
-    // Debug log the actual response
-    error_log('BunnyCDN API Response for video ' . $video_id . ': ' . print_r($data, true));
+    // Only log response details in debug mode
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('BunnyCDN API Response for video ' . $video_id . ': ' . print_r($data, true));
+    }
 
     if (empty($data)) {
         error_log('BunnyCDN API Error: Empty or invalid JSON response');
         return false;
     }
 
-    // Check if length property exists and log it
+    // Check if length property exists and log it only in debug mode
     if (isset($data['length'])) {
-        error_log('BunnyCDN Video Length (seconds): ' . $data['length'] . ' for video ' . $video_id);
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('BunnyCDN Video Length (seconds): ' . $data['length'] . ' for video ' . $video_id);
+        }
     } else {
         // Check if there's a different property for duration
-        error_log('BunnyCDN Response does not contain "length" property. Available properties: ' . implode(', ', array_keys($data)));
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('BunnyCDN Response does not contain "length" property. Available properties: ' . implode(', ', array_keys($data)));
+        }
     }
 
     // Cache the result for the configured duration

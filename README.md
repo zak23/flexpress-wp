@@ -295,6 +295,7 @@ FlexPress implements a multi-layer caching strategy to ensure optimal performanc
 - **Cache Headers**: Proper caching headers for static assets
 - **Security Headers**: X-Content-Type-Options, X-Frame-Options, etc.
 - **Performance Monitoring**: Built-in tracking for administrators
+- **Console Log Cleanup**: Production console cleaned of debug logs and third-party errors
 
 #### 🚀 Caching Layers
 
@@ -330,6 +331,31 @@ WordPress now properly detects caching with these headers:
 - **Object Cache**: Redis persistent caching active
 - **Static Assets**: Long-term caching enabled
 - **Bandwidth**: Reduced through proper caching
+
+#### 🧹 Console Log Management
+
+FlexPress implements intelligent console log management for optimal development and production experiences:
+
+**Production Mode (WP_DEBUG=false)**:
+
+- Clean console with no debug logs
+- Third-party errors suppressed (MutationObserver, jQuery Migrate, BunnyCDN RUM)
+- HLS.js non-fatal warnings suppressed
+- Only critical errors visible
+
+**Development Mode (WP_DEBUG=true)**:
+
+- Full debug visibility maintained
+- Performance monitoring logs active
+- ServiceWorker registration status logged
+- All warnings visible for debugging
+
+**Suppressed Errors**:
+
+- BunnyCDN RUM network failures (`bunnyinfra.net` DNS issues)
+- HLS.js buffer stalling warnings (`bufferStalledError`)
+- Third-party MutationObserver errors
+- jQuery Migrate compatibility warnings
 
 For detailed caching configuration, see [CACHING_CONFIGURATION.md](docs/CACHING_CONFIGURATION.md) and [REDIS_OBJECT_CACHE.md](docs/REDIS_OBJECT_CACHE.md).
 

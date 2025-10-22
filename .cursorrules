@@ -108,3 +108,14 @@
 - Monthly trials have minimum of 1 month (no restriction)
 - HTML input field has dynamic `min` attribute based on selected duration unit
 - Error message: "Trial period must be at least 3 days (Verotel requirement)"
+
+## Console Log Cleanup (Jan 2025)
+
+- Production console logs cleaned up via `flexpress_add_console_cleanup()` function
+- Debug logs wrapped in WP_DEBUG conditionals (performance monitoring, ServiceWorker)
+- Third-party error suppression: MutationObserver errors, jQuery Migrate warnings
+- BunnyCDN RUM network errors suppressed (`bunnyinfra.net` DNS failures)
+- HLS.js non-fatal buffer warnings suppressed (`bufferStalledError`)
+- Episode rating debug logs removed (redundant with episode-ratings.js)
+- Clean production console while maintaining debug visibility in development mode
+- WP_DEBUG disabled in production (docker-compose.yml: WORDPRESS_DEBUG removed)

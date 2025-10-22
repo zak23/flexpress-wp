@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Episode Rating System Template Part
  * Displays rating form, statistics, and ratings list for episodes
@@ -29,10 +30,10 @@ $recent_ratings = $ratings_system->get_episode_ratings_paginated($episode_id, 1,
             <?php esc_html_e('Rate This Episode', 'flexpress'); ?>
         </h5>
     <?php endif; ?>
-    
+
     <!-- Rating Statistics -->
     <?php echo $ratings_system->display_rating_stats($episode_id); ?>
-    
+
     <!-- Rating Form -->
     <?php if ($has_access): ?>
         <?php echo $ratings_system->display_rating_form($episode_id); ?>
@@ -46,13 +47,3 @@ $recent_ratings = $ratings_system->get_episode_ratings_paginated($episode_id, 1,
         </div>
     <?php endif; ?>
 </div>
-
-<script>
-jQuery(document).ready(function($) {
-    // Initialize rating form if it exists
-    if ($('.episode-rating-form').length) {
-        // The rating form JavaScript is handled by episode-ratings.js
-        console.log('Episode rating form initialized for episode <?php echo esc_js($episode_id); ?>');
-    }
-});
-</script>

@@ -9346,10 +9346,38 @@ function flexpress_add_console_cleanup()
             jQuery.migrateWarnings = false;
         }
         
+        // Suppress BunnyCDN RUM network errors
+        window.addEventListener("error", function(event) {
+            if (event.target && event.target.src && 
+                event.target.src.includes("bunnyinfra.net")) {
+                event.preventDefault();
+                return false;
+            }
+        });
+        
+        // Suppress HLS.js non-fatal buffer warnings
+        window.addEventListener("error", function(event) {
+            if (event.error && event.error.message && 
+                (event.error.message.includes("bufferStalledError") || 
+                 event.error.message.includes("HLS error occured"))) {
+                event.preventDefault();
+                return false;
+            }
+        });
+        
         // Suppress specific third-party script errors
         window.addEventListener("unhandledrejection", function(event) {
             if (event.reason && event.reason.message && 
                 event.reason.message.includes("Failed to execute \'observe\' on \'MutationObserver\'")) {
+                event.preventDefault();
+                return false;
+            }
+        });
+        
+        // Suppress BunnyCDN RUM unhandled rejections
+        window.addEventListener("unhandledrejection", function(event) {
+            if (event.reason && event.reason.message && 
+                event.reason.message.includes("bunnyinfra.net")) {
                 event.preventDefault();
                 return false;
             }

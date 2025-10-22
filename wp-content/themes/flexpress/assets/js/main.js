@@ -425,7 +425,9 @@ async function generateBunnyCDNToken(videoId) {
         !FlexPressData.bunnycdnUrl ||
         !FlexPressData.libraryId
       ) {
-        console.error("Missing BunnyCDN configuration");
+        if (FlexPressData && FlexPressData.isDebug) {
+          console.error("Missing BunnyCDN configuration");
+        }
         return;
       }
 

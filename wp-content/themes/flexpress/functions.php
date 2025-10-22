@@ -368,6 +368,11 @@ function flexpress_enqueue_scripts_and_styles()
     // Enqueue jQuery with defer
     wp_enqueue_script('jquery');
     wp_script_add_data('jquery', 'defer', true);
+    // In production, mute jQuery Migrate banner/warnings as early as possible
+    if (!defined('WP_DEBUG') || !WP_DEBUG) {
+        // Ensure the flag is set before jquery-migrate executes
+        wp_add_inline_script('jquery-migrate', 'window.jQuery && (jQuery.migrateMute = true);', 'before');
+    }
 
     // Add global error handler and jQuery Migrate configuration
     add_action('wp_footer', 'flexpress_add_console_cleanup');
@@ -391,7 +396,9 @@ function flexpress_enqueue_scripts_and_styles()
         !is_page_template('page-templates/join-flowguard.php') &&
         !is_page_template('page-templates/flowguard-payment.php')
     ) {
-        wp_enqueue_script('flexpress-main', get_template_directory_uri() . '/assets/js/main.js', array('jquery'), wp_get_theme()->get('Version'), true);
+        $main_js_path = get_template_directory() . '/assets/js/main.js';
+        $main_js_ver = file_exists($main_js_path) ? filemtime($main_js_path) : wp_get_theme()->get('Version');
+        wp_enqueue_script('flexpress-main', get_template_directory_uri() . '/assets/js/main.js', array('jquery'), $main_js_ver, true);
         wp_script_add_data('flexpress-main', 'defer', true);
     }
 
@@ -411,16 +418,18 @@ function flexpress_enqueue_scripts_and_styles()
     }
 
     // Localize script with necessary data
+    $video_settings = get_option('flexpress_video_settings', array());
     wp_localize_script('flexpress-main', 'FlexPressData', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('flexpress_nonce'),
         'isLoggedIn' => is_user_logged_in(),
         'membershipStatus' => $membership_status,
         'isActiveMember' => $is_active_member,
-        'bunnycdnUrl' => get_option('flexpress_video_bunnycdn_url', ''),
-        'libraryId' => get_option('flexpress_video_bunnycdn_library_id', ''),
+        'bunnycdnUrl' => isset($video_settings['bunnycdn_url']) ? $video_settings['bunnycdn_url'] : '',
+        'libraryId' => isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '',
         'token' => '', // Will be generated per request
-        'expires' => time() + 3600
+        'expires' => time() + 3600,
+        'isDebug' => (defined('WP_DEBUG') && WP_DEBUG)
     ));
 
     // Enqueue login script on login page

@@ -1815,12 +1815,12 @@ class FlexPress_General_Settings
                                     <label for="coming_soon_link_url_<?php echo $index; ?>"><?php esc_html_e('Link URL', 'flexpress'); ?></label>
                                 </th>
                                 <td>
-                                    <input type="url"
+                                    <input type="text"
                                         id="coming_soon_link_url_<?php echo $index; ?>"
                                         name="flexpress_general_settings[coming_soon_links][<?php echo $index; ?>][url]"
                                         value="<?php echo esc_attr($link['url'] ?? ''); ?>"
                                         class="regular-text"
-                                        placeholder="https://example.com">
+                                        placeholder="Enter link (e.g., /page, #modal, https://example.com)">
                                 </td>
                             </tr>
                             <tr>
@@ -1881,12 +1881,12 @@ class FlexPress_General_Settings
                                         <label for="coming_soon_link_url_${linkIndex}">Link URL</label>
                                     </th>
                                     <td>
-                                        <input type="url" 
+                                        <input type="text" 
                                                id="coming_soon_link_url_${linkIndex}"
                                                name="flexpress_general_settings[coming_soon_links][${linkIndex}][url]" 
                                                value="" 
                                                class="regular-text"
-                                               placeholder="https://example.com">
+                                               placeholder="Enter link (e.g., /page, #modal, https://example.com)">
                                     </td>
                                 </tr>
                                 <tr>
@@ -1956,7 +1956,7 @@ class FlexPress_General_Settings
                 margin: 0;
             }
         </style>
-<?php
+    <?php
     }
 
     /**
@@ -1966,7 +1966,7 @@ class FlexPress_General_Settings
     {
         $options = get_option('flexpress_general_settings');
         $whitelist = isset($options['coming_soon_whitelist']) ? $options['coming_soon_whitelist'] : array();
-        
+
         // Get all published pages
         $pages = get_pages(array(
             'post_status' => 'publish',
@@ -1977,19 +1977,19 @@ class FlexPress_General_Settings
         <p class="description">
             <?php esc_html_e('Select pages that should remain accessible when Coming Soon mode is enabled. These pages will bypass the coming soon redirect.', 'flexpress'); ?>
         </p>
-        
+
         <?php if (!empty($pages)) : ?>
-            <select name="flexpress_general_settings[coming_soon_whitelist][]" 
-                    id="flexpress_coming_soon_whitelist" 
-                    multiple="multiple" 
-                    size="8" 
-                    style="width: 100%; max-width: 500px;">
+            <select name="flexpress_general_settings[coming_soon_whitelist][]"
+                id="flexpress_coming_soon_whitelist"
+                multiple="multiple"
+                size="8"
+                style="width: 100%; max-width: 500px;">
                 <?php foreach ($pages as $page) : ?>
-                    <option value="<?php echo esc_attr($page->ID); ?>" 
-                            <?php selected(in_array($page->ID, $whitelist), true); ?>>
+                    <option value="<?php echo esc_attr($page->ID); ?>"
+                        <?php selected(in_array($page->ID, $whitelist), true); ?>>
                         <?php echo esc_html($page->post_title); ?>
                         <?php if ($page->post_parent) : ?>
-                            <?php 
+                            <?php
                             $parent = get_post($page->post_parent);
                             if ($parent) {
                                 echo ' (' . esc_html($parent->post_title) . ')';
@@ -1999,9 +1999,9 @@ class FlexPress_General_Settings
                     </option>
                 <?php endforeach; ?>
             </select>
-            
+
             <p class="description">
-                <strong><?php esc_html_e('Tip:', 'flexpress'); ?></strong> 
+                <strong><?php esc_html_e('Tip:', 'flexpress'); ?></strong>
                 <?php esc_html_e('Hold Ctrl/Cmd to select multiple pages. Common pages to whitelist include Contact, About, or specific landing pages.', 'flexpress'); ?>
             </p>
         <?php else : ?>
@@ -2009,7 +2009,7 @@ class FlexPress_General_Settings
                 <?php esc_html_e('No published pages found. Create some pages first to use this feature.', 'flexpress'); ?>
             </p>
         <?php endif; ?>
-        
+
         <style>
             #flexpress_coming_soon_whitelist {
                 border: 1px solid #ddd;
@@ -2017,11 +2017,11 @@ class FlexPress_General_Settings
                 padding: 8px;
                 font-size: 14px;
             }
-            
+
             #flexpress_coming_soon_whitelist option {
                 padding: 4px 8px;
             }
-            
+
             #flexpress_coming_soon_whitelist option:checked {
                 background-color: #0073aa;
                 color: white;

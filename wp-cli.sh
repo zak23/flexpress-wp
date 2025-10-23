@@ -31,5 +31,5 @@ if [ $# -eq 0 ]; then
     exit 0
 fi
 
-# Execute wp-cli command in the WordPress container as root with --allow-root flag
-docker exec -u root $CONTAINER_NAME /root/.composer/vendor/bin/wp --allow-root "$@"
+# Execute wp-cli command in the WordPress container using the wrapper that sets the correct path
+docker exec -u root $CONTAINER_NAME /usr/local/bin/wp "$@"

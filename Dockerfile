@@ -13,9 +13,9 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install WP-CLI using composer
+# Install WP-CLI (full bundle) using composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
-    && composer global require wp-cli/wp-cli composer/semver
+    && composer global require wp-cli/wp-cli-bundle
 
 # Create wp-cli wrapper script and fix permissions
 RUN chmod +x /root/.composer/vendor/bin/wp \

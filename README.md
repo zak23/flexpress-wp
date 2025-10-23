@@ -2534,6 +2534,7 @@ docker exec -it flexpress_wordpress wp [command]
 ./wp-cli.sh plugin list
 ./wp-cli.sh plugin install contact-form-7
 ./wp-cli.sh plugin activate contact-form-7
+./wp-cli.sh plugin install google-site-kit --activate
 
 # Database operations
 ./wp-cli.sh db export backup.sql
@@ -2553,6 +2554,11 @@ docker exec -it flexpress_wordpress wp [command]
 ./wp-cli.sh core update
 ./wp-cli.sh core download --force
 ```
+
+Notes:
+
+- FS method is enforced to direct via `.env` `WORDPRESS_CONFIG_EXTRA`, so no FTP is required.
+- If plugin installs fail in the UI, prefer WP-CLI.
 
 ## 🔧 Troubleshooting
 

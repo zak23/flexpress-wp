@@ -9,6 +9,7 @@ A modern WordPress website running in Docker containers with MySQL database and 
 - **Site Maintenance Mode**: New Coming Soon mode allows admins to display a maintenance page while continuing to build the site
   - Clean, minimal design with logo, autoplay video from Bunny CDN, and custom links
   - Automatic admin bypass - logged-in administrators see the normal site
+  - **Page Whitelist**: Select specific pages that remain accessible during coming soon mode
   - Configurable content: custom logo, Bunny CDN video ID, thumbnail image, text, and action links
   - Mobile responsive with smooth animations and video error handling
   - Autoplay video implementation: video starts playing immediately on page load
@@ -21,11 +22,14 @@ A modern WordPress website running in Docker containers with MySQL database and 
   - Thumbnail image upload (shows while video loads, fallback if video fails)
   - Custom "Coming Soon" text
   - Repeater field for custom action links
+  - **Whitelisted Pages**: Multi-select dropdown to choose pages that bypass coming soon mode
 - **Technical Implementation**:
   - Uses `template_redirect` hook with priority 1 for early interception
   - Admin bypass via `current_user_can('manage_options')` check
+  - **Whitelist Logic**: Checks `is_page()` against whitelisted page IDs before redirect
   - Dedicated template, CSS, and JavaScript files
   - Proper sanitization and validation of all settings
+  - Helper function `flexpress_is_coming_soon_enabled()` for conditional template logic
 - **Files Added/Modified**:
   - `wp-content/themes/flexpress/includes/admin/class-flexpress-general-settings.php` - Settings fields
   - `wp-content/themes/flexpress/page-templates/coming-soon.php` - Template

@@ -1100,6 +1100,24 @@ function flexpress_sanitize_general_settings($input)
         $sanitized['coming_soon_links'] = $sanitized_links;
     }
 
+    // Sanitize Coming Soon whitelist
+    if (isset($input['coming_soon_whitelist']) && is_array($input['coming_soon_whitelist'])) {
+        $sanitized_whitelist = array();
+        foreach ($input['coming_soon_whitelist'] as $page_id) {
+            $page_id = absint($page_id);
+            if ($page_id > 0) {
+                // Verify the page exists and is published
+                $page = get_post($page_id);
+                if ($page && $page->post_type === 'page' && $page->post_status === 'publish') {
+                    $sanitized_whitelist[] = $page_id;
+                }
+            }
+        }
+        $sanitized['coming_soon_whitelist'] = $sanitized_whitelist;
+    } else {
+        $sanitized['coming_soon_whitelist'] = array();
+    }
+
     // Log the complete sanitized data for debugging
     error_log('FlexPress General Settings: Complete sanitized data: ' . print_r($sanitized, true));
 
@@ -2187,12 +2205,29 @@ function flexpress_coming_soon_redirect()
     // Check if coming soon mode is enabled
     $general_settings = get_option('flexpress_general_settings');
     if (!empty($general_settings['coming_soon_enabled'])) {
+        // Check if current page is whitelisted
+        $whitelist = isset($general_settings['coming_soon_whitelist']) ? $general_settings['coming_soon_whitelist'] : array();
+        if (!empty($whitelist) && is_page($whitelist)) {
+            return; // Allow access to whitelisted pages
+        }
+        
         // Load coming soon template
         include get_template_directory() . '/page-templates/coming-soon.php';
         exit;
     }
 }
 add_action('template_redirect', 'flexpress_coming_soon_redirect', 1);
+
+/**
+ * Check if Coming Soon mode is enabled
+ * 
+ * @return bool True if coming soon mode is enabled, false otherwise
+ */
+function flexpress_is_coming_soon_enabled()
+{
+    $general_settings = get_option('flexpress_general_settings');
+    return !empty($general_settings['coming_soon_enabled']);
+}
 
 /**
  * Create banned page with the banned.php template

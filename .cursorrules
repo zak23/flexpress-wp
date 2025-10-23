@@ -14,7 +14,9 @@ Do not alter `.wakatime-project` once created
 - Template: Create dedicated template in `page-templates/` directory
 - Redirect: Use `template_redirect` hook with priority 1 for early interception
 - Admin bypass: Check `current_user_can('manage_options')` before redirect
+- Whitelist Logic: Check `is_page($whitelist_array)` before redirect for page exceptions
 - Assets: Create dedicated CSS/JS files in `assets/` directory
+- Helper Function: Use `flexpress_is_coming_soon_enabled()` to check status in templates
 - Documentation: Update README.md and .cursorrules with feature details
 
 ## Casting Requirements Implementation Pattern

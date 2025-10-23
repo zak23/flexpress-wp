@@ -305,6 +305,15 @@ class FlexPress_General_Settings
             'flexpress_general_settings',
             'flexpress_coming_soon_section'
         );
+
+        // Add coming soon whitelist field
+        add_settings_field(
+            'flexpress_coming_soon_whitelist',
+            __('Whitelisted Pages', 'flexpress'),
+            array($this, 'render_coming_soon_whitelist_field'),
+            'flexpress_general_settings',
+            'flexpress_coming_soon_section'
+        );
     }
 
     /**
@@ -1945,6 +1954,77 @@ class FlexPress_General_Settings
 
             .coming-soon-link-header h4 {
                 margin: 0;
+            }
+        </style>
+<?php
+    }
+
+    /**
+     * Render Coming Soon whitelist field
+     */
+    public function render_coming_soon_whitelist_field()
+    {
+        $options = get_option('flexpress_general_settings');
+        $whitelist = isset($options['coming_soon_whitelist']) ? $options['coming_soon_whitelist'] : array();
+        
+        // Get all published pages
+        $pages = get_pages(array(
+            'post_status' => 'publish',
+            'sort_column' => 'post_title',
+            'sort_order' => 'ASC'
+        ));
+    ?>
+        <p class="description">
+            <?php esc_html_e('Select pages that should remain accessible when Coming Soon mode is enabled. These pages will bypass the coming soon redirect.', 'flexpress'); ?>
+        </p>
+        
+        <?php if (!empty($pages)) : ?>
+            <select name="flexpress_general_settings[coming_soon_whitelist][]" 
+                    id="flexpress_coming_soon_whitelist" 
+                    multiple="multiple" 
+                    size="8" 
+                    style="width: 100%; max-width: 500px;">
+                <?php foreach ($pages as $page) : ?>
+                    <option value="<?php echo esc_attr($page->ID); ?>" 
+                            <?php selected(in_array($page->ID, $whitelist), true); ?>>
+                        <?php echo esc_html($page->post_title); ?>
+                        <?php if ($page->post_parent) : ?>
+                            <?php 
+                            $parent = get_post($page->post_parent);
+                            if ($parent) {
+                                echo ' (' . esc_html($parent->post_title) . ')';
+                            }
+                            ?>
+                        <?php endif; ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            
+            <p class="description">
+                <strong><?php esc_html_e('Tip:', 'flexpress'); ?></strong> 
+                <?php esc_html_e('Hold Ctrl/Cmd to select multiple pages. Common pages to whitelist include Contact, About, or specific landing pages.', 'flexpress'); ?>
+            </p>
+        <?php else : ?>
+            <p class="description">
+                <?php esc_html_e('No published pages found. Create some pages first to use this feature.', 'flexpress'); ?>
+            </p>
+        <?php endif; ?>
+        
+        <style>
+            #flexpress_coming_soon_whitelist {
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                padding: 8px;
+                font-size: 14px;
+            }
+            
+            #flexpress_coming_soon_whitelist option {
+                padding: 4px 8px;
+            }
+            
+            #flexpress_coming_soon_whitelist option:checked {
+                background-color: #0073aa;
+                color: white;
             }
         </style>
 <?php

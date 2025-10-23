@@ -1391,7 +1391,35 @@ if (function_exists('acf_add_local_field_group')):
                 'type' => 'textarea',
                 'instructions' => 'Enter requirement cards as JSON. Use the helper function to manage this data.',
                 'rows' => 10,
-                'default_value' => '[]',
+                'default_value' => '[
+    {
+        "icon_class": "fas fa-id-card",
+        "title": "Legal Requirements",
+        "requirements": [
+            "Must be 18+ years old",
+            "Valid government ID",
+            "Right to work in Australia"
+        ]
+    },
+    {
+        "icon_class": "fas fa-clipboard-check",
+        "title": "Health & Safety",
+        "requirements": [
+            "Recent health certificates",
+            "Professional attitude",
+            "Reliable transportation"
+        ]
+    },
+    {
+        "icon_class": "fas fa-star",
+        "title": "Personal Qualities",
+        "requirements": [
+            "Positive attitude",
+            "Reliable and punctual",
+            "Team player mindset"
+        ]
+    }
+]',
             ),
         ),
         'location' => array(

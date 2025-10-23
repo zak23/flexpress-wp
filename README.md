@@ -4,6 +4,53 @@ A modern WordPress website running in Docker containers with MySQL database and 
 
 ## 🔧 Recent Fixes
 
+### Coming Soon Mode (New Feature - October 2025)
+
+- **Site Maintenance Mode**: New Coming Soon mode allows admins to display a maintenance page while continuing to build the site
+  - Clean, minimal design with logo, autoplay video from Bunny CDN, and custom links
+  - Automatic admin bypass - logged-in administrators see the normal site
+  - Configurable content: custom logo, Bunny CDN video ID, thumbnail image, text, and action links
+  - Mobile responsive with smooth animations and video error handling
+  - Autoplay video implementation: video starts playing immediately on page load
+  - Newsletter modal triggered by "Get Notified" link
+  - Custom links support with option to open in new tab
+- **Admin Settings**: Available in FlexPress → General → Coming Soon Mode section
+  - Enable/disable toggle
+  - Logo upload (falls back to site logo if not set)
+  - Bunny CDN video ID field (just enter the video ID number)
+  - Thumbnail image upload (shows while video loads, fallback if video fails)
+  - Custom "Coming Soon" text
+  - Repeater field for custom action links
+- **Technical Implementation**:
+  - Uses `template_redirect` hook with priority 1 for early interception
+  - Admin bypass via `current_user_can('manage_options')` check
+  - Dedicated template, CSS, and JavaScript files
+  - Proper sanitization and validation of all settings
+- **Files Added/Modified**:
+  - `wp-content/themes/flexpress/includes/admin/class-flexpress-general-settings.php` - Settings fields
+  - `wp-content/themes/flexpress/page-templates/coming-soon.php` - Template
+  - `wp-content/themes/flexpress/assets/css/coming-soon.css` - Styles
+  - `wp-content/themes/flexpress/assets/js/coming-soon.js` - Video handling
+  - `wp-content/themes/flexpress/functions.php` - Redirect hook and sanitization
+
+### Casting Requirements (New Feature - October 2025)
+
+- **Model Application Requirements**: Enhanced casting page with structured requirements display
+  - Three requirement categories: Legal Requirements, Health & Safety, Personal Qualities
+  - Each category displays with FontAwesome icons and organized requirement lists
+  - Responsive card layout with hover effects and professional styling
+  - JSON-based configuration stored in ACF fields for easy content management
+  - Requirements include: 18+ age verification, valid government ID, work rights, health certificates, professional attitude, reliable transportation, positive attitude, punctuality, and team player mindset
+- **Technical Implementation**:
+  - Uses existing ACF field structure with JSON data format
+  - Template renders requirements from `casting_requirements_cards` field
+  - CSS styling includes hover animations and responsive grid layout
+  - Icons use FontAwesome classes for consistency with site design
+- **Files Modified**:
+  - `wp-content/themes/flexpress/includes/acf-fields.php` - Updated default JSON data for requirements
+  - `wp-content/themes/flexpress/page-templates/casting.php` - Template already supports requirements display
+  - `wp-content/themes/flexpress/assets/css/main.css` - Existing styling for requirements cards
+
 ### Episode Admin Columns (October 2025)
 
 - **Simplified Episode Management**: Cleaned up the episode list columns in WordPress admin for better clarity

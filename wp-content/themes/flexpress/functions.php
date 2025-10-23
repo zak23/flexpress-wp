@@ -1057,6 +1057,49 @@ function flexpress_sanitize_general_settings($input)
         }
     }
 
+    // Sanitize Coming Soon enabled
+    if (isset($input['coming_soon_enabled'])) {
+        $sanitized['coming_soon_enabled'] = '1';
+    } else {
+        $sanitized['coming_soon_enabled'] = '0';
+    }
+
+    // Sanitize Coming Soon logo
+    if (isset($input['coming_soon_logo'])) {
+        $sanitized['coming_soon_logo'] = absint($input['coming_soon_logo']);
+    }
+
+    // Sanitize Coming Soon video URL
+    if (isset($input['coming_soon_video_url'])) {
+        $video_id = sanitize_text_field($input['coming_soon_video_url']);
+        $sanitized['coming_soon_video_url'] = $video_id ? $video_id : '';
+    }
+
+    // Sanitize Coming Soon fallback image
+    if (isset($input['coming_soon_fallback_image'])) {
+        $sanitized['coming_soon_fallback_image'] = absint($input['coming_soon_fallback_image']);
+    }
+
+    // Sanitize Coming Soon text
+    if (isset($input['coming_soon_text'])) {
+        $sanitized['coming_soon_text'] = sanitize_text_field($input['coming_soon_text']);
+    }
+
+    // Sanitize Coming Soon links
+    if (isset($input['coming_soon_links']) && is_array($input['coming_soon_links'])) {
+        $sanitized_links = array();
+        foreach ($input['coming_soon_links'] as $index => $link) {
+            if (is_array($link)) {
+                $sanitized_links[$index] = array(
+                    'title' => sanitize_text_field($link['title'] ?? ''),
+                    'url' => esc_url_raw($link['url'] ?? ''),
+                    'new_tab' => isset($link['new_tab']) ? '1' : '0'
+                );
+            }
+        }
+        $sanitized['coming_soon_links'] = $sanitized_links;
+    }
+
     // Log the complete sanitized data for debugging
     error_log('FlexPress General Settings: Complete sanitized data: ' . print_r($sanitized, true));
 
@@ -2129,6 +2172,27 @@ function flexpress_custom_registration_url($register_url)
     return home_url('/register');
 }
 add_filter('register_url', 'flexpress_custom_registration_url');
+
+/**
+ * Coming Soon Mode Redirect
+ * Redirects visitors to coming soon page if enabled, but allows admins to bypass
+ */
+function flexpress_coming_soon_redirect()
+{
+    // Skip if admin is logged in
+    if (current_user_can('manage_options')) {
+        return;
+    }
+
+    // Check if coming soon mode is enabled
+    $general_settings = get_option('flexpress_general_settings');
+    if (!empty($general_settings['coming_soon_enabled'])) {
+        // Load coming soon template
+        include get_template_directory() . '/page-templates/coming-soon.php';
+        exit;
+    }
+}
+add_action('template_redirect', 'flexpress_coming_soon_redirect', 1);
 
 /**
  * Create banned page with the banned.php template

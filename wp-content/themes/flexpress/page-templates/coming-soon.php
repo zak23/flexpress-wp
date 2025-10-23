@@ -1,68 +1,188 @@
 <?php
+
 /**
  * Template Name: Coming Soon
+ * Description: Coming Soon landing page with logo, video, and custom links
  */
 
-get_header();
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
 
-// Get the showreel video ID if available
-$showreel_video_id = get_field('showreel_video');
+// Get settings
+$general_settings = get_option('flexpress_general_settings');
+$coming_soon_enabled = !empty($general_settings['coming_soon_enabled']);
+$coming_soon_logo = !empty($general_settings['coming_soon_logo']) ? $general_settings['coming_soon_logo'] : '';
+$coming_soon_video_id = !empty($general_settings['coming_soon_video_url']) ? $general_settings['coming_soon_video_url'] : '';
+$coming_soon_fallback_image = !empty($general_settings['coming_soon_fallback_image']) ? $general_settings['coming_soon_fallback_image'] : '';
+$coming_soon_text = !empty($general_settings['coming_soon_text']) ? $general_settings['coming_soon_text'] : 'Coming Soon';
+$coming_soon_links = !empty($general_settings['coming_soon_links']) ? $general_settings['coming_soon_links'] : array();
+
+// Get BunnyCDN video settings for proper authentication
+$video_settings = get_option('flexpress_video_settings', array());
+$library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
+$bunnycdn_url = isset($video_settings['bunnycdn_url']) ? $video_settings['bunnycdn_url'] : '';
+$token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
+
+// Generate token for BunnyCDN video
+$expires = time() + 3600; // 1 hour expiry
+$token = '';
+if (!empty($token_key) && !empty($coming_soon_video_id)) {
+    $token = hash('sha256', $token_key . $coming_soon_video_id . $expires);
+}
+
+// Get logo URL
+$logo_url = '';
+if (!empty($coming_soon_logo)) {
+    $logo_url = wp_get_attachment_image_url($coming_soon_logo, 'full');
+} else {
+    // Fall back to site logo
+    $site_logo_id = get_theme_mod('custom_logo');
+    if ($site_logo_id) {
+        $logo_url = wp_get_attachment_image_url($site_logo_id, 'full');
+    }
+}
+
+// Get fallback image URL
+$fallback_image_url = '';
+if (!empty($coming_soon_fallback_image)) {
+    $fallback_image_url = wp_get_attachment_image_url($coming_soon_fallback_image, 'full');
+}
+
+// Enqueue styles and scripts
+wp_enqueue_style('flexpress-coming-soon', get_template_directory_uri() . '/assets/css/coming-soon.css', array(), '1.0.0');
+wp_enqueue_script('flexpress-coming-soon', get_template_directory_uri() . '/assets/js/coming-soon.js', array('jquery'), '1.0.0', true);
+
+// Pass data to JavaScript
+wp_localize_script('flexpress-coming-soon', 'flexpressComingSoon', array(
+    'videoId' => $coming_soon_video_id,
+    'fallbackImageUrl' => $fallback_image_url,
+    'logoUrl' => $logo_url
+));
 ?>
+<!DOCTYPE html>
+<html <?php language_attributes(); ?>>
 
-<div class="coming-soon-page">
-    <div class="container">
-        <div class="coming-soon-content text-center">
-            <div class="site-branding mb-5">
-                <h1 class="coming-soon-title display-2">
-                    <?php echo esc_html(get_bloginfo('name')); ?>
-                </h1>
-                <p class="coming-soon-tagline lead">
-                    <?php esc_html_e('Coming Soon', 'flexpress'); ?>
-                </p>
+<head>
+    <meta charset="<?php bloginfo('charset'); ?>">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="profile" href="https://gmpg.org/xfn/11">
+    <?php wp_head(); ?>
+</head>
+
+<body <?php body_class('flexpress-coming-soon-page'); ?>>
+    <div class="coming-soon-wrapper">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-xl-7">
+                    <!-- Logo Section (centered) -->
+                    <?php if ($logo_url) : ?>
+                        <div class="coming-soon-logo">
+                            <img src="<?php echo esc_url($logo_url); ?>" alt="<?php bloginfo('name'); ?>" />
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
 
-            <?php if (!empty($showreel_video_id)): ?>
-                <div class="showreel-container mb-5">
-                    <div class="embed-responsive embed-responsive-16by9">
-                        <?php 
-                        // Use the BunnyCDN integration if available
-                        if (function_exists('flexpress_get_bunnycdn_video_url')):
-                            $video_url = flexpress_get_bunnycdn_video_url($showreel_video_id);
-                            $poster_url = flexpress_get_bunnycdn_poster_url($showreel_video_id);
-                        ?>
-                            <video class="embed-responsive-item" poster="<?php echo esc_url($poster_url); ?>" controls>
-                                <source src="<?php echo esc_url($video_url); ?>" type="video/mp4">
-                                <?php esc_html_e('Your browser does not support HTML5 video.', 'flexpress'); ?>
-                            </video>
-                        <?php else: ?>
-                            <!-- Fallback to generic video player if BunnyCDN integration not available -->
-                            <video class="embed-responsive-item" controls>
-                                <source src="<?php echo esc_url($showreel_video_id); ?>" type="video/mp4">
-                                <?php esc_html_e('Your browser does not support HTML5 video.', 'flexpress'); ?>
-                            </video>
+            <div class="row">
+                <div class="col-12">
+                    <!-- Video Section (full width in container) -->
+                    <?php if ($coming_soon_video_id && $library_id && $token): ?>
+                        <div class="coming-soon-video-container" id="comingSoonVideo">
+                            <?php if ($fallback_image_url): ?>
+                                <!-- Initial thumbnail -->
+                                <div class="coming-soon-thumbnail" style="background-image: url('<?php echo esc_url($fallback_image_url); ?>')"></div>
+                            <?php endif; ?>
+
+                            <!-- BunnyCDN iframe embed player -->
+                            <div style="position:relative;padding-top:56.25%;">
+                                <iframe src="https://iframe.mediadelivery.net/embed/<?php echo esc_attr($library_id); ?>/<?php echo esc_attr($coming_soon_video_id); ?>?token=<?php echo esc_attr($token); ?>&expires=<?php echo esc_attr($expires); ?>&autoplay=true&loop=true&muted=false&controls=false"
+                                    loading="lazy"
+                                    style="border:0;position:absolute;top:0;height:100%;width:100%;"
+                                    allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
+                                    allowfullscreen="true">
+                                </iframe>
+                            </div>
+                        </div>
+                    <?php elseif ($fallback_image_url): ?>
+                        <div class="coming-soon-image">
+                            <img src="<?php echo esc_url($fallback_image_url); ?>" alt="Coming Soon" />
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-xl-7">
+                    <!-- Text Section (centered) -->
+                    <div class="coming-soon-text">
+                        <h1><?php echo esc_html($coming_soon_text); ?></h1>
+                    </div>
+
+                    <!-- Buttons Section -->
+                    <?php if (!empty($coming_soon_links)) : ?>
+                        <div class="coming-soon-buttons">
+                            <?php foreach ($coming_soon_links as $link) : ?>
+                                <?php if (!empty($link['title']) && !empty($link['url'])) : ?>
+                                    <a href="<?php echo esc_url($link['url']); ?>"
+                                        class="btn btn-primary"
+                                        <?php echo (isset($link['new_tab']) && $link['new_tab'] == '1') ? 'target="_blank" rel="noopener noreferrer"' : ''; ?>>
+                                        <?php echo esc_html($link['title']); ?>
+                                    </a>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Footer Section with Social Icons -->
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-xl-7">
+                    <div class="coming-soon-footer">
+                        <?php if (function_exists('flexpress_has_social_media_links') && flexpress_has_social_media_links()) : ?>
+                            <div class="coming-soon-social-icons">
+                                <?php
+                                flexpress_display_social_media_links(array(
+                                    'wrapper' => 'ul',
+                                    'item_wrapper' => 'li',
+                                    'class' => 'coming-soon-social-list list-unstyled d-flex gap-3 justify-content-center',
+                                    'item_class' => '',
+                                    'link_class' => 'coming-soon-social-link',
+                                    'icon_class' => 'fa-lg',
+                                    'platforms' => array('facebook', 'instagram', 'twitter', 'tiktok', 'youtube', 'onlyfans'),
+                                    'show_icons' => true,
+                                    'show_labels' => false
+                                ));
+                                ?>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
-            <?php endif; ?>
-        </div>
-    </div>
-</div>
-
-<footer class="coming-soon-footer py-3 mt-auto">
-    <div class="container">
-        <div class="row">
-            <div class="col-12 text-center">
-                <p class="mb-0">
-                    &copy; <?php echo date('Y'); ?> <?php echo esc_html(get_bloginfo('name')); ?>
-                </p>
             </div>
         </div>
     </div>
-</footer>
 
-<?php
-// We're not using the standard footer to keep it minimal
-wp_footer();
-?>
+    <!-- Newsletter Modal -->
+    <div id="newsletter-modal" class="newsletter-modal" style="display: none;">
+        <div class="newsletter-modal-content">
+            <div class="newsletter-modal-header">
+                <h2>Get Notified</h2>
+                <button class="newsletter-modal-close">&times;</button>
+            </div>
+            <div class="newsletter-modal-body">
+                <p>Subscribe to our newsletter and be the first to know when new content drops!</p>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="Enter your email address" required>
+                    <button type="submit">Subscribe Now</button>
+                </form>
+                <p class="newsletter-disclaimer">By subscribing, you agree to receive our newsletter. You can unsubscribe at any time.</p>
+            </div>
+        </div>
+    </div>
+
+    <?php wp_footer(); ?>
 </body>
-</html> 
+
+</html>

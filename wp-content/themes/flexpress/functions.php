@@ -1092,7 +1092,7 @@ function flexpress_sanitize_general_settings($input)
             if (is_array($link)) {
                 $sanitized_links[$index] = array(
                     'title' => sanitize_text_field($link['title'] ?? ''),
-                    'url' => esc_url_raw($link['url'] ?? ''),
+                    'url' => sanitize_text_field($link['url'] ?? ''),
                     'new_tab' => isset($link['new_tab']) ? '1' : '0'
                 );
             }
@@ -2210,7 +2210,7 @@ function flexpress_coming_soon_redirect()
         if (!empty($whitelist) && is_page($whitelist)) {
             return; // Allow access to whitelisted pages
         }
-        
+
         // Load coming soon template
         include get_template_directory() . '/page-templates/coming-soon.php';
         exit;

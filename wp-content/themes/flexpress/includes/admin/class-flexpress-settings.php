@@ -56,6 +56,36 @@ class FlexPress_Settings
             array($this, 'render_settings_page')
         );
 
+        // Add Awards & Recognition submenu
+        add_submenu_page(
+            $this->page_slug,
+            __('Awards & Recognition', 'flexpress'),
+            __('Awards', 'flexpress'),
+            'manage_options',
+            'flexpress-awards-settings',
+            array($this, 'render_awards_settings_page')
+        );
+
+        // Add Featured On submenu
+        add_submenu_page(
+            $this->page_slug,
+            __('Featured On Section', 'flexpress'),
+            __('Featured On', 'flexpress'),
+            'manage_options',
+            'flexpress-featured-on-settings',
+            array($this, 'render_featured_on_settings_page')
+        );
+
+        // Add Coming Soon submenu
+        add_submenu_page(
+            $this->page_slug,
+            __('Coming Soon Mode', 'flexpress'),
+            __('Coming Soon', 'flexpress'),
+            'manage_options',
+            'flexpress-coming-soon-settings',
+            array($this, 'render_coming_soon_settings_page')
+        );
+
         // Add new Pages & Menus submenu (moved out of General page)
         add_submenu_page(
             $this->page_slug,
@@ -1352,6 +1382,45 @@ class FlexPress_Settings
             $smtp2go_settings->render_smtp2go_settings_page();
         } else {
             echo '<div class="wrap"><h1>SMTP2Go Settings</h1><p>SMTP2Go settings class not found.</p></div>';
+        }
+    }
+
+    /**
+     * Render the Awards settings page
+     */
+    public function render_awards_settings_page()
+    {
+        if (class_exists('FlexPress_Awards_Settings')) {
+            $awards_settings = new FlexPress_Awards_Settings();
+            $awards_settings->render_awards_settings_page();
+        } else {
+            echo '<div class="wrap"><h1>Awards & Recognition</h1><p>Awards settings class not found.</p></div>';
+        }
+    }
+
+    /**
+     * Render the Featured On settings page
+     */
+    public function render_featured_on_settings_page()
+    {
+        if (class_exists('FlexPress_Featured_On_Settings')) {
+            $featured_on_settings = new FlexPress_Featured_On_Settings();
+            $featured_on_settings->render_featured_on_settings_page();
+        } else {
+            echo '<div class="wrap"><h1>Featured On Section</h1><p>Featured On settings class not found.</p></div>';
+        }
+    }
+
+    /**
+     * Render the Coming Soon settings page
+     */
+    public function render_coming_soon_settings_page()
+    {
+        if (class_exists('FlexPress_Coming_Soon_Settings')) {
+            $coming_soon_settings = new FlexPress_Coming_Soon_Settings();
+            $coming_soon_settings->render_coming_soon_settings_page();
+        } else {
+            echo '<div class="wrap"><h1>Coming Soon Mode</h1><p>Coming Soon settings class not found.</p></div>';
         }
     }
 }

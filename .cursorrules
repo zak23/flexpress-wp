@@ -8,9 +8,28 @@ Use Puppeteer tests against the test site; prefer IPs for navigation and screens
 PHP indent: 4 spaces; JS: 2 spaces; CSS: 2 spaces
 Do not alter `.wakatime-project` once created
 
+## FlexPress Admin Menu Organization Pattern
+
+- **Menu Structure**: Organized submenu structure under FlexPress main menu
+  - General: Core site settings (logo, colors, site info)
+  - Awards: Awards & Recognition section settings
+  - Featured On: Media outlets and publications settings
+  - Coming Soon: Maintenance mode settings
+  - Pages & Menus: Page and menu management tools
+  - Auto-Setup: Setup and configuration tools
+  - Integrations: Discord, Turnstile, Plunk, SMTP, etc.
+- **Settings Classes**: Each major feature has its own settings class
+  - `FlexPress_Awards_Settings`: Awards & Recognition functionality
+  - `FlexPress_Featured_On_Settings`: Featured On section management
+  - `FlexPress_Coming_Soon_Settings`: Coming Soon mode configuration
+- **Data Persistence**: All settings use `flexpress_general_settings` option for backward compatibility
+- **Menu Registration**: Add submenu items in `class-flexpress-settings.php` using `add_submenu_page()`
+- **Render Methods**: Each settings class has its own `render_*_settings_page()` method
+- **Documentation**: Update README.md with new menu locations when reorganizing settings
+
 ## Coming Soon Mode Implementation Pattern
 
-- Settings: Add to `class-flexpress-general-settings.php` with proper sanitization
+- Settings: Add to `class-flexpress-coming-soon-settings.php` with proper sanitization
 - Template: Create dedicated template in `page-templates/` directory
 - Redirect: Use `template_redirect` hook with priority 1 for early interception
 - Admin bypass: Check `current_user_can('manage_options')` before redirect

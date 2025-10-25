@@ -4,6 +4,35 @@ A modern WordPress website running in Docker containers with MySQL database and 
 
 ## 🔧 Recent Fixes
 
+### Settings Menu Reorganization (December 2024)
+
+- **Improved Admin Organization**: Reorganized FlexPress admin settings for better usability and organization
+  - **Awards & Recognition**: Moved to dedicated submenu under FlexPress → Awards
+  - **Featured On Section**: Moved to dedicated submenu under FlexPress → Featured On  
+  - **Coming Soon Mode**: Moved to dedicated submenu under FlexPress → Coming Soon
+  - **Cleaner General Tab**: General settings now focuses on core site settings (logo, colors, etc.)
+- **Menu Structure**: New organized menu structure:
+  - General (core site settings)
+  - Awards (awards & recognition)
+  - Featured On (media outlets)
+  - Coming Soon (maintenance mode)
+  - Pages & Menus (page management)
+  - Auto-Setup (setup tools)
+  - Discord, Turnstile, Plunk, etc. (integrations)
+- **Technical Implementation**:
+  - Created three new settings classes: `FlexPress_Awards_Settings`, `FlexPress_Featured_On_Settings`, `FlexPress_Coming_Soon_Settings`
+  - All settings continue using the same `flexpress_general_settings` option for backward compatibility
+  - No data migration required - existing settings work immediately
+  - Maintained all existing functionality and helper functions
+- **Files Added**:
+  - `wp-content/themes/flexpress/includes/admin/class-flexpress-awards-settings.php`
+  - `wp-content/themes/flexpress/includes/admin/class-flexpress-featured-on-settings.php`
+  - `wp-content/themes/flexpress/includes/admin/class-flexpress-coming-soon-settings.php`
+- **Files Modified**:
+  - `wp-content/themes/flexpress/includes/admin/class-flexpress-settings.php` - Added new submenu items
+  - `wp-content/themes/flexpress/includes/admin/class-flexpress-general-settings.php` - Removed moved sections
+  - `README.md` - Updated documentation to reflect new menu structure
+
 ### Coming Soon Mode (New Feature - October 2025)
 
 - **Site Maintenance Mode**: New Coming Soon mode allows admins to display a maintenance page while continuing to build the site
@@ -15,7 +44,7 @@ A modern WordPress website running in Docker containers with MySQL database and 
   - Autoplay video implementation: video starts playing immediately on page load
   - Newsletter modal triggered by "Get Notified" link
   - Custom links support with option to open in new tab
-- **Admin Settings**: Available in FlexPress → General → Coming Soon Mode section
+- **Admin Settings**: Available in FlexPress → Coming Soon section
   - Enable/disable toggle
   - Logo upload (falls back to site logo if not set)
   - Bunny CDN video ID field (just enter the video ID number)
@@ -1760,7 +1789,7 @@ FlexPress includes a professional awards and nominations section that showcases 
 - **Template Part**: `template-parts/awards-nominations.php`
 - **Integration**: Included in homepage template above the footer
 - **Styling**: Comprehensive CSS in `main.css` (lines 6123-6184)
-- **Admin Settings**: Managed through FlexPress Settings → General → Awards & Recognition
+- **Admin Settings**: Managed through FlexPress Settings → Awards section
 - **Helper Functions**: `includes/awards-helpers.php` for settings management
 - **Conditional Display**: Only shows when enabled and logo is uploaded
 
@@ -1793,7 +1822,7 @@ The Awards section can be fully managed through the WordPress admin:
 - **Alt Text**: Set accessibility text for each award logo
 - **Conditional Display**: Section only appears when enabled AND at least one award has a logo
 
-**Admin Location**: FlexPress Settings → General → Awards & Recognition
+**Admin Location**: FlexPress Settings → Awards section
 
 **Helper Functions Available**:
 
@@ -1833,7 +1862,7 @@ FlexPress includes a professional "Featured On" section that showcases media out
 - **Styling**: Comprehensive CSS in `main.css` (lines 6341-6511)
 - **Slider**: Slick carousel with custom styling and responsive breakpoints
 - **Scripts**: Slick slider CSS/JS loaded only on homepage for performance
-- **Admin Settings**: Managed through FlexPress Settings → General → Featured On Section
+- **Admin Settings**: Managed through FlexPress Settings → Featured On section
 
 #### CSS Classes
 
@@ -1855,7 +1884,7 @@ FlexPress includes a professional "Featured On" section that showcases media out
 
 #### Admin Settings
 
-The Featured On section can be managed through **FlexPress Settings → General → Featured On Section**:
+The Featured On section can be managed through **FlexPress Settings → Featured On section**:
 
 - **Enable/Disable**: Toggle the section on/off with a checkbox
 - **Media Outlets Management**: Add, edit, or remove media outlets with:

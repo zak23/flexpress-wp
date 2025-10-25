@@ -9526,18 +9526,12 @@ function flexpress_is_collection_tag($tag)
     if (is_numeric($tag)) {
         $tag = get_term($tag, 'post_tag');
     }
-    
+
     if (!$tag || is_wp_error($tag)) {
         return false;
     }
-    
-    // Check for ACF field first
-    $acf_value = get_field('is_collection_tag', 'post_tag_' . $tag->term_id);
-    if ($acf_value !== false) {
-        return (bool) $acf_value;
-    }
-    
-    // Fallback: check database directly
+
+    // Check database directly (ACF fields might not be registered)
     global $wpdb;
     $result = $wpdb->get_var($wpdb->prepare(
         "SELECT meta_value FROM {$wpdb->postmeta} 
@@ -9545,7 +9539,7 @@ function flexpress_is_collection_tag($tag)
         'post_tag_' . $tag->term_id . '_is_collection_tag',
         $tag->term_id
     ));
-    
+
     return (bool) $result;
 }
 
@@ -9560,50 +9554,39 @@ function flexpress_get_collection_metadata($tag)
     if (is_numeric($tag)) {
         $tag = get_term($tag, 'post_tag');
     }
-    
+
     if (!$tag || is_wp_error($tag) || !flexpress_is_collection_tag($tag)) {
         return array();
     }
-    
+
     $term_id = $tag->term_id;
-    
-    // Try ACF fields first
-    $description = get_field('collection_description', 'post_tag_' . $term_id);
+
+    // Get metadata from database directly
+    global $wpdb;
+    $description = $wpdb->get_var($wpdb->prepare(
+        "SELECT meta_value FROM {$wpdb->postmeta} 
+         WHERE meta_key = %s AND post_id = %d",
+        'post_tag_' . $term_id . '_collection_description',
+        $term_id
+    ));
+
+    $episode_order = $wpdb->get_var($wpdb->prepare(
+        "SELECT meta_value FROM {$wpdb->postmeta} 
+         WHERE meta_key = %s AND post_id = %d",
+        'post_tag_' . $term_id . '_collection_episode_order',
+        $term_id
+    ));
+
+    $custom_css = $wpdb->get_var($wpdb->prepare(
+        "SELECT meta_value FROM {$wpdb->postmeta} 
+         WHERE meta_key = %s AND post_id = %d",
+        'post_tag_' . $term_id . '_collection_custom_css',
+        $term_id
+    ));
+
+    // Try ACF for featured image (this might work)
     $featured_image = get_field('collection_featured_image', 'post_tag_' . $term_id);
-    $episode_order = get_field('collection_episode_order', 'post_tag_' . $term_id);
-    $custom_css = get_field('collection_custom_css', 'post_tag_' . $term_id);
-    
-    // Fallback to database if ACF fields are not available
-    if ($description === false) {
-        global $wpdb;
-        $description = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM {$wpdb->postmeta} 
-             WHERE meta_key = %s AND post_id = %d",
-            'post_tag_' . $term_id . '_collection_description',
-            $term_id
-        ));
-    }
-    
-    if ($episode_order === false) {
-        global $wpdb;
-        $episode_order = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM {$wpdb->postmeta} 
-             WHERE meta_key = %s AND post_id = %d",
-            'post_tag_' . $term_id . '_collection_episode_order',
-            $term_id
-        ));
-    }
-    
-    if ($custom_css === false) {
-        global $wpdb;
-        $custom_css = $wpdb->get_var($wpdb->prepare(
-            "SELECT meta_value FROM {$wpdb->postmeta} 
-             WHERE meta_key = %s AND post_id = %d",
-            'post_tag_' . $term_id . '_collection_custom_css',
-            $term_id
-        ));
-    }
-    
+
     return array(
         'description' => $description,
         'featured_image' => $featured_image,

@@ -9531,16 +9531,22 @@ function flexpress_is_collection_tag($tag)
         return false;
     }
 
-    // Check database directly (ACF fields might not be registered)
-    global $wpdb;
-    $result = $wpdb->get_var($wpdb->prepare(
-        "SELECT meta_value FROM {$wpdb->postmeta} 
-         WHERE meta_key = %s AND post_id = %d",
-        'post_tag_' . $tag->term_id . '_is_collection_tag',
-        $tag->term_id
-    ));
+    // Check using WordPress term meta
+    $is_collection = get_term_meta($tag->term_id, 'is_collection_tag', true);
 
-    return (bool) $result;
+    // Fallback to old postmeta method if term meta is empty
+    if (empty($is_collection)) {
+        global $wpdb;
+        $result = $wpdb->get_var($wpdb->prepare(
+            "SELECT meta_value FROM {$wpdb->postmeta} 
+             WHERE meta_key = %s AND post_id = %d",
+            'post_tag_' . $tag->term_id . '_is_collection_tag',
+            $tag->term_id
+        ));
+        return (bool) $result;
+    }
+
+    return (bool) $is_collection;
 }
 
 /**
@@ -9561,28 +9567,41 @@ function flexpress_get_collection_metadata($tag)
 
     $term_id = $tag->term_id;
 
-    // Get metadata from database directly
-    global $wpdb;
-    $description = $wpdb->get_var($wpdb->prepare(
-        "SELECT meta_value FROM {$wpdb->postmeta} 
-         WHERE meta_key = %s AND post_id = %d",
-        'post_tag_' . $term_id . '_collection_description',
-        $term_id
-    ));
+    // Get metadata using WordPress term meta
+    $description = get_term_meta($term_id, 'collection_description', true);
+    $episode_order = get_term_meta($term_id, 'collection_episode_order', true);
+    $custom_css = get_term_meta($term_id, 'collection_custom_css', true);
 
-    $episode_order = $wpdb->get_var($wpdb->prepare(
-        "SELECT meta_value FROM {$wpdb->postmeta} 
-         WHERE meta_key = %s AND post_id = %d",
-        'post_tag_' . $term_id . '_collection_episode_order',
-        $term_id
-    ));
+    // Fallback to old postmeta method if term meta is empty
+    if (empty($description)) {
+        global $wpdb;
+        $description = $wpdb->get_var($wpdb->prepare(
+            "SELECT meta_value FROM {$wpdb->postmeta} 
+             WHERE meta_key = %s AND post_id = %d",
+            'post_tag_' . $term_id . '_collection_description',
+            $term_id
+        ));
+    }
 
-    $custom_css = $wpdb->get_var($wpdb->prepare(
-        "SELECT meta_value FROM {$wpdb->postmeta} 
-         WHERE meta_key = %s AND post_id = %d",
-        'post_tag_' . $term_id . '_collection_custom_css',
-        $term_id
-    ));
+    if (empty($episode_order)) {
+        global $wpdb;
+        $episode_order = $wpdb->get_var($wpdb->prepare(
+            "SELECT meta_value FROM {$wpdb->postmeta} 
+             WHERE meta_key = %s AND post_id = %d",
+            'post_tag_' . $term_id . '_collection_episode_order',
+            $term_id
+        ));
+    }
+
+    if (empty($custom_css)) {
+        global $wpdb;
+        $custom_css = $wpdb->get_var($wpdb->prepare(
+            "SELECT meta_value FROM {$wpdb->postmeta} 
+             WHERE meta_key = %s AND post_id = %d",
+            'post_tag_' . $term_id . '_collection_custom_css',
+            $term_id
+        ));
+    }
 
     // Try ACF for featured image (this might work)
     $featured_image = get_field('collection_featured_image', 'post_tag_' . $term_id);
@@ -9716,4 +9735,239 @@ function flexpress_get_collection_count($tag)
 
     $query = new WP_Query($args);
     return $query->found_posts;
+}
+
+// Include Collection Admin Interface
+require_once get_template_directory() . '/includes/collection-admin.php';
+
+// Register ACF Fields for Tag Collections
+add_action('acf/init', 'flexpress_register_collection_acf_fields');
+
+function flexpress_register_collection_acf_fields()
+{
+    if (function_exists('acf_add_local_field_group')) {
+        acf_add_local_field_group(array(
+            'key' => 'group_tag_collection',
+            'title' => 'Tag Collection Settings',
+            'fields' => array(
+                array(
+                    'key' => 'field_is_collection_tag',
+                    'label' => 'Collection Tag',
+                    'name' => 'is_collection_tag',
+                    'type' => 'true_false',
+                    'instructions' => 'Enable this tag to display as a special collection page with enhanced layout and metadata',
+                    'default_value' => 0,
+                    'ui' => 1,
+                ),
+                array(
+                    'key' => 'field_collection_description',
+                    'label' => 'Collection Description',
+                    'name' => 'collection_description',
+                    'type' => 'textarea',
+                    'instructions' => 'Rich description for this collection (displayed on collection page)',
+                    'required' => 0,
+                    'conditional_logic' => array(
+                        array(
+                            array(
+                                'field' => 'field_is_collection_tag',
+                                'operator' => '==',
+                                'value' => '1',
+                            ),
+                        ),
+                    ),
+                ),
+                array(
+                    'key' => 'field_collection_featured_image',
+                    'label' => 'Collection Featured Image',
+                    'name' => 'collection_featured_image',
+                    'type' => 'image',
+                    'instructions' => 'Featured image for this collection (displayed on collection page header)',
+                    'required' => 0,
+                    'conditional_logic' => array(
+                        array(
+                            array(
+                                'field' => 'field_is_collection_tag',
+                                'operator' => '==',
+                                'value' => '1',
+                            ),
+                        ),
+                    ),
+                    'return_format' => 'array',
+                    'preview_size' => 'medium',
+                    'library' => 'all',
+                ),
+                array(
+                    'key' => 'field_collection_episode_order',
+                    'label' => 'Episode Order',
+                    'name' => 'collection_episode_order',
+                    'type' => 'select',
+                    'instructions' => 'How to order episodes in this collection',
+                    'required' => 0,
+                    'conditional_logic' => array(
+                        array(
+                            array(
+                                'field' => 'field_is_collection_tag',
+                                'operator' => '==',
+                                'value' => '1',
+                            ),
+                        ),
+                    ),
+                    'choices' => array(
+                        'newest' => 'Newest First',
+                        'oldest' => 'Oldest First',
+                        'title' => 'Alphabetical',
+                        'custom' => 'Custom Order',
+                    ),
+                    'default_value' => 'newest',
+                    'allow_null' => 0,
+                    'multiple' => 0,
+                    'ui' => 0,
+                    'return_format' => 'value',
+                ),
+                array(
+                    'key' => 'field_collection_custom_css',
+                    'label' => 'Custom CSS Class',
+                    'name' => 'collection_custom_css',
+                    'type' => 'text',
+                    'instructions' => 'Custom CSS class for styling this collection page',
+                    'required' => 0,
+                    'conditional_logic' => array(
+                        array(
+                            array(
+                                'field' => 'field_is_collection_tag',
+                                'operator' => '==',
+                                'value' => '1',
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            'location' => array(
+                array(
+                    array(
+                        'param' => 'taxonomy',
+                        'operator' => '==',
+                        'value' => 'post_tag',
+                    ),
+                ),
+            ),
+            'menu_order' => 0,
+            'position' => 'normal',
+            'style' => 'default',
+            'label_placement' => 'top',
+            'instruction_placement' => 'label',
+            'hide_on_screen' => '',
+            'active' => true,
+            'description' => 'Settings for tag-based episode collections',
+        ));
+    }
+}
+
+// Add custom fields to tag edit page
+add_action('post_tag_edit_form_fields', 'flexpress_add_collection_fields_to_tag_edit');
+add_action('post_tag_add_form_fields', 'flexpress_add_collection_fields_to_tag_add');
+add_action('edited_post_tag', 'flexpress_save_collection_fields');
+add_action('created_post_tag', 'flexpress_save_collection_fields');
+
+function flexpress_add_collection_fields_to_tag_edit($tag)
+{
+    $is_collection = get_term_meta($tag->term_id, 'is_collection_tag', true);
+    $description = get_term_meta($tag->term_id, 'collection_description', true);
+    $episode_order = get_term_meta($tag->term_id, 'collection_episode_order', true);
+    $custom_css = get_term_meta($tag->term_id, 'collection_custom_css', true);
+    ?>
+        <tr class="form-field">
+            <th scope="row" valign="top">
+                <label for="is_collection_tag"><?php _e('Collection Tag', 'flexpress'); ?></label>
+            </th>
+            <td>
+                <input type="checkbox" name="is_collection_tag" id="is_collection_tag" value="1" <?php checked($is_collection, '1'); ?> />
+                <p class="description"><?php _e('Enable this tag to display as a special collection page with enhanced layout and metadata', 'flexpress'); ?></p>
+            </td>
+        </tr>
+        <tr class="form-field">
+            <th scope="row" valign="top">
+                <label for="collection_description"><?php _e('Collection Description', 'flexpress'); ?></label>
+            </th>
+            <td>
+                <textarea name="collection_description" id="collection_description" rows="5" cols="50" class="large-text"><?php echo esc_textarea($description); ?></textarea>
+                <p class="description"><?php _e('Rich description for this collection (displayed on collection page)', 'flexpress'); ?></p>
+            </td>
+        </tr>
+        <tr class="form-field">
+            <th scope="row" valign="top">
+                <label for="collection_episode_order"><?php _e('Episode Order', 'flexpress'); ?></label>
+            </th>
+            <td>
+                <select name="collection_episode_order" id="collection_episode_order">
+                    <option value="newest" <?php selected($episode_order, 'newest'); ?>><?php _e('Newest First', 'flexpress'); ?></option>
+                    <option value="oldest" <?php selected($episode_order, 'oldest'); ?>><?php _e('Oldest First', 'flexpress'); ?></option>
+                    <option value="title" <?php selected($episode_order, 'title'); ?>><?php _e('Alphabetical', 'flexpress'); ?></option>
+                    <option value="custom" <?php selected($episode_order, 'custom'); ?>><?php _e('Custom Order', 'flexpress'); ?></option>
+                </select>
+                <p class="description"><?php _e('How to order episodes in this collection', 'flexpress'); ?></p>
+            </td>
+        </tr>
+        <tr class="form-field">
+            <th scope="row" valign="top">
+                <label for="collection_custom_css"><?php _e('Custom CSS Class', 'flexpress'); ?></label>
+            </th>
+            <td>
+                <input type="text" name="collection_custom_css" id="collection_custom_css" value="<?php echo esc_attr($custom_css); ?>" class="regular-text" />
+                <p class="description"><?php _e('Custom CSS class for styling this collection page', 'flexpress'); ?></p>
+            </td>
+        </tr>
+    <?php
+}
+
+function flexpress_add_collection_fields_to_tag_add()
+{
+    ?>
+        <div class="form-field">
+            <label for="is_collection_tag"><?php _e('Collection Tag', 'flexpress'); ?></label>
+            <input type="checkbox" name="is_collection_tag" id="is_collection_tag" value="1" />
+            <p class="description"><?php _e('Enable this tag to display as a special collection page with enhanced layout and metadata', 'flexpress'); ?></p>
+        </div>
+        <div class="form-field">
+            <label for="collection_description"><?php _e('Collection Description', 'flexpress'); ?></label>
+            <textarea name="collection_description" id="collection_description" rows="5" cols="50" class="large-text"></textarea>
+            <p class="description"><?php _e('Rich description for this collection (displayed on collection page)', 'flexpress'); ?></p>
+        </div>
+        <div class="form-field">
+            <label for="collection_episode_order"><?php _e('Episode Order', 'flexpress'); ?></label>
+            <select name="collection_episode_order" id="collection_episode_order">
+                <option value="newest"><?php _e('Newest First', 'flexpress'); ?></option>
+                <option value="oldest"><?php _e('Oldest First', 'flexpress'); ?></option>
+                <option value="title"><?php _e('Alphabetical', 'flexpress'); ?></option>
+                <option value="custom"><?php _e('Custom Order', 'flexpress'); ?></option>
+            </select>
+            <p class="description"><?php _e('How to order episodes in this collection', 'flexpress'); ?></p>
+        </div>
+        <div class="form-field">
+            <label for="collection_custom_css"><?php _e('Custom CSS Class', 'flexpress'); ?></label>
+            <input type="text" name="collection_custom_css" id="collection_custom_css" class="regular-text" />
+            <p class="description"><?php _e('Custom CSS class for styling this collection page', 'flexpress'); ?></p>
+        </div>
+    <?php
+}
+
+function flexpress_save_collection_fields($term_id)
+{
+    if (isset($_POST['is_collection_tag'])) {
+        update_term_meta($term_id, 'is_collection_tag', '1');
+    } else {
+        delete_term_meta($term_id, 'is_collection_tag');
+    }
+
+    if (isset($_POST['collection_description'])) {
+        update_term_meta($term_id, 'collection_description', sanitize_textarea_field($_POST['collection_description']));
+    }
+
+    if (isset($_POST['collection_episode_order'])) {
+        update_term_meta($term_id, 'collection_episode_order', sanitize_text_field($_POST['collection_episode_order']));
+    }
+
+    if (isset($_POST['collection_custom_css'])) {
+        update_term_meta($term_id, 'collection_custom_css', sanitize_text_field($_POST['collection_custom_css']));
+    }
 }

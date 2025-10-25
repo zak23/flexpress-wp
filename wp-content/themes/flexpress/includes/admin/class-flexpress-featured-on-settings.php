@@ -77,7 +77,7 @@ class FlexPress_Featured_On_Settings
      */
     public function render_featured_on_settings_page()
     {
-    ?>
+?>
         <div class="wrap">
             <h1><?php echo esc_html__('Featured On Section', 'flexpress'); ?></h1>
 
@@ -206,9 +206,9 @@ class FlexPress_Featured_On_Settings
                                             $logo_alt = !empty($outlet['alt']) ? $outlet['alt'] : $outlet['name'];
                                             ?>
                                             <div class="featured-on-logo-preview">
-                                                <img src="<?php echo esc_url($logo_url); ?>" 
-                                                     style="max-width: 200px; height: auto; margin-bottom: 10px;" 
-                                                     alt="<?php echo esc_attr($logo_alt); ?>">
+                                                <img src="<?php echo esc_url($logo_url); ?>"
+                                                    style="max-width: 200px; height: auto; margin-bottom: 10px;"
+                                                    alt="<?php echo esc_attr($logo_alt); ?>">
                                             </div>
                                             <input type="hidden"
                                                 name="flexpress_general_settings[featured_on_media][<?php echo $index; ?>][logo_id]"
@@ -274,7 +274,7 @@ class FlexPress_Featured_On_Settings
 
                 // Add new media outlet
                 $('#add-media-outlet').on('click', function() {
-                    var newOutletHtml = 
+                    var newOutletHtml =
                         '<div class="featured-on-outlet" data-index="' + mediaIndex + '">' +
                         '<div class="featured-on-outlet-header">' +
                         '<h4>Media Outlet ' + (mediaIndex + 1) + '</h4>' +
@@ -353,7 +353,7 @@ class FlexPress_Featured_On_Settings
                                 button.before(preview);
                             }
                             preview.html('<img src="' + attachment.url + '" style="max-width: 200px; height: auto; margin-bottom: 10px;" />');
-                            
+
                             // Show remove button
                             if (button.closest('.featured-on-logo-upload').find('.remove-logo').length === 0) {
                                 button.after('<button type="button" class="button remove-logo" data-index="' + index + '"><?php esc_html_e('Remove Logo', 'flexpress'); ?></button>');
@@ -392,7 +392,7 @@ class FlexPress_Featured_On_Settings
                 }
             });
         </script>
-    <?php
+<?php
     }
 }
 

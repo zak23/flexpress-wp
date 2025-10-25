@@ -8,7 +8,7 @@ A modern WordPress website running in Docker containers with MySQL database and 
 
 - **Improved Admin Organization**: Reorganized FlexPress admin settings for better usability and organization
   - **Awards & Recognition**: Moved to dedicated submenu under FlexPress → Awards
-  - **Featured On Section**: Moved to dedicated submenu under FlexPress → Featured On  
+  - **Featured On Section**: Moved to dedicated submenu under FlexPress → Featured On
   - **Coming Soon Mode**: Moved to dedicated submenu under FlexPress → Coming Soon
   - **Cleaner General Tab**: General settings now focuses on core site settings (logo, colors, etc.)
 - **Menu Structure**: New organized menu structure:

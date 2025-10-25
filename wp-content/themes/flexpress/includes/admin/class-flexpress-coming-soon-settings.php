@@ -122,7 +122,7 @@ class FlexPress_Coming_Soon_Settings
      */
     public function render_coming_soon_settings_page()
     {
-    ?>
+?>
         <div class="wrap">
             <h1><?php echo esc_html__('Coming Soon Mode', 'flexpress'); ?></h1>
 
@@ -468,7 +468,7 @@ class FlexPress_Coming_Soon_Settings
 
                 // Add new link
                 $('#add-coming-soon-link').on('click', function() {
-                    var newLinkHtml = 
+                    var newLinkHtml =
                         '<div class="coming-soon-link-item" data-index="' + linkIndex + '">' +
                         '<div class="coming-soon-link-header">' +
                         '<h4>Link ' + (linkIndex + 1) + '</h4>' +
@@ -580,15 +580,17 @@ class FlexPress_Coming_Soon_Settings
                 padding: 8px;
                 background: #fff;
             }
+
             #flexpress_coming_soon_whitelist option {
                 padding: 4px 8px;
             }
+
             #flexpress_coming_soon_whitelist option:checked {
                 background: #0073aa;
                 color: #fff;
             }
         </style>
-    <?php
+<?php
     }
 }
 

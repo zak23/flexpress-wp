@@ -86,7 +86,7 @@ class FlexPress_Awards_Settings
      */
     public function render_awards_settings_page()
     {
-    ?>
+?>
         <div class="wrap">
             <h1><?php echo esc_html__('Awards & Recognition', 'flexpress'); ?></h1>
 
@@ -423,7 +423,7 @@ class FlexPress_Awards_Settings
                 }
             });
         </script>
-    <?php
+<?php
     }
 }
 

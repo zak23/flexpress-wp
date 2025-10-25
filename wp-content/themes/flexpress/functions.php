@@ -9741,7 +9741,7 @@ function flexpress_get_collection_count($tag)
 require_once get_template_directory() . '/includes/collection-admin.php';
 
 // Register ACF Fields for Tag Collections
-add_action('acf/init', 'flexpress_register_collection_acf_fields');
+// add_action('acf/init', 'flexpress_register_collection_acf_fields'); // Disabled - using custom WordPress fields
 
 function flexpress_register_collection_acf_fields()
 {
@@ -9868,6 +9868,9 @@ add_action('post_tag_edit_form_fields', 'flexpress_add_collection_fields_to_tag_
 add_action('post_tag_add_form_fields', 'flexpress_add_collection_fields_to_tag_add');
 add_action('edited_post_tag', 'flexpress_save_collection_fields');
 add_action('created_post_tag', 'flexpress_save_collection_fields');
+// Ensure runs for all taxonomy saves and last
+add_action('edited_term', 'flexpress_save_collection_fields', 999, 3);
+add_action('created_term', 'flexpress_save_collection_fields', 999, 3);
 
 function flexpress_add_collection_fields_to_tag_edit($tag)
 {
@@ -9876,6 +9879,7 @@ function flexpress_add_collection_fields_to_tag_edit($tag)
     $episode_order = get_term_meta($tag->term_id, 'collection_episode_order', true);
     $custom_css = get_term_meta($tag->term_id, 'collection_custom_css', true);
     ?>
+        <?php wp_nonce_field('flexpress_save_collection', 'flexpress_collection_nonce'); ?>
         <tr class="form-field">
             <th scope="row" valign="top">
                 <label for="is_collection_tag"><?php _e('Collection Tag', 'flexpress'); ?></label>
@@ -9923,6 +9927,7 @@ function flexpress_add_collection_fields_to_tag_edit($tag)
 function flexpress_add_collection_fields_to_tag_add()
 {
     ?>
+        <?php wp_nonce_field('flexpress_save_collection', 'flexpress_collection_nonce'); ?>
         <div class="form-field">
             <label for="is_collection_tag"><?php _e('Collection Tag', 'flexpress'); ?></label>
             <input type="checkbox" name="is_collection_tag" id="is_collection_tag" value="1" />
@@ -9951,23 +9956,70 @@ function flexpress_add_collection_fields_to_tag_add()
     <?php
 }
 
-function flexpress_save_collection_fields($term_id)
+function flexpress_save_collection_fields($term_id, $tt_id = null, $taxonomy = null)
 {
-    if (isset($_POST['is_collection_tag'])) {
+    // Scope to post_tag only
+    if ($taxonomy && $taxonomy !== 'post_tag') {
+        return;
+    }
+    if (isset($_POST['taxonomy']) && $_POST['taxonomy'] !== 'post_tag') {
+        return;
+    }
+
+    // Verify nonce for admin form submissions
+    if (is_admin()) {
+        if (!isset($_POST['flexpress_collection_nonce']) || !wp_verify_nonce($_POST['flexpress_collection_nonce'], 'flexpress_save_collection')) {
+            return;
+        }
+    }
+
+    // Debug: Log what we're saving
+    error_log("Saving collection fields for term_id: $term_id");
+
+    // Always handle the collection tag checkbox
+    if (isset($_POST['is_collection_tag']) && $_POST['is_collection_tag'] == '1') {
         update_term_meta($term_id, 'is_collection_tag', '1');
+        error_log("Set is_collection_tag to 1");
     } else {
         delete_term_meta($term_id, 'is_collection_tag');
+        error_log("Deleted is_collection_tag");
     }
 
+    // Handle description
     if (isset($_POST['collection_description'])) {
-        update_term_meta($term_id, 'collection_description', sanitize_textarea_field($_POST['collection_description']));
+        $description = sanitize_textarea_field($_POST['collection_description']);
+        if (!empty($description)) {
+            update_term_meta($term_id, 'collection_description', $description);
+            error_log("Set collection_description to: " . substr($description, 0, 50) . "...");
+        } else {
+            delete_term_meta($term_id, 'collection_description');
+            error_log("Deleted collection_description");
+        }
     }
 
+    // Handle episode order
     if (isset($_POST['collection_episode_order'])) {
-        update_term_meta($term_id, 'collection_episode_order', sanitize_text_field($_POST['collection_episode_order']));
+        $episode_order = sanitize_text_field($_POST['collection_episode_order']);
+        if (!empty($episode_order)) {
+            update_term_meta($term_id, 'collection_episode_order', $episode_order);
+            error_log("Set collection_episode_order to: $episode_order");
+        } else {
+            update_term_meta($term_id, 'collection_episode_order', 'newest'); // Default
+            error_log("Set collection_episode_order to default: newest");
+        }
     }
 
+    // Handle custom CSS
     if (isset($_POST['collection_custom_css'])) {
-        update_term_meta($term_id, 'collection_custom_css', sanitize_text_field($_POST['collection_custom_css']));
+        $custom_css = sanitize_text_field($_POST['collection_custom_css']);
+        if (!empty($custom_css)) {
+            update_term_meta($term_id, 'collection_custom_css', $custom_css);
+            error_log("Set collection_custom_css to: $custom_css");
+        } else {
+            delete_term_meta($term_id, 'collection_custom_css');
+            error_log("Deleted collection_custom_css");
+        }
     }
+
+    error_log("Collection fields save completed for term_id: $term_id");
 }

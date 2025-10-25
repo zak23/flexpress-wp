@@ -28,31 +28,31 @@ if ($enabled && $image_id) {
     if ($image_url) {
 ?>
         <div class="featured-banner-section">
-            <div class="container">
-                <div class="row">
-                    <div class="col-12">
-                        <?php if (!empty($url)): ?>
-                            <a href="<?php echo esc_url($url); ?>"
-                                class="featured-banner-link"
-                                aria-label="<?php echo esc_attr($image_alt); ?>">
-                                <?php echo wp_get_attachment_image($image_id, 'full', false, array(
-                                    'class' => 'featured-banner-image',
-                                    'alt' => esc_attr($image_alt),
-                                    'loading' => 'lazy'
-                                )); ?>
-                            </a>
-                        <?php else: ?>
-                            <div class="featured-banner-image-container">
-                                <?php echo wp_get_attachment_image($image_id, 'full', false, array(
-                                    'class' => 'featured-banner-image',
-                                    'alt' => esc_attr($image_alt),
-                                    'loading' => 'lazy'
-                                )); ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <?php if (!empty($url)): ?>
+                        <a href="<?php echo esc_url($url); ?>"
+                            class="featured-banner-link"
+                            aria-label="<?php echo esc_attr($image_alt); ?>">
+                            <img src="<?php echo esc_url($image_url); ?>"
+                                alt="<?php echo esc_attr($image_alt); ?>"
+                                class="featured-banner-image"
+                                loading="lazy"
+                                style="width: 100%; height: auto; max-width: 100%;">
+                        </a>
+                    <?php else: ?>
+                        <div class="featured-banner-image-container">
+                            <img src="<?php echo esc_url($image_url); ?>"
+                                alt="<?php echo esc_attr($image_alt); ?>"
+                                class="featured-banner-image"
+                                loading="lazy"
+                                style="width: 100%; height: auto; max-width: 100%;">
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
+
         </div>
 <?php
     }

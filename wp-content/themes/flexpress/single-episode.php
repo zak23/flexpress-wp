@@ -366,11 +366,28 @@ while (have_posts()):
                                 if ($tags) {
                                     $tag_links = array();
                                     foreach ($tags as $tag) {
-                                        $tag_url = add_query_arg(array(
-                                            'filter_type' => 'category',
-                                            'filter_value' => $tag->slug
-                                        ), home_url('/episodes/'));
-                                        $tag_links[] = '<a href="' . esc_url($tag_url) . '" class="tag-link">' . esc_html($tag->name) . '</a>';
+                                        // Check if this is a collection tag
+                                        $is_collection = flexpress_is_collection_tag($tag);
+
+                                        // Use direct tag link for collections, filter for regular tags
+                                        if ($is_collection) {
+                                            $tag_url = get_term_link($tag);
+                                            $tag_class = 'tag-link collection-tag-link';
+                                        } else {
+                                            $tag_url = add_query_arg(array(
+                                                'filter_type' => 'category',
+                                                'filter_value' => $tag->slug
+                                            ), home_url('/episodes/'));
+                                            $tag_class = 'tag-link';
+                                        }
+
+                                        $tag_html = '<a href="' . esc_url($tag_url) . '" class="' . esc_attr($tag_class) . '">' . esc_html($tag->name);
+                                        if ($is_collection) {
+                                            $tag_html .= ' <span class="collection-badge badge bg-primary ms-1">Collection</span>';
+                                        }
+                                        $tag_html .= '</a>';
+
+                                        $tag_links[] = $tag_html;
                                     }
                                     echo implode(', ', $tag_links);
                                 }

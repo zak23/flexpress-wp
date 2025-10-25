@@ -455,12 +455,41 @@ flexpress_track_enhanced_promo_usage(
 - **Release Scheduling**: Future episode planning
 - **Duration Tracking**: Episode length management
 - **Category System**: Tags and filtering
+- **Tag Collection System**: Special collection pages for curated episode groups
 - **Rating System**: User-generated ratings and reviews
 - **Interactive Ratings**: 5-star rating system with optional comments
 - **Rating Statistics**: Average ratings, distribution charts, and rating counts
 - **User Management**: Only logged-in users can rate episodes
 - **Rating Updates**: Users can modify or remove their ratings
 - **Episode Card Integration**: Rating display on episode cards and archive pages
+
+#### Tag Collection System
+
+The tag collection system allows specific tags to be promoted to "collection" status, creating enhanced landing pages with rich metadata and custom styling.
+
+**Features:**
+
+- **Collection Detection**: ACF field to mark tags as collections
+- **Rich Metadata**: Description, featured image, custom ordering
+- **Enhanced Templates**: Special `tag.php` template with collection layouts
+- **Visual Distinction**: Collection badges and gradient styling
+- **Custom Ordering**: Newest, oldest, alphabetical, or custom episode order
+- **Related Collections**: Cross-promotion of other collections
+- **Responsive Design**: Mobile-optimized collection pages
+
+**Usage:**
+
+1. **Admin Setup**: Edit any tag and enable "Collection Tag" option
+2. **Metadata**: Add description, featured image, and custom CSS class
+3. **Ordering**: Choose how episodes are sorted in the collection
+4. **Styling**: Apply custom CSS classes for unique collection themes
+
+**Technical Implementation:**
+
+- **Helper Functions**: `flexpress_is_collection_tag()`, `flexpress_get_collection_metadata()`
+- **Template**: `tag.php` with collection detection and enhanced layouts
+- **Styling**: Collection-specific CSS with gradients and animations
+- **Integration**: Enhanced episode archive filtering with collection badges
 
 ### Extras/BTS Content
 

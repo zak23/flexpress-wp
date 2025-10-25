@@ -294,10 +294,29 @@ $episodes_query = new WP_Query($episodes_args);
                                                 WHERE p.post_type = 'episode' AND p.post_status = 'publish' AND tt.term_id = %d",
                                                 $tag->term_id
                                             ));
+
+                                            // Check if this is a collection tag
+                                            $is_collection = flexpress_is_collection_tag($tag);
+
+                                            // Use direct tag link for collections, filter for regular tags
+                                            if ($is_collection) {
+                                                $tag_url = get_term_link($tag);
+                                                $tag_class = 'filter-item collection-tag';
+                                            } else {
+                                                $tag_url = add_query_arg(array('filter_type' => 'category', 'filter_value' => $tag->slug));
+                                                $tag_class = 'filter-item';
+                                            }
+
+                                            // Add active class if this tag is currently selected
+                                            if ($filter_type === 'category' && $filter_value === $tag->slug) {
+                                                $tag_class .= ' active';
+                                            }
                                     ?>
-                                            <a href="<?php echo esc_url(add_query_arg(array('filter_type' => 'category', 'filter_value' => $tag->slug))); ?>"
-                                                class="filter-item <?php echo ($filter_type === 'category' && $filter_value === $tag->slug) ? 'active' : ''; ?>">
+                                            <a href="<?php echo esc_url($tag_url); ?>" class="<?php echo esc_attr($tag_class); ?>">
                                                 <?php echo esc_html($tag->name); ?>
+                                                <?php if ($is_collection): ?>
+                                                    <span class="collection-badge badge bg-primary ms-1">Collection</span>
+                                                <?php endif; ?>
                                                 <span class="filter-count">(<?php echo $tag_count; ?>)</span>
                                             </a>
                                     <?php
@@ -319,7 +338,7 @@ $episodes_query = new WP_Query($episodes_args);
                                     AND pm.meta_key = 'featured_models'
                                     AND pm.meta_value != ''"
                                 );
-                                
+
                                 // Extract model IDs from serialized arrays
                                 $model_ids = array();
                                 foreach ($model_ids_in_episodes as $serialized) {
@@ -329,7 +348,7 @@ $episodes_query = new WP_Query($episodes_args);
                                     }
                                 }
                                 $model_ids = array_unique(array_filter($model_ids));
-                                
+
                                 $models = array();
                                 if (!empty($model_ids)) {
                                     $models = get_posts(array(

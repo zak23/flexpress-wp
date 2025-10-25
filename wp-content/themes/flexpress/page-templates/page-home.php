@@ -96,6 +96,9 @@ $hero_episode = new WP_Query($hero_args);
             <?php endif; ?>
         </div>
 
+        <!-- Featured Banner -->
+        <?php get_template_part('template-parts/featured-banner'); ?>
+
         <!-- Promo Video Section -->
         <?php get_template_part('template-parts/promo-video-section'); ?>
 

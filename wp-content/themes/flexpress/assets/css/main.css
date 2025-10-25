@@ -9331,3 +9331,248 @@ body.page-template-casting .site-main .alert-info {
         font-size: 0.75rem;
     }
 }
+
+/* ==========================================================================
+   Tag Collection System Styles
+   ========================================================================== */
+
+/* Collection Tag Styling */
+.filter-item.collection-tag {
+    position: relative;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.filter-item.collection-tag:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.filter-item.collection-tag.active {
+    background: linear-gradient(135deg, #4c63d2 0%, #5d3a7e 100%);
+    color: white;
+}
+
+.collection-badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Collection Header Styles */
+.collection-header {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border-radius: 15px;
+    padding: 2rem;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.collection-title {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+.collection-featured-image img {
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.collection-featured-image img:hover {
+    transform: scale(1.02);
+}
+
+.collection-description {
+    color: #6c757d;
+    line-height: 1.6;
+}
+
+.collection-stats .badge {
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    border-radius: 20px;
+}
+
+/* Collection Cards */
+.collection-card {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.collection-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.collection-card .card-img-top {
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.collection-card:hover .card-img-top {
+    transform: scale(1.05);
+}
+
+.collection-card .card-title {
+    font-weight: 600;
+    color: #333;
+}
+
+/* Tag Header Styles */
+.tag-header {
+    background: linear-gradient(135deg, rgba(108, 117, 125, 0.1) 0%, rgba(73, 80, 87, 0.1) 100%);
+    border-radius: 15px;
+    padding: 2rem;
+    border: 1px solid rgba(108, 117, 125, 0.2);
+}
+
+.tag-header h1 {
+    color: #495057;
+    font-weight: 600;
+}
+
+/* Collection Page Custom CSS Support */
+.collection-custom-style {
+    /* This class can be used for custom collection styling */
+}
+
+/* Collection Tag Links in Single Episode */
+.collection-tag-link {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white !important;
+    padding: 4px 8px;
+    border-radius: 15px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-block;
+    margin: 2px;
+}
+
+.collection-tag-link:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+    text-decoration: none;
+}
+
+/* Responsive Collection Styles */
+@media (max-width: 768px) {
+    .collection-header {
+        padding: 1.5rem;
+    }
+    
+    .collection-title {
+        font-size: 2rem;
+    }
+    
+    .collection-featured-image {
+        margin-bottom: 1rem;
+    }
+    
+    .collection-stats .badge {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .collection-header {
+        padding: 1rem;
+    }
+    
+    .collection-title {
+        font-size: 1.75rem;
+    }
+    
+    .collection-badge {
+        font-size: 0.65rem;
+        padding: 1px 4px;
+    }
+    
+    .filter-item.collection-tag {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+    }
+}
+
+/* ==========================================================================
+   Featured Banner Styles
+   ========================================================================== */
+
+.featured-banner-section {
+    margin: 3rem 0;
+}
+
+.featured-banner-link {
+    display: block;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-decoration: none;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.featured-banner-link:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    text-decoration: none;
+}
+
+.featured-banner-image-container {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.featured-banner-image {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+}
+
+.featured-banner-link:hover .featured-banner-image {
+    transform: scale(1.02);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .featured-banner-section {
+        margin: 2rem 0;
+    }
+    
+    .featured-banner-link:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+}
+
+@media (max-width: 576px) {
+    .featured-banner-section {
+        margin: 1.5rem 0;
+    }
+    
+    .featured-banner-link:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .featured-banner-link:hover .featured-banner-image {
+        transform: none;
+    }
+}

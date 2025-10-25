@@ -1995,6 +1995,67 @@ add_shortcode('upcoming_episode', 'upcoming_episode_shortcode');
 
 The upcoming episode system uses CSS custom properties and can be customized by overriding the styles in your child theme or via the WordPress customizer.
 
+## 🎯 Featured Banner System
+
+The FlexPress theme includes a customizable featured banner system that allows you to highlight special episodes, models, or promotional content on the homepage.
+
+### Features
+
+- **Customizable Banner**: Upload any image and set a destination URL
+- **Homepage Integration**: Displays below the featured episodes section
+- **Responsive Design**: Mobile-optimized with hover effects
+- **Easy Management**: Configure through FlexPress General Settings
+- **Smart Display**: Only shows when enabled and image is uploaded
+
+### How It Works
+
+The featured banner system:
+
+1. **Retrieves settings** from `flexpress_general_settings` option
+2. **Checks if enabled** and has a valid image
+3. **Displays banner** as clickable link (if URL provided) or static image
+4. **Uses responsive images** with proper alt text and accessibility
+5. **Applies hover effects** for better user experience
+
+### Configuration
+
+Configure the featured banner in **FlexPress → General → Featured Banner**:
+
+- **Enable Featured Banner**: Toggle to show/hide the banner
+- **Banner Image**: Upload image (recommended size: 1200x400px)
+- **Banner URL**: Set destination URL when banner is clicked
+
+### Technical Implementation
+
+#### Integration
+
+- **Homepage**: Automatically displays in `page-templates/page-home.php`
+- **Styling**: CSS in `main.css` (lines 9515-9578)
+- **Template**: `template-parts/featured-banner.php`
+
+#### Key Features
+
+- **Media Uploader**: WordPress media library integration
+- **Image Optimization**: Uses `wp_get_attachment_image()` for responsive images
+- **Accessibility**: Proper alt text and ARIA labels
+- **Hover Effects**: Smooth transitions and scale effects
+- **Mobile Responsive**: Disabled hover effects on mobile devices
+
+### Usage Examples
+
+```php
+// Get featured banner settings
+$settings = get_option('flexpress_general_settings', array());
+$enabled = isset($settings['featured_banner_enabled']) && $settings['featured_banner_enabled'];
+$image_id = isset($settings['featured_banner_image']) ? $settings['featured_banner_image'] : '';
+$url = isset($settings['featured_banner_url']) ? $settings['featured_banner_url'] : '';
+
+if ($enabled && $image_id) {
+    // Display banner
+    get_template_part('template-parts/featured-banner');
+}
+```
+
 ## 🔒 Hidden Episode System
 
 ### Overview

@@ -1874,4 +1874,147 @@ if (function_exists('acf_add_local_field_group')):
         'description' => 'Custom fields for the about page content management',
     ));
 
+    // Tag Collection Fields
+    acf_add_local_field_group(array(
+        'key' => 'group_tag_collection',
+        'title' => 'Tag Collection Settings',
+        'fields' => array(
+            array(
+                'key' => 'field_is_collection_tag',
+                'label' => 'Collection Tag',
+                'name' => 'is_collection_tag',
+                'type' => 'true_false',
+                'instructions' => 'Enable this tag to display as a special collection page with enhanced layout and metadata',
+                'default_value' => 0,
+                'ui' => 1,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+            ),
+            array(
+                'key' => 'field_collection_description',
+                'label' => 'Collection Description',
+                'name' => 'collection_description',
+                'type' => 'textarea',
+                'instructions' => 'Rich description for this collection (displayed on collection page)',
+                'required' => 0,
+                'conditional_logic' => array(
+                    array(
+                        array(
+                            'field' => 'field_is_collection_tag',
+                            'operator' => '==',
+                            'value' => '1',
+                        ),
+                    ),
+                ),
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+            ),
+            array(
+                'key' => 'field_collection_featured_image',
+                'label' => 'Collection Featured Image',
+                'name' => 'collection_featured_image',
+                'type' => 'image',
+                'instructions' => 'Featured image for this collection (displayed on collection page header)',
+                'required' => 0,
+                'conditional_logic' => array(
+                    array(
+                        array(
+                            'field' => 'field_is_collection_tag',
+                            'operator' => '==',
+                            'value' => '1',
+                        ),
+                    ),
+                ),
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'return_format' => 'array',
+                'preview_size' => 'medium',
+                'library' => 'all',
+            ),
+            array(
+                'key' => 'field_collection_episode_order',
+                'label' => 'Episode Order',
+                'name' => 'collection_episode_order',
+                'type' => 'select',
+                'instructions' => 'How to order episodes in this collection',
+                'required' => 0,
+                'conditional_logic' => array(
+                    array(
+                        array(
+                            'field' => 'field_is_collection_tag',
+                            'operator' => '==',
+                            'value' => '1',
+                        ),
+                    ),
+                ),
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'choices' => array(
+                    'newest' => 'Newest First',
+                    'oldest' => 'Oldest First',
+                    'title' => 'Alphabetical',
+                    'custom' => 'Custom Order',
+                ),
+                'default_value' => 'newest',
+                'allow_null' => 0,
+                'multiple' => 0,
+                'ui' => 0,
+                'return_format' => 'value',
+                'ajax' => 0,
+                'placeholder' => '',
+            ),
+            array(
+                'key' => 'field_collection_custom_css',
+                'label' => 'Custom CSS Class',
+                'name' => 'collection_custom_css',
+                'type' => 'text',
+                'instructions' => 'Custom CSS class for styling this collection page',
+                'required' => 0,
+                'conditional_logic' => array(
+                    array(
+                        array(
+                            'field' => 'field_is_collection_tag',
+                            'operator' => '==',
+                            'value' => '1',
+                        ),
+                    ),
+                ),
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param' => 'taxonomy',
+                    'operator' => '==',
+                    'value' => 'post_tag',
+                ),
+            ),
+        ),
+        'menu_order' => 0,
+        'position' => 'normal',
+        'style' => 'default',
+        'label_placement' => 'top',
+        'instruction_placement' => 'label',
+        'hide_on_screen' => '',
+        'active' => true,
+        'description' => 'Settings for tag-based episode collections',
+    ));
+
 endif;

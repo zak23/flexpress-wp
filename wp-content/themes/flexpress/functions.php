@@ -1118,6 +1118,23 @@ function flexpress_sanitize_general_settings($input)
         $sanitized['coming_soon_whitelist'] = array();
     }
 
+    // Sanitize Featured Banner enabled
+    if (isset($input['featured_banner_enabled'])) {
+        $sanitized['featured_banner_enabled'] = '1';
+    } else {
+        $sanitized['featured_banner_enabled'] = '0';
+    }
+
+    // Sanitize Featured Banner image
+    if (isset($input['featured_banner_image'])) {
+        $sanitized['featured_banner_image'] = absint($input['featured_banner_image']);
+    }
+
+    // Sanitize Featured Banner URL
+    if (isset($input['featured_banner_url'])) {
+        $sanitized['featured_banner_url'] = esc_url_raw($input['featured_banner_url']);
+    }
+
     // Log the complete sanitized data for debugging
     error_log('FlexPress General Settings: Complete sanitized data: ' . print_r($sanitized, true));
 
@@ -9492,4 +9509,228 @@ function flexpress_add_console_cleanup()
         });
         </script>';
     }
+}
+
+/**
+ * Tag Collection Helper Functions
+ */
+
+/**
+ * Check if a tag is configured as a collection
+ *
+ * @param int|WP_Term $tag Tag ID or WP_Term object
+ * @return bool True if tag is a collection
+ */
+function flexpress_is_collection_tag($tag)
+{
+    if (is_numeric($tag)) {
+        $tag = get_term($tag, 'post_tag');
+    }
+    
+    if (!$tag || is_wp_error($tag)) {
+        return false;
+    }
+    
+    // Check for ACF field first
+    $acf_value = get_field('is_collection_tag', 'post_tag_' . $tag->term_id);
+    if ($acf_value !== false) {
+        return (bool) $acf_value;
+    }
+    
+    // Fallback: check database directly
+    global $wpdb;
+    $result = $wpdb->get_var($wpdb->prepare(
+        "SELECT meta_value FROM {$wpdb->postmeta} 
+         WHERE meta_key = %s AND post_id = %d",
+        'post_tag_' . $tag->term_id . '_is_collection_tag',
+        $tag->term_id
+    ));
+    
+    return (bool) $result;
+}
+
+/**
+ * Get collection metadata for a tag
+ *
+ * @param int|WP_Term $tag Tag ID or WP_Term object
+ * @return array Collection metadata
+ */
+function flexpress_get_collection_metadata($tag)
+{
+    if (is_numeric($tag)) {
+        $tag = get_term($tag, 'post_tag');
+    }
+    
+    if (!$tag || is_wp_error($tag) || !flexpress_is_collection_tag($tag)) {
+        return array();
+    }
+    
+    $term_id = $tag->term_id;
+    
+    // Try ACF fields first
+    $description = get_field('collection_description', 'post_tag_' . $term_id);
+    $featured_image = get_field('collection_featured_image', 'post_tag_' . $term_id);
+    $episode_order = get_field('collection_episode_order', 'post_tag_' . $term_id);
+    $custom_css = get_field('collection_custom_css', 'post_tag_' . $term_id);
+    
+    // Fallback to database if ACF fields are not available
+    if ($description === false) {
+        global $wpdb;
+        $description = $wpdb->get_var($wpdb->prepare(
+            "SELECT meta_value FROM {$wpdb->postmeta} 
+             WHERE meta_key = %s AND post_id = %d",
+            'post_tag_' . $term_id . '_collection_description',
+            $term_id
+        ));
+    }
+    
+    if ($episode_order === false) {
+        global $wpdb;
+        $episode_order = $wpdb->get_var($wpdb->prepare(
+            "SELECT meta_value FROM {$wpdb->postmeta} 
+             WHERE meta_key = %s AND post_id = %d",
+            'post_tag_' . $term_id . '_collection_episode_order',
+            $term_id
+        ));
+    }
+    
+    if ($custom_css === false) {
+        global $wpdb;
+        $custom_css = $wpdb->get_var($wpdb->prepare(
+            "SELECT meta_value FROM {$wpdb->postmeta} 
+             WHERE meta_key = %s AND post_id = %d",
+            'post_tag_' . $term_id . '_collection_custom_css',
+            $term_id
+        ));
+    }
+    
+    return array(
+        'description' => $description,
+        'featured_image' => $featured_image,
+        'episode_order' => $episode_order ?: 'newest',
+        'custom_css' => $custom_css,
+        'tag' => $tag
+    );
+}
+
+/**
+ * Get episodes for a collection with proper ordering
+ *
+ * @param int|WP_Term $tag Tag ID or WP_Term object
+ * @param int $posts_per_page Number of posts per page
+ * @param int $paged Current page number
+ * @return WP_Query Query object
+ */
+function flexpress_get_collection_episodes($tag, $posts_per_page = 12, $paged = 1)
+{
+    if (is_numeric($tag)) {
+        $tag = get_term($tag, 'post_tag');
+    }
+
+    if (!$tag || is_wp_error($tag)) {
+        return new WP_Query(array('post__in' => array(0))); // Empty query
+    }
+
+    $collection_meta = flexpress_get_collection_metadata($tag);
+    $order = $collection_meta['episode_order'] ?: 'newest';
+
+    // Build query args based on collection order
+    $args = array(
+        'post_type' => 'episode',
+        'posts_per_page' => $posts_per_page,
+        'paged' => $paged,
+        'tax_query' => array(
+            array(
+                'taxonomy' => 'post_tag',
+                'field' => 'slug',
+                'terms' => $tag->slug
+            )
+        )
+    );
+
+    // Set ordering based on collection settings
+    switch ($order) {
+        case 'oldest':
+            $args['orderby'] = 'meta_value';
+            $args['meta_key'] = 'release_date';
+            $args['order'] = 'ASC';
+            break;
+        case 'title':
+            $args['orderby'] = 'title';
+            $args['order'] = 'ASC';
+            break;
+        case 'custom':
+            // For custom order, we'll use menu_order if available, otherwise newest
+            $args['orderby'] = 'meta_value';
+            $args['meta_key'] = 'release_date';
+            $args['order'] = 'DESC';
+            break;
+        case 'newest':
+        default:
+            $args['orderby'] = 'meta_value';
+            $args['meta_key'] = 'release_date';
+            $args['order'] = 'DESC';
+            break;
+    }
+
+    // Apply episode visibility filtering
+    $args = flexpress_add_episode_visibility_to_query($args);
+
+    return new WP_Query($args);
+}
+
+/**
+ * Get collection URL for a tag
+ *
+ * @param int|WP_Term $tag Tag ID or WP_Term object
+ * @return string Collection URL
+ */
+function flexpress_get_collection_url($tag)
+{
+    if (is_numeric($tag)) {
+        $tag = get_term($tag, 'post_tag');
+    }
+
+    if (!$tag || is_wp_error($tag)) {
+        return '';
+    }
+
+    return get_term_link($tag);
+}
+
+/**
+ * Get collection count for a tag
+ *
+ * @param int|WP_Term $tag Tag ID or WP_Term object
+ * @return int Number of episodes in collection
+ */
+function flexpress_get_collection_count($tag)
+{
+    if (is_numeric($tag)) {
+        $tag = get_term($tag, 'post_tag');
+    }
+
+    if (!$tag || is_wp_error($tag)) {
+        return 0;
+    }
+
+    // Get count of published episodes with this tag
+    $args = array(
+        'post_type' => 'episode',
+        'posts_per_page' => -1,
+        'fields' => 'ids',
+        'tax_query' => array(
+            array(
+                'taxonomy' => 'post_tag',
+                'field' => 'slug',
+                'terms' => $tag->slug
+            )
+        )
+    );
+
+    // Apply episode visibility filtering
+    $args = flexpress_add_episode_visibility_to_query($args);
+
+    $query = new WP_Query($args);
+    return $query->found_posts;
 }

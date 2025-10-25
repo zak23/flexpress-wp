@@ -28,3 +28,28 @@ Do not alter `.wakatime-project` once created
 - Content Management: Store requirements in `casting_requirements_cards` ACF field
 - JSON Format: `[{"icon_class": "fas fa-icon", "title": "Category", "requirements": ["item1", "item2"]}]`
 - Documentation: Update README.md with feature details and technical implementation
+
+## Tag Collection System Implementation Pattern
+
+- ACF Fields: Add collection metadata fields to `post_tag` taxonomy in `includes/acf-fields.php`
+- Helper Functions: Create collection detection and metadata functions in `functions.php`
+- Template: Create `tag.php` template with collection detection and enhanced layouts
+- Styling: Add collection-specific CSS with gradients and animations in `main.css`
+- Integration: Update episode archive filtering to show collection badges and direct links
+- Navigation: Enhance single episode pages to show collection links with badges
+- Detection: Use `flexpress_is_collection_tag()` to check if tag is a collection
+- Metadata: Use `flexpress_get_collection_metadata()` to get collection settings
+- Ordering: Support newest, oldest, alphabetical, and custom episode ordering
+- Documentation: Update README.md with collection system details and usage examples
+
+## Featured Banner System Implementation Pattern
+
+- Settings: Add to `class-flexpress-general-settings.php` with proper sanitization
+- Template: Create dedicated template in `template-parts/` directory
+- Integration: Add template part to homepage below featured episodes section
+- Assets: Add CSS styles to `main.css` with hover effects and responsive design
+- Media Uploader: Use WordPress media library with preview and remove functionality
+- Sanitization: Use `absint()` for image IDs, `esc_url_raw()` for URLs, checkbox validation
+- Accessibility: Include proper alt text, ARIA labels, and semantic HTML
+- Responsive: Mobile-optimized with disabled hover effects on small screens
+- Documentation: Update README.md with feature details and technical implementation

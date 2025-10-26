@@ -6648,6 +6648,15 @@ footer.bg-black .row.footer {
   background-color: var(--color-accent);
 }
 
+/* Mobile navigation active link - left-aligned underline */
+@media (max-width: 991.98px) {
+  .navbar-nav .nav-link.active::after {
+    left: 15px;
+    transform: none;
+    width: 30px;
+  }
+}
+
 /* Required field indicators */
 .required {
   color: var(--color-accent) !important;

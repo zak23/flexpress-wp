@@ -1082,8 +1082,9 @@ FlexPress now uses **Flowguard** as the primary payment processing system, repla
 
 1. **Access Settings**: Go to `FlexPress Settings → Flowguard`
 2. **Configure API**: Enter your Shop ID and Signature Key from ControlCenter
-3. **Set Environment**: Choose between Sandbox (testing) or Production (live)
-4. **Test Integration**: Use the built-in testing tools to verify setup
+3. **Test Integration**: Use the built-in testing tools to verify setup
+
+**Note**: FlowGuard uses the same API endpoint for both sandbox and production. Manage test vs live configurations through FlowGuard ControlCenter, not through the WordPress settings.
 
 #### Payment Pages
 
@@ -1466,8 +1467,9 @@ Next Charge: Mar 15, 2025
 1. **API URL**: Use `https://flowguard.yoursafe.com/api/merchant` (not `api.yoursafe.com`)
 2. **Minimum Amount**: Flowguard requires minimum $2.95 USD for transactions
 3. **Minimum Period**: Subscriptions require minimum 2 days (`P2D`)
-4. **Environment**: Sandbox and production use the same API URL
-5. **Credentials**: Shop ID `134837` and Signature Key from ControlCenter
+4. **Single Endpoint**: Sandbox and production use the same API URL (`https://flowguard.yoursafe.com/api/merchant`)
+5. **Credentials**: Shop ID and Signature Key from ControlCenter (same credentials work for both environments)
+6. **Test/Live Control**: Manage test vs live transactions through FlowGuard ControlCenter configuration
 
 ### Cloudflare Turnstile Protection
 

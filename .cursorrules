@@ -8,6 +8,15 @@ Use Puppeteer tests against the test site; prefer IPs for navigation and screens
 PHP indent: 4 spaces; JS: 2 spaces; CSS: 2 spaces
 Do not alter `.wakatime-project` once created
 
+## FlowGuard Payment System Pattern
+
+- **API Endpoint**: Single endpoint `https://flowguard.yoursafe.com/api/merchant` for both sandbox and production
+- **No Environment Setting**: Removed sandbox/production toggle from WordPress settings since it doesn't change functionality
+- **Configuration**: Manage test vs live through FlowGuard ControlCenter, not through WordPress
+- **Credentials**: Same Shop ID and Signature Key work for both environments
+- **Settings**: Only Shop ID and Signature Key needed in WordPress settings
+- **Documentation**: Update README.md when modifying FlowGuard integration
+
 ## FlexPress Admin Menu Organization Pattern
 
 - **Menu Structure**: Organized submenu structure under FlexPress main menu

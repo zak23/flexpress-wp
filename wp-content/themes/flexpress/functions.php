@@ -490,7 +490,6 @@ function flexpress_enqueue_scripts_and_styles()
 
         wp_localize_script('flexpress-flowguard', 'flowguardConfig', array(
             'shopId' => $flowguard_settings['shop_id'] ?? '',
-            'environment' => $flowguard_settings['environment'] ?? 'sandbox',
             'nonce' => wp_create_nonce('flowguard_nonce'),
             'ajaxUrl' => admin_url('admin-ajax.php')
         ));
@@ -8390,7 +8389,6 @@ function flexpress_set_default_theme_options()
         $default_flowguard_settings = array(
             'shop_id' => '134837',
             'signature_key' => 'QdqSpfTHzKKQChBB26xDcEAh3wkQtZ',
-            'environment' => 'sandbox',
             'webhook_url' => home_url('/wp-admin/admin-ajax.php?action=flowguard_webhook'),
             'enabled' => true
         );

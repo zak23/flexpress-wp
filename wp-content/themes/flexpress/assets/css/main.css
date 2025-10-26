@@ -8553,7 +8553,7 @@ body.page-template-casting .site-main .alert-info {
 }
 
 .episode-tags .tag-link:hover {
-    color: var(--accent-color);
+    color: var(--color-accent);
     text-decoration: underline;
 }
 
@@ -9339,22 +9339,22 @@ body.page-template-casting .site-main .alert-info {
 /* Collection Tag Styling */
 .filter-item.collection-tag {
     position: relative;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: transparent;
+    color: inherit;
     border: none;
     transition: all 0.3s ease;
 }
 
 .filter-item.collection-tag:hover {
-    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-    color: white;
+    background: transparent;
+    color: inherit;
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    box-shadow: none;
 }
 
 .filter-item.collection-tag.active {
-    background: linear-gradient(135deg, #4c63d2 0%, #5d3a7e 100%);
-    color: white;
+    background: transparent;
+    color: inherit;
 }
 
 .collection-badge {
@@ -9364,6 +9364,13 @@ body.page-template-casting .site-main .alert-info {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    background-color: var(--color-accent) !important;
+    color: white !important;
+}
+
+.filter-sidebar .collection-badge {
+    background-color: var(--color-accent) !important;
+    color: white !important;
 }
 
 /* Collection Header Styles */

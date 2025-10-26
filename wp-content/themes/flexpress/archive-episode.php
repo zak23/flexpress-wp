@@ -315,7 +315,7 @@ $episodes_query = new WP_Query($episodes_args);
                                             <a href="<?php echo esc_url($tag_url); ?>" class="<?php echo esc_attr($tag_class); ?>">
                                                 <?php echo esc_html($tag->name); ?>
                                                 <?php if ($is_collection): ?>
-                                                    <span class="collection-badge badge bg-primary ms-1">Collection</span>
+                                                    <span class="collection-badge badge ms-1">Collection</span>
                                                 <?php endif; ?>
                                                 <span class="filter-count">(<?php echo $tag_count; ?>)</span>
                                             </a>

@@ -4,6 +4,22 @@ A modern WordPress website running in Docker containers with MySQL database and 
 
 ## 🔧 Recent Fixes
 
+### Settings Save Robustness (October 2025)
+
+- Problem: Saving one settings page (e.g., Featured On) cleared unrelated settings because only posted fields were saved.
+- Fixes:
+  - Sanitizer now merges sanitized input with existing `flexpress_general_settings` so non-posted keys persist.
+  - All checkboxes use a hidden `0` input immediately before the checkbox to ensure unchecking posts `0`.
+  - Dedicated page slugs ensure each settings page renders only its own sections:
+    - Awards → `flexpress_awards_settings`
+    - Featured On → `flexpress_featured_on_settings`
+    - Coming Soon → `flexpress_coming_soon_settings`
+- Implementation Details:
+  - Merge: `return array_merge($current, $sanitized)` in `flexpress_sanitize_general_settings()`.
+  - Hidden inputs added for: `awards_enabled`, `featured_on_enabled`, `coming_soon_enabled`, `extras_enabled`, `dolls_downunder_network`, `featured_banner_enabled`, and Coming Soon link `new_tab`.
+  - Multi-select whitelist posts a reset marker to clear when nothing selected.
+- Impact: Saving any page no longer wipes other settings; unchecking checkboxes works reliably.
+
 ### Checkbox Visibility Fix (December 2024)
 
 - **Problem**: Bootstrap 5 form checkboxes on the dark theme didn't show visible checkmarks when checked and checkbox/label were misaligned

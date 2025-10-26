@@ -8,6 +8,18 @@ Use Puppeteer tests against the test site; prefer IPs for navigation and screens
 PHP indent: 4 spaces; JS: 2 spaces; CSS: 2 spaces
 Do not alter `.wakatime-project` once created
 
+## Settings Save Robustness Pattern
+
+- All feature settings that share `flexpress_general_settings` MUST:
+  - Use a merge sanitizer that preserves non-posted keys
+  - Precede every checkbox input with a hidden `0` input of the same name
+  - For array multi-selects, include a reset marker hidden input if needed
+- Dedicated page slugs:
+  - Awards → `flexpress_awards_settings`
+  - Featured On → `flexpress_featured_on_settings`
+  - Coming Soon → `flexpress_coming_soon_settings`
+- Documentation: Update README.md when changing settings behavior
+
 ## FlowGuard Payment System Pattern
 
 - **API Endpoint**: Single endpoint `https://flowguard.yoursafe.com/api/merchant` for both sandbox and production

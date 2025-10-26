@@ -113,6 +113,7 @@ class FlexPress_Featured_On_Settings
         $value = isset($options['featured_on_enabled']) ? $options['featured_on_enabled'] : '0';
     ?>
         <label>
+            <input type="hidden" name="flexpress_general_settings[featured_on_enabled]" value="0">
             <input type="checkbox"
                 name="flexpress_general_settings[featured_on_enabled]"
                 value="1"

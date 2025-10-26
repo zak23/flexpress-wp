@@ -145,6 +145,7 @@ class FlexPress_Collections_Settings
         $value = isset($options['collections_enabled']) ? $options['collections_enabled'] : 0;
     ?>
         <label>
+            <input type="hidden" name="flexpress_collections_settings[collections_enabled]" value="0">
             <input type="checkbox"
                 name="flexpress_collections_settings[collections_enabled]"
                 value="1"

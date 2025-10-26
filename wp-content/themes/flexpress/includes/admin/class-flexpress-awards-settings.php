@@ -118,6 +118,7 @@ class FlexPress_Awards_Settings
         $value = isset($options['awards_enabled']) ? $options['awards_enabled'] : 0;
     ?>
         <label>
+            <input type="hidden" name="flexpress_general_settings[awards_enabled]" value="0">
             <input type="checkbox"
                 name="flexpress_general_settings[awards_enabled]"
                 value="1"

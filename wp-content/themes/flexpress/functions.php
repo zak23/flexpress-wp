@@ -897,6 +897,8 @@ add_action('wp_ajax_flexpress_test_settings', 'flexpress_test_settings_save');
  */
 function flexpress_sanitize_general_settings($input)
 {
+    // Start from existing settings and only overwrite provided keys
+    $current = get_option('flexpress_general_settings', array());
     $sanitized = array();
 
     // Sanitize site title
@@ -936,18 +938,14 @@ function flexpress_sanitize_general_settings($input)
         $sanitized['onlyfans_referral_code'] = sanitize_text_field($input['onlyfans_referral_code']);
     }
 
-    // Sanitize Dolls Downunder Network
+    // Sanitize Dolls Downunder Network (checkbox)
     if (isset($input['dolls_downunder_network'])) {
-        $sanitized['dolls_downunder_network'] = '1';
-    } else {
-        $sanitized['dolls_downunder_network'] = '0';
+        $sanitized['dolls_downunder_network'] = $input['dolls_downunder_network'] === '1' ? '1' : '0';
     }
 
-    // Sanitize awards enabled
+    // Sanitize awards enabled (checkbox)
     if (isset($input['awards_enabled'])) {
-        $sanitized['awards_enabled'] = '1';
-    } else {
-        $sanitized['awards_enabled'] = '0';
+        $sanitized['awards_enabled'] = $input['awards_enabled'] === '1' ? '1' : '0';
     }
 
     // Sanitize awards title
@@ -980,11 +978,9 @@ function flexpress_sanitize_general_settings($input)
         $sanitized['awards_link'] = esc_url_raw($input['awards_link']);
     }
 
-    // Sanitize Featured On enabled
+    // Sanitize Featured On enabled (checkbox)
     if (isset($input['featured_on_enabled'])) {
-        $sanitized['featured_on_enabled'] = '1';
-    } else {
-        $sanitized['featured_on_enabled'] = '0';
+        $sanitized['featured_on_enabled'] = $input['featured_on_enabled'] === '1' ? '1' : '0';
     }
 
     // Sanitize Featured On media outlets
@@ -1004,11 +1000,9 @@ function flexpress_sanitize_general_settings($input)
         $sanitized['featured_on_media'] = $sanitized_media;
     }
 
-    // Sanitize extras enabled
+    // Sanitize extras enabled (checkbox)
     if (isset($input['extras_enabled'])) {
-        $sanitized['extras_enabled'] = '1';
-    } else {
-        $sanitized['extras_enabled'] = '0';
+        $sanitized['extras_enabled'] = $input['extras_enabled'] === '1' ? '1' : '0';
     }
 
     // Sanitize casting image
@@ -1061,11 +1055,9 @@ function flexpress_sanitize_general_settings($input)
         }
     }
 
-    // Sanitize Coming Soon enabled
+    // Sanitize Coming Soon enabled (checkbox)
     if (isset($input['coming_soon_enabled'])) {
-        $sanitized['coming_soon_enabled'] = '1';
-    } else {
-        $sanitized['coming_soon_enabled'] = '0';
+        $sanitized['coming_soon_enabled'] = $input['coming_soon_enabled'] === '1' ? '1' : '0';
     }
 
     // Sanitize Coming Soon logo
@@ -1118,15 +1110,11 @@ function flexpress_sanitize_general_settings($input)
             }
         }
         $sanitized['coming_soon_whitelist'] = $sanitized_whitelist;
-    } else {
-        $sanitized['coming_soon_whitelist'] = array();
     }
 
-    // Sanitize Featured Banner enabled
+    // Sanitize Featured Banner enabled (checkbox)
     if (isset($input['featured_banner_enabled'])) {
-        $sanitized['featured_banner_enabled'] = '1';
-    } else {
-        $sanitized['featured_banner_enabled'] = '0';
+        $sanitized['featured_banner_enabled'] = $input['featured_banner_enabled'] === '1' ? '1' : '0';
     }
 
     // Sanitize Featured Banner image
@@ -1140,9 +1128,10 @@ function flexpress_sanitize_general_settings($input)
     }
 
     // Log the complete sanitized data for debugging
-    error_log('FlexPress General Settings: Complete sanitized data: ' . print_r($sanitized, true));
+    error_log('FlexPress General Settings: Complete sanitized (delta) data: ' . print_r($sanitized, true));
 
-    return $sanitized;
+    // Merge with current so non-posted keys persist
+    return array_merge($current, $sanitized);
 }
 
 /**

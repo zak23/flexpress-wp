@@ -158,6 +158,7 @@ class FlexPress_Coming_Soon_Settings
         $value = isset($options['coming_soon_enabled']) ? $options['coming_soon_enabled'] : 0;
     ?>
         <label>
+            <input type="hidden" name="flexpress_general_settings[coming_soon_enabled]" value="0">
             <input type="checkbox"
                 name="flexpress_general_settings[coming_soon_enabled]"
                 value="1"
@@ -443,6 +444,7 @@ class FlexPress_Coming_Soon_Settings
                                 </th>
                                 <td>
                                     <label>
+                                        <input type="hidden" name="flexpress_general_settings[coming_soon_links][<?php echo $index; ?>][new_tab]" value="0">
                                         <input type="checkbox"
                                             id="coming_soon_link_new_tab_<?php echo $index; ?>"
                                             name="flexpress_general_settings[coming_soon_links][<?php echo $index; ?>][new_tab]"
@@ -485,7 +487,7 @@ class FlexPress_Coming_Soon_Settings
                         '</tr>' +
                         '<tr>' +
                         '<th scope="row"><label><?php esc_html_e('Open in New Tab', 'flexpress'); ?></label></th>' +
-                        '<td><label><input type="checkbox" name="flexpress_general_settings[coming_soon_links][' + linkIndex + '][new_tab]" value="1"> <?php esc_html_e('Open this link in a new tab', 'flexpress'); ?></label></td>' +
+                        '<td><label><input type="hidden" name="flexpress_general_settings[coming_soon_links][' + linkIndex + '][new_tab]" value="0"><input type="checkbox" name="flexpress_general_settings[coming_soon_links][' + linkIndex + '][new_tab]" value="1"> <?php esc_html_e('Open this link in a new tab', 'flexpress'); ?></label></td>' +
                         '</tr>' +
                         '</table>' +
                         '</div>';
@@ -542,6 +544,7 @@ class FlexPress_Coming_Soon_Settings
         </p>
 
         <?php if (!empty($pages)) : ?>
+            <input type="hidden" name="flexpress_general_settings[coming_soon_whitelist]" value="__reset__">
             <select name="flexpress_general_settings[coming_soon_whitelist][]"
                 id="flexpress_coming_soon_whitelist"
                 multiple="multiple"

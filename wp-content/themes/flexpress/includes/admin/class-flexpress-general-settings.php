@@ -384,6 +384,7 @@ class FlexPress_General_Settings
         $value = isset($options['dolls_downunder_network']) ? $options['dolls_downunder_network'] : 0;
     ?>
         <label>
+            <input type="hidden" name="flexpress_general_settings[dolls_downunder_network]" value="0">
             <input type="checkbox"
                 name="flexpress_general_settings[dolls_downunder_network]"
                 value="1"
@@ -608,6 +609,7 @@ class FlexPress_General_Settings
         $value = isset($options['extras_enabled']) ? $options['extras_enabled'] : '0';
     ?>
         <label>
+            <input type="hidden" name="flexpress_general_settings[extras_enabled]" value="0">
             <input type="checkbox"
                 name="flexpress_general_settings[extras_enabled]"
                 value="1"
@@ -877,6 +879,7 @@ class FlexPress_General_Settings
         $value = isset($options['featured_banner_enabled']) ? $options['featured_banner_enabled'] : 0;
     ?>
         <label>
+            <input type="hidden" name="flexpress_general_settings[featured_banner_enabled]" value="0">
             <input type="checkbox"
                 name="flexpress_general_settings[featured_banner_enabled]"
                 value="1"

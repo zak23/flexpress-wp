@@ -42,7 +42,7 @@ class FlexPress_Coming_Soon_Settings
             'flexpress_coming_soon_section',
             __('Coming Soon Mode', 'flexpress'),
             array($this, 'render_section_description'),
-            'flexpress_general_settings'
+            'flexpress_coming_soon_settings'
         );
 
         // Add coming soon enabled field
@@ -50,7 +50,7 @@ class FlexPress_Coming_Soon_Settings
             'flexpress_coming_soon_enabled',
             __('Enable Coming Soon Mode', 'flexpress'),
             array($this, 'render_coming_soon_enabled_field'),
-            'flexpress_general_settings',
+            'flexpress_coming_soon_settings',
             'flexpress_coming_soon_section'
         );
 
@@ -59,7 +59,7 @@ class FlexPress_Coming_Soon_Settings
             'flexpress_coming_soon_logo',
             __('Coming Soon Logo', 'flexpress'),
             array($this, 'render_coming_soon_logo_field'),
-            'flexpress_general_settings',
+            'flexpress_coming_soon_settings',
             'flexpress_coming_soon_section'
         );
 
@@ -68,7 +68,7 @@ class FlexPress_Coming_Soon_Settings
             'flexpress_coming_soon_video_url',
             __('Video ID (Bunny CDN)', 'flexpress'),
             array($this, 'render_coming_soon_video_url_field'),
-            'flexpress_general_settings',
+            'flexpress_coming_soon_settings',
             'flexpress_coming_soon_section'
         );
 
@@ -77,7 +77,7 @@ class FlexPress_Coming_Soon_Settings
             'flexpress_coming_soon_fallback_image',
             __('Thumbnail Image', 'flexpress'),
             array($this, 'render_coming_soon_fallback_image_field'),
-            'flexpress_general_settings',
+            'flexpress_coming_soon_settings',
             'flexpress_coming_soon_section'
         );
 
@@ -86,7 +86,7 @@ class FlexPress_Coming_Soon_Settings
             'flexpress_coming_soon_text',
             __('Coming Soon Text', 'flexpress'),
             array($this, 'render_coming_soon_text_field'),
-            'flexpress_general_settings',
+            'flexpress_coming_soon_settings',
             'flexpress_coming_soon_section'
         );
 
@@ -95,7 +95,7 @@ class FlexPress_Coming_Soon_Settings
             'flexpress_coming_soon_links',
             __('Custom Links', 'flexpress'),
             array($this, 'render_coming_soon_links_field'),
-            'flexpress_general_settings',
+            'flexpress_coming_soon_settings',
             'flexpress_coming_soon_section'
         );
 
@@ -104,7 +104,7 @@ class FlexPress_Coming_Soon_Settings
             'flexpress_coming_soon_whitelist',
             __('Whitelisted Pages', 'flexpress'),
             array($this, 'render_coming_soon_whitelist_field'),
-            'flexpress_general_settings',
+            'flexpress_coming_soon_settings',
             'flexpress_coming_soon_section'
         );
     }
@@ -129,7 +129,7 @@ class FlexPress_Coming_Soon_Settings
             <form method="post" action="options.php">
                 <?php
                 settings_fields('flexpress_general_settings');
-                do_settings_sections('flexpress_general_settings');
+                do_settings_sections('flexpress_coming_soon_settings');
                 submit_button();
                 ?>
             </form>

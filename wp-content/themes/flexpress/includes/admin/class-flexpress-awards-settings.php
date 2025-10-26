@@ -42,7 +42,7 @@ class FlexPress_Awards_Settings
             'flexpress_awards_section',
             __('Awards & Recognition', 'flexpress'),
             array($this, 'render_section_description'),
-            'flexpress_general_settings'
+            'flexpress_awards_settings'
         );
 
         // Add awards section enable/disable field
@@ -50,7 +50,7 @@ class FlexPress_Awards_Settings
             'flexpress_awards_enabled',
             __('Enable Awards Section', 'flexpress'),
             array($this, 'render_awards_enabled_field'),
-            'flexpress_general_settings',
+            'flexpress_awards_settings',
             'flexpress_awards_section'
         );
 
@@ -59,7 +59,7 @@ class FlexPress_Awards_Settings
             'flexpress_awards_title',
             __('Awards Section Title', 'flexpress'),
             array($this, 'render_awards_title_field'),
-            'flexpress_general_settings',
+            'flexpress_awards_settings',
             'flexpress_awards_section'
         );
 
@@ -68,7 +68,7 @@ class FlexPress_Awards_Settings
             'flexpress_awards_list',
             __('Awards & Recognitions', 'flexpress'),
             array($this, 'render_awards_list_field'),
-            'flexpress_general_settings',
+            'flexpress_awards_settings',
             'flexpress_awards_section'
         );
     }
@@ -93,7 +93,7 @@ class FlexPress_Awards_Settings
             <form method="post" action="options.php">
                 <?php
                 settings_fields('flexpress_general_settings');
-                do_settings_sections('flexpress_general_settings');
+                do_settings_sections('flexpress_awards_settings');
                 submit_button();
                 ?>
             </form>

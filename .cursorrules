@@ -101,5 +101,6 @@ Do not alter `.wakatime-project` once created
   - Hover: Brighter border and background for better UX
   - Focus: Accent color glow using `box-shadow: 0 0 0 0.25rem var(--color-accent-light)`
   - Disabled: Opacity 0.5 with `cursor: not-allowed`
+  - Contact Form 7: Special CSS for checkboxes wrapped in `<p>` tags: `.form-check p` uses flexbox, `.form-check p br` hidden
 - Usage: Apply Bootstrap's `form-check`, `form-check-input`, and `form-check-label` classes
 - Documentation: Update README.md with checkbox styling implementation details

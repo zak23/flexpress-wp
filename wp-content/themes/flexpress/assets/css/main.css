@@ -6715,6 +6715,23 @@ input[type="radio"]:checked {
   cursor: not-allowed;
 }
 
+/* Fix for Contact Form 7 and other cases where checkbox is inside a <p> tag */
+.form-check p {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0;
+}
+
+.form-check p br {
+  display: none;
+}
+
+.form-check p label.form-check-label {
+  flex: 1;
+  line-height: 1.5;
+}
+
 /* Special highlight for featured content */
 .featured-badge {
   background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%);

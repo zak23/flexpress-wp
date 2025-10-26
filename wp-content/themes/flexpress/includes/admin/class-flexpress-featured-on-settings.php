@@ -42,7 +42,7 @@ class FlexPress_Featured_On_Settings
             'flexpress_featured_on_section',
             __('Featured On Section', 'flexpress'),
             array($this, 'render_section_description'),
-            'flexpress_general_settings'
+            'flexpress_featured_on_settings'
         );
 
         // Add Featured On enable field
@@ -50,7 +50,7 @@ class FlexPress_Featured_On_Settings
             'flexpress_featured_on_enabled',
             __('Enable Featured On Section', 'flexpress'),
             array($this, 'render_featured_on_enabled_field'),
-            'flexpress_general_settings',
+            'flexpress_featured_on_settings',
             'flexpress_featured_on_section'
         );
 
@@ -59,7 +59,7 @@ class FlexPress_Featured_On_Settings
             'flexpress_featured_on_media',
             __('Media Outlets', 'flexpress'),
             array($this, 'render_featured_on_media_field'),
-            'flexpress_general_settings',
+            'flexpress_featured_on_settings',
             'flexpress_featured_on_section'
         );
     }
@@ -84,7 +84,7 @@ class FlexPress_Featured_On_Settings
             <form method="post" action="options.php">
                 <?php
                 settings_fields('flexpress_general_settings');
-                do_settings_sections('flexpress_general_settings');
+                do_settings_sections('flexpress_featured_on_settings');
                 submit_button();
                 ?>
             </form>

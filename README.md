@@ -22,6 +22,8 @@ A modern WordPress website running in Docker containers with MySQL database and 
   - Used `var(--color-accent)` for checked state background
   - Proper contrast on dark backgrounds with semi-transparent white for unchecked state
   - Transitions for smooth state changes
+  - Special handling for Contact Form 7 where checkboxes are wrapped in `<p>` tags
+  - Hidden all `<br>` tags inside form-check containers for clean alignment
 - **Files Modified**:
   - `wp-content/themes/flexpress/assets/css/main.css` - Added enhanced checkbox styling
 - **Affected Pages**:

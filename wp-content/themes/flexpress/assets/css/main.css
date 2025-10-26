@@ -4700,7 +4700,7 @@ footer.bg-black .row.footer {
 }
 
 /* ==========================================================================
-   Archive Page - Vixen.com Style
+   Archive Page
    ========================================================================== */
 
 /* Archive Header */
@@ -4711,7 +4711,7 @@ footer.bg-black .row.footer {
   margin-bottom: 2rem;
 }
 
-/* Sort Options - Vixen Style */
+
 .sort-options {
   margin-bottom: 3rem;
 }
@@ -4770,7 +4770,7 @@ footer.bg-black .row.footer {
   transform: translateY(-5px);
 }
 
-/* Vixen-Style Pagination */
+
 .pagination-nav {
   margin-top: 4rem;
   margin-bottom: 2rem;

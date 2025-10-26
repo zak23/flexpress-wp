@@ -100,7 +100,6 @@ $models_query = new WP_Query($models_args);
                         </div>
                     </div>
 
-                    <!-- Vixen-Style Pagination -->
                     <?php
                     $total_pages = $models_query->max_num_pages;
                     if ($total_pages > 1):
@@ -178,7 +177,6 @@ $models_query = new WP_Query($models_args);
                                         <?php endif; ?>
                                     </ul>
 
-                                    <!-- Page info like Vixen -->
                                     <div class="pagination-info mt-3">
                                         <span class="text-muted">
                                             <?php echo esc_html($current_page); ?> of <?php echo esc_html($total_pages); ?>

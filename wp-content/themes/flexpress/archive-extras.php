@@ -134,7 +134,7 @@ $extras_query = new WP_Query($extras_args);
                         </div>
                     </div>
 
-                    <!-- Vixen-Style Pagination -->
+
                     <?php
                     $total_pages = $extras_query->max_num_pages;
                     if ($total_pages > 1):
@@ -142,7 +142,7 @@ $extras_query = new WP_Query($extras_args);
                         <nav class="pagination-nav mt-5">
                             <div class="pagination-wrapper text-center">
                                 <?php
-                                // Custom pagination similar to Vixen.com
+
                                 $current_page = max(1, $paged);
                                 $pagination_args = array(
                                     'base' => str_replace(999999999, '%#%', esc_url(get_pagenum_link(999999999))),
@@ -212,7 +212,6 @@ $extras_query = new WP_Query($extras_args);
                                         <?php endif; ?>
                                     </ul>
 
-                                    <!-- Page info like Vixen -->
                                     <div class="pagination-info mt-3">
                                         <span class="text-muted">
                                             <?php echo esc_html($current_page); ?> of <?php echo esc_html($total_pages); ?>
@@ -355,7 +354,7 @@ $extras_query = new WP_Query($extras_args);
                                     AND pm.meta_key = 'featured_models'
                                     AND pm.meta_value != ''"
                                 );
-                                
+
                                 // Extract model IDs from serialized arrays
                                 $model_ids = array();
                                 foreach ($model_ids_in_extras as $serialized) {
@@ -365,7 +364,7 @@ $extras_query = new WP_Query($extras_args);
                                     }
                                 }
                                 $model_ids = array_unique(array_filter($model_ids));
-                                
+
                                 $models = array();
                                 if (!empty($model_ids)) {
                                     $models = get_posts(array(

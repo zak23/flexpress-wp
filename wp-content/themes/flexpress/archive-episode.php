@@ -126,7 +126,7 @@ $episodes_query = new WP_Query($episodes_args);
                         </div>
                     </div>
 
-                    <!-- Vixen-Style Pagination -->
+
                     <?php
                     $total_pages = $episodes_query->max_num_pages;
                     if ($total_pages > 1):
@@ -134,7 +134,7 @@ $episodes_query = new WP_Query($episodes_args);
                         <nav class="pagination-nav mt-5">
                             <div class="pagination-wrapper text-center">
                                 <?php
-                                // Custom pagination similar to Vixen.com
+
                                 $current_page = max(1, $paged);
                                 $pagination_args = array(
                                     'base' => str_replace(999999999, '%#%', esc_url(get_pagenum_link(999999999))),
@@ -204,7 +204,6 @@ $episodes_query = new WP_Query($episodes_args);
                                         <?php endif; ?>
                                     </ul>
 
-                                    <!-- Page info like Vixen -->
                                     <div class="pagination-info mt-3">
                                         <span class="text-muted">
                                             <?php echo esc_html($current_page); ?> of <?php echo esc_html($total_pages); ?>

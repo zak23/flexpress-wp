@@ -295,8 +295,8 @@ $episodes_query = new WP_Query($episodes_args);
                                                 $tag->term_id
                                             ));
 
-                                            // Check if this is a collection tag
-                                            $is_collection = flexpress_is_collection_tag($tag);
+                                            // Check if this is a collection tag and if collections are enabled
+                                            $is_collection = flexpress_is_collection_tag($tag) && flexpress_collections_enabled();
 
                                             // Use direct tag link for collections, filter for regular tags
                                             if ($is_collection) {

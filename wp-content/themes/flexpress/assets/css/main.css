@@ -9583,3 +9583,8 @@ body.page-template-casting .site-main .alert-info {
         transform: none;
     }
 }
+
+/* Collections Page Grid - Reuses existing collection-card styles */
+.collections-grid {
+    margin-top: 2rem;
+}

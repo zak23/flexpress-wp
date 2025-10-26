@@ -126,6 +126,7 @@ add_action('init', 'flexpress_load_acf_fields', 20);
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-settings.php';
 require_once FLEXPRESS_PATH . '/includes/performance-optimization.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-general-settings.php';
+require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-collections-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-video-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-membership-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-flowguard-settings.php';
@@ -284,6 +285,7 @@ function flexpress_setup()
 
     add_image_size('casting-image', 500, 0, false); // 500px wide, auto height
     add_image_size('model-card-alt', 250, 0, false); // 250px wide, auto height
+    add_image_size('collection-card', 550, 0, false); // 550px wide, auto height
 
     // Register navigation menus
     register_nav_menus(array(
@@ -9737,6 +9739,17 @@ function flexpress_get_collection_count($tag)
     return $query->found_posts;
 }
 
+/**
+ * Check if collections feature is enabled
+ *
+ * @return bool True if collections feature is enabled
+ */
+function flexpress_collections_enabled()
+{
+    $options = get_option('flexpress_collections_settings', array());
+    return !empty($options['collections_enabled']);
+}
+
 // Include Collection Admin Interface
 require_once get_template_directory() . '/includes/collection-admin.php';
 
@@ -9861,165 +9874,4 @@ function flexpress_register_collection_acf_fields()
             'description' => 'Settings for tag-based episode collections',
         ));
     }
-}
-
-// Add custom fields to tag edit page
-add_action('post_tag_edit_form_fields', 'flexpress_add_collection_fields_to_tag_edit');
-add_action('post_tag_add_form_fields', 'flexpress_add_collection_fields_to_tag_add');
-add_action('edited_post_tag', 'flexpress_save_collection_fields');
-add_action('created_post_tag', 'flexpress_save_collection_fields');
-// Ensure runs for all taxonomy saves and last
-add_action('edited_term', 'flexpress_save_collection_fields', 999, 3);
-add_action('created_term', 'flexpress_save_collection_fields', 999, 3);
-
-function flexpress_add_collection_fields_to_tag_edit($tag)
-{
-    $is_collection = get_term_meta($tag->term_id, 'is_collection_tag', true);
-    $description = get_term_meta($tag->term_id, 'collection_description', true);
-    $episode_order = get_term_meta($tag->term_id, 'collection_episode_order', true);
-    $custom_css = get_term_meta($tag->term_id, 'collection_custom_css', true);
-    ?>
-        <?php wp_nonce_field('flexpress_save_collection', 'flexpress_collection_nonce'); ?>
-        <tr class="form-field">
-            <th scope="row" valign="top">
-                <label for="is_collection_tag"><?php _e('Collection Tag', 'flexpress'); ?></label>
-            </th>
-            <td>
-                <input type="checkbox" name="is_collection_tag" id="is_collection_tag" value="1" <?php checked($is_collection, '1'); ?> />
-                <p class="description"><?php _e('Enable this tag to display as a special collection page with enhanced layout and metadata', 'flexpress'); ?></p>
-            </td>
-        </tr>
-        <tr class="form-field">
-            <th scope="row" valign="top">
-                <label for="collection_description"><?php _e('Collection Description', 'flexpress'); ?></label>
-            </th>
-            <td>
-                <textarea name="collection_description" id="collection_description" rows="5" cols="50" class="large-text"><?php echo esc_textarea($description); ?></textarea>
-                <p class="description"><?php _e('Rich description for this collection (displayed on collection page)', 'flexpress'); ?></p>
-            </td>
-        </tr>
-        <tr class="form-field">
-            <th scope="row" valign="top">
-                <label for="collection_episode_order"><?php _e('Episode Order', 'flexpress'); ?></label>
-            </th>
-            <td>
-                <select name="collection_episode_order" id="collection_episode_order">
-                    <option value="newest" <?php selected($episode_order, 'newest'); ?>><?php _e('Newest First', 'flexpress'); ?></option>
-                    <option value="oldest" <?php selected($episode_order, 'oldest'); ?>><?php _e('Oldest First', 'flexpress'); ?></option>
-                    <option value="title" <?php selected($episode_order, 'title'); ?>><?php _e('Alphabetical', 'flexpress'); ?></option>
-                    <option value="custom" <?php selected($episode_order, 'custom'); ?>><?php _e('Custom Order', 'flexpress'); ?></option>
-                </select>
-                <p class="description"><?php _e('How to order episodes in this collection', 'flexpress'); ?></p>
-            </td>
-        </tr>
-        <tr class="form-field">
-            <th scope="row" valign="top">
-                <label for="collection_custom_css"><?php _e('Custom CSS Class', 'flexpress'); ?></label>
-            </th>
-            <td>
-                <input type="text" name="collection_custom_css" id="collection_custom_css" value="<?php echo esc_attr($custom_css); ?>" class="regular-text" />
-                <p class="description"><?php _e('Custom CSS class for styling this collection page', 'flexpress'); ?></p>
-            </td>
-        </tr>
-    <?php
-}
-
-function flexpress_add_collection_fields_to_tag_add()
-{
-    ?>
-        <?php wp_nonce_field('flexpress_save_collection', 'flexpress_collection_nonce'); ?>
-        <div class="form-field">
-            <label for="is_collection_tag"><?php _e('Collection Tag', 'flexpress'); ?></label>
-            <input type="checkbox" name="is_collection_tag" id="is_collection_tag" value="1" />
-            <p class="description"><?php _e('Enable this tag to display as a special collection page with enhanced layout and metadata', 'flexpress'); ?></p>
-        </div>
-        <div class="form-field">
-            <label for="collection_description"><?php _e('Collection Description', 'flexpress'); ?></label>
-            <textarea name="collection_description" id="collection_description" rows="5" cols="50" class="large-text"></textarea>
-            <p class="description"><?php _e('Rich description for this collection (displayed on collection page)', 'flexpress'); ?></p>
-        </div>
-        <div class="form-field">
-            <label for="collection_episode_order"><?php _e('Episode Order', 'flexpress'); ?></label>
-            <select name="collection_episode_order" id="collection_episode_order">
-                <option value="newest"><?php _e('Newest First', 'flexpress'); ?></option>
-                <option value="oldest"><?php _e('Oldest First', 'flexpress'); ?></option>
-                <option value="title"><?php _e('Alphabetical', 'flexpress'); ?></option>
-                <option value="custom"><?php _e('Custom Order', 'flexpress'); ?></option>
-            </select>
-            <p class="description"><?php _e('How to order episodes in this collection', 'flexpress'); ?></p>
-        </div>
-        <div class="form-field">
-            <label for="collection_custom_css"><?php _e('Custom CSS Class', 'flexpress'); ?></label>
-            <input type="text" name="collection_custom_css" id="collection_custom_css" class="regular-text" />
-            <p class="description"><?php _e('Custom CSS class for styling this collection page', 'flexpress'); ?></p>
-        </div>
-    <?php
-}
-
-function flexpress_save_collection_fields($term_id, $tt_id = null, $taxonomy = null)
-{
-    // Scope to post_tag only
-    if ($taxonomy && $taxonomy !== 'post_tag') {
-        return;
-    }
-    if (isset($_POST['taxonomy']) && $_POST['taxonomy'] !== 'post_tag') {
-        return;
-    }
-
-    // Verify nonce for admin form submissions
-    if (is_admin()) {
-        if (!isset($_POST['flexpress_collection_nonce']) || !wp_verify_nonce($_POST['flexpress_collection_nonce'], 'flexpress_save_collection')) {
-            return;
-        }
-    }
-
-    // Debug: Log what we're saving
-    error_log("Saving collection fields for term_id: $term_id");
-
-    // Always handle the collection tag checkbox
-    if (isset($_POST['is_collection_tag']) && $_POST['is_collection_tag'] == '1') {
-        update_term_meta($term_id, 'is_collection_tag', '1');
-        error_log("Set is_collection_tag to 1");
-    } else {
-        delete_term_meta($term_id, 'is_collection_tag');
-        error_log("Deleted is_collection_tag");
-    }
-
-    // Handle description
-    if (isset($_POST['collection_description'])) {
-        $description = sanitize_textarea_field($_POST['collection_description']);
-        if (!empty($description)) {
-            update_term_meta($term_id, 'collection_description', $description);
-            error_log("Set collection_description to: " . substr($description, 0, 50) . "...");
-        } else {
-            delete_term_meta($term_id, 'collection_description');
-            error_log("Deleted collection_description");
-        }
-    }
-
-    // Handle episode order
-    if (isset($_POST['collection_episode_order'])) {
-        $episode_order = sanitize_text_field($_POST['collection_episode_order']);
-        if (!empty($episode_order)) {
-            update_term_meta($term_id, 'collection_episode_order', $episode_order);
-            error_log("Set collection_episode_order to: $episode_order");
-        } else {
-            update_term_meta($term_id, 'collection_episode_order', 'newest'); // Default
-            error_log("Set collection_episode_order to default: newest");
-        }
-    }
-
-    // Handle custom CSS
-    if (isset($_POST['collection_custom_css'])) {
-        $custom_css = sanitize_text_field($_POST['collection_custom_css']);
-        if (!empty($custom_css)) {
-            update_term_meta($term_id, 'collection_custom_css', $custom_css);
-            error_log("Set collection_custom_css to: $custom_css");
-        } else {
-            delete_term_meta($term_id, 'collection_custom_css');
-            error_log("Deleted collection_custom_css");
-        }
-    }
-
-    error_log("Collection fields save completed for term_id: $term_id");
 }

@@ -469,6 +469,8 @@ The tag collection system allows specific tags to be promoted to "collection" st
 
 **Features:**
 
+- **Enable/Disable Toggle**: Collections feature can be enabled/disabled site-wide from `FlexPress → Collections`
+- **Collections Listing Page**: Dedicated `/collections` page listing all collections (accessible only when enabled)
 - **Collection Detection**: ACF field to mark tags as collections
 - **Rich Metadata**: Description, featured image, custom ordering
 - **Enhanced Templates**: Special `tag.php` template with collection layouts
@@ -476,20 +478,33 @@ The tag collection system allows specific tags to be promoted to "collection" st
 - **Custom Ordering**: Newest, oldest, alphabetical, or custom episode order
 - **Related Collections**: Cross-promotion of other collections
 - **Responsive Design**: Mobile-optimized collection pages
+- **Conditional UI**: All collection UI elements (badges, links, sections) are conditionally rendered based on enabled state
 
 **Usage:**
 
-1. **Admin Setup**: Edit any tag and enable "Collection Tag" option
-2. **Metadata**: Add description, featured image, and custom CSS class
-3. **Ordering**: Choose how episodes are sorted in the collection
-4. **Styling**: Apply custom CSS classes for unique collection themes
+1. **Enable Collections**: Go to `FlexPress → Collections` and enable the feature
+2. **Configure Page**: Set custom page title and description (optional)
+3. **Admin Setup**: Edit any tag and enable "Collection Tag" option
+4. **Metadata**: Add description, featured image, and custom CSS class
+5. **Ordering**: Choose how episodes are sorted in the collection
+6. **Styling**: Apply custom CSS classes for unique collection themes
+
+**When Disabled:**
+
+- `/collections` page redirects to `/episodes/`
+- Collection badges are hidden throughout the site
+- Collection links use regular tag filtering instead
+- "Explore Collections" sections are not displayed
 
 **Technical Implementation:**
 
+- **Settings Class**: `FlexPress_Collections_Settings` manages enable/disable functionality
+- **Helper Function**: `flexpress_collections_enabled()` checks if feature is active
 - **Helper Functions**: `flexpress_is_collection_tag()`, `flexpress_get_collection_metadata()`
-- **Template**: `tag.php` with collection detection and enhanced layouts
+- **Templates**: `tag.php` and `page-templates/collections.php` with collection detection
 - **Styling**: Collection-specific CSS with gradients and animations
-- **Integration**: Enhanced episode archive filtering with collection badges
+- **Integration**: Enhanced episode archive filtering with collection badges (conditional)
+- **Redirect Logic**: Template redirects `/collections` when disabled
 
 ### Extras/BTS Content
 

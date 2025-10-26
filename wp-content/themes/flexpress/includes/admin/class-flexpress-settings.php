@@ -76,6 +76,16 @@ class FlexPress_Settings
             array($this, 'render_featured_on_settings_page')
         );
 
+        // Add Collections submenu
+        add_submenu_page(
+            $this->page_slug,
+            __('Collections Settings', 'flexpress'),
+            __('Collections', 'flexpress'),
+            'manage_options',
+            'flexpress-collections-settings',
+            array($this, 'render_collections_settings_page')
+        );
+
         // Add Coming Soon submenu
         add_submenu_page(
             $this->page_slug,
@@ -1408,6 +1418,19 @@ class FlexPress_Settings
             $featured_on_settings->render_featured_on_settings_page();
         } else {
             echo '<div class="wrap"><h1>Featured On Section</h1><p>Featured On settings class not found.</p></div>';
+        }
+    }
+
+    /**
+     * Render the Collections settings page
+     */
+    public function render_collections_settings_page()
+    {
+        if (class_exists('FlexPress_Collections_Settings')) {
+            $collections_settings = new FlexPress_Collections_Settings();
+            $collections_settings->render_collections_settings_page();
+        } else {
+            echo '<div class="wrap"><h1>Collections Settings</h1><p>Collections settings class not found.</p></div>';
         }
     }
 

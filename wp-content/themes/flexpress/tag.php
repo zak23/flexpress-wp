@@ -158,8 +158,8 @@ if ($is_collection) {
 
         <?php wp_reset_postdata(); ?>
 
-        <!-- Related Collections (if this is a regular tag) -->
-        <?php if (!$is_collection): ?>
+        <!-- Related Collections (if this is a regular tag and collections are enabled) -->
+        <?php if (!$is_collection && flexpress_collections_enabled()): ?>
             <?php
             // Get other collection tags for related collections
             $collection_tags = get_terms(array(

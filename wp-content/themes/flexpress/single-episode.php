@@ -382,7 +382,7 @@ while (have_posts()):
                                         }
 
                                         $tag_html = '<a href="' . esc_url($tag_url) . '" class="' . esc_attr($tag_class) . '">' . esc_html($tag->name);
-                                        if ($is_collection) {
+                                        if ($is_collection && flexpress_collections_enabled()) {
                                             $tag_html .= ' <span class="collection-badge badge ms-1">Collection</span>';
                                         }
                                         $tag_html .= '</a>';

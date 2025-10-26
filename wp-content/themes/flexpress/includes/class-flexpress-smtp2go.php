@@ -58,8 +58,10 @@ class FlexPress_SMTP2Go
 
         // Set from address if configured
         if (!empty($options['from_email'])) {
-            $phpmailer->setFrom($options['from_email'], $options['from_name'] ?? '');
-            error_log('FlexPress SMTP2Go: Set From address to ' . $options['from_email'] . ' (' . ($options['from_name'] ?? '') . ')');
+            // Default to site title if from_name is not set
+            $from_name = !empty($options['from_name']) ? $options['from_name'] : (get_bloginfo('name') ?: '');
+            $phpmailer->setFrom($options['from_email'], $from_name);
+            error_log('FlexPress SMTP2Go: Set From address to ' . $options['from_email'] . ' (' . $from_name . ')');
         } else {
             error_log('FlexPress SMTP2Go: No from_email configured in options');
         }

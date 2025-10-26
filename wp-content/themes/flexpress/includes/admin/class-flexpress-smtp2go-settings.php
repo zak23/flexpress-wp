@@ -267,10 +267,12 @@ class FlexPress_SMTP2Go_Settings
     public function render_from_name_field()
     {
         $options = get_option('flexpress_smtp2go_settings', array());
-        $value = $options['from_name'] ?? '';
+        // Default to site title if not set, but show actual saved value in the input
+        $default_name = get_bloginfo('name') ?: 'Site Name';
+        $value = !empty($options['from_name']) ? $options['from_name'] : '';
 
         echo '<input type="text" name="flexpress_smtp2go_settings[from_name]" value="' . esc_attr($value) . '" class="regular-text" />';
-        echo '<p class="description">' . __('Name to send from', 'flexpress') . '</p>';
+        echo '<p class="description">' . sprintf(__('Name to send from (defaults to "%s" if left empty)', 'flexpress'), esc_html($default_name)) . '</p>';
     }
 
     /**
@@ -429,8 +431,12 @@ class FlexPress_SMTP2Go_Settings
             $to = $options['test_email'];
             $subject = 'SMTP2Go Test Email - ' . date('Y-m-d H:i:s');
             $message = 'This is a test email from FlexPress SMTP2Go integration.';
+
+            // Default to site title if from_name is not set
+            $from_name = !empty($options['from_name']) ? $options['from_name'] : (get_bloginfo('name') ?: '');
+
             $headers = array(
-                'From: ' . $options['from_name'] . ' <' . $options['from_email'] . '>'
+                'From: ' . $from_name . ' <' . $options['from_email'] . '>'
             );
 
             $result = wp_mail($to, $subject, $message, $headers);

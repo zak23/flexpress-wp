@@ -571,6 +571,7 @@ FlexPress includes SMTP2Go integration as the primary solution for reliable inte
 
 - **Internal Emails**: Any email sent TO `@zakspov.com` is automatically routed through SMTP2Go
 - **From Address Override**: SMTP2Go uses your configured From email (`zak@zakozbourne.com`) instead of WordPress defaults
+- **From Name Fallback**: If From Name is left empty, it defaults to your WordPress site title (e.g., "Dolls Downunder")
 - **Professional Delivery**: No more bounces or spam filter issues
 - **Automatic Fallback**: If SMTP2Go fails, system falls back to Google SMTP, then Amazon SES
 
@@ -789,6 +790,7 @@ No field keys or names changed; existing data remains intact.
 - **Added SMTP2Go Integration**: Complete SMTP2Go integration for reliable internal email delivery
 - **Smart Routing Logic**: Automatically routes emails TO `@zakspov.com` through SMTP2Go
 - **From Address Override**: SMTP2Go uses configured From email (`zak@zakozbourne.com`) instead of WordPress defaults
+- **From Name Fallback**: If From Name is left empty in settings, defaults to WordPress site title (matches SES and Google SMTP behavior)
 - **Professional Delivery**: Eliminates bounce issues and spam filter problems for internal emails
 - **Admin Interface**: Full settings page under `FlexPress → SMTP2Go` with test functionality
 - **Fallback System**: SMTP2Go → Google SMTP → Amazon SES priority order for internal emails

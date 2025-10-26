@@ -86,3 +86,20 @@ Do not alter `.wakatime-project` once created
 - Accessibility: Include proper alt text, ARIA labels, and semantic HTML
 - Responsive: Mobile-optimized with disabled hover effects on small screens
 - Documentation: Update README.md with feature details and technical implementation
+
+## Bootstrap 5 Form Checkbox Styling Pattern
+
+- Problem: Bootstrap 5 checkboxes on dark themes don't show visible checkmarks and checkbox/label alignment issues
+- Solution: Enhanced `.form-check` container and `.form-check-input` styling in `main.css`
+- Technical Details:
+  - Container: `.form-check` uses flexbox with `display: flex`, `align-items: flex-start`, `gap: 0.5rem`
+  - Label: `.form-check-label` uses `flex: 1`, `line-height: 1.5`, `margin-bottom: 0`
+  - Checkbox: `.form-check-input` uses `flex-shrink: 0`, `margin-top: 0.25rem`
+  - Unchecked: `rgba(255, 255, 255, 0.1)` background, `rgba(255, 255, 255, 0.3)` border
+  - Checked: Accent color background (`var(--color-accent)`) with white SVG checkmark
+  - Checkmark: Data URI SVG (`data:image/svg+xml...`) with white stroke
+  - Hover: Brighter border and background for better UX
+  - Focus: Accent color glow using `box-shadow: 0 0 0 0.25rem var(--color-accent-light)`
+  - Disabled: Opacity 0.5 with `cursor: not-allowed`
+- Usage: Apply Bootstrap's `form-check`, `form-check-input`, and `form-check-label` classes
+- Documentation: Update README.md with checkbox styling implementation details

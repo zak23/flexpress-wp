@@ -4,6 +4,32 @@ A modern WordPress website running in Docker containers with MySQL database and 
 
 ## 🔧 Recent Fixes
 
+### Checkbox Visibility Fix (December 2024)
+
+- **Problem**: Bootstrap 5 form checkboxes on the dark theme didn't show visible checkmarks when checked and checkbox/label were misaligned
+- **Solution**: Added comprehensive CSS styling for Bootstrap 5 `.form-check` containers and `.form-check-input` checkboxes
+  - Container: Flexbox layout with `display: flex`, `align-items: flex-start`, and gap spacing
+  - Unchecked state: Semi-transparent white background with subtle border
+  - Checked state: Accent color background with white checkmark SVG icon
+  - Hover state: Brighter border and background for better UX
+  - Focus state: Accent color glow for accessibility
+  - Disabled state: Reduced opacity with not-allowed cursor
+  - Label alignment: Proper flex properties to align checkbox and label on the same line
+- **Technical Implementation**:
+  - Added `.form-check` flexbox container styling
+  - Added `.form-check-label` flex properties for proper alignment
+  - Added inline SVG checkmark using data URI for the checked state
+  - Used `var(--color-accent)` for checked state background
+  - Proper contrast on dark backgrounds with semi-transparent white for unchecked state
+  - Transitions for smooth state changes
+- **Files Modified**:
+  - `wp-content/themes/flexpress/assets/css/main.css` - Added enhanced checkbox styling
+- **Affected Pages**:
+  - `/register` page (terms checkbox)
+  - `/talent-application` page (confirmation checkbox)
+  - `/join` and `/membership` pages (terms checkboxes)
+  - Contact Form 7 forms (confirmation checkboxes)
+
 ### Settings Menu Reorganization (December 2024)
 
 - **Improved Admin Organization**: Reorganized FlexPress admin settings for better usability and organization

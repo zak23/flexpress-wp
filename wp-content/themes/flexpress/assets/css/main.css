@@ -6640,7 +6640,7 @@ footer.bg-black .row.footer {
 .navbar-nav .nav-link.active::after {
   content: '';
   position: absolute;
-  bottom: -5px;
+  bottom: -2px;
   left: 50%;
   transform: translateX(-50%);
   width: 30px;

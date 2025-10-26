@@ -698,16 +698,6 @@ a:hover {
   position: relative;
 }
 
-.navbar-nav .nav-link.active:after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 15px;
-  right: 15px;
-  height: 2px;
-  background-color: var(--color-primary);
-}
-
 /* ==========================================================================
    Hero Section - Recent Video
    ========================================================================== */
@@ -6640,7 +6630,7 @@ footer.bg-black .row.footer {
 .navbar-nav .nav-link.active::after {
   content: '';
   position: absolute;
-  bottom: -2px;
+  bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   width: 30px;

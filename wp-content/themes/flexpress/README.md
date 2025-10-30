@@ -11,6 +11,14 @@ FlexPress is designed specifically for content websites (primarily adult content
 
 ## 🌟 Core Features
 
+### Subscription Type Labeling (October 2025)
+
+- Single helper `flexpress_get_user_subscription_type($userId)` derives a normalized label.
+- Returns one of: "Free Trial", "membership", "none".
+- Logic: active trial → Free Trial; active/cancelled (until expiry) → membership; otherwise none.
+- Updated templates: `page-templates/membership.php`, `page-templates/cancel-membership.php`.
+- Admin membership screen displays derived label alongside status.
+
 ### Date Format Standardization (October 2025)
 
 - **Australian/European Date Format**: All episode dates now display in day-first format

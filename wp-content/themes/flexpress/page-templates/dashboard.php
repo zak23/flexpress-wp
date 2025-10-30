@@ -206,22 +206,7 @@ add_filter('body_class', function ($classes) {
                                                 echo esc_html(date_i18n(get_option('date_format'), $site_time));
                                                 ?>
                                             </p>
-                                            <?php if ($status === 'active'): ?>
-                                                <p class="mb-1">
-                                                    <strong><?php esc_html_e('Next Rebill:', 'flexpress'); ?></strong>
-                                                    <?php
-                                                    $next_rebill = get_user_meta($user_id, 'next_rebill_date', true);
-                                                    if ($next_rebill) {
-                                                        // Convert UTC timestamp to site timezone
-                                                        $utc_timestamp = strtotime($next_rebill);
-                                                        $site_time = $utc_timestamp + (get_option('gmt_offset') * HOUR_IN_SECONDS);
-                                                        echo esc_html(date_i18n(get_option('date_format'), $site_time));
-                                                    } else {
-                                                        echo esc_html__('Not available', 'flexpress');
-                                                    }
-                                                    ?>
-                                                </p>
-                                            <?php endif; ?>
+                                            
                                         </div>
                                     </div>
                                 </div>
@@ -258,7 +243,9 @@ add_filter('body_class', function ($classes) {
                             <div class="card-body">
                                 <?php
                                 $membership_status = get_user_meta($user_id, 'membership_status', true) ?: 'none';
-                                $subscription_type = get_user_meta($user_id, 'subscription_type', true);
+                                $subscription_type = function_exists('flexpress_get_user_subscription_type')
+                                    ? flexpress_get_user_subscription_type($user_id)
+                                    : (get_user_meta($user_id, 'subscription_type', true) ?: '');
                                 $subscription_start = get_user_meta($user_id, 'subscription_start_date', true);
                                 $next_rebill = get_user_meta($user_id, 'next_rebill_date', true);
                                 $flowguard_transaction_id = get_user_meta($user_id, 'flowguard_transaction_id', true);
@@ -271,27 +258,14 @@ add_filter('body_class', function ($classes) {
                                         <div class="col-md-6">
                                             <p class="mb-1">
                                                 <strong><?php esc_html_e('Status:', 'flexpress'); ?></strong>
-                                                <span class="badge bg-<?php
-                                                                        $status_color = '';
-                                                                        switch ($membership_status) {
-                                                                            case 'active':
-                                                                                $status_color = 'success';
-                                                                                break;
-                                                                            case 'cancelled':
-                                                                                $status_color = 'warning';
-                                                                                break;
-                                                                            case 'expired':
-                                                                            case 'banned':
-                                                                                $status_color = 'danger';
-                                                                                break;
-                                                                            default:
-                                                                                $status_color = 'secondary';
-                                                                        }
-                                                                        echo $status_color;
-                                                                        ?>">
-                                                    <?php echo esc_html(ucfirst($membership_status)); ?>
-                                                </span>
+                                                <?php echo esc_html(ucfirst($membership_status)); ?>
                                             </p>
+                                            <?php if (!empty($subscription_type)) : ?>
+                                            <p class="mb-1">
+                                                <strong><?php esc_html_e('Subscription:', 'flexpress'); ?></strong>
+                                                <?php echo esc_html($subscription_type); ?>
+                                            </p>
+                                            <?php endif; ?>
 
                                             <?php if ($subscription_start): ?>
                                                 <p class="mb-1">
@@ -304,7 +278,10 @@ add_filter('body_class', function ($classes) {
                                                     ?>
                                                 </p>
                                             <?php endif; ?>
-                                            <?php if ($next_rebill): ?>
+                                            <?php 
+                                            $next_rebill_str = is_string($next_rebill) ? trim($next_rebill) : $next_rebill;
+                                            $show_next_rebill = !empty($next_rebill_str) && strtolower($next_rebill_str) !== 'not available';
+                                            if ($show_next_rebill): ?>
                                                 <p class="mb-0">
                                                     <strong>
                                                         <?php
@@ -318,8 +295,10 @@ add_filter('body_class', function ($classes) {
                                                     <?php
                                                     // Convert UTC timestamp to site timezone
                                                     $utc_timestamp = strtotime($next_rebill);
-                                                    $site_time = $utc_timestamp + (get_option('gmt_offset') * HOUR_IN_SECONDS);
-                                                    echo esc_html(date_i18n(get_option('date_format'), $site_time));
+                                                    if ($utc_timestamp) {
+                                                        $site_time = $utc_timestamp + (get_option('gmt_offset') * HOUR_IN_SECONDS);
+                                                        echo esc_html(date_i18n(get_option('date_format'), $site_time));
+                                                    }
                                                     ?>
                                                 </p>
                                             <?php endif; ?>

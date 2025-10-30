@@ -125,3 +125,10 @@ Do not alter `.wakatime-project` once created
   - Contact Form 7: Special CSS for checkboxes wrapped in `<p>` tags: `.form-check p` uses flexbox, `.form-check p br` hidden
 - Usage: Apply Bootstrap's `form-check`, `form-check-input`, and `form-check-label` classes
 - Documentation: Update README.md with checkbox styling implementation details
+
+## Subscription Type Labeling
+
+- Use `flexpress_get_user_subscription_type($userId)` for all displays
+- Labels: "Free Trial" (active trial), "membership" (active/cancelled until expiry), "none"
+- Frontend: replace direct `subscription_type` meta usage with helper
+- Admin: show derived label in membership panel; do not alter DB schema

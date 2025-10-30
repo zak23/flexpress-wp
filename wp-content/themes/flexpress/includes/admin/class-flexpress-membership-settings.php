@@ -451,6 +451,16 @@ class FlexPress_Membership_Settings {
      * Render the members list
      */
     public function render_members_list() {
+        // Handle status refresh request
+        if (isset($_GET['refresh_status']) && isset($_GET['user_id']) && current_user_can('edit_users')) {
+            $user_id = intval($_GET['user_id']);
+            // Force refresh by calling flexpress_get_membership_status which checks trial expiration
+            if (function_exists('flexpress_get_membership_status')) {
+                flexpress_get_membership_status($user_id);
+                echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Membership status refreshed successfully.', 'flexpress') . '</p></div>';
+            }
+        }
+        
         // Check if we need to update a user
         if (isset($_POST['update_user_membership']) && isset($_POST['user_id']) && current_user_can('edit_users')) {
             check_admin_referer('update_user_membership', 'membership_nonce');
@@ -459,13 +469,42 @@ class FlexPress_Membership_Settings {
             $membership_status = sanitize_text_field($_POST['membership_status']);
             $subscription_type = sanitize_text_field($_POST['subscription_type']);
             $next_rebill_date = sanitize_text_field($_POST['next_rebill_date']);
+            $trial_expires_at = isset($_POST['trial_expires_at']) && !empty($_POST['trial_expires_at']) ? sanitize_text_field($_POST['trial_expires_at']) : '';
             $verotel_subscriber_id = isset($_POST['verotel_subscriber_id']) ? sanitize_text_field($_POST['verotel_subscriber_id']) : '';
             $flowguard_subscriber_id = isset($_POST['flowguard_subscriber_id']) ? sanitize_text_field($_POST['flowguard_subscriber_id']) : '';
+            
+            // Convert datetime-local to MySQL format if provided
+            $old_trial_expires_at = get_user_meta($user_id, 'trial_expires_at', true);
+            if (!empty($trial_expires_at)) {
+                $trial_expires_at = date('Y-m-d H:i:s', strtotime($trial_expires_at));
+            } else {
+                // If empty, delete the meta
+                delete_user_meta($user_id, 'trial_expires_at');
+            }
+            
+            // Check if trial expiration date was updated and trial is now active
+            if (!empty($trial_expires_at)) {
+                $expires_timestamp = strtotime($trial_expires_at);
+                $expires_with_grace = $expires_timestamp + (1 * DAY_IN_SECONDS);
+                $current_status = get_user_meta($user_id, 'membership_status', true);
+                
+                // If trial expiration is in the future (with grace period) and status is expired, update to active
+                if ($expires_with_grace > current_time('timestamp') && $current_status === 'expired') {
+                    $membership_status = 'active';
+                }
+                // If trial expiration is in the past (with grace period) and status is active, update to expired
+                elseif ($expires_with_grace < current_time('timestamp') && $current_status === 'active') {
+                    $membership_status = 'expired';
+                }
+            }
             
             // Update user meta
             update_user_meta($user_id, 'membership_status', $membership_status);
             update_user_meta($user_id, 'subscription_type', $subscription_type);
             update_user_meta($user_id, 'next_rebill_date', $next_rebill_date);
+            if (!empty($trial_expires_at)) {
+                update_user_meta($user_id, 'trial_expires_at', $trial_expires_at);
+            }
             update_user_meta($user_id, 'verotel_subscriber_id', $verotel_subscriber_id);
             update_user_meta($user_id, 'flowguard_subscriber_id', $flowguard_subscriber_id);
             
@@ -637,19 +676,45 @@ class FlexPress_Membership_Settings {
      */
     public function render_user_edit_form($user) {
         $user_id = $user->ID;
-        $membership_status = get_user_meta($user_id, 'membership_status', true) ?: 'none';
+        
+        // Use flexpress_get_membership_status() to ensure trial expiration is checked and status is auto-updated
+        $membership_status = function_exists('flexpress_get_membership_status') 
+            ? flexpress_get_membership_status($user_id) 
+            : (get_user_meta($user_id, 'membership_status', true) ?: 'none');
+        
         $subscription_type = get_user_meta($user_id, 'subscription_type', true);
         $subscription_start = get_user_meta($user_id, 'subscription_start_date', true);
         $next_rebill_date = get_user_meta($user_id, 'next_rebill_date', true);
+        $trial_expires_at = get_user_meta($user_id, 'trial_expires_at', true);
         $verotel_subscriber_id = get_user_meta($user_id, 'verotel_subscriber_id', true);
         $verotel_transaction_id = get_user_meta($user_id, 'verotel_transaction_id', true);
         $flowguard_subscriber_id = get_user_meta($user_id, 'flowguard_subscriber_id', true);
+        
+        // Check if trial is actually expired (with 1-day grace period)
+        $trial_is_expired = false;
+        if (!empty($trial_expires_at)) {
+            $expires_timestamp = strtotime($trial_expires_at);
+            // Add 1 day grace period
+            $expires_with_grace = $expires_timestamp + (1 * DAY_IN_SECONDS);
+            $trial_is_expired = $expires_with_grace < current_time('timestamp');
+        }
         ?>
         <h2><?php echo esc_html(sprintf(__('Edit Membership for %s', 'flexpress'), $user->display_name)); ?></h2>
         
         <p>
             <a href="?page=flexpress-manage-members" class="button"><?php esc_html_e('Back to Members List', 'flexpress'); ?></a>
+            <?php if (!empty($trial_expires_at)): ?>
+                <a href="<?php echo esc_url(add_query_arg(array('refresh_status' => '1', 'user_id' => $user_id), admin_url('admin.php?page=flexpress-manage-members&edit_user=' . $user_id))); ?>" class="button">
+                    <?php esc_html_e('Refresh Status', 'flexpress'); ?>
+                </a>
+            <?php endif; ?>
         </p>
+        
+        <?php if ($trial_is_expired && $membership_status === 'active'): ?>
+            <div class="notice notice-warning is-dismissible">
+                <p><strong><?php esc_html_e('Warning:', 'flexpress'); ?></strong> <?php esc_html_e('This user has an expired trial, but their status is still set to Active. Click "Refresh Status" to automatically update it to Expired.', 'flexpress'); ?></p>
+            </div>
+        <?php endif; ?>
         
         <form method="post" action="">
             <?php wp_nonce_field('update_user_membership', 'membership_nonce'); ?>
@@ -666,18 +731,33 @@ class FlexPress_Membership_Settings {
                             <option value="expired" <?php selected($membership_status, 'expired'); ?>><?php esc_html_e('Expired', 'flexpress'); ?></option>
                             <option value="banned" <?php selected($membership_status, 'banned'); ?>><?php esc_html_e('Banned', 'flexpress'); ?></option>
                         </select>
+                        <?php if ($trial_is_expired && $membership_status === 'expired'): ?>
+                            <p class="description" style="color: #d63638;">
+                                <strong><?php esc_html_e('Trial Expired', 'flexpress'); ?></strong> - <?php esc_html_e('Status automatically set to Expired due to trial expiration.', 'flexpress'); ?>
+                            </p>
+                        <?php elseif (!empty($trial_expires_at) && !$trial_is_expired): ?>
+                            <p class="description">
+                                <?php 
+                                $expires_in = human_time_diff(current_time('timestamp'), strtotime($trial_expires_at));
+                                printf(esc_html__('Trial active - expires in %s.', 'flexpress'), $expires_in);
+                                ?>
+                            </p>
+                        <?php endif; ?>
                     </td>
                 </tr>
                 
                 <tr>
                     <th><label for="subscription_type"><?php esc_html_e('Subscription Type', 'flexpress'); ?></label></th>
                     <td>
-                        <select name="subscription_type" id="subscription_type">
-                            <option value="" <?php selected($subscription_type, ''); ?>><?php esc_html_e('None', 'flexpress'); ?></option>
-                            <option value="monthly" <?php selected($subscription_type, 'monthly'); ?>><?php esc_html_e('Monthly', 'flexpress'); ?></option>
-                            <option value="quarterly" <?php selected($subscription_type, 'quarterly'); ?>><?php esc_html_e('Quarterly', 'flexpress'); ?></option>
-                            <option value="annual" <?php selected($subscription_type, 'annual'); ?>><?php esc_html_e('Annual', 'flexpress'); ?></option>
-                        </select>
+                        <?php 
+                        $derived_label = function_exists('flexpress_get_user_subscription_type')
+                            ? flexpress_get_user_subscription_type($user->ID)
+                            : '';
+                        if (empty($derived_label)) {
+                            $derived_label = 'none';
+                        }
+                        ?>
+                        <strong><?php echo esc_html($derived_label); ?></strong>
                     </td>
                 </tr>
                 
@@ -706,7 +786,22 @@ class FlexPress_Membership_Settings {
                     </td>
                 </tr>
                 
-
+                <tr>
+                    <th><label for="trial_expires_at"><?php esc_html_e('Trial Expiration Date', 'flexpress'); ?></label></th>
+                    <td>
+                        <input type="datetime-local" name="trial_expires_at" id="trial_expires_at" value="<?php echo $trial_expires_at ? esc_attr(date('Y-m-d\TH:i', strtotime($trial_expires_at))) : ''; ?>" class="regular-text" />
+                        <p class="description"><?php esc_html_e('The date and time when the trial period expires. Leave empty if this is not a trial account.', 'flexpress'); ?></p>
+                        <?php if ($trial_expires_at): ?>
+                            <?php
+                            $is_expired = strtotime($trial_expires_at) < current_time('timestamp');
+                            $expires_in = human_time_diff(current_time('timestamp'), strtotime($trial_expires_at));
+                            ?>
+                            <p class="description">
+                                <strong><?php echo $is_expired ? esc_html__('Status: Expired', 'flexpress') : sprintf(esc_html__('Status: Active (expires in %s)', 'flexpress'), $expires_in); ?></strong>
+                            </p>
+                        <?php endif; ?>
+                    </td>
+                </tr>
                 
                 <tr>
                     <th><label for="verotel_subscriber_id"><?php esc_html_e('Verotel Subscriber ID', 'flexpress'); ?></label></th>
@@ -1068,6 +1163,7 @@ class FlexPress_Membership_Settings {
         $subscription_type = get_user_meta($user->ID, 'subscription_type', true);
         $subscription_start = get_user_meta($user->ID, 'subscription_start_date', true);
         $next_rebill_date = get_user_meta($user->ID, 'next_rebill_date', true);
+        $trial_expires_at = get_user_meta($user->ID, 'trial_expires_at', true);
         $verotel_subscriber_id = get_user_meta($user->ID, 'verotel_subscriber_id', true);
         $verotel_transaction_id = get_user_meta($user->ID, 'verotel_transaction_id', true);
         $flowguard_subscriber_id = get_user_meta($user->ID, 'flowguard_subscriber_id', true);
@@ -1090,12 +1186,15 @@ class FlexPress_Membership_Settings {
             <tr>
                 <th><label for="subscription_type"><?php esc_html_e('Subscription Type', 'flexpress'); ?></label></th>
                 <td>
-                    <select name="subscription_type" id="subscription_type">
-                        <option value="" <?php selected($subscription_type, ''); ?>><?php esc_html_e('None', 'flexpress'); ?></option>
-                        <option value="monthly" <?php selected($subscription_type, 'monthly'); ?>><?php esc_html_e('Monthly', 'flexpress'); ?></option>
-                        <option value="quarterly" <?php selected($subscription_type, 'quarterly'); ?>><?php esc_html_e('Quarterly', 'flexpress'); ?></option>
-                        <option value="annual" <?php selected($subscription_type, 'annual'); ?>><?php esc_html_e('Annual', 'flexpress'); ?></option>
-                    </select>
+                    <?php 
+                    $derived_label = function_exists('flexpress_get_user_subscription_type')
+                        ? flexpress_get_user_subscription_type($user_id)
+                        : '';
+                    if (empty($derived_label)) {
+                        $derived_label = 'none';
+                    }
+                    ?>
+                    <strong><?php echo esc_html($derived_label); ?></strong>
                 </td>
             </tr>
             
@@ -1103,6 +1202,14 @@ class FlexPress_Membership_Settings {
                 <th><label for="next_rebill_date"><?php esc_html_e('Next Rebill Date', 'flexpress'); ?></label></th>
                 <td>
                     <input type="date" name="next_rebill_date" id="next_rebill_date" value="<?php echo $next_rebill_date ? esc_attr(date('Y-m-d', strtotime($next_rebill_date))) : ''; ?>" class="regular-text" />
+                </td>
+            </tr>
+            
+            <tr>
+                <th><label for="trial_expires_at"><?php esc_html_e('Trial Expiration Date', 'flexpress'); ?></label></th>
+                <td>
+                    <input type="datetime-local" name="trial_expires_at" id="trial_expires_at" value="<?php echo $trial_expires_at ? esc_attr(date('Y-m-d\TH:i', strtotime($trial_expires_at))) : ''; ?>" class="regular-text" />
+                    <p class="description"><?php esc_html_e('The date and time when the trial period expires. Leave empty if this is not a trial account.', 'flexpress'); ?></p>
                 </td>
             </tr>
             
@@ -1143,6 +1250,31 @@ class FlexPress_Membership_Settings {
         update_user_meta($user_id, 'membership_status', sanitize_text_field($_POST['membership_status']));
         update_user_meta($user_id, 'subscription_type', sanitize_text_field($_POST['subscription_type']));
         update_user_meta($user_id, 'next_rebill_date', sanitize_text_field($_POST['next_rebill_date']));
+        
+        // Handle trial expiration date
+        $old_trial_expires_at = get_user_meta($user_id, 'trial_expires_at', true);
+        $trial_expires_at = isset($_POST['trial_expires_at']) && !empty($_POST['trial_expires_at']) ? sanitize_text_field($_POST['trial_expires_at']) : '';
+        if (!empty($trial_expires_at)) {
+            $trial_expires_at = date('Y-m-d H:i:s', strtotime($trial_expires_at));
+            update_user_meta($user_id, 'trial_expires_at', $trial_expires_at);
+            
+            // Check if trial expiration date was updated and automatically update status
+            $expires_timestamp = strtotime($trial_expires_at);
+            $expires_with_grace = $expires_timestamp + (1 * DAY_IN_SECONDS);
+            $current_status = get_user_meta($user_id, 'membership_status', true);
+            
+            // If trial expiration is in the future (with grace period) and status is expired, update to active
+            if ($expires_with_grace > current_time('timestamp') && $current_status === 'expired') {
+                update_user_meta($user_id, 'membership_status', 'active');
+            }
+            // If trial expiration is in the past (with grace period) and status is active, update to expired
+            elseif ($expires_with_grace < current_time('timestamp') && $current_status === 'active') {
+                update_user_meta($user_id, 'membership_status', 'expired');
+            }
+        } else {
+            delete_user_meta($user_id, 'trial_expires_at');
+        }
+        
         update_user_meta($user_id, 'verotel_subscriber_id', sanitize_text_field($_POST['verotel_subscriber_id']));
         update_user_meta($user_id, 'flowguard_subscriber_id', sanitize_text_field($_POST['flowguard_subscriber_id']));
         
@@ -1441,8 +1573,12 @@ class FlexPress_Membership_Settings {
                     <div class="membership-access-info" style="background: #e7f3ff; border: 1px solid #b3d9ff; border-radius: 4px; padding: 10px;">
                         <strong><?php esc_html_e('Active Membership:', 'flexpress'); ?></strong>
                         <?php esc_html_e('This user has access to all episodes through their active membership.', 'flexpress'); ?>
-                        <?php if ($subscription_type): ?>
-                            <br><small><?php printf(__('Subscription Type: %s', 'flexpress'), esc_html($subscription_type)); ?></small>
+                        <?php 
+                        $derived_subscription_type = function_exists('flexpress_get_user_subscription_type')
+                            ? flexpress_get_user_subscription_type($user_id)
+                            : ($subscription_type ?: '');
+                        if (!empty($derived_subscription_type)) : ?>
+                            <br><small><?php printf(__('Subscription Type: %s', 'flexpress'), esc_html($derived_subscription_type)); ?></small>
                         <?php endif; ?>
                     </div>
                 </div>

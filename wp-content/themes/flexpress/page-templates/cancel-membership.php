@@ -18,7 +18,9 @@ $user_id = $current_user->ID;
 
 // Get user's membership status
 $membership_status = get_user_meta($user_id, 'membership_status', true);
-$subscription_type = get_user_meta($user_id, 'subscription_type', true);
+$subscription_type = function_exists('flexpress_get_user_subscription_type')
+    ? flexpress_get_user_subscription_type($user_id)
+    : (get_user_meta($user_id, 'subscription_type', true) ?: '');
 $next_rebill_date = get_user_meta($user_id, 'next_rebill_date', true);
 $membership_expires = get_user_meta($user_id, 'membership_expires', true);
 $subscription_amount = get_user_meta($user_id, 'subscription_amount', true);

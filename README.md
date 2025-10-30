@@ -1435,6 +1435,13 @@ Sale ID: 987654321
 Next Charge: Mar 15, 2025
 ```
 
+### Subscription Type Labeling (October 2025)
+
+- Unified display for user-facing and admin views using `flexpress_get_user_subscription_type($userId)`.
+- Labels: "Free Trial" (active trial), "membership" (active/cancelled until expiry), "none" (expired/none).
+- Frontend templates updated: `membership.php`, `cancel-membership.php`.
+- Admin membership panel now shows derived label. Underlying editable fields remain.
+
 #### Pro Tips
 
 - **Separate Channels**: Create different Discord channels for different types of notifications

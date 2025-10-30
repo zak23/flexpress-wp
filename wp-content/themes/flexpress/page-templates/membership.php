@@ -17,7 +17,9 @@ if ($is_logged_in && function_exists('flexpress_get_membership_status')) {
     $current_user_id = get_current_user_id();
     $membership_status = flexpress_get_membership_status($current_user_id);
     $next_rebill_date = get_user_meta($current_user_id, 'next_rebill_date', true);
-    $subscription_type = get_user_meta($current_user_id, 'subscription_type', true);
+    $subscription_type = function_exists('flexpress_get_user_subscription_type')
+        ? flexpress_get_user_subscription_type($current_user_id)
+        : (get_user_meta($current_user_id, 'subscription_type', true) ?: '');
 }
 
 // Check for promo code in URL (supports both /membership/code and /membership?promo=code)

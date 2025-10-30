@@ -72,6 +72,7 @@ require_once FLEXPRESS_PATH . '/includes/payout-display-helpers.php';
 require_once FLEXPRESS_PATH . '/includes/contact-helpers.php';
 require_once FLEXPRESS_PATH . '/includes/awards-helpers.php';
 require_once FLEXPRESS_PATH . '/includes/episode-visibility-helpers.php';
+require_once FLEXPRESS_PATH . '/includes/subscriptions.php';
 
 // Filter search queries to exclude hidden episodes for non-logged-in users
 function flexpress_filter_search_query($query)
@@ -98,6 +99,11 @@ add_action('pre_get_posts', 'flexpress_filter_search_query');
 // Affiliate System Integration
 require_once FLEXPRESS_PATH . '/includes/affiliate-database.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-affiliate-manager.php';
+
+// Trial Links System
+require_once FLEXPRESS_PATH . '/includes/trial-links-database.php';
+require_once FLEXPRESS_PATH . '/includes/trial-links-handler.php';
+require_once FLEXPRESS_PATH . '/includes/subscription-expiry-checker.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-affiliate-tracker.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-affiliate-dashboard.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-affiliate-payouts.php';
@@ -137,6 +143,7 @@ require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-flowguard-referen
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-earnings-settings.php';
 // Verotel settings removed - Flowguard settings are now primary
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-pricing-settings.php';
+require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-trial-links-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-affiliate-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-contact-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-turnstile-settings.php';
@@ -3243,6 +3250,34 @@ function flexpress_process_registration_and_payment()
     $password = $_POST['password'];
     $selected_plan = sanitize_text_field($_POST['selected_plan']);
     $applied_promo_code = sanitize_text_field($_POST['applied_promo_code'] ?? '');
+    
+    // Check for trial token in POST data, session, or cookie
+    $trial_token = '';
+    if (isset($_POST['trial_token']) && !empty($_POST['trial_token'])) {
+        $trial_token = sanitize_text_field($_POST['trial_token']);
+    } elseif (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['trial_token'])) {
+        $trial_token = sanitize_text_field($_SESSION['trial_token']);
+    } elseif (isset($_COOKIE['flexpress_trial_token'])) {
+        $trial_token = sanitize_text_field($_COOKIE['flexpress_trial_token']);
+    }
+    
+    $is_trial_registration = false;
+    $trial_link_data = null;
+    
+    // Validate trial token if present
+    if (!empty($trial_token)) {
+        $validation = flexpress_validate_trial_token($trial_token);
+        if ($validation['valid']) {
+            $is_trial_registration = true;
+            $trial_link_data = $validation['trial_link'];
+            // Override selected plan with trial plan
+            $selected_plan = $trial_link_data->plan_id;
+        } else {
+            // Invalid trial token - reject registration
+            wp_send_json_error(array('message' => $validation['message']));
+            return;
+        }
+    }
 
     // Validate required fields
     if (empty($email) || empty($password) || empty($selected_plan)) {
@@ -3325,7 +3360,59 @@ function flexpress_process_registration_and_payment()
     $user = new WP_User($user_id);
     $user->set_role('subscriber');
 
-    // Check if Flowguard is configured
+    // Handle trial registration - bypass payment flow
+    if ($is_trial_registration && $trial_link_data) {
+        // Skip Flowguard payment creation
+        update_user_meta($user_id, 'membership_status', 'active');
+        update_user_meta($user_id, 'subscription_plan', $selected_plan);
+        update_user_meta($user_id, 'subscription_start', current_time('mysql'));
+        
+        // Calculate trial expiration date
+        $trial_expires_at = date('Y-m-d H:i:s', strtotime('+' . $trial_link_data->duration . ' days'));
+        update_user_meta($user_id, 'trial_expires_at', $trial_expires_at);
+        update_user_meta($user_id, 'trial_link_id', $trial_link_data->id);
+        update_user_meta($user_id, 'trial_token', $trial_token);
+        
+        // Mark trial link as used
+        flexpress_mark_trial_link_used($trial_link_data->id);
+        
+        // Log activity
+        if (class_exists('FlexPress_Activity_Logger')) {
+            FlexPress_Activity_Logger::log_activity($user_id, 'trial_link_used', sprintf(
+                'Trial link used: %s (Plan: %s, Duration: %d days)',
+                substr($trial_token, 0, 8) . '...',
+                $selected_plan,
+                $trial_link_data->duration
+            ));
+        }
+        
+        // Send Discord notification
+        if (function_exists('flexpress_discord_notify_trial_link_used')) {
+            flexpress_discord_notify_trial_link_used($user_id, $trial_link_data, $plan);
+        }
+        
+        // Log the user in
+        wp_set_current_user($user_id);
+        wp_set_auth_cookie($user_id);
+        
+        // Clear trial token from session/cookie
+        if (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['trial_token'])) {
+            unset($_SESSION['trial_token']);
+        }
+        if (isset($_COOKIE['flexpress_trial_token'])) {
+            setcookie('flexpress_trial_token', '', time() - 3600, '/');
+        }
+        
+        wp_send_json_success(array(
+            'message' => 'Free trial activated! Welcome to ' . get_bloginfo('name') . '!',
+            'redirect_url' => home_url('/dashboard/'),
+            'user_id' => $user_id,
+            'trial_duration' => $trial_link_data->duration,
+            'trial_expires_at' => $trial_expires_at,
+            'is_trial' => true
+        ));
+        return;
+    }
     $flowguard_settings = get_option('flexpress_flowguard_settings', array());
     $flowguard_configured = !empty($flowguard_settings['shop_id']) &&
         !empty($flowguard_settings['signature_key']);
@@ -8283,6 +8370,9 @@ function flexpress_theme_activation()
     add_role('affiliate_user', 'Affiliate User', array('read' => true));
     add_role('affiliate_manager', 'Affiliate Manager', array('read' => true, 'manage_options' => true));
 
+    // Create trial links database table
+    flexpress_trial_links_init_database();
+
     // Set default theme options
     flexpress_set_default_theme_options();
 
@@ -8308,6 +8398,7 @@ function flexpress_check_db_version()
         // Run migrations
         flexpress_flowguard_create_tables();
         flexpress_affiliate_init_database();
+        flexpress_trial_links_init_database();
 
         // Update version
         update_option('flexpress_db_version', $target_version);
@@ -8488,6 +8579,19 @@ function flexpress_get_membership_status($user_id = null)
         return 'none';
     }
 
+    // Check trial expiration first (with 1-day grace period)
+    $trial_expires_at = get_user_meta($user_id, 'trial_expires_at', true);
+    if (!empty($trial_expires_at)) {
+        $expires_timestamp = strtotime($trial_expires_at);
+        // Add 1 day grace period (86400 seconds = 1 day)
+        $expires_with_grace = $expires_timestamp + (1 * DAY_IN_SECONDS);
+        if ($expires_with_grace < current_time('timestamp')) {
+            // Trial expired (past grace period) - auto-update status
+            flexpress_update_membership_status($user_id, 'expired');
+            return 'expired';
+        }
+    }
+
     $membership_status = get_user_meta($user_id, 'membership_status', true);
 
     // Return 'none' if no status is set
@@ -8496,6 +8600,24 @@ function flexpress_get_membership_status($user_id = null)
     }
 
     return $membership_status;
+}
+
+/**
+ * Check if user's trial has expired
+ *
+ * @param int $user_id User ID
+ * @return bool True if trial expired
+ */
+function flexpress_check_trial_expiration($user_id) {
+    $trial_expires_at = get_user_meta($user_id, 'trial_expires_at', true);
+    if (empty($trial_expires_at)) {
+        return false; // No trial
+    }
+    
+    $expires_timestamp = strtotime($trial_expires_at);
+    // Add 1 day grace period
+    $expires_with_grace = $expires_timestamp + (1 * DAY_IN_SECONDS);
+    return $expires_with_grace < current_time('timestamp');
 }
 
 /**

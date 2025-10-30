@@ -720,6 +720,75 @@ class FlexPress_Discord_Notifications
     }
 
     /**
+     * Create trial link used embed
+     * 
+     * @param int $user_id User ID
+     * @param object $trial_link Trial link object
+     * @return array Discord embed
+     */
+    public function create_trial_link_used_embed($user_id, $trial_link)
+    {
+        $user = get_userdata($user_id);
+        $user_display_name = flexpress_get_user_display_name($user_id);
+        
+        $trial_expires_at = get_user_meta($user_id, 'trial_expires_at', true);
+        $expires_display = $trial_expires_at ? date('M j, Y', strtotime($trial_expires_at)) : 'N/A';
+
+        $embed = [
+            'title' => '🎁 Free Trial Link Used!',
+            'color' => 0x00ff00, // Green
+            'fields' => [
+                [
+                    'name' => 'Username',
+                    'value' => $user_display_name,
+                    'inline' => true
+                ],
+                [
+                    'name' => 'User ID',
+                    'value' => '`' . $user_id . '`',
+                    'inline' => true
+                ],
+                [
+                    'name' => 'Email',
+                    'value' => $user->user_email,
+                    'inline' => true
+                ],
+                [
+                    'name' => 'Trial Duration',
+                    'value' => $trial_link->duration . ' days',
+                    'inline' => true
+                ],
+                [
+                    'name' => 'Trial Expires',
+                    'value' => $expires_display,
+                    'inline' => true
+                ],
+                [
+                    'name' => 'Trial Link Token',
+                    'value' => '`' . substr($trial_link->token, 0, 16) . '...`',
+                    'inline' => true
+                ],
+                [
+                    'name' => 'Link Uses',
+                    'value' => ($trial_link->use_count + 1) . ' / ' . $trial_link->max_uses,
+                    'inline' => true
+                ]
+            ],
+            'timestamp' => date('c')
+        ];
+
+        // Build footer with optional icon
+        $footer = ['text' => $this->site_name . ' • Trial Link'];
+        $site_icon = get_site_icon_url();
+        if ($site_icon) {
+            $footer['icon_url'] = $site_icon;
+        }
+        $embed['footer'] = $footer;
+
+        return $embed;
+    }
+
+    /**
      * Create general notification embed
      * 
      * @param string $title Notification title
@@ -748,6 +817,25 @@ class FlexPress_Discord_Notifications
 
         return $embed;
     }
+}
+
+/**
+ * Send Discord notification for trial link usage
+ * 
+ * @param int $user_id User ID
+ * @param object $trial_link Trial link object
+ */
+function flexpress_discord_notify_trial_link_used($user_id, $trial_link)
+{
+    $discord_settings = get_option('flexpress_discord_settings', []);
+    if (empty($discord_settings['webhook_url']) || !($discord_settings['notify_subscriptions'] ?? true)) {
+        return;
+    }
+
+    $discord = new FlexPress_Discord_Notifications();
+    $embed = $discord->create_trial_link_used_embed($user_id, $trial_link);
+
+    $discord->send_notification($embed, '🎁 **Free trial link activated!**', 'financial');
 }
 
 /**

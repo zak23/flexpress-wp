@@ -17,6 +17,33 @@ $promo_code = sanitize_text_field($promo_code);
 // Check for plan parameter
 $selected_plan = isset($_GET['plan']) ? sanitize_text_field($_GET['plan']) : '';
 
+// Check for trial token in URL
+$trial_token = isset($_GET['trial']) ? sanitize_text_field($_GET['trial']) : '';
+$trial_link_data = null;
+$trial_valid = false;
+
+if (!empty($trial_token)) {
+    $validation = flexpress_validate_trial_token($trial_token);
+    if ($validation['valid']) {
+        $trial_valid = true;
+        $trial_link_data = $validation['trial_link'];
+        
+        // Store trial token in session/cookie for registration process
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $_SESSION['trial_token'] = $trial_token;
+        
+        // Also store in cookie as backup (expires in 1 hour)
+        setcookie('flexpress_trial_token', $trial_token, time() + 3600, '/');
+        
+        // Auto-select the trial plan
+        if (!empty($trial_link_data->plan_id)) {
+            $selected_plan = $trial_link_data->plan_id;
+        }
+    }
+}
+
 // Check user login and membership status
 $is_logged_in = is_user_logged_in();
 $current_user = null;
@@ -185,6 +212,22 @@ if (isset($_GET['error'])) {
                     <div class="alert alert-danger" role="alert">
                         <i class="fas fa-exclamation-circle me-2"></i>
                         <?php echo esc_html($error_message); ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($trial_valid && $trial_link_data): ?>
+                    <div class="alert alert-success" role="alert">
+                        <i class="fas fa-gift me-2"></i>
+                        <strong><?php esc_html_e('Free Trial Activated!', 'flexpress'); ?></strong>
+                        <?php
+                        $plan = flexpress_get_pricing_plan($trial_link_data->plan_id);
+                        $plan_name = $plan ? $plan['name'] : $trial_link_data->plan_id;
+                        echo sprintf(
+                            esc_html__('You\'re signing up for a %d-day free trial of %s. No payment required!', 'flexpress'),
+                            $trial_link_data->duration,
+                            esc_html($plan_name)
+                        );
+                        ?>
                     </div>
                 <?php endif; ?>
 
@@ -1030,7 +1073,8 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
                         email: email,
                         password: password,
                         selected_plan: planId,
-                        applied_promo_code: appliedPromo ? appliedPromo.code : ''
+                        applied_promo_code: appliedPromo ? appliedPromo.code : '',
+                        trial_token: '<?php echo $trial_valid ? esc_js($trial_token) : ''; ?>'
                     },
                     success: function(response) {
                         if (response.success) {

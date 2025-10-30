@@ -123,6 +123,8 @@ add_filter('body_class', function ($classes) {
                                     $query = new WP_Query($args);
 
                                     if ($query->have_posts()):
+                                $flowguard_subscription_phase = get_user_meta($user_id, 'flowguard_subscription_phase', true);
+                                $flowguard_next_charge_on = get_user_meta($user_id, 'flowguard_next_charge_on', true);
                                 ?>
                                         <div class="row g-4">
                                             <?php
@@ -249,7 +251,19 @@ add_filter('body_class', function ($classes) {
                                 $subscription_start = get_user_meta($user_id, 'subscription_start_date', true);
                                 $next_rebill = get_user_meta($user_id, 'next_rebill_date', true);
                                 $flowguard_transaction_id = get_user_meta($user_id, 'flowguard_transaction_id', true);
-                                $flowguard_transaction_id = get_user_meta($user_id, 'flowguard_transaction_id', true);
+                                $flowguard_subscription_phase = get_user_meta($user_id, 'flowguard_subscription_phase', true);
+                                $flowguard_next_charge_on = get_user_meta($user_id, 'flowguard_next_charge_on', true);
+                                $trial_expires_at = get_user_meta($user_id, 'trial_expires_at', true);
+                                if (empty($trial_expires_at)) {
+                                    global $wpdb;
+                                    $trial_expires_at = $wpdb->get_var(
+                                        $wpdb->prepare(
+                                            "SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = %d AND meta_key = %s LIMIT 1",
+                                            $user_id,
+                                            'trial_expires_at'
+                                        )
+                                    );
+                                }
                                 ?>
 
                                 <div class="subscription-info mb-4">
@@ -265,6 +279,41 @@ add_filter('body_class', function ($classes) {
                                                 <strong><?php esc_html_e('Subscription:', 'flexpress'); ?></strong>
                                                 <?php echo esc_html($subscription_type); ?>
                                             </p>
+                                            <?php endif; ?>
+                                            <?php if (empty($trial_expires_at)): ?>
+                                                <p class="mb-0 text-muted" style="font-size: 0.9rem;">
+                                                    <?php esc_html_e('(No trial expiration on file)', 'flexpress'); ?>
+                                                </p>
+                                            <?php endif; ?>
+                                            <?php if (empty($trial_expires_at) && strtolower((string)$flowguard_subscription_phase) === 'trial' && (!empty($flowguard_next_charge_on) || !empty($next_rebill))): ?>
+                                                <p class="mb-0">
+                                                    <strong><?php esc_html_e('Free trial ends:', 'flexpress'); ?></strong>
+                                                    <?php
+                                                    $trial_end_src = !empty($flowguard_next_charge_on) ? $flowguard_next_charge_on : $next_rebill;
+                                                    $utc_timestamp = strtotime($trial_end_src);
+                                                    if ($utc_timestamp) {
+                                                        $site_time = $utc_timestamp + (get_option('gmt_offset') * HOUR_IN_SECONDS);
+                                                        echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $site_time));
+                                                    } else {
+                                                        echo esc_html($trial_end_src);
+                                                    }
+                                                    ?>
+                                                </p>
+                                            <?php endif; ?>
+                                            <?php if (!empty($trial_expires_at)): ?>
+                                                <p class="mb-0">
+                                                    <strong><?php esc_html_e('Free trial ends:', 'flexpress'); ?></strong>
+                                                    <?php
+                                                    $utc_timestamp = strtotime($trial_expires_at);
+                                                    if ($utc_timestamp) {
+                                                        $site_time = $utc_timestamp + (get_option('gmt_offset') * HOUR_IN_SECONDS);
+                                                        echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $site_time));
+                                                    } else {
+                                                        // Fallback: show raw value if parsing fails
+                                                        echo esc_html($trial_expires_at);
+                                                    }
+                                                    ?>
+                                                </p>
                                             <?php endif; ?>
 
                                             <?php if ($subscription_start): ?>

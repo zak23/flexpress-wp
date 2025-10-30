@@ -470,7 +470,6 @@ class FlexPress_Membership_Settings {
             $subscription_type = sanitize_text_field($_POST['subscription_type']);
             $next_rebill_date = sanitize_text_field($_POST['next_rebill_date']);
             $trial_expires_at = isset($_POST['trial_expires_at']) && !empty($_POST['trial_expires_at']) ? sanitize_text_field($_POST['trial_expires_at']) : '';
-            $verotel_subscriber_id = isset($_POST['verotel_subscriber_id']) ? sanitize_text_field($_POST['verotel_subscriber_id']) : '';
             $flowguard_subscriber_id = isset($_POST['flowguard_subscriber_id']) ? sanitize_text_field($_POST['flowguard_subscriber_id']) : '';
             
             // Convert datetime-local to MySQL format if provided
@@ -505,7 +504,6 @@ class FlexPress_Membership_Settings {
             if (!empty($trial_expires_at)) {
                 update_user_meta($user_id, 'trial_expires_at', $trial_expires_at);
             }
-            update_user_meta($user_id, 'verotel_subscriber_id', $verotel_subscriber_id);
             update_user_meta($user_id, 'flowguard_subscriber_id', $flowguard_subscriber_id);
             
             // Clear user cache to ensure updated status is reflected immediately
@@ -686,7 +684,6 @@ class FlexPress_Membership_Settings {
         $subscription_start = get_user_meta($user_id, 'subscription_start_date', true);
         $next_rebill_date = get_user_meta($user_id, 'next_rebill_date', true);
         $trial_expires_at = get_user_meta($user_id, 'trial_expires_at', true);
-        $verotel_subscriber_id = get_user_meta($user_id, 'verotel_subscriber_id', true);
         $verotel_transaction_id = get_user_meta($user_id, 'verotel_transaction_id', true);
         $flowguard_subscriber_id = get_user_meta($user_id, 'flowguard_subscriber_id', true);
         
@@ -803,13 +800,7 @@ class FlexPress_Membership_Settings {
                     </td>
                 </tr>
                 
-                <tr>
-                    <th><label for="verotel_subscriber_id"><?php esc_html_e('Verotel Subscriber ID', 'flexpress'); ?></label></th>
-                    <td>
-                        <input type="text" name="verotel_subscriber_id" id="verotel_subscriber_id" value="<?php echo esc_attr($verotel_subscriber_id); ?>" class="regular-text" />
-                        <p class="description"><?php esc_html_e('Legacy Verotel subscriber ID (read-only)', 'flexpress'); ?></p>
-                    </td>
-                </tr>
+                
                 
                 <tr>
                     <th><label for="flowguard_subscriber_id"><?php esc_html_e('Flowguard Subscriber ID', 'flexpress'); ?></label></th>
@@ -1164,7 +1155,6 @@ class FlexPress_Membership_Settings {
         $subscription_start = get_user_meta($user->ID, 'subscription_start_date', true);
         $next_rebill_date = get_user_meta($user->ID, 'next_rebill_date', true);
         $trial_expires_at = get_user_meta($user->ID, 'trial_expires_at', true);
-        $verotel_subscriber_id = get_user_meta($user->ID, 'verotel_subscriber_id', true);
         $verotel_transaction_id = get_user_meta($user->ID, 'verotel_transaction_id', true);
         $flowguard_subscriber_id = get_user_meta($user->ID, 'flowguard_subscriber_id', true);
         ?>
@@ -1213,13 +1203,7 @@ class FlexPress_Membership_Settings {
                 </td>
             </tr>
             
-            <tr>
-                <th><label for="verotel_subscriber_id"><?php esc_html_e('Verotel Subscriber ID', 'flexpress'); ?></label></th>
-                <td>
-                    <input type="text" name="verotel_subscriber_id" id="verotel_subscriber_id" value="<?php echo esc_attr($verotel_subscriber_id); ?>" class="regular-text" />
-                    <p class="description"><?php esc_html_e('Legacy Verotel subscriber ID', 'flexpress'); ?></p>
-                </td>
-            </tr>
+            
             
             <tr>
                 <th><label for="flowguard_subscriber_id"><?php esc_html_e('Flowguard Subscriber ID', 'flexpress'); ?></label></th>
@@ -1275,7 +1259,6 @@ class FlexPress_Membership_Settings {
             delete_user_meta($user_id, 'trial_expires_at');
         }
         
-        update_user_meta($user_id, 'verotel_subscriber_id', sanitize_text_field($_POST['verotel_subscriber_id']));
         update_user_meta($user_id, 'flowguard_subscriber_id', sanitize_text_field($_POST['flowguard_subscriber_id']));
         
         // Clear user cache to ensure updated status is reflected immediately

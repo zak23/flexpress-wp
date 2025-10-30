@@ -3225,3 +3225,19 @@ FlexPress automatically redirects WordPress branded URLs to custom pages while p
 - Automatic user capability detection
 - SEO-friendly custom URLs
 - No manual configuration required
+
+## Payment Meta Changes (October 2025)
+
+- Removed Verotel Subscriber ID field from admin UI and saving logic (legacy, unused).
+- Persist all Flowguard webhook payload fields to user meta for audit/debugging:
+  - `flowguard_sale_id`, `flowguard_transaction_id`, `flowguard_price_amount`, `flowguard_price_currency`
+  - `flowguard_reference_id_last`, `flowguard_shop_id`, `flowguard_order_type`, `flowguard_postback_type_last`
+  - `flowguard_subscription_type`, `flowguard_subscription_phase`, `flowguard_next_charge_on`, `flowguard_expires_on`
+  - Snapshots: `flowguard_webhook_last_payload` (JSON), `flowguard_webhook_last_at`
+- Backward-compatible keys continue when applicable: `subscription_amount`, `subscription_currency`, `next_rebill_date`, `membership_expires`.
+
+Example access:
+```php
+$amount = get_user_meta($user_id, 'flowguard_price_amount', true);
+$phase  = get_user_meta($user_id, 'flowguard_subscription_phase', true);
+```

@@ -138,6 +138,8 @@ function flexpress_flowguard_handle_subscription_approved($payload) {
         error_log('Flowguard Webhook: User not found for reference: ' . ($payload['referenceId'] ?? ''));
         return;
     }
+    // Persist all payload fields to user meta for audit/debugging
+    flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
     
     // Update user membership status
     flexpress_update_membership_status($user_id, 'active');
@@ -259,6 +261,8 @@ function flexpress_flowguard_handle_purchase_approved($payload) {
         error_log('Flowguard Webhook: User not found for purchase reference: ' . ($payload['referenceId'] ?? ''));
         return;
     }
+    // Persist all payload fields to user meta for audit/debugging
+    flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
     
     // Parse enhanced reference data for PPV purchase
     $reference_id = $payload['referenceId'] ?? '';
@@ -384,6 +388,8 @@ function flexpress_flowguard_handle_subscription_rebill($payload) {
         error_log('Flowguard Webhook: User not found for rebill reference: ' . ($payload['referenceId'] ?? ''));
         return;
     }
+    // Persist all payload fields to user meta for audit/debugging
+    flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
     
     // Update membership status
     flexpress_update_membership_status($user_id, 'active');
@@ -434,6 +440,8 @@ function flexpress_flowguard_handle_subscription_cancel($payload) {
         error_log('Flowguard Webhook: User not found for cancel reference: ' . ($payload['referenceId'] ?? ''));
         return;
     }
+    // Persist all payload fields to user meta for audit/debugging
+    flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
     
     // Update membership status
     flexpress_update_membership_status($user_id, 'cancelled');
@@ -471,6 +479,8 @@ function flexpress_flowguard_handle_subscription_expiry($payload) {
         error_log('Flowguard Webhook: User not found for expiry reference: ' . ($payload['referenceId'] ?? ''));
         return;
     }
+    // Persist all payload fields to user meta for audit/debugging
+    flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
     
     // Update membership status
     flexpress_update_membership_status($user_id, 'expired');
@@ -503,6 +513,8 @@ function flexpress_flowguard_handle_refund($payload) {
         error_log('Flowguard Webhook: User not found for refund reference: ' . ($payload['referenceId'] ?? ''));
         return;
     }
+    // Persist all payload fields to user meta for audit/debugging
+    flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
     
     // Store refund transaction
     flexpress_flowguard_store_transaction([
@@ -795,6 +807,8 @@ function flexpress_flowguard_handle_subscription_uncancel($payload) {
         error_log('Flowguard Webhook: User not found for uncancel reference: ' . ($payload['referenceId'] ?? ''));
         return;
     }
+    // Persist all payload fields to user meta for audit/debugging
+    flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
     
     // Update membership status
     flexpress_update_membership_status($user_id, 'active');
@@ -826,6 +840,8 @@ function flexpress_flowguard_handle_subscription_extend($payload) {
         error_log('Flowguard Webhook: User not found for extend reference: ' . ($payload['referenceId'] ?? ''));
         return;
     }
+    // Persist all payload fields to user meta for audit/debugging
+    flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
     
     // Get current membership status - DO NOT change the status, only update dates
     $current_status = flexpress_get_membership_status($user_id);
@@ -1003,6 +1019,70 @@ function flexpress_process_affiliate_commission_from_webhook($payload) {
 // Register webhook handler
 add_action('wp_ajax_nopriv_flowguard_webhook', 'flexpress_flowguard_webhook_handler');
 add_action('wp_ajax_flowguard_webhook', 'flexpress_flowguard_webhook_handler');
+
+/**
+ * Persist all Flowguard payload fields to user meta with namespaced keys
+ *
+ * @param int $user_id
+ * @param array $payload
+ */
+function flexpress_flowguard_persist_payload_user_meta($user_id, $payload) {
+    if (!$user_id || !is_array($payload)) {
+        return;
+    }
+
+    // Core identifiers
+    if (isset($payload['saleId'])) {
+        update_user_meta($user_id, 'flowguard_sale_id', $payload['saleId']);
+    }
+    if (isset($payload['transactionId'])) {
+        update_user_meta($user_id, 'flowguard_transaction_id', $payload['transactionId']);
+    }
+
+    // Monetary
+    if (isset($payload['priceAmount'])) {
+        update_user_meta($user_id, 'flowguard_price_amount', $payload['priceAmount']);
+        update_user_meta($user_id, 'subscription_amount', $payload['priceAmount']); // keep legacy
+    }
+    if (isset($payload['priceCurrency'])) {
+        update_user_meta($user_id, 'flowguard_price_currency', $payload['priceCurrency']);
+        update_user_meta($user_id, 'subscription_currency', $payload['priceCurrency']); // keep legacy
+    }
+
+    // Routing/meta
+    if (isset($payload['referenceId'])) {
+        update_user_meta($user_id, 'flowguard_reference_id_last', $payload['referenceId']);
+    }
+    if (isset($payload['shopId'])) {
+        update_user_meta($user_id, 'flowguard_shop_id', $payload['shopId']);
+    }
+    if (isset($payload['orderType'])) {
+        update_user_meta($user_id, 'flowguard_order_type', $payload['orderType']);
+    }
+    if (isset($payload['postbackType'])) {
+        update_user_meta($user_id, 'flowguard_postback_type_last', $payload['postbackType']);
+    }
+
+    // Subscription details
+    if (isset($payload['subscriptionType'])) {
+        update_user_meta($user_id, 'flowguard_subscription_type', $payload['subscriptionType']);
+    }
+    if (isset($payload['subscriptionPhase'])) {
+        update_user_meta($user_id, 'flowguard_subscription_phase', $payload['subscriptionPhase']);
+    }
+    if (!empty($payload['nextChargeOn'])) {
+        update_user_meta($user_id, 'flowguard_next_charge_on', $payload['nextChargeOn']);
+        update_user_meta($user_id, 'next_rebill_date', $payload['nextChargeOn']); // keep existing
+    }
+    if (!empty($payload['expiresOn'])) {
+        update_user_meta($user_id, 'flowguard_expires_on', $payload['expiresOn']);
+        update_user_meta($user_id, 'membership_expires', $payload['expiresOn']); // keep existing
+    }
+
+    // Last payload snapshot
+    update_user_meta($user_id, 'flowguard_webhook_last_payload', wp_json_encode($payload));
+    update_user_meta($user_id, 'flowguard_webhook_last_at', current_time('mysql'));
+}
 
 /**
  * Cron: Auto-approve affiliate commissions older than 14 days

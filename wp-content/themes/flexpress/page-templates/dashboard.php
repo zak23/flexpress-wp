@@ -123,8 +123,8 @@ add_filter('body_class', function ($classes) {
                                     $query = new WP_Query($args);
 
                                     if ($query->have_posts()):
-                                $flowguard_subscription_phase = get_user_meta($user_id, 'flowguard_subscription_phase', true);
-                                $flowguard_next_charge_on = get_user_meta($user_id, 'flowguard_next_charge_on', true);
+                                        $flowguard_subscription_phase = get_user_meta($user_id, 'flowguard_subscription_phase', true);
+                                        $flowguard_next_charge_on = get_user_meta($user_id, 'flowguard_next_charge_on', true);
                                 ?>
                                         <div class="row g-4">
                                             <?php
@@ -208,7 +208,7 @@ add_filter('body_class', function ($classes) {
                                                 echo esc_html(date_i18n(get_option('date_format'), $site_time));
                                                 ?>
                                             </p>
-                                            
+
                                         </div>
                                     </div>
                                 </div>
@@ -250,7 +250,6 @@ add_filter('body_class', function ($classes) {
                                     : (get_user_meta($user_id, 'subscription_type', true) ?: '');
                                 $subscription_start = get_user_meta($user_id, 'subscription_start_date', true);
                                 $next_rebill = get_user_meta($user_id, 'next_rebill_date', true);
-                                $flowguard_transaction_id = get_user_meta($user_id, 'flowguard_transaction_id', true);
                                 $flowguard_subscription_phase = get_user_meta($user_id, 'flowguard_subscription_phase', true);
                                 $flowguard_next_charge_on = get_user_meta($user_id, 'flowguard_next_charge_on', true);
                                 $trial_expires_at = get_user_meta($user_id, 'trial_expires_at', true);
@@ -264,6 +263,12 @@ add_filter('body_class', function ($classes) {
                                         )
                                     );
                                 }
+                                $is_trial_membership = false;
+                                if (!empty($subscription_type) && stripos($subscription_type, 'trial') !== false) {
+                                    $is_trial_membership = true;
+                                } elseif (strtolower((string)$flowguard_subscription_phase) === 'trial') {
+                                    $is_trial_membership = true;
+                                }
                                 ?>
 
                                 <div class="subscription-info mb-4">
@@ -275,45 +280,41 @@ add_filter('body_class', function ($classes) {
                                                 <?php echo esc_html(ucfirst($membership_status)); ?>
                                             </p>
                                             <?php if (!empty($subscription_type)) : ?>
-                                            <p class="mb-1">
-                                                <strong><?php esc_html_e('Subscription:', 'flexpress'); ?></strong>
-                                                <?php echo esc_html($subscription_type); ?>
-                                            </p>
-                                            <?php endif; ?>
-                                            <?php if (empty($trial_expires_at)): ?>
-                                                <p class="mb-0 text-muted" style="font-size: 0.9rem;">
-                                                    <?php esc_html_e('(No trial expiration on file)', 'flexpress'); ?>
+                                                <p class="mb-1">
+                                                    <strong><?php esc_html_e('Subscription Type:', 'flexpress'); ?></strong>
+                                                    <?php echo esc_html(ucwords($subscription_type)); ?>
                                                 </p>
                                             <?php endif; ?>
-                                            <?php if (empty($trial_expires_at) && strtolower((string)$flowguard_subscription_phase) === 'trial' && (!empty($flowguard_next_charge_on) || !empty($next_rebill))): ?>
-                                                <p class="mb-0">
-                                                    <strong><?php esc_html_e('Free trial ends:', 'flexpress'); ?></strong>
-                                                    <?php
-                                                    $trial_end_src = !empty($flowguard_next_charge_on) ? $flowguard_next_charge_on : $next_rebill;
-                                                    $utc_timestamp = strtotime($trial_end_src);
-                                                    if ($utc_timestamp) {
-                                                        $site_time = $utc_timestamp + (get_option('gmt_offset') * HOUR_IN_SECONDS);
-                                                        echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $site_time));
-                                                    } else {
-                                                        echo esc_html($trial_end_src);
-                                                    }
-                                                    ?>
-                                                </p>
-                                            <?php endif; ?>
-                                            <?php if (!empty($trial_expires_at)): ?>
-                                                <p class="mb-0">
-                                                    <strong><?php esc_html_e('Free trial ends:', 'flexpress'); ?></strong>
-                                                    <?php
-                                                    $utc_timestamp = strtotime($trial_expires_at);
-                                                    if ($utc_timestamp) {
-                                                        $site_time = $utc_timestamp + (get_option('gmt_offset') * HOUR_IN_SECONDS);
-                                                        echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $site_time));
-                                                    } else {
-                                                        // Fallback: show raw value if parsing fails
-                                                        echo esc_html($trial_expires_at);
-                                                    }
-                                                    ?>
-                                                </p>
+                                            <?php if ($is_trial_membership): ?>
+                                                <?php if (!empty($trial_expires_at)): ?>
+                                                    <p class="mb-0">
+                                                        <strong><?php esc_html_e('Free trial ends:', 'flexpress'); ?></strong>
+                                                        <?php
+                                                        $utc_timestamp = strtotime($trial_expires_at);
+                                                        if ($utc_timestamp) {
+                                                            $site_time = $utc_timestamp + (get_option('gmt_offset') * HOUR_IN_SECONDS);
+                                                            echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $site_time));
+                                                        } else {
+                                                            // Fallback: show raw value if parsing fails
+                                                            echo esc_html($trial_expires_at);
+                                                        }
+                                                        ?>
+                                                    </p>
+                                                <?php elseif (!empty($flowguard_next_charge_on) || !empty($next_rebill)): ?>
+                                                    <p class="mb-0">
+                                                        <strong><?php esc_html_e('Free trial ends:', 'flexpress'); ?></strong>
+                                                        <?php
+                                                        $trial_end_src = !empty($flowguard_next_charge_on) ? $flowguard_next_charge_on : $next_rebill;
+                                                        $utc_timestamp = strtotime($trial_end_src);
+                                                        if ($utc_timestamp) {
+                                                            $site_time = $utc_timestamp + (get_option('gmt_offset') * HOUR_IN_SECONDS);
+                                                            echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $site_time));
+                                                        } else {
+                                                            echo esc_html($trial_end_src);
+                                                        }
+                                                        ?>
+                                                    </p>
+                                                <?php endif; ?>
                                             <?php endif; ?>
 
                                             <?php if ($subscription_start): ?>
@@ -327,7 +328,7 @@ add_filter('body_class', function ($classes) {
                                                     ?>
                                                 </p>
                                             <?php endif; ?>
-                                            <?php 
+                                            <?php
                                             $next_rebill_str = is_string($next_rebill) ? trim($next_rebill) : $next_rebill;
                                             $show_next_rebill = !empty($next_rebill_str) && strtolower($next_rebill_str) !== 'not available';
                                             if ($show_next_rebill): ?>
@@ -691,13 +692,13 @@ add_filter('body_class', function ($classes) {
         height: 32px;
         margin-right: 15px;
     }
-    
+
     .toggle-switch input {
         opacity: 0;
         width: 0;
         height: 0;
     }
-    
+
     .toggle-slider {
         position: absolute;
         cursor: pointer;
@@ -708,9 +709,9 @@ add_filter('body_class', function ($classes) {
         background-color: #dc3545;
         transition: all 0.3s ease;
         border-radius: 32px;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
     }
-    
+
     .toggle-slider:before {
         position: absolute;
         content: "";
@@ -721,35 +722,35 @@ add_filter('body_class', function ($classes) {
         background-color: white;
         transition: all 0.3s ease;
         border-radius: 50%;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
-    
-    input:checked + .toggle-slider {
+
+    input:checked+.toggle-slider {
         background-color: #28a745;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
     }
-    
-    input:checked + .toggle-slider:before {
+
+    input:checked+.toggle-slider:before {
         transform: translateX(28px);
-        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     }
-    
+
     .toggle-slider:hover {
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 0 8px rgba(0,0,0,0.15);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 8px rgba(0, 0, 0, 0.15);
     }
-    
-    input:checked + .toggle-slider:hover {
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 0 8px rgba(40, 167, 69, 0.3);
+
+    input:checked+.toggle-slider:hover {
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 8px rgba(40, 167, 69, 0.3);
     }
-    
+
     /* Disabled state */
-    .toggle-switch input:disabled + .toggle-slider {
+    .toggle-switch input:disabled+.toggle-slider {
         opacity: 0.6;
         cursor: not-allowed;
     }
-    
+
     /* Focus state for accessibility */
-    .toggle-switch input:focus + .toggle-slider {
+    .toggle-switch input:focus+.toggle-slider {
         outline: 2px solid #007bff;
         outline-offset: 2px;
     }

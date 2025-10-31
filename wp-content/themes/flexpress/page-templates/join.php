@@ -21,6 +21,7 @@ $selected_plan = isset($_GET['plan']) ? sanitize_text_field($_GET['plan']) : '';
 $trial_token = isset($_GET['trial']) ? sanitize_text_field($_GET['trial']) : '';
 $trial_link_data = null;
 $trial_valid = false;
+$trial_error_message = '';
 
 if (!empty($trial_token)) {
     $validation = flexpress_validate_trial_token($trial_token);
@@ -37,10 +38,10 @@ if (!empty($trial_token)) {
         // Also store in cookie as backup (expires in 1 hour)
         setcookie('flexpress_trial_token', $trial_token, time() + 3600, '/');
         
-        // Auto-select the trial plan
-        if (!empty($trial_link_data->plan_id)) {
-            $selected_plan = $trial_link_data->plan_id;
-        }
+        // For trial links, no plan selection needed
+    } else {
+        // Store error message for invalid trial link
+        $trial_error_message = isset($validation['message']) ? $validation['message'] : __('This trial link is no longer available.', 'flexpress');
     }
 }
 
@@ -220,14 +221,36 @@ if (isset($_GET['error'])) {
                         <i class="fas fa-gift me-2"></i>
                         <strong><?php esc_html_e('Free Trial Activated!', 'flexpress'); ?></strong>
                         <?php
-                        $plan = flexpress_get_pricing_plan($trial_link_data->plan_id);
-                        $plan_name = $plan ? $plan['name'] : $trial_link_data->plan_id;
-                        echo sprintf(
-                            esc_html__('You\'re signing up for a %d-day free trial of %s. No payment required!', 'flexpress'),
-                            $trial_link_data->duration,
-                            esc_html($plan_name)
-                        );
+                        // Try to get plan name from selected plan (trial links don't store plan_id)
+                        $plan_name = '';
+                        if (!empty($selected_plan)) {
+                            $plan = flexpress_get_pricing_plan($selected_plan);
+                            if ($plan && !empty($plan['name'])) {
+                                $plan_name = $plan['name'];
+                            }
+                        }
+                        if ($plan_name) {
+                            echo sprintf(
+                                esc_html__('You\'re signing up for a %d-day free trial of %s. No payment required!', 'flexpress'),
+                                $trial_link_data->duration,
+                                esc_html($plan_name)
+                            );
+                        } else {
+                            echo sprintf(
+                                esc_html__('You\'re signing up for a %d-day free trial. No payment required!', 'flexpress'),
+                                $trial_link_data->duration
+                            );
+                        }
                         ?>
+                    </div>
+                <?php elseif (!empty($trial_error_message)): ?>
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong><?php esc_html_e('Trial Link Unavailable', 'flexpress'); ?></strong>
+                        <p class="mb-0 mt-2"><?php echo esc_html($trial_error_message); ?></p>
+                        <p class="mb-0 mt-2">
+                            <?php esc_html_e('You can still join by selecting a membership plan below.', 'flexpress'); ?>
+                        </p>
                     </div>
                 <?php endif; ?>
 
@@ -252,6 +275,7 @@ if (isset($_GET['error'])) {
 
 
         <!-- Promo Code Section -->
+        <?php if (!$trial_valid): ?>
         <div class="row justify-content-center mb-4">
             <div class="col-lg-8 col-xl-6">
                 <div class="promo-code-section">
@@ -280,12 +304,14 @@ if (isset($_GET['error'])) {
                 </div>
             </div>
         </div>
+        <?php endif; ?>
 
         <!-- Membership Selection Section -->
+        <?php if (!$trial_valid): ?>
         <div class="row justify-content-center mb-4">
             <div class="col-lg-8 col-xl-6">
                 <div class="membership-selection-header">
-                    <h2 class="text-center mb-4"><?php esc_html_e('2. Select Deal', 'flexpress'); ?></h2>
+                    <h2 class="text-center mb-4"><?php echo esc_html($plan_selection_step_number . '. ' . __('Select Deal', 'flexpress')); ?></h2>
 
                     <!-- Plan Type Toggle -->
                     <div class="plan-type-toggle mb-4">
@@ -406,13 +432,14 @@ if (isset($_GET['error'])) {
                 </div>
             </div>
         </div>
+        <?php endif; ?>
 
         <?php if (!$is_logged_in): ?>
             <!-- Registration/Login Section for Non-Logged In Users -->
             <div class="row justify-content-center mb-4">
                 <div class="col-lg-8 col-xl-6">
                     <div class="registration-section">
-                        <h3 class="text-center mb-4"><?php esc_html_e('3. Quick & Easy Signup', 'flexpress'); ?></h3>
+                        <h3 class="text-center mb-4"><?php esc_html_e('Quick & Easy Signup', 'flexpress'); ?></h3>
 
                         <!-- Registration form only - no login option on join page -->
                         <div class="text-center mb-4">
@@ -1006,21 +1033,26 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
             console.log('Continue button clicked!');
             console.log('Selected plan:', selectedPlan);
 
-            if (!selectedPlan) {
+            // Check if this is a trial link - if so, skip plan selection requirement
+            const isTrialLink = <?php echo $trial_valid ? 'true' : 'false'; ?>;
+            
+            if (!isTrialLink && !selectedPlan) {
                 alert('Please select a membership plan first.');
                 return;
             }
 
-            const planId = selectedPlan.data('plan-id');
-            const planName = selectedPlan.find('.plan-name').text();
+            const planId = isTrialLink ? null : selectedPlan.data('plan-id');
+            const planName = isTrialLink ? '' : selectedPlan.find('.plan-name').text();
 
             // Get the price - check for discounted price first, then original price
-            let planPrice;
-            const discountedPriceElement = selectedPlan.find('.discounted-price');
-            if (discountedPriceElement.length > 0) {
-                planPrice = discountedPriceElement.text().replace(/[^0-9.]/g, '');
-            } else {
-                planPrice = selectedPlan.find('.price-amount').text().replace(/[^0-9.]/g, '');
+            let planPrice = '';
+            if (!isTrialLink) {
+                const discountedPriceElement = selectedPlan.find('.discounted-price');
+                if (discountedPriceElement.length > 0) {
+                    planPrice = discountedPriceElement.text().replace(/[^0-9.]/g, '');
+                } else {
+                    planPrice = selectedPlan.find('.price-amount').text().replace(/[^0-9.]/g, '');
+                }
             }
 
             console.log('Plan ID:', planId);
@@ -1030,8 +1062,15 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
             // Check if user is logged in
             const isLoggedIn = <?php echo $is_logged_in ? 'true' : 'false'; ?>;
 
-            if (isLoggedIn) {
-                // Logged in user - proceed to payment
+            // For trial links, skip payment flow - go directly to registration
+            if (isTrialLink && !isLoggedIn) {
+                // Skip to registration validation below
+            } else if (isLoggedIn) {
+                // Logged in user - proceed to payment (but not for trial links)
+                if (isTrialLink) {
+                    // Trial links don't need payment
+                    return;
+                }
                 let paymentUrl = '<?php echo esc_url(home_url('/payment')); ?>?plan=' + encodeURIComponent(planId);
 
                 // Add promo code if applied
@@ -1072,7 +1111,7 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
                         nonce: flexpressJoinForm.nonce,
                         email: email,
                         password: password,
-                        selected_plan: planId,
+                        selected_plan: isTrialLink ? '' : planId,
                         applied_promo_code: appliedPromo ? appliedPromo.code : '',
                         trial_token: '<?php echo $trial_valid ? esc_js($trial_token) : ''; ?>'
                     },
@@ -1095,27 +1134,31 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
             }
         });
 
-        // Initialize: show recurring plans by default
-        jQuery('.membership-plan-item').hide();
-        jQuery('.membership-plan-item[data-plan-type="recurring"]').show();
+        // Initialize: show recurring plans by default (only if not a trial link)
+        const isTrialLink = <?php echo $trial_valid ? 'true' : 'false'; ?>;
+        
+        if (!isTrialLink) {
+            jQuery('.membership-plan-item').hide();
+            jQuery('.membership-plan-item[data-plan-type="recurring"]').show();
 
-        // Auto-select the most popular plan on page load
-        const popularPlan = jQuery('.membership-plan-item.popular-plan:visible').first();
-        if (popularPlan.length > 0) {
-            // Apply the same logic as clicking a plan
-            jQuery('.membership-plan-item').removeClass('selected');
-            jQuery('.membership-plan-item.popular-plan').removeClass('no-highlight');
-            popularPlan.addClass('selected');
+            // Auto-select the most popular plan on page load
+            const popularPlan = jQuery('.membership-plan-item.popular-plan:visible').first();
+            if (popularPlan.length > 0) {
+                // Apply the same logic as clicking a plan
+                jQuery('.membership-plan-item').removeClass('selected');
+                jQuery('.membership-plan-item.popular-plan').removeClass('no-highlight');
+                popularPlan.addClass('selected');
 
-            // Add no-highlight class to other popular plans that are not selected
-            jQuery('.membership-plan-item.popular-plan:not(.selected)').addClass('no-highlight');
+                // Add no-highlight class to other popular plans that are not selected
+                jQuery('.membership-plan-item.popular-plan:not(.selected)').addClass('no-highlight');
 
-            selectedPlan = popularPlan;
+                selectedPlan = popularPlan;
 
-            // Update legal text for auto-selected plan
-            updateLegalText(popularPlan);
+                // Update legal text for auto-selected plan
+                updateLegalText(popularPlan);
 
-            console.log('Auto-selected popular plan:', selectedPlan);
+                console.log('Auto-selected popular plan:', selectedPlan);
+            }
         }
 
         // Prevent Enter key from submitting promo code

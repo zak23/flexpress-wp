@@ -65,7 +65,19 @@ class FlexPress_Trial_Links_Settings
             flexpress_trial_links_create_table();
         }
         
-        $trial_links = flexpress_get_all_trial_links();
+        $all_trial_links = flexpress_get_all_trial_links();
+        
+        // Separate links by status
+        $active_links = array();
+        $used_links = array();
+        
+        foreach ($all_trial_links as $link) {
+            if ($link->use_count >= $link->max_uses) {
+                $used_links[] = $link;
+            } else {
+                $active_links[] = $link;
+            }
+        }
 ?>
         <div class="wrap">
             <h1><?php echo esc_html__('Trial Links Management', 'flexpress'); ?></h1>
@@ -81,31 +93,108 @@ class FlexPress_Trial_Links_Settings
                     </button>
                 </div>
 
+                <!-- Tabs -->
+                <div class="trial-links-tabs">
+                    <nav class="nav-tab-wrapper">
+                        <a href="#" class="nav-tab nav-tab-active" data-tab="active">
+                            <?php esc_html_e('Active', 'flexpress'); ?>
+                            <span class="trial-link-count">(<?php echo count($active_links); ?>)</span>
+                        </a>
+                        <a href="#" class="nav-tab" data-tab="used">
+                            <?php esc_html_e('Used', 'flexpress'); ?>
+                            <span class="trial-link-count">(<?php echo count($used_links); ?>)</span>
+                        </a>
+                        <a href="#" class="nav-tab" data-tab="all">
+                            <?php esc_html_e('All', 'flexpress'); ?>
+                            <span class="trial-link-count">(<?php echo count($all_trial_links); ?>)</span>
+                        </a>
+                    </nav>
+                </div>
+
                 <div id="trial-links-list">
-                    <?php if (empty($trial_links)): ?>
-                        <div class="no-trial-links-message">
-                            <p><?php esc_html_e('No trial links created yet. Click "Create New Trial Link" to get started.', 'flexpress'); ?></p>
-                        </div>
-                    <?php else: ?>
-                        <table class="wp-list-table widefat fixed striped">
-                            <thead>
-                                <tr>
-                                    <th><?php esc_html_e('Token', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Duration', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Uses', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Status', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Expires', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Created', 'flexpress'); ?></th>
-                                    <th><?php esc_html_e('Actions', 'flexpress'); ?></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($trial_links as $link): ?>
-                                    <?php $this->render_trial_link_row($link); ?>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    <?php endif; ?>
+                    <!-- Active Links Tab -->
+                    <div class="trial-links-tab-content" id="tab-active" style="display: block;">
+                        <?php if (empty($active_links)): ?>
+                            <div class="no-trial-links-message">
+                                <p><?php esc_html_e('No active trial links. Click "Create New Trial Link" to get started.', 'flexpress'); ?></p>
+                            </div>
+                        <?php else: ?>
+                            <table class="wp-list-table widefat fixed striped">
+                                <thead>
+                                    <tr>
+                                        <th><?php esc_html_e('Token', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Duration', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Uses', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Status', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Expires', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Created', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Actions', 'flexpress'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($active_links as $link): ?>
+                                        <?php $this->render_trial_link_row($link); ?>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Used Links Tab -->
+                    <div class="trial-links-tab-content" id="tab-used" style="display: none;">
+                        <?php if (empty($used_links)): ?>
+                            <div class="no-trial-links-message">
+                                <p><?php esc_html_e('No used trial links yet.', 'flexpress'); ?></p>
+                            </div>
+                        <?php else: ?>
+                            <table class="wp-list-table widefat fixed striped">
+                                <thead>
+                                    <tr>
+                                        <th><?php esc_html_e('Token', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Duration', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Uses', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Status', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Expires', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Created', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Actions', 'flexpress'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($used_links as $link): ?>
+                                        <?php $this->render_trial_link_row($link); ?>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- All Links Tab -->
+                    <div class="trial-links-tab-content" id="tab-all" style="display: none;">
+                        <?php if (empty($all_trial_links)): ?>
+                            <div class="no-trial-links-message">
+                                <p><?php esc_html_e('No trial links created yet. Click "Create New Trial Link" to get started.', 'flexpress'); ?></p>
+                            </div>
+                        <?php else: ?>
+                            <table class="wp-list-table widefat fixed striped">
+                                <thead>
+                                    <tr>
+                                        <th><?php esc_html_e('Token', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Duration', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Uses', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Status', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Expires', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Created', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Actions', 'flexpress'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($all_trial_links as $link): ?>
+                                        <?php $this->render_trial_link_row($link); ?>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
 
@@ -129,6 +218,33 @@ class FlexPress_Trial_Links_Settings
             }
             .trial-links-header {
                 margin-bottom: 20px;
+            }
+            .trial-links-tabs {
+                margin: 20px 0;
+            }
+            .trial-links-tabs .nav-tab-wrapper {
+                border-bottom: 1px solid #ccc;
+                margin-bottom: 0;
+            }
+            .trial-links-tabs .nav-tab {
+                position: relative;
+            }
+            .trial-link-count {
+                font-size: 11px;
+                font-weight: normal;
+                opacity: 0.7;
+                margin-left: 4px;
+            }
+            .trial-links-tab-content {
+                margin-top: 0;
+            }
+            .trial-links-tab-content .no-trial-links-message {
+                padding: 40px 20px;
+                text-align: center;
+                background: #f9f9f9;
+                border: 1px solid #ddd;
+                border-top: none;
+                color: #666;
             }
             .trial-link-modal {
                 display: none;
@@ -177,19 +293,70 @@ class FlexPress_Trial_Links_Settings
             .trial-link-row-actions {
                 display: flex;
                 gap: 5px;
+                flex-wrap: wrap;
             }
-            .trial-link-url {
-                font-family: monospace;
-                font-size: 12px;
-                word-break: break-all;
-                background: #f0f0f0;
-                padding: 5px;
-                border-radius: 3px;
+            .trial-link-details-row {
+                background: #f9f9f9;
+            }
+            .trial-link-details-row td {
+                padding: 20px;
+                border-top: 2px solid #ddd;
+            }
+            .trial-link-details-content {
+                background: #fff;
+                padding: 15px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+            .trial-link-details-content h4 {
+                margin: 0 0 15px 0;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #ddd;
+            }
+            .trial-link-details-content table {
+                margin-top: 10px;
+            }
+            .trial-link-details-content table th {
+                font-weight: 600;
+                padding: 10px;
+                background: #f5f5f5;
+            }
+            .trial-link-details-content table td {
+                padding: 10px;
+                vertical-align: top;
+            }
+            .status-used {
+                color: #666;
+                font-style: italic;
+            }
+            .status-active {
+                color: #46b450;
+            }
+            .status-inactive {
+                color: #dc3232;
+            }
+            .status-expired {
+                color: #f56e28;
             }
         </style>
 
         <script>
         jQuery(document).ready(function($) {
+            // Tab switching
+            $('.trial-links-tabs .nav-tab').on('click', function(e) {
+                e.preventDefault();
+                
+                var tab = $(this).data('tab');
+                
+                // Update active tab
+                $('.trial-links-tabs .nav-tab').removeClass('nav-tab-active');
+                $(this).addClass('nav-tab-active');
+                
+                // Show/hide tab content
+                $('.trial-links-tab-content').hide();
+                $('#tab-' + tab).show();
+            });
+
             // Open modal
             $('#add-new-trial-link').on('click', function() {
                 $('#modal-title').text('Create Trial Link');
@@ -297,9 +464,47 @@ class FlexPress_Trial_Links_Settings
                     }
                 });
             });
+
+            // Toggle details row
+            $(document).on('click', '.show-trial-link-details', function(e) {
+                e.preventDefault();
+                var linkId = $(this).data('link-id');
+                var $detailsRow = $('#trial-link-details-' + linkId);
+                var $detailsText = $(this).find('.details-text');
+                var $hideDetailsText = $(this).find('.hide-details-text');
+                
+                if ($detailsRow.is(':visible')) {
+                    $detailsRow.slideUp();
+                    $detailsText.show();
+                    $hideDetailsText.hide();
+                } else {
+                    $detailsRow.slideDown();
+                    $detailsText.hide();
+                    $hideDetailsText.show();
+                }
+            });
         });
         </script>
 <?php
+    }
+
+    /**
+     * Get users who used a specific trial link
+     * 
+     * @param int $trial_link_id Trial link ID
+     * @return array Array of user objects
+     */
+    private function get_trial_link_users($trial_link_id)
+    {
+        $users = get_users(array(
+            'meta_key' => 'trial_link_id',
+            'meta_value' => $trial_link_id,
+            'number' => -1,
+            'orderby' => 'registered',
+            'order' => 'DESC'
+        ));
+        
+        return $users;
     }
 
     /**
@@ -309,15 +514,35 @@ class FlexPress_Trial_Links_Settings
     {
         $trial_url = flexpress_get_trial_link_url($link->token);
         $is_expired = !empty($link->expires_at) && strtotime($link->expires_at) < current_time('timestamp');
-        $status_class = !$link->is_active ? 'inactive' : ($is_expired ? 'expired' : 'active');
-        $status_text = !$link->is_active ? 'Inactive' : ($is_expired ? 'Expired' : 'Active');
+        $is_used = $link->use_count >= $link->max_uses;
+        
+        // Determine status
+        if ($is_used) {
+            $status_class = 'used';
+            $status_text = 'Used';
+        } elseif (!$link->is_active) {
+            $status_class = 'inactive';
+            $status_text = 'Inactive';
+        } elseif ($is_expired) {
+            $status_class = 'expired';
+            $status_text = 'Expired';
+        } else {
+            $status_class = 'active';
+            $status_text = 'Active';
+        }
 ?>
-        <tr>
+        <?php $users = $this->get_trial_link_users($link->id); ?>
+        <tr class="trial-link-main-row"<?php echo $is_used ? ' style="opacity: 0.7;"' : ''; ?> data-link-id="<?php echo esc_attr($link->id); ?>">
             <td>
                 <code style="font-size: 11px;"><?php echo esc_html(substr($link->token, 0, 16) . '...'); ?></code>
             </td>
             <td><?php echo esc_html($link->duration); ?> days</td>
-            <td><?php echo esc_html($link->use_count); ?> / <?php echo esc_html($link->max_uses); ?></td>
+            <td>
+                <strong><?php echo esc_html($link->use_count); ?></strong> / <?php echo esc_html($link->max_uses); ?>
+                <?php if ($is_used): ?>
+                    <span class="status-used" style="margin-left: 5px;">✓</span>
+                <?php endif; ?>
+            </td>
             <td>
                 <span class="status-<?php echo esc_attr($status_class); ?>">
                     <?php echo esc_html($status_text); ?>
@@ -338,18 +563,80 @@ class FlexPress_Trial_Links_Settings
                     <button type="button" class="button button-small copy-trial-link" data-url="<?php echo esc_url($trial_url); ?>">
                         Copy Link
                     </button>
-                    <button type="button" class="button button-small toggle-trial-link-status" data-id="<?php echo esc_attr($link->id); ?>" data-status="<?php echo esc_attr($link->is_active); ?>">
-                        <?php echo $link->is_active ? 'Deactivate' : 'Activate'; ?>
-                    </button>
+                    <?php if ($link->use_count > 0): ?>
+                        <button type="button" class="button button-small show-trial-link-details" data-link-id="<?php echo esc_attr($link->id); ?>">
+                            <span class="details-text">Show Details</span>
+                            <span class="hide-details-text" style="display: none;">Hide Details</span>
+                        </button>
+                    <?php endif; ?>
+                    <?php if (!$is_used): ?>
+                        <button type="button" class="button button-small toggle-trial-link-status" data-id="<?php echo esc_attr($link->id); ?>" data-status="<?php echo esc_attr($link->is_active); ?>">
+                            <?php echo $link->is_active ? 'Deactivate' : 'Activate'; ?>
+                        </button>
+                    <?php endif; ?>
                     <button type="button" class="button button-small delete-trial-link" data-id="<?php echo esc_attr($link->id); ?>">
                         Delete
                     </button>
                 </div>
-                <div class="trial-link-url" style="margin-top: 5px;">
-                    <?php echo esc_html($trial_url); ?>
-                </div>
             </td>
         </tr>
+        <?php if ($link->use_count > 0): ?>
+            <tr class="trial-link-details-row" id="trial-link-details-<?php echo esc_attr($link->id); ?>" style="display: none;">
+                <td colspan="7">
+                    <div class="trial-link-details-content">
+                        <h4><?php esc_html_e('Members Who Used This Link', 'flexpress'); ?></h4>
+                        <?php if (empty($users)): ?>
+                            <p style="color: #666; font-style: italic;"><?php esc_html_e('No member information found for this link.', 'flexpress'); ?></p>
+                        <?php else: ?>
+                            <table class="widefat" style="margin-top: 10px;">
+                                <thead>
+                                    <tr>
+                                        <th><?php esc_html_e('Name', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Email', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Registered', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Trial Expires', 'flexpress'); ?></th>
+                                        <th><?php esc_html_e('Actions', 'flexpress'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($users as $user): 
+                                        $trial_expires_at = get_user_meta($user->ID, 'trial_expires_at', true);
+                                        $display_name = $user->display_name ?: $user->user_login;
+                                    ?>
+                                        <tr>
+                                            <td>
+                                                <strong><?php echo esc_html($display_name); ?></strong>
+                                                <br><small style="color: #666;"><?php echo esc_html($user->user_login); ?></small>
+                                            </td>
+                                            <td><?php echo esc_html($user->user_email); ?></td>
+                                            <td><?php echo esc_html(date('M j, Y g:i a', strtotime($user->user_registered))); ?></td>
+                                            <td>
+                                                <?php 
+                                                if ($trial_expires_at) {
+                                                    $expires_timestamp = strtotime($trial_expires_at);
+                                                    $is_trial_expired = $expires_timestamp < current_time('timestamp');
+                                                    echo '<span class="' . ($is_trial_expired ? 'status-expired' : 'status-active') . '">';
+                                                    echo esc_html(date('M j, Y g:i a', $expires_timestamp));
+                                                    echo '</span>';
+                                                } else {
+                                                    echo '—';
+                                                }
+                                                ?>
+                                            </td>
+                                            <td>
+                                                <a href="<?php echo esc_url(admin_url('admin.php?page=flexpress-manage-members&edit_user=' . $user->ID)); ?>" class="button button-small">
+                                                    <?php esc_html_e('Edit Member', 'flexpress'); ?>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php endif; ?>
+                    </div>
+                </td>
+            </tr>
+        <?php endif; ?>
 <?php
     }
 

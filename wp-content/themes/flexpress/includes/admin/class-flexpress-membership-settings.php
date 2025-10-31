@@ -598,6 +598,8 @@ class FlexPress_Membership_Settings
                         <th><?php esc_html_e('Membership Status', 'flexpress'); ?></th>
                         <th><?php esc_html_e('Subscription Type', 'flexpress'); ?></th>
                         <th><?php esc_html_e('Next Rebill', 'flexpress'); ?></th>
+                        <th><?php esc_html_e('FlowGuard Subscriber ID', 'flexpress'); ?></th>
+                        <th><?php esc_html_e('Last Postback', 'flexpress'); ?></th>
                         <th><?php esc_html_e('Actions', 'flexpress'); ?></th>
                     </tr>
                 </thead>
@@ -671,7 +673,7 @@ class FlexPress_Membership_Settings
                     if (!$found_users) {
                     ?>
                         <tr>
-                            <td colspan="7"><?php esc_html_e('No users found matching the filter criteria.', 'flexpress'); ?></td>
+                            <td colspan="9"><?php esc_html_e('No users found matching the filter criteria.', 'flexpress'); ?></td>
                         </tr>
                     <?php
                     }
@@ -825,8 +827,6 @@ class FlexPress_Membership_Settings
                     </td>
                 </tr>
 
-
-
                 <tr>
                     <th><label><?php esc_html_e('Account Created', 'flexpress'); ?></label></th>
                     <td>
@@ -844,6 +844,211 @@ class FlexPress_Membership_Settings
                 <input type="submit" name="update_user_membership" class="button button-primary" value="<?php esc_attr_e('Update Membership', 'flexpress'); ?>" />
             </p>
         </form>
+
+        <!-- FlowGuard Data Section -->
+        <h2 style="margin-top: 30px;"><?php esc_html_e('FlowGuard Integration Data', 'flexpress'); ?></h2>
+        <table class="form-table">
+            <?php
+            // Get all FlowGuard user meta fields
+            $flowguard_subscriber_id = get_user_meta($user_id, 'flowguard_subscriber_id', true);
+            $flowguard_sale_id = get_user_meta($user_id, 'flowguard_sale_id', true);
+            $flowguard_transaction_id = get_user_meta($user_id, 'flowguard_transaction_id', true);
+            $flowguard_parent_id = get_user_meta($user_id, 'flowguard_parent_id', true);
+            $flowguard_price_amount = get_user_meta($user_id, 'flowguard_price_amount', true);
+            $flowguard_price_currency = get_user_meta($user_id, 'flowguard_price_currency', true);
+            $flowguard_reference_id = get_user_meta($user_id, 'flowguard_reference_id_last', true);
+            $flowguard_shop_id = get_user_meta($user_id, 'flowguard_shop_id', true);
+            $flowguard_order_type = get_user_meta($user_id, 'flowguard_order_type', true);
+            $flowguard_postback_type = get_user_meta($user_id, 'flowguard_postback_type_last', true);
+            $flowguard_subscription_type = get_user_meta($user_id, 'flowguard_subscription_type', true);
+            $flowguard_subscription_phase = get_user_meta($user_id, 'flowguard_subscription_phase', true);
+            $flowguard_cancelled_by = get_user_meta($user_id, 'flowguard_cancelled_by', true);
+            $flowguard_uncancelled_by = get_user_meta($user_id, 'flowguard_uncancelled_by', true);
+            $flowguard_next_charge_on = get_user_meta($user_id, 'flowguard_next_charge_on', true);
+            $flowguard_expires_on = get_user_meta($user_id, 'flowguard_expires_on', true);
+            $flowguard_webhook_last_at = get_user_meta($user_id, 'flowguard_webhook_last_at', true);
+            $flowguard_webhook_last_payload = get_user_meta($user_id, 'flowguard_webhook_last_payload', true);
+            ?>
+
+            <tr>
+                <th><?php esc_html_e('Subscriber ID', 'flexpress'); ?></th>
+                <td><?php echo $flowguard_subscriber_id ? esc_html($flowguard_subscriber_id) : '<span style="color: #999;">—</span>'; ?></td>
+            </tr>
+
+            <tr>
+                <th><?php esc_html_e('Sale ID (Legacy)', 'flexpress'); ?></th>
+                <td><?php echo $flowguard_sale_id ? esc_html($flowguard_sale_id) : '<span style="color: #999;">—</span>'; ?></td>
+            </tr>
+
+            <tr>
+                <th><?php esc_html_e('Transaction ID', 'flexpress'); ?></th>
+                <td><?php echo $flowguard_transaction_id ? esc_html($flowguard_transaction_id) : '<span style="color: #999;">—</span>'; ?></td>
+            </tr>
+
+            <tr>
+                <th><?php esc_html_e('Parent Transaction ID', 'flexpress'); ?></th>
+                <td><?php echo $flowguard_parent_id ? esc_html($flowguard_parent_id) : '<span style="color: #999;">—</span>'; ?>
+                    <p class="description"><?php esc_html_e('Original transaction ID for refunds', 'flexpress'); ?></p>
+                </td>
+            </tr>
+
+            <tr>
+                <th><?php esc_html_e('Price Amount', 'flexpress'); ?></th>
+                <td><?php echo $flowguard_price_amount ? esc_html($flowguard_price_amount . ' ' . ($flowguard_price_currency ?: '')) : '<span style="color: #999;">—</span>'; ?></td>
+            </tr>
+
+            <tr>
+                <th><?php esc_html_e('Price Currency', 'flexpress'); ?></th>
+                <td><?php echo $flowguard_price_currency ? esc_html($flowguard_price_currency) : '<span style="color: #999;">—</span>'; ?></td>
+            </tr>
+
+            <tr>
+                <th><?php esc_html_e('Reference ID', 'flexpress'); ?></th>
+                <td><?php echo $flowguard_reference_id ? esc_html($flowguard_reference_id) : '<span style="color: #999;">—</span>'; ?></td>
+            </tr>
+
+            <tr>
+                <th><?php esc_html_e('Shop ID', 'flexpress'); ?></th>
+                <td><?php echo $flowguard_shop_id ? esc_html($flowguard_shop_id) : '<span style="color: #999;">—</span>'; ?></td>
+            </tr>
+
+            <tr>
+                <th><?php esc_html_e('Order Type', 'flexpress'); ?></th>
+                <td><?php echo $flowguard_order_type ? esc_html(ucfirst($flowguard_order_type)) : '<span style="color: #999;">—</span>'; ?></td>
+            </tr>
+
+            <tr>
+                <th><?php esc_html_e('Last Postback Type', 'flexpress'); ?></th>
+                <td><?php echo $flowguard_postback_type ? esc_html(ucfirst($flowguard_postback_type)) : '<span style="color: #999;">—</span>'; ?></td>
+            </tr>
+
+            <tr>
+                <th><?php esc_html_e('Subscription Type', 'flexpress'); ?></th>
+                <td><?php echo $flowguard_subscription_type ? esc_html(ucfirst($flowguard_subscription_type)) : '<span style="color: #999;">—</span>'; ?></td>
+            </tr>
+
+            <tr>
+                <th><?php esc_html_e('Subscription Phase', 'flexpress'); ?></th>
+                <td><?php echo $flowguard_subscription_phase ? esc_html(ucfirst($flowguard_subscription_phase)) : '<span style="color: #999;">—</span>'; ?></td>
+            </tr>
+
+            <tr>
+                <th><?php esc_html_e('Cancelled By', 'flexpress'); ?></th>
+                <td><?php echo $flowguard_cancelled_by ? esc_html(ucfirst($flowguard_cancelled_by)) : '<span style="color: #999;">—</span>'; ?></td>
+            </tr>
+
+            <tr>
+                <th><?php esc_html_e('Uncancelled By', 'flexpress'); ?></th>
+                <td><?php echo $flowguard_uncancelled_by ? esc_html(ucfirst($flowguard_uncancelled_by)) : '<span style="color: #999;">—</span>'; ?></td>
+            </tr>
+
+            <tr>
+                <th><?php esc_html_e('Next Charge On', 'flexpress'); ?></th>
+                <td>
+                    <?php
+                    if ($flowguard_next_charge_on) {
+                        $utc_timestamp = strtotime($flowguard_next_charge_on);
+                        $site_time = $utc_timestamp + (get_option('gmt_offset') * HOUR_IN_SECONDS);
+                        echo esc_html(date_i18n(get_option('date_format'), $site_time));
+                    } else {
+                        echo '<span style="color: #999;">—</span>';
+                    }
+                    ?>
+                </td>
+            </tr>
+
+            <tr>
+                <th><?php esc_html_e('Expires On', 'flexpress'); ?></th>
+                <td>
+                    <?php
+                    if ($flowguard_expires_on) {
+                        $utc_timestamp = strtotime($flowguard_expires_on);
+                        $site_time = $utc_timestamp + (get_option('gmt_offset') * HOUR_IN_SECONDS);
+                        echo esc_html(date_i18n(get_option('date_format'), $site_time));
+                    } else {
+                        echo '<span style="color: #999;">—</span>';
+                    }
+                    ?>
+                </td>
+            </tr>
+
+            <tr>
+                <th><?php esc_html_e('Last Webhook Received', 'flexpress'); ?></th>
+                <td>
+                    <?php
+                    if ($flowguard_webhook_last_at) {
+                        $utc_timestamp = strtotime($flowguard_webhook_last_at);
+                        $site_time = $utc_timestamp + (get_option('gmt_offset') * HOUR_IN_SECONDS);
+                        echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $site_time));
+                    } else {
+                        echo '<span style="color: #999;">—</span>';
+                    }
+                    ?>
+                </td>
+            </tr>
+
+            <?php if ($flowguard_webhook_last_payload): ?>
+            <tr>
+                <th><?php esc_html_e('Last Webhook Payload', 'flexpress'); ?></th>
+                <td>
+                    <details>
+                        <summary style="cursor: pointer; color: #2271b1; text-decoration: underline;"><?php esc_html_e('View JSON Payload', 'flexpress'); ?></summary>
+                        <pre style="background: #f0f0f1; padding: 15px; border: 1px solid #dcdcde; border-radius: 4px; overflow-x: auto; margin-top: 10px; max-height: 400px; overflow-y: auto;"><?php
+                            $payload_array = json_decode($flowguard_webhook_last_payload, true);
+                            echo esc_html(wp_json_encode($payload_array, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+                        ?></pre>
+                    </details>
+                </td>
+            </tr>
+            <?php endif; ?>
+        </table>
+
+        <!-- Postback Logs Section -->
+        <?php
+        $postback_logs = get_user_meta($user_id, 'flowguard_postback_logs', true);
+        if (!empty($postback_logs) && is_array($postback_logs)):
+        ?>
+        <h2 style="margin-top: 30px;"><?php esc_html_e('Recent Postback Logs', 'flexpress'); ?></h2>
+        <p class="description"><?php esc_html_e('Last 50 postbacks received for this user', 'flexpress'); ?></p>
+        <table class="wp-list-table widefat striped" style="margin-top: 10px;">
+            <thead>
+                <tr>
+                    <th><?php esc_html_e('Timestamp', 'flexpress'); ?></th>
+                    <th><?php esc_html_e('Postback Type', 'flexpress'); ?></th>
+                    <th><?php esc_html_e('Order Type', 'flexpress'); ?></th>
+                    <th><?php esc_html_e('Subscription Type', 'flexpress'); ?></th>
+                    <th><?php esc_html_e('Subscription Phase', 'flexpress'); ?></th>
+                    <th><?php esc_html_e('Sale ID', 'flexpress'); ?></th>
+                    <th><?php esc_html_e('Transaction ID', 'flexpress'); ?></th>
+                    <th><?php esc_html_e('Next Charge', 'flexpress'); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach (array_reverse($postback_logs) as $log): ?>
+                    <tr>
+                        <td>
+                            <?php
+                            if (!empty($log['timestamp'])) {
+                                $utc_timestamp = strtotime($log['timestamp']);
+                                $site_time = $utc_timestamp + (get_option('gmt_offset') * HOUR_IN_SECONDS);
+                                echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $site_time));
+                            } else {
+                                echo '—';
+                            }
+                            ?>
+                        </td>
+                        <td><?php echo isset($log['postback_type']) ? esc_html(ucfirst($log['postback_type'])) : '—'; ?></td>
+                        <td><?php echo isset($log['order_type']) ? esc_html(ucfirst($log['order_type'])) : '—'; ?></td>
+                        <td><?php echo isset($log['subscription_type']) ? esc_html(ucfirst($log['subscription_type'])) : '—'; ?></td>
+                        <td><?php echo isset($log['subscription_phase']) ? esc_html(ucfirst($log['subscription_phase'])) : '—'; ?></td>
+                        <td><?php echo isset($log['sale_id']) ? esc_html($log['sale_id']) : '—'; ?></td>
+                        <td><?php echo isset($log['transaction_id']) ? esc_html($log['transaction_id']) : '—'; ?></td>
+                        <td><?php echo isset($log['next_charge_on']) ? esc_html($log['next_charge_on']) : '—'; ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <?php endif; ?>
 
         <!-- Episode Access Management -->
         <?php $this->render_purchased_episodes_section($user); ?>

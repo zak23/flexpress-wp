@@ -683,7 +683,11 @@ function flexpress_flowguard_cancel_subscription($user_id, $cancelled_by = 'merc
  */
 function flexpress_flowguard_get_subscription_status($user_id)
 {
-    $sale_id = get_user_meta($user_id, 'flowguard_sale_id', true);
+    // Prefer flowguard_subscriber_id (subscription ID), fall back to flowguard_sale_id for backward compatibility
+    $sale_id = get_user_meta($user_id, 'flowguard_subscriber_id', true);
+    if (empty($sale_id)) {
+        $sale_id = get_user_meta($user_id, 'flowguard_sale_id', true);
+    }
     $transaction_id = get_user_meta($user_id, 'flowguard_transaction_id', true);
     $membership_status = get_user_meta($user_id, 'membership_status', true);
     $next_rebill_date = get_user_meta($user_id, 'next_rebill_date', true);

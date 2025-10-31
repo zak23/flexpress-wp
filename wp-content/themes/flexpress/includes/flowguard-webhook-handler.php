@@ -72,6 +72,48 @@ function flexpress_flowguard_webhook_handler() {
     // Process webhook based on type
     $postback_type = $payload['postbackType'] ?? '';
     $order_type = $payload['orderType'] ?? '';
+    $subscription_type = $payload['subscriptionType'] ?? '';
+    $subscription_phase = $payload['subscriptionPhase'] ?? '';
+    
+    // Get user ID early for comprehensive logging
+    $user_id = flexpress_flowguard_get_user_from_reference($payload['referenceId'] ?? '');
+    
+    // Comprehensive postback data logging for testing
+    if ($user_id) {
+        $log_data = [
+            'user_id' => $user_id,
+            'postback_type' => $postback_type,
+            'order_type' => $order_type,
+            'subscription_type' => $subscription_type,
+            'subscription_phase' => $subscription_phase,
+            'sale_id' => $payload['saleId'] ?? '',
+            'transaction_id' => $payload['transactionId'] ?? '',
+            'next_charge_on' => $payload['nextChargeOn'] ?? '',
+            'price_amount' => $payload['priceAmount'] ?? '',
+            'price_currency' => $payload['priceCurrency'] ?? '',
+            'reference_id' => $payload['referenceId'] ?? '',
+            'shop_id' => $payload['shopId'] ?? '',
+            'full_payload' => $payload
+        ];
+        error_log('Flowguard Postback Analysis [User ' . $user_id . ']: ' . wp_json_encode($log_data, JSON_PRETTY_PRINT));
+        
+        // Store full postback log for user
+        $existing_logs = get_user_meta($user_id, 'flowguard_postback_logs', true) ?: [];
+        $existing_logs[] = [
+            'timestamp' => current_time('mysql'),
+            'postback_type' => $postback_type,
+            'order_type' => $order_type,
+            'subscription_type' => $subscription_type,
+            'subscription_phase' => $subscription_phase,
+            'sale_id' => $payload['saleId'] ?? '',
+            'transaction_id' => $payload['transactionId'] ?? '',
+            'next_charge_on' => $payload['nextChargeOn'] ?? '',
+            'payload' => $payload
+        ];
+        // Keep only last 50 postbacks per user
+        $existing_logs = array_slice($existing_logs, -50);
+        update_user_meta($user_id, 'flowguard_postback_logs', $existing_logs);
+    }
     
     switch ($postback_type) {
         case 'approved':
@@ -149,14 +191,31 @@ function flexpress_flowguard_handle_subscription_approved($payload) {
     }
     
     // Store subscription details
-    update_user_meta($user_id, 'flowguard_sale_id', $payload['saleId']);
-    update_user_meta($user_id, 'flowguard_transaction_id', $payload['transactionId']);
+    // saleId is the subscription ID (Flowguard Subscriber ID) - stays same until cancelled/expired
+    if (!empty($payload['saleId'])) {
+        update_user_meta($user_id, 'flowguard_subscriber_id', $payload['saleId']);
+        update_user_meta($user_id, 'flowguard_sale_id', $payload['saleId']); // Backward compatibility
+    }
+    // transactionId is the individual transaction ID - changes with each transaction
+    if (!empty($payload['transactionId'])) {
+        update_user_meta($user_id, 'flowguard_transaction_id', $payload['transactionId']);
+    }
     update_user_meta($user_id, 'subscription_amount', $payload['priceAmount']);
     update_user_meta($user_id, 'subscription_currency', $payload['priceCurrency']);
     update_user_meta($user_id, 'subscription_start_date', current_time('mysql'));
     
-    if ($payload['subscriptionType'] === 'recurring' && !empty($payload['nextChargeOn'])) {
+    // Update next rebill date for recurring subscriptions
+    if (!empty($payload['nextChargeOn'])) {
         update_user_meta($user_id, 'next_rebill_date', $payload['nextChargeOn']);
+        error_log('Flowguard Webhook: Updated next_rebill_date to ' . $payload['nextChargeOn'] . ' for user ' . $user_id);
+    }
+    
+    // Handle subscription type and phase
+    if (!empty($payload['subscriptionType'])) {
+        update_user_meta($user_id, 'flowguard_subscription_type', $payload['subscriptionType']);
+    }
+    if (!empty($payload['subscriptionPhase'])) {
+        update_user_meta($user_id, 'flowguard_subscription_phase', $payload['subscriptionPhase']);
     }
     
     if ($payload['subscriptionType'] === 'one-time' && !empty($payload['expiresOn'])) {
@@ -263,6 +322,17 @@ function flexpress_flowguard_handle_purchase_approved($payload) {
     }
     // Persist all payload fields to user meta for audit/debugging
     flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
+    
+    // Handle order type, subscription type and phase (for PPV purchases)
+    if (!empty($payload['orderType'])) {
+        update_user_meta($user_id, 'flowguard_order_type', $payload['orderType']);
+    }
+    if (!empty($payload['subscriptionType'])) {
+        update_user_meta($user_id, 'flowguard_subscription_type', $payload['subscriptionType']);
+    }
+    if (!empty($payload['subscriptionPhase'])) {
+        update_user_meta($user_id, 'flowguard_subscription_phase', $payload['subscriptionPhase']);
+    }
     
     // Parse enhanced reference data for PPV purchase
     $reference_id = $payload['referenceId'] ?? '';
@@ -397,9 +467,28 @@ function flexpress_flowguard_handle_subscription_rebill($payload) {
         flexpress_invalidate_user_cache($user_id);
     }
     
-    // Update next rebill date
+    // Update next rebill date (nextChargeOn is when Flowguard will initiate the next rebill)
     if (!empty($payload['nextChargeOn'])) {
         update_user_meta($user_id, 'next_rebill_date', $payload['nextChargeOn']);
+        error_log('Flowguard Webhook: Updated next_rebill_date to ' . $payload['nextChargeOn'] . ' for user ' . $user_id . ' (rebill)');
+    }
+    
+    // Handle subscription type and phase
+    if (!empty($payload['subscriptionType'])) {
+        update_user_meta($user_id, 'flowguard_subscription_type', $payload['subscriptionType']);
+    }
+    if (!empty($payload['subscriptionPhase'])) {
+        update_user_meta($user_id, 'flowguard_subscription_phase', $payload['subscriptionPhase']);
+    }
+    
+    // Update subscriber ID if saleId changed (new subscription)
+    if (!empty($payload['saleId'])) {
+        $current_subscriber_id = get_user_meta($user_id, 'flowguard_subscriber_id', true);
+        if ($current_subscriber_id !== $payload['saleId']) {
+            update_user_meta($user_id, 'flowguard_subscriber_id', $payload['saleId']);
+            update_user_meta($user_id, 'flowguard_sale_id', $payload['saleId']); // Backward compatibility
+            error_log('Flowguard Webhook: Updated subscriber ID from ' . $current_subscriber_id . ' to ' . $payload['saleId'] . ' for user ' . $user_id);
+        }
     }
     
     // Store transaction
@@ -443,6 +532,14 @@ function flexpress_flowguard_handle_subscription_cancel($payload) {
     // Persist all payload fields to user meta for audit/debugging
     flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
     
+    // Handle subscription type and phase
+    if (!empty($payload['subscriptionType'])) {
+        update_user_meta($user_id, 'flowguard_subscription_type', $payload['subscriptionType']);
+    }
+    if (!empty($payload['subscriptionPhase'])) {
+        update_user_meta($user_id, 'flowguard_subscription_phase', $payload['subscriptionPhase']);
+    }
+    
     // Update membership status
     flexpress_update_membership_status($user_id, 'cancelled');
     if (function_exists('flexpress_invalidate_user_cache')) {
@@ -452,6 +549,16 @@ function flexpress_flowguard_handle_subscription_cancel($payload) {
     // Set expiration date if provided
     if (!empty($payload['expiresOn'])) {
         update_user_meta($user_id, 'membership_expires', $payload['expiresOn']);
+    }
+    
+    // Update next rebill date if provided (may be cleared on cancel)
+    if (isset($payload['nextChargeOn'])) {
+        if (!empty($payload['nextChargeOn'])) {
+            update_user_meta($user_id, 'next_rebill_date', $payload['nextChargeOn']);
+        } else {
+            // Clear next rebill date if empty
+            delete_user_meta($user_id, 'next_rebill_date');
+        }
     }
     
     // Log activity
@@ -481,6 +588,14 @@ function flexpress_flowguard_handle_subscription_expiry($payload) {
     }
     // Persist all payload fields to user meta for audit/debugging
     flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
+    
+    // Handle subscription type and phase
+    if (!empty($payload['subscriptionType'])) {
+        update_user_meta($user_id, 'flowguard_subscription_type', $payload['subscriptionType']);
+    }
+    if (!empty($payload['subscriptionPhase'])) {
+        update_user_meta($user_id, 'flowguard_subscription_phase', $payload['subscriptionPhase']);
+    }
     
     // Update membership status
     flexpress_update_membership_status($user_id, 'expired');
@@ -515,6 +630,14 @@ function flexpress_flowguard_handle_refund($payload) {
     }
     // Persist all payload fields to user meta for audit/debugging
     flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
+    
+    // Handle subscription type and phase
+    if (!empty($payload['subscriptionType'])) {
+        update_user_meta($user_id, 'flowguard_subscription_type', $payload['subscriptionType']);
+    }
+    if (!empty($payload['subscriptionPhase'])) {
+        update_user_meta($user_id, 'flowguard_subscription_phase', $payload['subscriptionPhase']);
+    }
     
     // Store refund transaction
     flexpress_flowguard_store_transaction([
@@ -685,11 +808,14 @@ function flexpress_cancel_subscription_for_banned_user($user_id, $reason = 'User
         return false;
     }
     
-    // Get Flowguard sale ID
-    $flowguard_sale_id = get_user_meta($user_id, 'flowguard_sale_id', true);
+    // Get Flowguard subscriber ID (subscription ID) - prefer flowguard_subscriber_id, fall back to flowguard_sale_id
+    $flowguard_sale_id = get_user_meta($user_id, 'flowguard_subscriber_id', true);
+    if (empty($flowguard_sale_id)) {
+        $flowguard_sale_id = get_user_meta($user_id, 'flowguard_sale_id', true);
+    }
     
     if (!$flowguard_sale_id) {
-        error_log('FlexPress Ban: No Flowguard sale ID found for user ' . $user_id);
+        error_log('FlexPress Ban: No Flowguard subscriber ID found for user ' . $user_id);
         return false;
     }
     
@@ -813,9 +939,18 @@ function flexpress_flowguard_handle_subscription_uncancel($payload) {
     // Update membership status
     flexpress_update_membership_status($user_id, 'active');
     
-    // Update next charge date if provided
+    // Update next charge date if provided (nextChargeOn is when Flowguard will initiate the next rebill)
     if (!empty($payload['nextChargeOn'])) {
         update_user_meta($user_id, 'next_rebill_date', $payload['nextChargeOn']);
+        error_log('Flowguard Webhook: Updated next_rebill_date to ' . $payload['nextChargeOn'] . ' for user ' . $user_id . ' (uncancel)');
+    }
+    
+    // Handle subscription type and phase
+    if (!empty($payload['subscriptionType'])) {
+        update_user_meta($user_id, 'flowguard_subscription_type', $payload['subscriptionType']);
+    }
+    if (!empty($payload['subscriptionPhase'])) {
+        update_user_meta($user_id, 'flowguard_subscription_phase', $payload['subscriptionPhase']);
     }
     
     // Log activity
@@ -846,9 +981,19 @@ function flexpress_flowguard_handle_subscription_extend($payload) {
     // Get current membership status - DO NOT change the status, only update dates
     $current_status = flexpress_get_membership_status($user_id);
     
+    // Handle subscription type and phase
+    if (!empty($payload['subscriptionType'])) {
+        update_user_meta($user_id, 'flowguard_subscription_type', $payload['subscriptionType']);
+    }
+    if (!empty($payload['subscriptionPhase'])) {
+        update_user_meta($user_id, 'flowguard_subscription_phase', $payload['subscriptionPhase']);
+    }
+    
     // Update dates based on subscription type
-    if ($payload['subscriptionType'] === 'recurring' && !empty($payload['nextChargeOn'])) {
+    // nextChargeOn is when Flowguard will initiate the next rebill
+    if (!empty($payload['nextChargeOn'])) {
         update_user_meta($user_id, 'next_rebill_date', $payload['nextChargeOn']);
+        error_log('Flowguard Webhook: Updated next_rebill_date to ' . $payload['nextChargeOn'] . ' for user ' . $user_id . ' (extend)');
     }
     
     if ($payload['subscriptionType'] === 'one-time' && !empty($payload['expiresOn'])) {
@@ -1032,11 +1177,18 @@ function flexpress_flowguard_persist_payload_user_meta($user_id, $payload) {
     }
 
     // Core identifiers
+    // saleId is the subscription ID (Flowguard Subscriber ID) - stays same until cancelled/expired
     if (isset($payload['saleId'])) {
-        update_user_meta($user_id, 'flowguard_sale_id', $payload['saleId']);
+        update_user_meta($user_id, 'flowguard_subscriber_id', $payload['saleId']);
+        update_user_meta($user_id, 'flowguard_sale_id', $payload['saleId']); // Backward compatibility
     }
+    // transactionId is the individual transaction ID - changes with each transaction
     if (isset($payload['transactionId'])) {
         update_user_meta($user_id, 'flowguard_transaction_id', $payload['transactionId']);
+    }
+    // parentId - ID of transaction being refunded (for refund postbacks)
+    if (isset($payload['parentId'])) {
+        update_user_meta($user_id, 'flowguard_parent_id', $payload['parentId']);
     }
 
     // Monetary
@@ -1070,13 +1222,38 @@ function flexpress_flowguard_persist_payload_user_meta($user_id, $payload) {
     if (isset($payload['subscriptionPhase'])) {
         update_user_meta($user_id, 'flowguard_subscription_phase', $payload['subscriptionPhase']);
     }
+    
+    // Cancellation/uncancellation details
+    if (isset($payload['cancelledBy'])) {
+        update_user_meta($user_id, 'flowguard_cancelled_by', $payload['cancelledBy']);
+    }
+    if (isset($payload['uncancelledBy'])) {
+        update_user_meta($user_id, 'flowguard_uncancelled_by', $payload['uncancelledBy']);
+    }
+    
+    // nextChargeOn is when Flowguard will initiate the next rebill - update Next Rebill Date
     if (!empty($payload['nextChargeOn'])) {
         update_user_meta($user_id, 'flowguard_next_charge_on', $payload['nextChargeOn']);
         update_user_meta($user_id, 'next_rebill_date', $payload['nextChargeOn']); // keep existing
     }
+    
+    // expiresOn - expiration date for one-time subscriptions
+    // Set expiresOn if provided, or calculate if missing for one-time subscriptions
+    $subscription_type = $payload['subscriptionType'] ?? '';
     if (!empty($payload['expiresOn'])) {
+        // Use provided expiresOn
         update_user_meta($user_id, 'flowguard_expires_on', $payload['expiresOn']);
         update_user_meta($user_id, 'membership_expires', $payload['expiresOn']); // keep existing
+    } elseif ($subscription_type === 'one-time' && !empty($payload['nextChargeOn'])) {
+        // For one-time subscriptions, expiresOn should match nextChargeOn if not provided
+        // This ensures we always have an expiration date for one-time subscriptions
+        update_user_meta($user_id, 'flowguard_expires_on', $payload['nextChargeOn']);
+        update_user_meta($user_id, 'membership_expires', $payload['nextChargeOn']); // keep existing
+        error_log('Flowguard Webhook: Set expiresOn to nextChargeOn (' . $payload['nextChargeOn'] . ') for one-time subscription user ' . $user_id);
+    } elseif ($subscription_type === 'one-time' && empty($payload['nextChargeOn']) && empty($payload['expiresOn'])) {
+        // If we have a one-time subscription but no dates, log a warning
+        // This is a fallback - ideally FlowGuard should send expiresOn for one-time subscriptions
+        error_log('Flowguard Webhook: Warning - one-time subscription without expiresOn or nextChargeOn for user ' . $user_id);
     }
 
     // Last payload snapshot

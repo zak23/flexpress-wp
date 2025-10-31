@@ -389,55 +389,193 @@ class FlexPress_Flowguard_Settings
             return;
         }
 
+        // Get pagination parameters
+        $per_page = 50;
+        $current_page = isset($_GET['webhook_page']) ? max(1, intval($_GET['webhook_page'])) : 1;
+        $offset = ($current_page - 1) * $per_page;
+
+        // Get total count
+        $total_count = $wpdb->get_var("SELECT COUNT(*) FROM {$table_name}");
+        $total_pages = ceil($total_count / $per_page);
+
+        // Get webhooks with pagination
         $webhooks = $wpdb->get_results(
-            "SELECT * FROM {$table_name} ORDER BY created_at DESC LIMIT 10",
+            $wpdb->prepare(
+                "SELECT * FROM {$table_name} ORDER BY created_at DESC LIMIT %d OFFSET %d",
+                $per_page,
+                $offset
+            ),
             ARRAY_A
         );
 
+        // Parse payloads to extract key fields
+        foreach ($webhooks as &$webhook) {
+            $payload = json_decode($webhook['payload'], true);
+            $webhook['parsed'] = [
+                'orderType' => $payload['orderType'] ?? '',
+                'subscriptionType' => $payload['subscriptionType'] ?? '',
+                'subscriptionPhase' => $payload['subscriptionPhase'] ?? '',
+                'saleId' => $payload['saleId'] ?? '',
+                'nextChargeOn' => $payload['nextChargeOn'] ?? '',
+                'priceAmount' => $payload['priceAmount'] ?? '',
+                'priceCurrency' => $payload['priceCurrency'] ?? '',
+            ];
+        }
+        unset($webhook);
+
     ?>
-        <div class="card" style="max-width: 800px;">
-            <h2>Recent Webhook Logs</h2>
+        <div class="card" style="max-width: 1400px;">
+            <h2>Webhook Logs</h2>
+            <p class="description">Complete list of all FlowGuard postback webhooks. Showing <?php echo number_format($total_count); ?> total webhooks.</p>
 
             <?php if (empty($webhooks)): ?>
                 <p>No webhook logs found.</p>
             <?php else: ?>
-                <table class="wp-list-table widefat fixed striped">
-                    <thead>
-                        <tr>
-                            <th>Event Type</th>
-                            <th>Transaction ID</th>
-                            <th>User ID</th>
-                            <th>Processed</th>
-                            <th>Created</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($webhooks as $webhook): ?>
+                <div style="overflow-x: auto;">
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
                             <tr>
-                                <td><?php echo esc_html($webhook['event_type']); ?></td>
-                                <td><?php echo esc_html($webhook['transaction_id']); ?></td>
-                                <td><?php echo esc_html($webhook['user_id']); ?></td>
-                                <td>
-                                    <?php if ($webhook['processed']): ?>
-                                        <span style="color: green;">✓</span>
-                                    <?php else: ?>
-                                        <span style="color: red;">✗</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td><?php echo esc_html($webhook['created_at']); ?></td>
-                                <td>
-                                    <button type="button"
-                                        onclick="viewWebhookPayload(<?php echo $webhook['id']; ?>)"
-                                        class="button button-small">View</button>
-                                </td>
+                                <th>Created</th>
+                                <th>Event Type</th>
+                                <th>Order Type</th>
+                                <th>Subscription Type</th>
+                                <th>Subscription Phase</th>
+                                <th>Sale ID</th>
+                                <th>Transaction ID</th>
+                                <th>User ID</th>
+                                <th>Amount</th>
+                                <th>Next Charge</th>
+                                <th>Processed</th>
+                                <th>Actions</th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($webhooks as $webhook): ?>
+                                <tr>
+                                    <td><?php echo esc_html($webhook['created_at']); ?></td>
+                                    <td><strong><?php echo esc_html($webhook['event_type']); ?></strong></td>
+                                    <td><?php echo esc_html($webhook['parsed']['orderType']); ?></td>
+                                    <td><?php echo esc_html($webhook['parsed']['subscriptionType']); ?></td>
+                                    <td><?php echo esc_html($webhook['parsed']['subscriptionPhase']); ?></td>
+                                    <td><code><?php echo esc_html($webhook['parsed']['saleId']); ?></code></td>
+                                    <td><code><?php echo esc_html($webhook['transaction_id']); ?></code></td>
+                                    <td>
+                                        <?php if ($webhook['user_id']): ?>
+                                            <a href="<?php echo admin_url('user-edit.php?user_id=' . $webhook['user_id']); ?>"><?php echo esc_html($webhook['user_id']); ?></a>
+                                        <?php else: ?>
+                                            —
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php if ($webhook['parsed']['priceAmount']): ?>
+                                            <?php echo esc_html($webhook['parsed']['priceCurrency']); ?> <?php echo esc_html($webhook['parsed']['priceAmount']); ?>
+                                        <?php else: ?>
+                                            —
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?php echo esc_html($webhook['parsed']['nextChargeOn'] ?: '—'); ?></td>
+                                    <td>
+                                        <?php if ($webhook['processed']): ?>
+                                            <span style="color: green;">✓</span>
+                                        <?php else: ?>
+                                            <span style="color: red;">✗</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <button type="button"
+                                            onclick="viewWebhookPayload(<?php echo $webhook['id']; ?>)"
+                                            class="button button-small">View Full</button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <?php if ($total_pages > 1): ?>
+                    <div class="tablenav">
+                        <div class="tablenav-pages">
+                            <?php
+                            $page_links = paginate_links([
+                                'base' => add_query_arg('webhook_page', '%#%'),
+                                'format' => '',
+                                'prev_text' => '&laquo;',
+                                'next_text' => '&raquo;',
+                                'total' => $total_pages,
+                                'current' => $current_page
+                            ]);
+                            echo $page_links;
+                            ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
 
+            <style>
+                #webhook-payload-modal {
+                    display: none;
+                    position: fixed;
+                    z-index: 100000;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    overflow: auto;
+                    background-color: rgba(0,0,0,0.5);
+                }
+                #webhook-payload-modal .modal-content {
+                    background-color: #fefefe;
+                    margin: 5% auto;
+                    padding: 20px;
+                    border: 1px solid #888;
+                    width: 90%;
+                    max-width: 900px;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                }
+                #webhook-payload-modal .close {
+                    color: #aaa;
+                    float: right;
+                    font-size: 28px;
+                    font-weight: bold;
+                    cursor: pointer;
+                }
+                #webhook-payload-modal .close:hover {
+                    color: #000;
+                }
+                #webhook-payload-content {
+                    font-family: monospace;
+                    white-space: pre-wrap;
+                    background: #f5f5f5;
+                    padding: 15px;
+                    border-radius: 4px;
+                    max-height: 60vh;
+                    overflow-y: auto;
+                }
+            </style>
+
+            <div id="webhook-payload-modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Webhook Payload</h2>
+                    <div id="webhook-payload-content"></div>
+                </div>
+            </div>
+
             <script>
+                var modal = document.getElementById('webhook-payload-modal');
+                var span = document.getElementsByClassName('close')[0];
+
+                span.onclick = function() {
+                    modal.style.display = 'none';
+                }
+
+                window.onclick = function(event) {
+                    if (event.target == modal) {
+                        modal.style.display = 'none';
+                    }
+                }
+
                 function viewWebhookPayload(webhookId) {
                     jQuery.post(ajaxurl, {
                         action: 'get_webhook_payload',
@@ -445,10 +583,13 @@ class FlexPress_Flowguard_Settings
                         nonce: '<?php echo wp_create_nonce('get_webhook_payload'); ?>'
                     }, function(response) {
                         if (response.success) {
-                            alert('Webhook Payload:\n\n' + JSON.stringify(response.data, null, 2));
+                            document.getElementById('webhook-payload-content').textContent = JSON.stringify(response.data, null, 2);
+                            modal.style.display = 'block';
                         } else {
-                            alert('Failed to load webhook payload');
+                            alert('Failed to load webhook payload: ' + (response.data || 'Unknown error'));
                         }
+                    }).fail(function() {
+                        alert('Failed to load webhook payload');
                     });
                 }
             </script>

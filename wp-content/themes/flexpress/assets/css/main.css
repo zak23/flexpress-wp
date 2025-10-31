@@ -3058,7 +3058,13 @@ footer.bg-black .row.footer {
 .membership-page .alert-warning {
   background-color: rgba(255, 193, 7, 0.1);
   border-color: rgba(255, 193, 7, 0.3);
-  color: #ffc107;
+  color: white;
+}
+
+.membership-page .alert-warning strong,
+.membership-page .alert-warning p,
+.membership-page .alert-warning i {
+  color: white !important;
 }
 
 .membership-page .alert-danger {

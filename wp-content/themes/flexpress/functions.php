@@ -3270,8 +3270,7 @@ function flexpress_process_registration_and_payment()
         if ($validation['valid']) {
             $is_trial_registration = true;
             $trial_link_data = $validation['trial_link'];
-            // Override selected plan with trial plan
-            $selected_plan = $trial_link_data->plan_id;
+            // For trial links, plan selection is not required
         } else {
             // Invalid trial token - reject registration
             wp_send_json_error(array('message' => $validation['message']));
@@ -3280,8 +3279,15 @@ function flexpress_process_registration_and_payment()
     }
 
     // Validate required fields
-    if (empty($email) || empty($password) || empty($selected_plan)) {
+    // For trial registrations, plan is not required
+    if (empty($email) || empty($password)) {
         wp_send_json_error(array('message' => 'Please fill in all required fields.'));
+        return;
+    }
+    
+    // For non-trial registrations, plan is required
+    if (!$is_trial_registration && empty($selected_plan)) {
+        wp_send_json_error(array('message' => 'Please select a membership plan.'));
         return;
     }
 
@@ -3298,13 +3304,16 @@ function flexpress_process_registration_and_payment()
     }
 
     // Get the selected pricing plan (include promo code to unlock promo-only plans)
-    $pricing_plans = flexpress_get_pricing_plans(true, $applied_promo_code);
-    if (!isset($pricing_plans[$selected_plan])) {
-        wp_send_json_error(array('message' => 'Invalid pricing plan selected.'));
-        return;
+    // For trial registrations, plan validation is skipped
+    $plan = null;
+    if (!$is_trial_registration && !empty($selected_plan)) {
+        $pricing_plans = flexpress_get_pricing_plans(true, $applied_promo_code);
+        if (!isset($pricing_plans[$selected_plan])) {
+            wp_send_json_error(array('message' => 'Invalid pricing plan selected.'));
+            return;
+        }
+        $plan = $pricing_plans[$selected_plan];
     }
-
-    $plan = $pricing_plans[$selected_plan];
 
     // Create user account
     $user_id = wp_create_user($email, $password, $email);
@@ -3318,10 +3327,13 @@ function flexpress_process_registration_and_payment()
     $display_name = $email_parts[0];
     update_user_meta($user_id, 'flexpress_display_name', $display_name);
 
-    update_user_meta($user_id, 'selected_pricing_plan', $selected_plan);
+    // Store selected plan if provided (not required for trial registrations)
+    if (!empty($selected_plan)) {
+        update_user_meta($user_id, 'selected_pricing_plan', $selected_plan);
+    }
 
-    // Track promo code usage if applied
-    if (!empty($applied_promo_code)) {
+    // Track promo code usage if applied (only for non-trial registrations with plans)
+    if (!empty($applied_promo_code) && !empty($selected_plan)) {
         update_user_meta($user_id, 'applied_promo_code', $applied_promo_code);
         flexpress_track_promo_usage($applied_promo_code, $user_id, $selected_plan, 'registration_' . $user_id, 0.00);
     }
@@ -3364,7 +3376,7 @@ function flexpress_process_registration_and_payment()
     if ($is_trial_registration && $trial_link_data) {
         // Skip Flowguard payment creation
         update_user_meta($user_id, 'membership_status', 'active');
-        update_user_meta($user_id, 'subscription_plan', $selected_plan);
+        // Don't set subscription_plan for trial links - trial access is independent of plans
         update_user_meta($user_id, 'subscription_start', current_time('mysql'));
         
         // Calculate trial expiration date
@@ -3388,7 +3400,7 @@ function flexpress_process_registration_and_payment()
         
         // Send Discord notification
         if (function_exists('flexpress_discord_notify_trial_link_used')) {
-            flexpress_discord_notify_trial_link_used($user_id, $trial_link_data, $plan);
+            flexpress_discord_notify_trial_link_used($user_id, $trial_link_data, null);
         }
         
         // Log the user in

@@ -101,11 +101,12 @@ function flexpress_customize_episode_columns($columns)
     // Remove the taxonomy column
     unset($columns['taxonomy-episode_status']);
 
-    // Add custom Access Type column (before date)
+    // Add custom Access Type and Average Rating columns (before date)
     $new_columns = array();
     foreach ($columns as $key => $value) {
         if ($key === 'date') {
             $new_columns['access_type'] = __('Access Type', 'flexpress');
+            $new_columns['average_rating'] = __('Average Rating', 'flexpress');
         }
         $new_columns[$key] = $value;
     }
@@ -115,7 +116,7 @@ function flexpress_customize_episode_columns($columns)
 add_filter('manage_episode_posts_columns', 'flexpress_customize_episode_columns');
 
 /**
- * Display Access Type column content
+ * Display Access Type and Average Rating column content
  */
 function flexpress_display_access_type_column($column, $post_id)
 {
@@ -139,6 +140,18 @@ function flexpress_display_access_type_column($column, $post_id)
             } else {
                 echo '—';
             }
+        }
+    } elseif ($column === 'average_rating') {
+        if (function_exists('flexpress_get_episode_rating_stats')) {
+            $stats = flexpress_get_episode_rating_stats($post_id);
+            
+            if ($stats['total_ratings'] > 0) {
+                echo number_format($stats['average_rating'], 2) . ' (' . esc_html($stats['total_ratings']) . ')';
+            } else {
+                echo '—';
+            }
+        } else {
+            echo '—';
         }
     }
 }

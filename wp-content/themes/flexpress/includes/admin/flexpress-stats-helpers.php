@@ -522,3 +522,321 @@ function flexpress_get_rating_stats($time_range = 'all_time', $custom_from = '',
     return $result;
 }
 
+
+/**
+ * Get episode unlock statistics (PPV purchases)
+ *
+ * @param string $time_range Time range: 'today', 'this_week', 'this_month', 'this_year', 'all_time', 'custom'
+ * @param string $custom_from Custom date from (Y-m-d format)
+ * @param string $custom_to Custom date to (Y-m-d format)
+ * @return array Statistics array
+ */
+function flexpress_get_unlock_stats($time_range = 'all_time', $custom_from = '', $custom_to = '')
+{
+    global $wpdb;
+
+    $cache_key = 'flexpress_unlock_stats_' . md5($time_range . $custom_from . $custom_to);
+    $cached = get_transient($cache_key);
+
+    if ($cached !== false) {
+        return $cached;
+    }
+
+    // Get PPV purchases from Flowguard transactions
+    $transactions_table = $wpdb->prefix . 'flexpress_flowguard_transactions';
+    $date_where = flexpress_stats_build_date_clause($time_range, $custom_from, $custom_to, 'created_at');
+
+    $ppv_stats = $wpdb->get_row(
+        "SELECT 
+            COUNT(*) as total_count,
+            SUM(amount) as total_amount,
+            AVG(amount) as avg_amount,
+            COUNT(DISTINCT user_id) as unique_users,
+            COUNT(DISTINCT plan_id) as unique_episodes
+        FROM $transactions_table
+        WHERE status = 'approved'
+        AND order_type = 'purchase'
+        AND $date_where
+    ",
+        ARRAY_A
+    );
+
+    // Get previous period comparison
+    $previous_comparison = null;
+    if (in_array($time_range, ['this_week', 'this_month', 'this_year'])) {
+        $prev_date_where = '';
+        switch ($time_range) {
+            case 'this_week':
+                $prev_date_where = "$transactions_table.created_at >= DATE_SUB(DATE_SUB(NOW(), INTERVAL 7 DAY), INTERVAL 7 DAY) 
+                     AND $transactions_table.created_at < DATE_SUB(NOW(), INTERVAL 7 DAY)";
+                break;
+            case 'this_month':
+                $prev_date_where = "$transactions_table.created_at >= DATE_SUB(DATE_SUB(NOW(), INTERVAL 30 DAY), INTERVAL 30 DAY) 
+                     AND $transactions_table.created_at < DATE_SUB(NOW(), INTERVAL 30 DAY)";
+                break;
+            case 'this_year':
+                $prev_date_where = "YEAR($transactions_table.created_at) = YEAR(NOW()) - 1";
+                break;
+        }
+
+        if (!empty($prev_date_where)) {
+            $prev_stats = $wpdb->get_row(
+                "SELECT 
+                    COUNT(*) as total_count,
+                    SUM(amount) as total_amount
+                FROM $transactions_table
+                WHERE status = 'approved'
+                AND order_type = 'purchase'
+                AND $prev_date_where
+            ",
+                ARRAY_A
+            );
+
+            if ($prev_stats) {
+                $current_amount = floatval($ppv_stats['total_amount'] ?: 0);
+                $prev_amount = floatval($prev_stats['total_amount'] ?: 0);
+                $current_count = intval($ppv_stats['total_count'] ?: 0);
+                $prev_count = intval($prev_stats['total_count'] ?: 0);
+
+                $amount_change = $prev_amount > 0 ? (($current_amount - $prev_amount) / $prev_amount) * 100 : 0;
+                $count_change = $prev_count > 0 ? (($current_count - $prev_count) / $prev_count) * 100 : 0;
+
+                $previous_comparison = [
+                    'amount_change' => round($amount_change, 2),
+                    'count_change' => round($count_change, 2),
+                    'prev_amount' => $prev_amount,
+                    'prev_count' => $prev_count,
+                ];
+            }
+        }
+    }
+
+    $result = [
+        'total_count' => intval($ppv_stats['total_count'] ?: 0),
+        'total_amount' => floatval($ppv_stats['total_amount'] ?: 0),
+        'avg_amount' => floatval($ppv_stats['avg_amount'] ?: 0),
+        'unique_users' => intval($ppv_stats['unique_users'] ?: 0),
+        'unique_episodes' => intval($ppv_stats['unique_episodes'] ?: 0),
+        'previous_comparison' => $previous_comparison,
+        'time_range' => $time_range,
+    ];
+
+    // Cache for 5 minutes
+    set_transient($cache_key, $result, 5 * MINUTE_IN_SECONDS);
+
+    return $result;
+}
+
+/**
+ * Get user registration statistics
+ *
+ * @param string $time_range Time range: 'today', 'this_week', 'this_month', 'this_year', 'all_time', 'custom'
+ * @param string $custom_from Custom date from (Y-m-d format)
+ * @param string $custom_to Custom date to (Y-m-d format)
+ * @return array Statistics array
+ */
+function flexpress_get_registration_stats($time_range = 'all_time', $custom_from = '', $custom_to = '')
+{
+    global $wpdb;
+
+    $cache_key = 'flexpress_registration_stats_' . md5($time_range . $custom_from . $custom_to);
+    $cached = get_transient($cache_key);
+
+    if ($cached !== false) {
+        return $cached;
+    }
+
+    $date_where = flexpress_stats_build_date_clause($time_range, $custom_from, $custom_to, 'user_registered');
+
+    // Get registration stats from users table
+    $stats = $wpdb->get_row(
+        "SELECT 
+            COUNT(*) as total_count,
+            COUNT(DISTINCT DATE(user_registered)) as unique_days
+        FROM {$wpdb->users}
+        WHERE $date_where
+    ",
+        ARRAY_A
+    );
+
+    // Get registrations by signup source
+    $source_stats = $wpdb->get_results(
+        "SELECT 
+            COALESCE(um.meta_value, 'direct') as signup_source,
+            COUNT(DISTINCT u.ID) as count
+        FROM {$wpdb->users} u
+        LEFT JOIN {$wpdb->usermeta} um ON u.ID = um.user_id AND um.meta_key = 'signup_source'
+        WHERE $date_where
+        GROUP BY signup_source
+    ",
+        ARRAY_A
+    );
+
+    $sources = array();
+    foreach ($source_stats as $source) {
+        $sources[$source['signup_source']] = intval($source['count']);
+    }
+
+    // Get trial vs paid registrations
+    $trial_registrations = $wpdb->get_var(
+        "SELECT COUNT(DISTINCT u.ID)
+        FROM {$wpdb->users} u
+        INNER JOIN {$wpdb->usermeta} um ON u.ID = um.user_id
+        WHERE um.meta_key = 'trial_expires_at'
+        AND um.meta_value != ''
+        AND $date_where
+    "
+    );
+
+    $paid_registrations = intval($stats['total_count'] ?: 0) - intval($trial_registrations ?: 0);
+
+    // Get previous period comparison
+    $previous_comparison = null;
+    if (in_array($time_range, ['this_week', 'this_month', 'this_year'])) {
+        $prev_date_where = '';
+        switch ($time_range) {
+            case 'this_week':
+                $prev_date_where = "user_registered >= DATE_SUB(DATE_SUB(NOW(), INTERVAL 7 DAY), INTERVAL 7 DAY) 
+                     AND user_registered < DATE_SUB(NOW(), INTERVAL 7 DAY)";
+                break;
+            case 'this_month':
+                $prev_date_where = "user_registered >= DATE_SUB(DATE_SUB(NOW(), INTERVAL 30 DAY), INTERVAL 30 DAY) 
+                     AND user_registered < DATE_SUB(NOW(), INTERVAL 30 DAY)";
+                break;
+            case 'this_year':
+                $prev_date_where = "YEAR(user_registered) = YEAR(NOW()) - 1";
+                break;
+        }
+
+        if (!empty($prev_date_where)) {
+            $prev_count = $wpdb->get_var(
+                "SELECT COUNT(*) 
+                FROM {$wpdb->users}
+                WHERE $prev_date_where
+            "
+            );
+
+            if ($prev_count) {
+                $current_count = intval($stats['total_count'] ?: 0);
+                $prev_count = intval($prev_count);
+                $count_change = $prev_count > 0 ? (($current_count - $prev_count) / $prev_count) * 100 : 0;
+
+                $previous_comparison = [
+                    'count_change' => round($count_change, 2),
+                    'prev_count' => $prev_count,
+                ];
+            }
+        }
+    }
+
+    $result = [
+        'total_count' => intval($stats['total_count'] ?: 0),
+        'unique_days' => intval($stats['unique_days'] ?: 0),
+        'trial_registrations' => intval($trial_registrations ?: 0),
+        'paid_registrations' => $paid_registrations,
+        'sources' => $sources,
+        'previous_comparison' => $previous_comparison,
+        'time_range' => $time_range,
+    ];
+
+    // Cache for 5 minutes
+    set_transient($cache_key, $result, 5 * MINUTE_IN_SECONDS);
+
+    return $result;
+}
+
+/**
+ * Get active membership statistics
+ *
+ * @param string $time_range Time range: 'today', 'this_week', 'this_month', 'this_year', 'all_time', 'custom'
+ * @param string $custom_from Custom date from (Y-m-d format)
+ * @param string $custom_to Custom date to (Y-m-d format)
+ * @return array Statistics array
+ */
+function flexpress_get_membership_stats($time_range = 'all_time', $custom_from = '', $custom_to = '')
+{
+    global $wpdb;
+
+    $cache_key = 'flexpress_membership_stats_' . md5($time_range . $custom_from . $custom_to);
+    $cached = get_transient($cache_key);
+
+    if ($cached !== false) {
+        return $cached;
+    }
+
+    // Get active members (membership_status = 'active' or 'cancelled')
+    $active_members = $wpdb->get_var(
+        "SELECT COUNT(DISTINCT user_id)
+        FROM {$wpdb->usermeta}
+        WHERE meta_key = 'membership_status'
+        AND meta_value IN ('active', 'cancelled')
+    "
+    );
+
+    // Get cancelled members (with access until expiry)
+    $cancelled_but_active = $wpdb->get_var(
+        "SELECT COUNT(DISTINCT user_id)
+        FROM {$wpdb->usermeta}
+        WHERE meta_key = 'membership_status'
+        AND meta_value = 'cancelled'
+    "
+    );
+
+    // Get expired members
+    $expired_members = $wpdb->get_var(
+        "SELECT COUNT(DISTINCT user_id)
+        FROM {$wpdb->usermeta}
+        WHERE meta_key = 'membership_status'
+        AND meta_value = 'expired'
+    "
+    );
+
+    // Get memberships by subscription type
+    $subscription_types = $wpdb->get_results(
+        "SELECT 
+            CASE 
+                WHEN um1.meta_value IS NOT NULL AND CAST(um1.meta_value AS DATETIME) > NOW() THEN 'trial'
+                WHEN um2.meta_value IN ('active', 'cancelled') THEN 'paid'
+                ELSE 'none'
+            END as membership_type,
+            COUNT(DISTINCT u.ID) as count
+        FROM {$wpdb->users} u
+        LEFT JOIN {$wpdb->usermeta} um1 ON u.ID = um1.user_id AND um1.meta_key = 'trial_expires_at'
+        LEFT JOIN {$wpdb->usermeta} um2 ON u.ID = um2.user_id AND um2.meta_key = 'membership_status'
+        GROUP BY membership_type
+    ",
+        ARRAY_A
+    );
+
+    $type_counts = array('trial' => 0, 'paid' => 0, 'none' => 0);
+    foreach ($subscription_types as $type) {
+        $type_counts[$type['membership_type']] = intval($type['count']);
+    }
+
+    // Get memberships started in time range
+    $date_where = flexpress_stats_build_date_clause($time_range, $custom_from, $custom_to, 'meta_value');
+    $started_count = $wpdb->get_var(
+        "SELECT COUNT(DISTINCT user_id)
+        FROM {$wpdb->usermeta}
+        WHERE meta_key = 'subscription_start_date'
+        AND $date_where
+    "
+    );
+
+    $result = [
+        'active_members' => intval($active_members ?: 0),
+        'cancelled_but_active' => intval($cancelled_but_active ?: 0),
+        'expired_members' => intval($expired_members ?: 0),
+        'total_members' => intval($active_members ?: 0) + intval($cancelled_but_active ?: 0),
+        'trial_members' => $type_counts['trial'],
+        'paid_members' => $type_counts['paid'],
+        'free_members' => $type_counts['none'],
+        'started_in_period' => intval($started_count ?: 0),
+        'time_range' => $time_range,
+    ];
+
+    // Cache for 5 minutes
+    set_transient($cache_key, $result, 5 * MINUTE_IN_SECONDS);
+
+    return $result;
+}

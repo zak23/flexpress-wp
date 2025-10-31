@@ -66,6 +66,24 @@ class FlexPress_Stats_Dashboard
             __('FlexPress Ratings', 'flexpress'),
             array($this, 'render_ratings_widget')
         );
+
+        wp_add_dashboard_widget(
+            'flexpress_stats_unlocks',
+            __('FlexPress Episode Unlocks', 'flexpress'),
+            array($this, 'render_unlocks_widget')
+        );
+
+        wp_add_dashboard_widget(
+            'flexpress_stats_registrations',
+            __('FlexPress Registrations', 'flexpress'),
+            array($this, 'render_registrations_widget')
+        );
+
+        wp_add_dashboard_widget(
+            'flexpress_stats_memberships',
+            __('FlexPress Memberships', 'flexpress'),
+            array($this, 'render_memberships_widget')
+        );
     }
 
     /**
@@ -221,6 +239,9 @@ class FlexPress_Stats_Dashboard
                     $this->render_stats_card('trials', __('Free Trials', 'flexpress'), 'dashicons-star-filled');
                     $this->render_stats_card('rebills', __('Rebills', 'flexpress'), 'dashicons-update');
                     $this->render_stats_card('ratings', __('Ratings', 'flexpress'), 'dashicons-star-half');
+                    $this->render_stats_card('unlocks', __('Episode Unlocks', 'flexpress'), 'dashicons-unlock');
+                    $this->render_stats_card('registrations', __('Registrations', 'flexpress'), 'dashicons-groups');
+                    $this->render_stats_card('memberships', __('Active Memberships', 'flexpress'), 'dashicons-admin-users');
                     ?>
                 </div>
             </div>
@@ -284,6 +305,30 @@ class FlexPress_Stats_Dashboard
     public function render_ratings_widget()
     {
         $this->render_widget_content('ratings', __('Ratings', 'flexpress'));
+    }
+
+    /**
+     * Render unlocks widget for WordPress dashboard
+     */
+    public function render_unlocks_widget()
+    {
+        $this->render_widget_content('unlocks', __('Episode Unlocks', 'flexpress'));
+    }
+
+    /**
+     * Render registrations widget for WordPress dashboard
+     */
+    public function render_registrations_widget()
+    {
+        $this->render_widget_content('registrations', __('Registrations', 'flexpress'));
+    }
+
+    /**
+     * Render memberships widget for WordPress dashboard
+     */
+    public function render_memberships_widget()
+    {
+        $this->render_widget_content('memberships', __('Active Memberships', 'flexpress'));
     }
 
     /**
@@ -369,6 +414,21 @@ class FlexPress_Stats_Dashboard
             case 'ratings':
                 $stats = flexpress_get_rating_stats($time_range, $custom_from, $custom_to);
                 $html = $this->format_ratings_html($stats);
+                break;
+
+            case 'unlocks':
+                $stats = flexpress_get_unlock_stats($time_range, $custom_from, $custom_to);
+                $html = $this->format_unlocks_html($stats);
+                break;
+
+            case 'registrations':
+                $stats = flexpress_get_registration_stats($time_range, $custom_from, $custom_to);
+                $html = $this->format_registrations_html($stats);
+                break;
+
+            case 'memberships':
+                $stats = flexpress_get_membership_stats($time_range, $custom_from, $custom_to);
+                $html = $this->format_memberships_html($stats);
                 break;
 
             default:
@@ -582,6 +642,151 @@ class FlexPress_Stats_Dashboard
             $html .= '<span class="flexpress-stats-change-label">' . esc_html__('vs Previous Period', 'flexpress') . '</span>';
             $html .= '</div>';
         }
+
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    /**
+     * Format unlocks stats HTML
+     *
+     * @param array $stats Stats array
+     * @return string HTML
+     */
+    private function format_unlocks_html($stats)
+    {
+        $total_count = number_format($stats['total_count']);
+        $total_amount = number_format($stats['total_amount'], 2);
+
+        $html = '<div class="flexpress-stats-primary">';
+        $html .= '<span class="flexpress-stats-value">' . esc_html($total_count) . '</span>';
+        $html .= '<span class="flexpress-stats-label">' . esc_html__('Total Unlocks', 'flexpress') . '</span>';
+        $html .= '</div>';
+
+        $html .= '<div class="flexpress-stats-secondary">';
+        $html .= '<div class="flexpress-stats-metric">';
+        $html .= '<span class="flexpress-stats-metric-value">$' . esc_html($total_amount) . '</span>';
+        $html .= '<span class="flexpress-stats-metric-label">' . esc_html__('Total Revenue', 'flexpress') . '</span>';
+        $html .= '</div>';
+        $html .= '<div class="flexpress-stats-metric">';
+        $html .= '<span class="flexpress-stats-metric-value">' . esc_html(number_format($stats['unique_users'])) . '</span>';
+        $html .= '<span class="flexpress-stats-metric-label">' . esc_html__('Unique Users', 'flexpress') . '</span>';
+        $html .= '</div>';
+
+        if (!empty($stats['unique_episodes'])) {
+            $html .= '<div class="flexpress-stats-breakdown">';
+            $html .= '<div>' . esc_html__('Episodes Unlocked:', 'flexpress') . ' ' . number_format($stats['unique_episodes']) . '</div>';
+            if (!empty($stats['avg_amount'])) {
+                $html .= '<div>' . esc_html__('Avg Price:', 'flexpress') . ' $' . number_format($stats['avg_amount'], 2) . '</div>';
+            }
+            $html .= '</div>';
+        }
+
+        // Show previous period comparison if available
+        if (!empty($stats['previous_comparison'])) {
+            $comparison = $stats['previous_comparison'];
+            $amount_change = $comparison['amount_change'];
+            $change_class = $amount_change >= 0 ? 'positive' : 'negative';
+            $change_icon = $amount_change >= 0 ? '↑' : '↓';
+            $html .= '<div class="flexpress-stats-comparison ' . $change_class . '">';
+            $html .= '<span class="flexpress-stats-change">' . $change_icon . ' ' . abs($amount_change) . '%</span>';
+            $html .= '<span class="flexpress-stats-change-label">' . esc_html__('vs Previous Period', 'flexpress') . '</span>';
+            $html .= '</div>';
+        }
+
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    /**
+     * Format registrations stats HTML
+     *
+     * @param array $stats Stats array
+     * @return string HTML
+     */
+    private function format_registrations_html($stats)
+    {
+        $total_count = number_format($stats['total_count']);
+
+        $html = '<div class="flexpress-stats-primary">';
+        $html .= '<span class="flexpress-stats-value">' . esc_html($total_count) . '</span>';
+        $html .= '<span class="flexpress-stats-label">' . esc_html__('Total Registrations', 'flexpress') . '</span>';
+        $html .= '</div>';
+
+        $html .= '<div class="flexpress-stats-secondary">';
+        $html .= '<div class="flexpress-stats-metric">';
+        $html .= '<span class="flexpress-stats-metric-value">' . esc_html(number_format($stats['trial_registrations'])) . '</span>';
+        $html .= '<span class="flexpress-stats-metric-label">' . esc_html__('Free Trials', 'flexpress') . '</span>';
+        $html .= '</div>';
+        $html .= '<div class="flexpress-stats-metric">';
+        $html .= '<span class="flexpress-stats-metric-value">' . esc_html(number_format($stats['paid_registrations'])) . '</span>';
+        $html .= '<span class="flexpress-stats-metric-label">' . esc_html__('Paid Signups', 'flexpress') . '</span>';
+        $html .= '</div>';
+
+        if (!empty($stats['sources'])) {
+            $html .= '<div class="flexpress-stats-breakdown">';
+            foreach ($stats['sources'] as $source => $count) {
+                $html .= '<div>' . esc_html(ucfirst($source)) . ': ' . number_format($count) . '</div>';
+            }
+            $html .= '</div>';
+        }
+
+        // Show previous period comparison if available
+        if (!empty($stats['previous_comparison'])) {
+            $comparison = $stats['previous_comparison'];
+            $count_change = $comparison['count_change'];
+            $change_class = $count_change >= 0 ? 'positive' : 'negative';
+            $change_icon = $count_change >= 0 ? '↑' : '↓';
+            $html .= '<div class="flexpress-stats-comparison ' . $change_class . '">';
+            $html .= '<span class="flexpress-stats-change">' . $change_icon . ' ' . abs($count_change) . '%</span>';
+            $html .= '<span class="flexpress-stats-change-label">' . esc_html__('vs Previous Period', 'flexpress') . '</span>';
+            $html .= '</div>';
+        }
+
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    /**
+     * Format memberships stats HTML
+     *
+     * @param array $stats Stats array
+     * @return string HTML
+     */
+    private function format_memberships_html($stats)
+    {
+        $total_members = number_format($stats['total_members']);
+
+        $html = '<div class="flexpress-stats-primary">';
+        $html .= '<span class="flexpress-stats-value">' . esc_html($total_members) . '</span>';
+        $html .= '<span class="flexpress-stats-label">' . esc_html__('Total Active Members', 'flexpress') . '</span>';
+        $html .= '</div>';
+
+        $html .= '<div class="flexpress-stats-secondary">';
+        $html .= '<div class="flexpress-stats-metric">';
+        $html .= '<span class="flexpress-stats-metric-value">' . esc_html(number_format($stats['paid_members'])) . '</span>';
+        $html .= '<span class="flexpress-stats-metric-label">' . esc_html__('Paid Members', 'flexpress') . '</span>';
+        $html .= '</div>';
+        $html .= '<div class="flexpress-stats-metric">';
+        $html .= '<span class="flexpress-stats-metric-value">' . esc_html(number_format($stats['trial_members'])) . '</span>';
+        $html .= '<span class="flexpress-stats-metric-label">' . esc_html__('Trial Members', 'flexpress') . '</span>';
+        $html .= '</div>';
+
+        $html .= '<div class="flexpress-stats-breakdown">';
+        $html .= '<div>' . esc_html__('Active:', 'flexpress') . ' ' . number_format($stats['active_members']) . '</div>';
+        if (!empty($stats['cancelled_but_active'])) {
+            $html .= '<div>' . esc_html__('Cancelled (still active):', 'flexpress') . ' ' . number_format($stats['cancelled_but_active']) . '</div>';
+        }
+        if (!empty($stats['expired_members'])) {
+            $html .= '<div>' . esc_html__('Expired:', 'flexpress') . ' ' . number_format($stats['expired_members']) . '</div>';
+        }
+        if (!empty($stats['started_in_period'])) {
+            $html .= '<div>' . esc_html__('Started in Period:', 'flexpress') . ' ' . number_format($stats['started_in_period']) . '</div>';
+        }
+        $html .= '</div>';
 
         $html .= '</div>';
 

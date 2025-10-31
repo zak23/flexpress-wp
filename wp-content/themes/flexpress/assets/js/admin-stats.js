@@ -92,7 +92,7 @@
      * @param {string} customTo Custom to date
      */
     function loadAllStats(context, timeRange = 'this_month', customFrom = '', customTo = '') {
-        const statTypes = ['sales', 'trials', 'rebills', 'ratings'];
+        const statTypes = ['sales', 'trials', 'rebills', 'ratings', 'unlocks', 'registrations', 'memberships'];
 
         statTypes.forEach(function (type) {
             loadStats(type, timeRange, customFrom, customTo, context);

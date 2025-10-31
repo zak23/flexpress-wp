@@ -11,7 +11,7 @@
 
                     <!-- Logo Section -->
                     <div class="col-12 col-lg-3 mb-4 mb-lg-0 text-center">
-                        <?php flexpress_display_logo(); ?>
+                        <?php flexpress_display_logo(array('force_type' => 'primary')); ?>
                     </div>
 
                     <!-- Menu Sections -->

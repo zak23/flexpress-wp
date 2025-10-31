@@ -62,7 +62,8 @@
                                 'class' => 'navbar-logo',
                                 'alt' => get_bloginfo('name'),
                                 'title_class' => 'text-uppercase fw-bold text-white',
-                                'title_tag' => 'span'
+                                'title_tag' => 'span',
+                                'force_type' => 'primary'
                             ));
                             ?>
                         </a>

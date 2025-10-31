@@ -4183,7 +4183,7 @@ function flexpress_check_episode_access($episode_id = null, $user_id = null, $fo
     }
 
     // Get episode fields
-    $access_type = get_field('access_type', $episode_id) ?: 'membership';
+    $access_type = get_field('access_type', $episode_id) ?: 'membership_only';
     $price = get_field('episode_price', $episode_id);
     $member_discount = get_field('member_discount', $episode_id) ?: 0;
 
@@ -4338,7 +4338,7 @@ function flexpress_get_episode_access_summary($episode_id = null)
         $episode_id = get_the_ID();
     }
 
-    $access_type = get_field('access_type', $episode_id) ?: 'membership';
+    $access_type = get_field('access_type', $episode_id) ?: 'membership_only';
     $price = get_field('episode_price', $episode_id);
     $member_discount = get_field('member_discount', $episode_id) ?: 0;
 

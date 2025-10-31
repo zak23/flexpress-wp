@@ -103,7 +103,7 @@ if (function_exists('acf_add_local_field_group')):
                 'type' => 'select',
                 'instructions' => 'Choose how users can access this episode',
                 'required' => 1,
-                'default_value' => 'membership',
+                'default_value' => 'membership_only',
                 'choices' => array(
                     'free' => 'Free for Everyone',
                     'membership_only' => 'Membership Only (No PPV Option)',

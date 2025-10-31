@@ -2336,7 +2336,7 @@ Located in `includes/acf-fields.php`:
 
 - **Field Name**: `access_type`
 - **Field Type**: Select dropdown
-- **Default Value**: `membership`
+- **Default Value**: `membership_only`
 - **Choices**: All 5 access types with descriptive labels
 
 **Default PPV Price Field:**

@@ -25,7 +25,7 @@ class FlexPress_Stats_Dashboard
         add_action('wp_dashboard_setup', array($this, 'register_dashboard_widgets'));
 
         // Register admin menu page
-        add_action('admin_menu', array($this, 'add_dashboard_page'), 5); // Priority 5 to add before other submenus
+        add_action('admin_menu', array($this, 'add_dashboard_page'), 15); // Priority 15 to register after parent menu exists (priority 10)
 
         // Enqueue admin assets
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
@@ -88,7 +88,7 @@ class FlexPress_Stats_Dashboard
 
     /**
      * Add dashboard page to FlexPress admin menu
-     * Priority 5 ensures this runs before Settings class (priority 10)
+     * Priority 15 ensures this runs after the parent menu is created (priority 10)
      */
     public function add_dashboard_page()
     {

@@ -317,7 +317,7 @@ class FlexPress_Affiliate_Manager {
     public function approve_affiliate() {
         check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error(['message' => __('Permission denied.', 'flexpress')]);
         }
         
@@ -357,7 +357,7 @@ class FlexPress_Affiliate_Manager {
     public function reject_affiliate() {
         check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error(['message' => __('Permission denied.', 'flexpress')]);
         }
         
@@ -401,7 +401,7 @@ class FlexPress_Affiliate_Manager {
     public function suspend_affiliate() {
         check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error(['message' => __('Permission denied.', 'flexpress')]);
         }
         

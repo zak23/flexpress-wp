@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Check if user has admin permissions
-if (!current_user_can('manage_options')) {
+if (!flexpress_current_user_is_founder()) {
     wp_die('You do not have sufficient permissions to access this page.');
 }
 

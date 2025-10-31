@@ -39,7 +39,7 @@ class FlexPress_Stats_Dashboard
      */
     public function register_dashboard_widgets()
     {
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             return;
         }
 
@@ -207,7 +207,7 @@ class FlexPress_Stats_Dashboard
      */
     public function render_dashboard_page()
     {
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die(__('You do not have sufficient permissions to access this page.', 'flexpress'));
         }
 
@@ -368,7 +368,7 @@ class FlexPress_Stats_Dashboard
     {
         check_ajax_referer('flexpress_stats_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error(array('message' => __('Insufficient permissions.', 'flexpress')));
         }
 

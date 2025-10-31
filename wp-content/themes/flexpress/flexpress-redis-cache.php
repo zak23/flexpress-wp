@@ -154,7 +154,7 @@ add_action('init', function() {
 add_action('admin_notices', function() {
     global $wp_object_cache;
     
-    if (current_user_can('manage_options')) {
+    if (flexpress_current_user_is_founder()) {
         if ($wp_object_cache instanceof FlexPress_Redis_Object_Cache) {
             $stats = $wp_object_cache->get_stats();
             

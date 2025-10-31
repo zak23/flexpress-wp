@@ -613,7 +613,7 @@ function flexpress_test_flowguard_connection()
 {
     check_ajax_referer('test_flowguard_connection', 'nonce');
 
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Unauthorized');
     }
 
@@ -651,7 +651,7 @@ function flexpress_test_flowguard_webhook()
 {
     check_ajax_referer('test_flowguard_webhook', 'nonce');
 
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Unauthorized');
     }
 
@@ -708,7 +708,7 @@ function flexpress_get_webhook_payload()
 {
     check_ajax_referer('get_webhook_payload', 'nonce');
 
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Unauthorized');
     }
 

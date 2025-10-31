@@ -8,7 +8,7 @@ require_once(dirname(dirname(dirname(__FILE__))) . '/wp-load.php');
 
 // Basic security check
 $allowed_ips = array('127.0.0.1', '::1');
-if (!in_array($_SERVER['REMOTE_ADDR'], $allowed_ips) && !current_user_can('manage_options')) {
+if (!in_array($_SERVER['REMOTE_ADDR'], $allowed_ips) && !flexpress_current_user_is_founder()) {
     die('Access denied');
 }
 

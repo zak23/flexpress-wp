@@ -127,7 +127,7 @@ class FlexPress_REST_Affiliates {
     }
 
     public static function require_admin() {
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             return new WP_Error('forbidden', 'Admin only', ['status' => 403]);
         }
         return true;
@@ -188,7 +188,7 @@ class FlexPress_REST_Affiliates {
             return new WP_Error('unauthorized', 'Invalid credentials', ['status' => 401]);
         }
         // Check affiliate role
-        if (!in_array('affiliate_user', (array)$user->roles, true) && !current_user_can('manage_options')) {
+        if (!in_array('affiliate_user', (array)$user->roles, true) && !flexpress_current_user_is_founder()) {
             return new WP_Error('forbidden', 'Not an affiliate', ['status' => 403]);
         }
         $payload = [

@@ -178,7 +178,7 @@ class FlexPress_Email_Blacklist {
         }
         
         // Check user capabilities
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error(array('message' => __('You do not have permission to manage blacklist.', 'flexpress')));
             return;
         }
@@ -211,7 +211,7 @@ class FlexPress_Email_Blacklist {
         }
         
         // Check user capabilities
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error(array('message' => __('You do not have permission to manage blacklist.', 'flexpress')));
             return;
         }
@@ -243,7 +243,7 @@ class FlexPress_Email_Blacklist {
         }
         
         // Check user capabilities
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error(array('message' => __('You do not have permission to view blacklist.', 'flexpress')));
             return;
         }

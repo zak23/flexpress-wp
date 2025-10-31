@@ -543,7 +543,7 @@ class FlexPress_SES_Settings {
     public function test_ses_email() {
         check_ajax_referer('flexpress_ses_test', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error(__('Insufficient permissions.', 'flexpress'));
         }
         
@@ -571,7 +571,7 @@ class FlexPress_SES_Settings {
     public function get_ses_stats() {
         check_ajax_referer('flexpress_ses_stats', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error(__('Insufficient permissions.', 'flexpress'));
         }
         

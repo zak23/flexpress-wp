@@ -16,7 +16,7 @@ define('WP_USE_THEMES', false);
 require_once($wp_load_path);
 
 // Check if user is admin
-if (!current_user_can('manage_options')) {
+if (!flexpress_current_user_is_founder()) {
     die('You do not have sufficient permissions to access this page.');
 }
 

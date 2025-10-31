@@ -15,7 +15,7 @@
 // Load WordPress
 require_once('../../../../wp-load.php');
 
-if (!current_user_can('manage_options')) {
+if (!flexpress_current_user_is_founder()) {
     die('Access denied. Admin privileges required.');
 }
 

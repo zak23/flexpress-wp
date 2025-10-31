@@ -283,7 +283,7 @@ class FlexPress_Plunk_Subscriber {
             wp_die('Security check failed');
         }
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
 
@@ -313,7 +313,7 @@ class FlexPress_Plunk_Subscriber {
             wp_die('Security check failed');
         }
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
 

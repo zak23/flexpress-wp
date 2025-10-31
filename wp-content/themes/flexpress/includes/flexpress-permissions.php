@@ -184,10 +184,29 @@ function flexpress_user_is_founder($user_id = null)
 
     $founders = flexpress_get_founder_user_ids();
     if (empty($founders)) {
-        return user_can($user_id, 'manage_options');
+        return flexpress_is_founder_entity($user_id);
     }
 
     return in_array((int) $user_id, $founders, true);
+}
+
+/**
+ * Evaluate whether a mixed user reference should be treated as founder.
+ *
+ * @param mixed $user
+ * @return bool
+ */
+function flexpress_is_founder_entity($user)
+{
+    if ($user instanceof WP_User) {
+        return flexpress_user_is_founder($user->ID);
+    }
+
+    if (is_numeric($user)) {
+        return flexpress_user_is_founder((int) $user);
+    }
+
+    return false;
 }
 
 /**

@@ -2108,7 +2108,7 @@ class FlexPress_Affiliate_Settings {
     public function create_affiliate_code() {
         check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
         
@@ -2151,7 +2151,7 @@ class FlexPress_Affiliate_Settings {
     public function delete_affiliate_code() {
         check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
         
@@ -2175,7 +2175,7 @@ class FlexPress_Affiliate_Settings {
     public function toggle_affiliate_status() {
         check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
         
@@ -2219,7 +2219,7 @@ class FlexPress_Affiliate_Settings {
     public function get_affiliate_details() {
         check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
         
@@ -2273,7 +2273,7 @@ class FlexPress_Affiliate_Settings {
     public function update_affiliate_details() {
         check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
         
@@ -2578,7 +2578,7 @@ class FlexPress_Affiliate_Settings {
     public function create_promo_code() {
         check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
         
@@ -2633,7 +2633,7 @@ class FlexPress_Affiliate_Settings {
     public function update_promo_code() {
         check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
         
@@ -2690,7 +2690,7 @@ class FlexPress_Affiliate_Settings {
     public function delete_promo_code() {
         check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
         
@@ -2714,7 +2714,7 @@ class FlexPress_Affiliate_Settings {
     public function toggle_promo_status() {
         check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
         
@@ -2749,7 +2749,7 @@ class FlexPress_Affiliate_Settings {
     public function get_promo_details() {
         check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
         
@@ -2776,7 +2776,7 @@ class FlexPress_Affiliate_Settings {
     public function get_promo_codes_list() {
         check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
         
@@ -2796,7 +2796,7 @@ class FlexPress_Affiliate_Settings {
     public function create_tables_manually_ajax() {
         check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
         
@@ -2816,7 +2816,7 @@ class FlexPress_Affiliate_Settings {
     public function update_tables_manually_ajax() {
         check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
         
@@ -2834,7 +2834,7 @@ class FlexPress_Affiliate_Settings {
     public function force_recreate_promo_table_ajax() {
         check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
         
@@ -2852,7 +2852,7 @@ class FlexPress_Affiliate_Settings {
     public function export_promo_report_csv() {
         check_ajax_referer('flexpress_affiliate_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
         

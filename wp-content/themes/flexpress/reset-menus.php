@@ -7,7 +7,7 @@
 require_once(dirname(dirname(dirname(dirname(__FILE__)))) . '/wp-load.php');
 
 // Check if user is admin
-if (!current_user_can('manage_options')) {
+if (!flexpress_current_user_is_founder()) {
     die('You do not have sufficient permissions to access this page.');
 }
 

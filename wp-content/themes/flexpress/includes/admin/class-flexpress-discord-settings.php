@@ -845,7 +845,7 @@ add_action('wp_ajax_test_discord_connection', 'flexpress_test_discord_connection
 function flexpress_test_discord_connection() {
     check_ajax_referer('test_discord_connection', 'nonce');
     
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Unauthorized');
     }
     
@@ -953,7 +953,7 @@ add_action('wp_ajax_test_casting_discord_notification', 'flexpress_test_casting_
 function flexpress_test_casting_discord_notification() {
     check_ajax_referer('test_casting_discord_notification', 'nonce');
     
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Unauthorized');
     }
     

@@ -47,7 +47,7 @@ class FlexPress_Affiliate_Payouts {
         }
 
         // Check permissions
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'flexpress')]);
         }
 
@@ -138,7 +138,7 @@ class FlexPress_Affiliate_Payouts {
         }
 
         // Check permissions
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'flexpress')]);
         }
 
@@ -252,7 +252,7 @@ class FlexPress_Affiliate_Payouts {
         }
 
         // Check permissions
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'flexpress')]);
         }
 
@@ -350,7 +350,7 @@ class FlexPress_Affiliate_Payouts {
         }
 
         // Check permissions
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'flexpress')]);
         }
 
@@ -438,7 +438,7 @@ class FlexPress_Affiliate_Payouts {
         }
 
         // Check permissions
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'flexpress')]);
         }
 
@@ -472,7 +472,7 @@ class FlexPress_Affiliate_Payouts {
         }
 
         // Check permissions
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error(['message' => __('You do not have permission to perform this action.', 'flexpress')]);
         }
 

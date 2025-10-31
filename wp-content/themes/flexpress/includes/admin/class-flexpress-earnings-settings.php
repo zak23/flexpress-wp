@@ -277,7 +277,7 @@ class FlexPress_Earnings_Settings
     {
         check_ajax_referer('flexpress_earnings_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error('Unauthorized');
         }
 
@@ -297,7 +297,7 @@ class FlexPress_Earnings_Settings
     {
         check_ajax_referer('flexpress_earnings_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Unauthorized');
         }
 
@@ -370,7 +370,7 @@ class FlexPress_Earnings_Settings
      */
     public function render_earnings_page()
     {
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Unauthorized');
         }
 

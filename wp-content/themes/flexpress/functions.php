@@ -209,7 +209,7 @@ function flexpress_test_turnstile_connection()
     }
 
     // Check user permissions
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_send_json_error('Insufficient permissions');
     }
 
@@ -890,7 +890,7 @@ add_action('wp_head', 'flexpress_output_meta_description', 5);
  */
 function flexpress_test_settings_save()
 {
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Unauthorized');
     }
 
@@ -1427,7 +1427,7 @@ add_action('wp_ajax_nopriv_flexpress_generate_bunnycdn_token', 'flexpress_genera
 function flexpress_clear_bunnycdn_cache_ajax()
 {
     // Check user permissions
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_send_json_error('Insufficient permissions');
         return;
     }
@@ -1607,7 +1607,7 @@ add_action('admin_init', 'flexpress_register_admin_actions');
 function flexpress_handle_duration_update_action()
 {
     // Verify nonce and user capabilities
-    if (!isset($_POST['update_durations_nonce']) || !wp_verify_nonce($_POST['update_durations_nonce'], 'update_episode_durations_nonce') || !current_user_can('manage_options')) {
+    if (!isset($_POST['update_durations_nonce']) || !wp_verify_nonce($_POST['update_durations_nonce'], 'update_episode_durations_nonce') || !flexpress_current_user_is_founder()) {
         wp_die(__('You do not have sufficient permissions to access this page.', 'flexpress'));
     }
 
@@ -1725,7 +1725,7 @@ add_action('admin_menu', 'flexpress_add_duration_update_menu');
 function flexpress_render_duration_update_page()
 {
     // Check user capabilities
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('You do not have sufficient permissions to access this page.');
     }
 
@@ -2175,7 +2175,7 @@ function flexpress_redirect_wp_admin_to_login()
     // Check if we're accessing wp-admin
     if (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false) {
         // If user is logged in and has admin capabilities, allow access
-        if (is_user_logged_in() && current_user_can('manage_options')) {
+        if (is_user_logged_in() && flexpress_current_user_is_founder()) {
             return; // Allow admin access
         }
 
@@ -2227,7 +2227,7 @@ add_filter('register_url', 'flexpress_custom_registration_url');
 function flexpress_coming_soon_redirect()
 {
     // Skip if admin is logged in
-    if (current_user_can('manage_options')) {
+    if (flexpress_current_user_is_founder()) {
         return;
     }
 
@@ -2865,7 +2865,7 @@ function flexpress_create_legal_pages_and_menu()
 function flexpress_register_admin_page_menu_actions()
 {
     // Only register for admin users
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         return;
     }
 
@@ -2882,7 +2882,7 @@ add_action('admin_init', 'flexpress_register_admin_page_menu_actions');
 function flexpress_handle_create_pages_menus_action()
 {
     // Verify nonce and user capabilities
-    if (!isset($_POST['create_pages_menus_nonce']) || !wp_verify_nonce($_POST['create_pages_menus_nonce'], 'create_pages_menus_nonce') || !current_user_can('manage_options')) {
+    if (!isset($_POST['create_pages_menus_nonce']) || !wp_verify_nonce($_POST['create_pages_menus_nonce'], 'create_pages_menus_nonce') || !flexpress_current_user_is_founder()) {
         wp_die(__('You do not have sufficient permissions to access this page.', 'flexpress'));
     }
 
@@ -2908,7 +2908,7 @@ function flexpress_handle_create_pages_menus_action()
 function flexpress_handle_create_legal_pages_menu_action()
 {
     // Verify nonce and user capabilities
-    if (!isset($_POST['create_legal_pages_nonce']) || !wp_verify_nonce($_POST['create_legal_pages_nonce'], 'create_legal_pages_nonce') || !current_user_can('manage_options')) {
+    if (!isset($_POST['create_legal_pages_nonce']) || !wp_verify_nonce($_POST['create_legal_pages_nonce'], 'create_legal_pages_nonce') || !flexpress_current_user_is_founder()) {
         wp_die(__('You do not have sufficient permissions to access this page.', 'flexpress'));
     }
 
@@ -2931,7 +2931,7 @@ function flexpress_handle_create_legal_pages_menu_action()
 function flexpress_handle_create_main_footer_pages_menu_action()
 {
     // Verify nonce and user capabilities
-    if (!isset($_POST['create_main_footer_pages_nonce']) || !wp_verify_nonce($_POST['create_main_footer_pages_nonce'], 'create_main_footer_pages_nonce') || !current_user_can('manage_options')) {
+    if (!isset($_POST['create_main_footer_pages_nonce']) || !wp_verify_nonce($_POST['create_main_footer_pages_nonce'], 'create_main_footer_pages_nonce') || !flexpress_current_user_is_founder()) {
         wp_die(__('You do not have sufficient permissions to access this page.', 'flexpress'));
     }
 
@@ -2954,7 +2954,7 @@ function flexpress_handle_create_main_footer_pages_menu_action()
 function flexpress_handle_create_support_pages_menu_action()
 {
     // Verify nonce and user capabilities
-    if (!isset($_POST['create_support_pages_nonce']) || !wp_verify_nonce($_POST['create_support_pages_nonce'], 'create_support_pages_nonce') || !current_user_can('manage_options')) {
+    if (!isset($_POST['create_support_pages_nonce']) || !wp_verify_nonce($_POST['create_support_pages_nonce'], 'create_support_pages_nonce') || !flexpress_current_user_is_founder()) {
         wp_die(__('You do not have sufficient permissions to access this page.', 'flexpress'));
     }
 
@@ -5885,7 +5885,7 @@ function flexpress_force_auto_setup()
 function flexpress_manual_auto_setup()
 {
     // Check if user has permission
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         return array('success' => false, 'message' => 'Insufficient permissions');
     }
 
@@ -5993,7 +5993,7 @@ function flexpress_add_auto_setup_status_section()
 function flexpress_handle_force_auto_setup()
 {
     // Verify nonce and permissions
-    if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'flexpress_force_setup') || !current_user_can('manage_options')) {
+    if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'flexpress_force_setup') || !flexpress_current_user_is_founder()) {
         wp_die('Unauthorized');
     }
 
@@ -6928,7 +6928,7 @@ function flexpress_handle_regenerate_legal_content()
     }
 
     // Check user capabilities
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die(__('Insufficient permissions', 'flexpress'));
     }
 
@@ -7859,7 +7859,7 @@ function flexpress_update_test_pricing_plans_ajax()
     }
 
     // Check if user has admin capabilities
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_send_json_error(array('message' => __('Insufficient permissions.', 'flexpress')));
         return;
     }
@@ -8098,7 +8098,7 @@ require_once get_template_directory() . '/includes/class-flexpress-join-carousel
 
 // Temporary: Force create default pricing plans on next admin page load
 add_action('admin_init', function () {
-    if (isset($_GET['create_default_plans']) && current_user_can('manage_options')) {
+    if (isset($_GET['create_default_plans']) && flexpress_current_user_is_founder()) {
         if (function_exists('flexpress_force_create_default_pricing_plans')) {
             flexpress_force_create_default_pricing_plans();
             wp_redirect(admin_url('admin.php?page=flexpress-pricing-settings&created=1'));
@@ -8144,7 +8144,7 @@ function flexpress_ajax_reset_setup_status()
     }
 
     // Check if user has permission
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_send_json_error('Insufficient permissions');
     }
 
@@ -8228,7 +8228,7 @@ function flexpress_test_discord_connection_ajax()
 {
     check_ajax_referer('test_discord_connection', 'nonce');
 
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Unauthorized');
     }
 
@@ -8843,7 +8843,7 @@ add_action('wp_ajax_bulk_update_affiliate_status', 'flexpress_ajax_bulk_update_a
  */
 function flexpress_ajax_create_affiliate_code()
 {
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Insufficient permissions');
     }
 
@@ -8856,7 +8856,7 @@ function flexpress_ajax_create_affiliate_code()
  */
 function flexpress_ajax_delete_affiliate_code()
 {
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Insufficient permissions');
     }
 
@@ -8869,7 +8869,7 @@ function flexpress_ajax_delete_affiliate_code()
  */
 function flexpress_ajax_toggle_affiliate_status()
 {
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Insufficient permissions');
     }
 
@@ -8882,7 +8882,7 @@ function flexpress_ajax_toggle_affiliate_status()
  */
 function flexpress_ajax_get_affiliate_details()
 {
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Insufficient permissions');
     }
 
@@ -8895,7 +8895,7 @@ function flexpress_ajax_get_affiliate_details()
  */
 function flexpress_ajax_update_affiliate_details()
 {
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Insufficient permissions');
     }
 
@@ -8908,7 +8908,7 @@ function flexpress_ajax_update_affiliate_details()
  */
 function flexpress_ajax_add_affiliate()
 {
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Insufficient permissions');
     }
 
@@ -8975,7 +8975,7 @@ function flexpress_ajax_add_affiliate()
  */
 function flexpress_ajax_update_affiliate()
 {
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Insufficient permissions');
     }
 
@@ -9029,7 +9029,7 @@ function flexpress_ajax_update_affiliate()
  */
 function flexpress_ajax_get_affiliate_stats()
 {
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Insufficient permissions');
     }
 
@@ -9084,7 +9084,7 @@ function flexpress_ajax_get_affiliate_stats()
  */
 function flexpress_ajax_update_affiliate_code()
 {
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Insufficient permissions');
     }
 
@@ -9122,7 +9122,7 @@ function flexpress_ajax_update_affiliate_code()
  */
 function flexpress_ajax_get_pricing_plans()
 {
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Insufficient permissions');
     }
 
@@ -9142,7 +9142,7 @@ function flexpress_ajax_get_pricing_plans()
  */
 function flexpress_ajax_get_affiliates_list()
 {
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Insufficient permissions');
     }
 
@@ -9207,7 +9207,7 @@ function flexpress_ajax_get_affiliates_list()
  */
 function flexpress_ajax_get_affiliate_statistics()
 {
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Insufficient permissions');
     }
 
@@ -9245,7 +9245,7 @@ function flexpress_ajax_get_affiliate_statistics()
  */
 function flexpress_ajax_bulk_update_affiliate_status()
 {
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_die('Insufficient permissions');
     }
 
@@ -9382,7 +9382,7 @@ function flexpress_preview_delete_transactions()
 {
     check_ajax_referer('flexpress_delete_transactions', 'nonce');
 
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_send_json_error('Unauthorized');
     }
 
@@ -9489,7 +9489,7 @@ function flexpress_delete_transactions()
 {
     check_ajax_referer('flexpress_delete_transactions', 'nonce');
 
-    if (!current_user_can('manage_options')) {
+    if (!flexpress_current_user_is_founder()) {
         wp_send_json_error('Unauthorized');
     }
 

@@ -345,7 +345,7 @@ class FlexPress_Membership_Settings
     public function handle_clear_debug_log()
     {
         // Capability check
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_redirect(add_query_arg(array(
                 'page' => 'flexpress-tools',
                 'debug_error' => 'permission'
@@ -467,7 +467,7 @@ class FlexPress_Membership_Settings
     public function render_members_list()
     {
         // Handle status refresh request
-        if (isset($_GET['refresh_status']) && isset($_GET['user_id']) && current_user_can('edit_users')) {
+        if (isset($_GET['refresh_status']) && isset($_GET['user_id']) && flexpress_current_user_is_founder()) {
             $user_id = intval($_GET['user_id']);
             // Force refresh by calling flexpress_get_membership_status which checks trial expiration
             if (function_exists('flexpress_get_membership_status')) {
@@ -477,7 +477,7 @@ class FlexPress_Membership_Settings
         }
 
         // Check if we need to update a user
-        if (isset($_POST['update_user_membership']) && isset($_POST['user_id']) && current_user_can('edit_users')) {
+        if (isset($_POST['update_user_membership']) && isset($_POST['user_id']) && flexpress_current_user_is_founder()) {
             check_admin_referer('update_user_membership', 'membership_nonce');
 
             $user_id = intval($_POST['user_id']);
@@ -1410,7 +1410,7 @@ class FlexPress_Membership_Settings
      */
     public function add_verotel_user_fields($user)
     {
-        if (!current_user_can('edit_users')) {
+        if (!flexpress_current_user_is_founder()) {
             return;
         }
 
@@ -1698,7 +1698,7 @@ class FlexPress_Membership_Settings
         }
 
         // Prevent deletion of admin users (safety check)
-        if (user_can($user_id, 'manage_options')) {
+        if (flexpress_is_founder_entity($user_id)) {
             wp_send_json_error(array('message' => __('Cannot delete administrator users.', 'flexpress')));
             return;
         }

@@ -677,7 +677,7 @@ class FlexPress_Flowguard_Reference_Manager {
     public function ajax_get_reference_data() {
         check_ajax_referer('flexpress_admin_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error('Insufficient permissions');
         }
         
@@ -693,7 +693,7 @@ class FlexPress_Flowguard_Reference_Manager {
     public function ajax_update_reference_data() {
         check_ajax_referer('flexpress_admin_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error('Insufficient permissions');
         }
         
@@ -712,7 +712,7 @@ class FlexPress_Flowguard_Reference_Manager {
     public function ajax_test_enhanced_references() {
         check_ajax_referer('flexpress_admin_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error('Insufficient permissions');
         }
         
@@ -854,7 +854,7 @@ class FlexPress_Flowguard_Reference_Manager {
     public function ajax_update_database_schema() {
         check_ajax_referer('flexpress_admin_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error('Insufficient permissions');
         }
         

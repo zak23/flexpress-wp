@@ -381,7 +381,7 @@ class FlexPress_SMTP2Go_Settings
         }
 
         // Check permissions
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
 

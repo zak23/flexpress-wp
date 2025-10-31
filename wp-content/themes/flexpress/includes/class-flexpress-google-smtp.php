@@ -190,7 +190,7 @@ class FlexPress_Google_SMTP
         }
 
         // Check user capabilities
-        if (!current_user_can('manage_options')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_die('Insufficient permissions');
         }
 

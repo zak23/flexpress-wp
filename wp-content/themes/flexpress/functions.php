@@ -8001,6 +8001,16 @@ function flexpress_handle_simple_registration()
         exit;
     }
 
+    // Check if email is blacklisted
+    if (class_exists('FlexPress_Email_Blacklist')) {
+        $blacklist_info = FlexPress_Email_Blacklist::is_blacklisted($email);
+        if ($blacklist_info) {
+            $reason = !empty($blacklist_info['reason']) ? urlencode($blacklist_info['reason']) : 'Not specified';
+            wp_redirect(home_url('/register?register=failed&error=blacklisted&reason=' . $reason));
+            exit;
+        }
+    }
+
     // Create user (use email as username)
     $user_id = wp_create_user($email, $password, $email);
 
@@ -8083,6 +8093,17 @@ function flexpress_register_user_ajax()
     // Check if email already exists
     if (email_exists($email)) {
         wp_send_json_error('Email address already registered. Please sign in instead.');
+    }
+
+    // Check if email is blacklisted
+    if (class_exists('FlexPress_Email_Blacklist')) {
+        $blacklist_info = FlexPress_Email_Blacklist::is_blacklisted($email);
+        if ($blacklist_info) {
+            wp_send_json_error(sprintf(
+                'This email address is not allowed to register. Reason: %s',
+                $blacklist_info['reason'] ?: 'Not specified'
+            ));
+        }
     }
 
     // Create user (use email as username)

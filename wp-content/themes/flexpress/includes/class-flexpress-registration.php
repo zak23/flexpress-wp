@@ -105,6 +105,19 @@ class FlexPress_Registration {
             wp_send_json_error(array('message' => 'This email address is already registered.'));
         }
 
+        // Check if email is blacklisted
+        if (class_exists('FlexPress_Email_Blacklist')) {
+            $blacklist_info = FlexPress_Email_Blacklist::is_blacklisted($email);
+            if ($blacklist_info) {
+                wp_send_json_error(array(
+                    'message' => sprintf(
+                        'This email address is not allowed to register. Reason: %s',
+                        $blacklist_info['reason'] ?: 'Not specified'
+                    )
+                ));
+            }
+        }
+
         // Create user
         $user_id = wp_create_user($email, $password, $email);
 

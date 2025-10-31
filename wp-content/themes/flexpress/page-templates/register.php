@@ -56,6 +56,13 @@ get_header();
                                 case 'exists':
                                     $error_message = __('This email address is already registered.', 'flexpress');
                                     break;
+                                case 'blacklisted':
+                                    $reason = isset($_GET['reason']) ? sanitize_text_field(urldecode($_GET['reason'])) : 'Not specified';
+                                    $error_message = sprintf(
+                                        __('This email address is not allowed to register. Reason: %s', 'flexpress'),
+                                        esc_html($reason)
+                                    );
+                                    break;
                                 case 'create':
                                     $error_message = __('Registration failed. Please try again.', 'flexpress');
                                     break;

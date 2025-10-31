@@ -696,15 +696,44 @@ jQuery(document).ready(function() {
             durationText = planDuration + ' years';
         }
         
+        // Format trial duration text
+        let trialDurationText = '';
+        if (trialEnabled && trialDuration > 0) {
+            trialDurationText = trialDuration + ' ' + trialDurationUnit;
+            if (trialDuration > 1 && trialDurationUnit === 'day') {
+                trialDurationText = trialDuration + ' days';
+            } else if (trialDuration > 1 && trialDurationUnit === 'week') {
+                trialDurationText = trialDuration + ' weeks';
+            } else if (trialDuration > 1 && trialDurationUnit === 'month') {
+                trialDurationText = trialDuration + ' months';
+            }
+        }
+        
         if (planType === 'recurring') {
-            billingText = 'Your subscription will automatically renew at ' + planCurrency + planPrice.toFixed(2) + ' every ' + durationText + ' unless cancelled. You may cancel at any time';
+            if (trialEnabled && trialPrice === 0 && trialDuration > 0) {
+                // Free trial - no payment required
+                billingText = 'You\'re signing up for a ' + trialDurationText + ' free trial. After the trial, your access will be terminated and you will be prompted to purchase access';
+            } else if (trialEnabled && trialPrice > 0 && trialDuration > 0) {
+                // Trial-enabled recurring plan
+                billingText = 'Your subscription starts with a ' + trialDurationText + ' trial for ' + planCurrency + trialPrice.toFixed(2) + ', then automatically renews at ' + planCurrency + planPrice.toFixed(2) + ' every ' + durationText + ' unless cancelled. You may cancel at any time';
+            } else {
+                // Regular recurring plan
+                billingText = 'Your subscription will automatically renew at ' + planCurrency + planPrice.toFixed(2) + ' every ' + durationText + ' unless cancelled. You may cancel at any time';
+            }
         } else if (planType === 'one_time') {
             billingText = 'This is a one-time payment of ' + planCurrency + planPrice.toFixed(2) + '. No recurring charges will be applied.';
         } else if (planType === 'lifetime') {
             billingText = 'This is a one-time payment of ' + planCurrency + planPrice.toFixed(2) + ' for lifetime access. No recurring charges will be applied.';
         } else {
             // Default fallback
-            billingText = 'Your subscription will automatically renew at ' + planCurrency + planPrice.toFixed(2) + ' every ' + durationText + ' unless cancelled. You may cancel at any time';
+            if (trialEnabled && trialPrice === 0 && trialDuration > 0) {
+                // Free trial - no payment required
+                billingText = 'You\'re signing up for a ' + trialDurationText + ' free trial. After the trial, your access will be terminated and you will be prompted to purchase access';
+            } else if (trialEnabled && trialPrice > 0 && trialDuration > 0) {
+                billingText = 'Your subscription starts with a ' + trialDurationText + ' trial for ' + planCurrency + trialPrice.toFixed(2) + ', then automatically renews at ' + planCurrency + planPrice.toFixed(2) + ' every ' + durationText + ' unless cancelled. You may cancel at any time';
+            } else {
+                billingText = 'Your subscription will automatically renew at ' + planCurrency + planPrice.toFixed(2) + ' every ' + durationText + ' unless cancelled. You may cancel at any time';
+            }
         }
         
         billingTextElement.text(billingText);

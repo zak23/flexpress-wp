@@ -668,7 +668,7 @@ add_filter('script_loader_tag', 'flexpress_add_defer_to_scripts', 10, 3);
 function flexpress_add_accent_color_styles()
 {
     $options = get_option('flexpress_general_settings');
-    $accent_color = isset($options['accent_color']) ? $options['accent_color'] : '#ff6b35';
+    $accent_color = isset($options['accent_color']) ? $options['accent_color'] : '#28a745';
 
     // Generate lighter and darker variants
     $accent_rgb = flexpress_hex_to_rgb($accent_color);

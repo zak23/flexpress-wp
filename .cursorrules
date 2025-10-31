@@ -133,6 +133,22 @@ Do not alter `.wakatime-project` once created
 - Frontend: replace direct `subscription_type` meta usage with helper
 - Admin: show derived label in membership panel; do not alter DB schema
 
+## Free Trial Signup UX Pattern
+
+- **Signup Text**: Free trial signups display termination messaging instead of auto-renewal
+  - Text: "After the trial, your access will be terminated and you will be prompted to purchase access"
+  - Update both JavaScript (dynamic plan selection) and PHP (trial link scenarios)
+  - Files: `page-templates/join.php` and `page-templates/membership.php`
+- **Alert Styling**: Free Trial Activated banner uses accent color
+  - Class: `.alert-trial` with `.membership-page .alert-trial` for specificity
+  - Background: `var(--color-accent)` with white text for contrast
+  - Border-left: `var(--color-accent-hover)` for emphasis (4px solid)
+  - Selector must match `.membership-page .alert` specificity to override defaults
+- **Default Accent Color**: Theme default is green (#28a745) matching Bootstrap alert-success
+  - Updated in: `functions.php`, `class-flexpress-general-settings.php`, `assets/css/variables.css`
+  - Auto-generates hover, light, and dark variants
+- Documentation: Update README.md when changing signup flow or styling
+
 ## Founder Permissions Model
 
 - Capability: Founders use `manage_flexpress_founder_settings`; grab it via `flexpress_get_founder_capability()` when registering menus or meta caps.

@@ -587,6 +587,7 @@
     border-left: 4px solid #28a745;
 }
 
+
 .alert-danger {
     background: rgba(220, 53, 69, 0.2);
     color: #ffffff;
@@ -696,6 +697,23 @@ a:hover {
 .navbar-nav .nav-link.active {
   color: var(--color-accent);
   position: relative;
+}
+
+.membership-page .alert-trial,
+.alert-trial {
+  background: var(--color-accent) !important;
+  border: none !important;
+  border-left: 4px solid var(--color-accent-hover) !important;
+  color: #ffffff !important;
+  padding: 1rem 1.25rem !important;
+  border-radius: 6px !important;
+}
+
+.membership-page .alert-trial strong,
+.membership-page .alert-trial i,
+.alert-trial strong,
+.alert-trial i {
+  color: #ffffff !important;
 }
 
 /* ==========================================================================

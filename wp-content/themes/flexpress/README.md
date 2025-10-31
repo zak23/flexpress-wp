@@ -11,6 +11,23 @@ FlexPress is designed specifically for content websites (primarily adult content
 
 ## 🌟 Core Features
 
+### Free Trial Signup UX Updates (October 2025)
+
+- **Updated Signup Text**: Free trial signups now display clearer messaging
+  - Changed from: "After the trial, your subscription will automatically renew unless cancelled"
+  - Changed to: "After the trial, your access will be terminated and you will be prompted to purchase access"
+  - Updated in both JavaScript (dynamic plan selection) and PHP (trial link scenarios)
+  - Applied to: `page-templates/join.php` and `page-templates/membership.php`
+- **Accent Color Alert Styling**: Free Trial Activated banner now uses theme accent color
+  - Custom `.alert-trial` class applies accent color background with proper text contrast
+  - Border-left uses accent-hover color for emphasis
+  - White text ensures readability on any accent color
+  - Selector specificity ensures proper override of membership-page alert defaults
+- **Default Accent Color**: Changed from hot pink (#ff69b4) to green (#28a745)
+  - Updated in: `functions.php`, `class-flexpress-general-settings.php`, `assets/css/variables.css`
+  - Matches Bootstrap alert-success styling for consistency
+  - Automatically generates hover, light, and dark variants
+
 ### Subscription Type Labeling (October 2025)
 
 - Single helper `flexpress_get_user_subscription_type($userId)` derives a normalized label.
@@ -2916,7 +2933,7 @@ if ($featured_models && !empty($featured_models)) {
 ### Color System
 
 - **Primary Color**: `var(--color-primary)` for white elements
-- **Accent Color**: `var(--color-accent)` for buttons, links, and interactive elements (default: #ff69b4)
+- **Accent Color**: `var(--color-accent)` for buttons, links, and interactive elements (default: #28a745)
 - **Accent Hover**: `var(--color-accent-hover)` for hover states
 - **Accent Light**: `var(--color-accent-light)` for backgrounds and shadows
 - **Accent Dark**: `var(--color-accent-dark)` for gradients and borders

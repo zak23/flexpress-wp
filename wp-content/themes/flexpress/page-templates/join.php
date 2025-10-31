@@ -28,16 +28,16 @@ if (!empty($trial_token)) {
     if ($validation['valid']) {
         $trial_valid = true;
         $trial_link_data = $validation['trial_link'];
-        
+
         // Store trial token in session/cookie for registration process
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         $_SESSION['trial_token'] = $trial_token;
-        
+
         // Also store in cookie as backup (expires in 1 hour)
         setcookie('flexpress_trial_token', $trial_token, time() + 3600, '/');
-        
+
         // For trial links, no plan selection needed
     } else {
         // Store error message for invalid trial link
@@ -220,7 +220,7 @@ $plan_selection_step_number = 1;
                 <?php endif; ?>
 
                 <?php if ($trial_valid && $trial_link_data): ?>
-                    <div class="alert alert-success" role="alert">
+                    <div class="alert alert-trial" role="alert">
                         <i class="fas fa-gift me-2"></i>
                         <strong><?php esc_html_e('Free Trial Activated!', 'flexpress'); ?></strong>
                         <?php
@@ -279,162 +279,162 @@ $plan_selection_step_number = 1;
 
         <!-- Promo Code Section -->
         <?php if (!$trial_valid): ?>
-        <div class="row justify-content-center mb-4">
-            <div class="col-lg-8 col-xl-6">
-                <div class="promo-code-section">
-                    <p class="promo-code-label">
-                        <?php esc_html_e('Have a coupon? Use it here', 'flexpress'); ?>
-                        <i class="fas fa-chevron-down ms-2"></i>
-                    </p>
-                    <div class="promo-code-input">
-                        <div class="input-group">
-                            <input type="text" id="membership-promo-code" class="form-control"
-                                placeholder="<?php esc_attr_e('Enter your promo code', 'flexpress'); ?>"
-                                value="<?php echo esc_attr($promo_code); ?>">
-                            <button type="button" id="apply-membership-promo" class="btn btn-primary">
-                                <?php esc_html_e('Apply', 'flexpress'); ?>
-                            </button>
-                        </div>
-                        <div id="membership-promo-message" class="promo-code-message mt-2">
-                            <?php if (!empty($promo_code)): ?>
-                                <div class="promo-applied-message text-success">
-                                    <i class="fas fa-check-circle me-1"></i>
-                                    <?php echo sprintf(esc_html__('Promo code "%s" applied!', 'flexpress'), esc_html($promo_code ?: '')); ?>
-                                </div>
-                            <?php endif; ?>
+            <div class="row justify-content-center mb-4">
+                <div class="col-lg-8 col-xl-6">
+                    <div class="promo-code-section">
+                        <p class="promo-code-label">
+                            <?php esc_html_e('Have a coupon? Use it here', 'flexpress'); ?>
+                            <i class="fas fa-chevron-down ms-2"></i>
+                        </p>
+                        <div class="promo-code-input">
+                            <div class="input-group">
+                                <input type="text" id="membership-promo-code" class="form-control"
+                                    placeholder="<?php esc_attr_e('Enter your promo code', 'flexpress'); ?>"
+                                    value="<?php echo esc_attr($promo_code); ?>">
+                                <button type="button" id="apply-membership-promo" class="btn btn-primary">
+                                    <?php esc_html_e('Apply', 'flexpress'); ?>
+                                </button>
+                            </div>
+                            <div id="membership-promo-message" class="promo-code-message mt-2">
+                                <?php if (!empty($promo_code)): ?>
+                                    <div class="promo-applied-message text-success">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        <?php echo sprintf(esc_html__('Promo code "%s" applied!', 'flexpress'), esc_html($promo_code ?: '')); ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
         <?php endif; ?>
 
         <!-- Membership Selection Section -->
         <?php if (!$trial_valid): ?>
-        <div class="row justify-content-center mb-4">
-            <div class="col-lg-8 col-xl-6">
-                <div class="membership-selection-header">
-                    <h2 class="text-center mb-4"><?php echo esc_html($plan_selection_step_number . '. ' . __('Select Deal', 'flexpress')); ?></h2>
+            <div class="row justify-content-center mb-4">
+                <div class="col-lg-8 col-xl-6">
+                    <div class="membership-selection-header">
+                        <h2 class="text-center mb-4"><?php echo esc_html($plan_selection_step_number . '. ' . __('Select Deal', 'flexpress')); ?></h2>
 
-                    <!-- Plan Type Toggle -->
-                    <div class="plan-type-toggle mb-4">
-                        <div class="toggle-buttons">
-                            <button type="button" class="toggle-btn active" data-plan-type="recurring">
-                                <?php esc_html_e('Recurring', 'flexpress'); ?>
-                            </button>
-                            <button type="button" class="toggle-btn" data-plan-type="one_time">
-                                <?php esc_html_e('One Time', 'flexpress'); ?>
-                            </button>
+                        <!-- Plan Type Toggle -->
+                        <div class="plan-type-toggle mb-4">
+                            <div class="toggle-buttons">
+                                <button type="button" class="toggle-btn active" data-plan-type="recurring">
+                                    <?php esc_html_e('Recurring', 'flexpress'); ?>
+                                </button>
+                                <button type="button" class="toggle-btn" data-plan-type="one_time">
+                                    <?php esc_html_e('One Time', 'flexpress'); ?>
+                                </button>
+                            </div>
                         </div>
+
+                        <h3 class="text-center mb-4"><?php esc_html_e('Choose Your Perfect Plan', 'flexpress'); ?></h3>
                     </div>
 
-                    <h3 class="text-center mb-4"><?php esc_html_e('Choose Your Perfect Plan', 'flexpress'); ?></h3>
-                </div>
-
-                <div class="membership-plans-list">
-                    <?php if (!empty($pricing_plans)): ?>
-                        <?php
-                        // Sort plans by price (cheapest to most expensive)
-                        $sorted_plans = $pricing_plans;
-                        uasort($sorted_plans, function ($a, $b) {
-                            return $a['price'] <=> $b['price'];
-                        });
-                        ?>
-                        <?php foreach ($sorted_plans as $plan_id => $plan): ?>
+                    <div class="membership-plans-list">
+                        <?php if (!empty($pricing_plans)): ?>
                             <?php
-                            $is_featured = $featured_plan && $featured_plan['id'] === $plan_id;
-                            $is_promo_only = !empty($plan['promo_only']);
-                            $plan_features = isset($plan['features']) ? $plan['features'] : array();
-                            $plan_type_class = 'plan-type-' . $plan['plan_type'];
+                            // Sort plans by price (cheapest to most expensive)
+                            $sorted_plans = $pricing_plans;
+                            uasort($sorted_plans, function ($a, $b) {
+                                return $a['price'] <=> $b['price'];
+                            });
                             ?>
-                            <div class="membership-plan-item <?php echo $is_featured ? 'popular-plan' : ''; ?> <?php echo $is_promo_only ? 'promo-only-plan' : ''; ?> <?php echo esc_attr($plan_type_class); ?>"
-                                data-plan-type="<?php echo esc_attr($plan['plan_type']); ?>"
-                                data-plan-id="<?php echo esc_attr($plan_id); ?>"
-                                data-plan-price="<?php echo esc_attr($plan['price']); ?>"
-                                data-plan-currency="<?php echo esc_attr($plan['currency']); ?>"
-                                data-plan-name="<?php echo esc_attr($plan['name']); ?>"
-                                data-trial-enabled="<?php echo esc_attr($plan['trial_enabled'] ?? 0); ?>"
-                                data-trial-price="<?php echo esc_attr($plan['trial_price'] ?? 0); ?>"
-                                data-trial-duration="<?php echo esc_attr($plan['trial_duration'] ?? 0); ?>"
-                                data-trial-duration-unit="<?php echo esc_attr($plan['trial_duration_unit'] ?? 'days'); ?>"
-                                data-duration="<?php echo esc_attr($plan['duration'] ?? 30); ?>"
-                                data-duration-unit="<?php echo esc_attr($plan['duration_unit'] ?? 'days'); ?>">
-                                <div class="plan-content">
-                                    <div class="plan-info">
-                                        <div class="plan-header">
-                                            <h5 class="plan-name"><?php echo esc_html($plan['name']); ?></h5>
-                                            <div class="plan-badges">
-                                                <?php if ($is_featured): ?>
-                                                    <span class="popular-badge"><?php esc_html_e('MOST POPULAR', 'flexpress'); ?></span>
-                                                <?php elseif ($is_promo_only): ?>
-                                                    <span class="promo-only-badge"><?php esc_html_e('PROMO ONLY', 'flexpress'); ?></span>
-                                                <?php endif; ?>
+                            <?php foreach ($sorted_plans as $plan_id => $plan): ?>
+                                <?php
+                                $is_featured = $featured_plan && $featured_plan['id'] === $plan_id;
+                                $is_promo_only = !empty($plan['promo_only']);
+                                $plan_features = isset($plan['features']) ? $plan['features'] : array();
+                                $plan_type_class = 'plan-type-' . $plan['plan_type'];
+                                ?>
+                                <div class="membership-plan-item <?php echo $is_featured ? 'popular-plan' : ''; ?> <?php echo $is_promo_only ? 'promo-only-plan' : ''; ?> <?php echo esc_attr($plan_type_class); ?>"
+                                    data-plan-type="<?php echo esc_attr($plan['plan_type']); ?>"
+                                    data-plan-id="<?php echo esc_attr($plan_id); ?>"
+                                    data-plan-price="<?php echo esc_attr($plan['price']); ?>"
+                                    data-plan-currency="<?php echo esc_attr($plan['currency']); ?>"
+                                    data-plan-name="<?php echo esc_attr($plan['name']); ?>"
+                                    data-trial-enabled="<?php echo esc_attr($plan['trial_enabled'] ?? 0); ?>"
+                                    data-trial-price="<?php echo esc_attr($plan['trial_price'] ?? 0); ?>"
+                                    data-trial-duration="<?php echo esc_attr($plan['trial_duration'] ?? 0); ?>"
+                                    data-trial-duration-unit="<?php echo esc_attr($plan['trial_duration_unit'] ?? 'days'); ?>"
+                                    data-duration="<?php echo esc_attr($plan['duration'] ?? 30); ?>"
+                                    data-duration-unit="<?php echo esc_attr($plan['duration_unit'] ?? 'days'); ?>">
+                                    <div class="plan-content">
+                                        <div class="plan-info">
+                                            <div class="plan-header">
+                                                <h5 class="plan-name"><?php echo esc_html($plan['name']); ?></h5>
+                                                <div class="plan-badges">
+                                                    <?php if ($is_featured): ?>
+                                                        <span class="popular-badge"><?php esc_html_e('MOST POPULAR', 'flexpress'); ?></span>
+                                                    <?php elseif ($is_promo_only): ?>
+                                                        <span class="promo-only-badge"><?php esc_html_e('PROMO ONLY', 'flexpress'); ?></span>
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <?php if (!empty($plan['description'])): ?>
-                                            <p class="plan-description"><?php echo esc_html($plan['description']); ?></p>
-                                        <?php endif; ?>
-                                        <?php if ($plan['plan_type'] === 'recurring'): ?>
-                                            <?php if (!empty($plan['trial_enabled']) && !empty($plan['trial_price']) && !empty($plan['trial_duration'])): ?>
-                                                <?php
-                                                // Format trial duration text
-                                                $trial_duration_text = $plan['trial_duration'] . ' ' . $plan['trial_duration_unit'];
-                                                if ($plan['trial_duration'] > 1 && $plan['trial_duration_unit'] === 'day') {
-                                                    $trial_duration_text = $plan['trial_duration'] . ' days';
-                                                } elseif ($plan['trial_duration'] > 1 && $plan['trial_duration_unit'] === 'week') {
-                                                    $trial_duration_text = $plan['trial_duration'] . ' weeks';
-                                                } elseif ($plan['trial_duration'] > 1 && $plan['trial_duration_unit'] === 'month') {
-                                                    $trial_duration_text = $plan['trial_duration'] . ' months';
-                                                }
-                                                
-                                                // Format billing cycle duration text
-                                                $billing_duration_text = $plan['duration'] . ' ' . $plan['duration_unit'];
-                                                if ($plan['duration'] > 1 && $plan['duration_unit'] === 'day') {
-                                                    $billing_duration_text = $plan['duration'] . ' days';
-                                                } elseif ($plan['duration'] > 1 && $plan['duration_unit'] === 'week') {
-                                                    $billing_duration_text = $plan['duration'] . ' weeks';
-                                                } elseif ($plan['duration'] > 1 && $plan['duration_unit'] === 'month') {
-                                                    $billing_duration_text = $plan['duration'] . ' months';
-                                                } elseif ($plan['duration'] > 1 && $plan['duration_unit'] === 'year') {
-                                                    $billing_duration_text = $plan['duration'] . ' years';
-                                                }
-                                                ?>
-                                                <p class="plan-billing">
-                                                    <span class="trial-info">
-                                                        <?php echo esc_html($trial_duration_text); ?> trial for <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['trial_price'], 2)); ?>
-                                                    </span>
-                                                    <br>
-                                                    <span class="plan-billing">
-                                                        Then <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['price'], 2)); ?> every <?php echo esc_html($billing_duration_text); ?>
-                                                    </span>
-                                                </p>
-                                            <?php else: ?>
-                                                <p class="plan-billing"><?php esc_html_e('Recurring Charge / Billed As', 'flexpress'); ?> <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['price'], 2)); ?></p>
+                                            <?php if (!empty($plan['description'])): ?>
+                                                <p class="plan-description"><?php echo esc_html($plan['description']); ?></p>
                                             <?php endif; ?>
-                                        <?php elseif ($plan['plan_type'] === 'one_time'): ?>
-                                            <p class="plan-billing"><?php esc_html_e('One time charge Billed As', 'flexpress'); ?> <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['price'], 2)); ?></p>
-                                        <?php endif; ?>
-                                    </div>
-                                    <div class="plan-pricing">
-                                        <div class="price">
-                                            <span class="price-amount"><?php echo esc_html(flexpress_get_daily_rate_display($plan)); ?></span>
-                                            <small class="price-period">/Per Day<?php if (!empty($plan['trial_enabled']) && !empty($plan['trial_price']) && !empty($plan['trial_duration'])): ?> <span class="trial-rate-indicator">(Trial Rate)</span><?php endif; ?></small>
+                                            <?php if ($plan['plan_type'] === 'recurring'): ?>
+                                                <?php if (!empty($plan['trial_enabled']) && !empty($plan['trial_price']) && !empty($plan['trial_duration'])): ?>
+                                                    <?php
+                                                    // Format trial duration text
+                                                    $trial_duration_text = $plan['trial_duration'] . ' ' . $plan['trial_duration_unit'];
+                                                    if ($plan['trial_duration'] > 1 && $plan['trial_duration_unit'] === 'day') {
+                                                        $trial_duration_text = $plan['trial_duration'] . ' days';
+                                                    } elseif ($plan['trial_duration'] > 1 && $plan['trial_duration_unit'] === 'week') {
+                                                        $trial_duration_text = $plan['trial_duration'] . ' weeks';
+                                                    } elseif ($plan['trial_duration'] > 1 && $plan['trial_duration_unit'] === 'month') {
+                                                        $trial_duration_text = $plan['trial_duration'] . ' months';
+                                                    }
+
+                                                    // Format billing cycle duration text
+                                                    $billing_duration_text = $plan['duration'] . ' ' . $plan['duration_unit'];
+                                                    if ($plan['duration'] > 1 && $plan['duration_unit'] === 'day') {
+                                                        $billing_duration_text = $plan['duration'] . ' days';
+                                                    } elseif ($plan['duration'] > 1 && $plan['duration_unit'] === 'week') {
+                                                        $billing_duration_text = $plan['duration'] . ' weeks';
+                                                    } elseif ($plan['duration'] > 1 && $plan['duration_unit'] === 'month') {
+                                                        $billing_duration_text = $plan['duration'] . ' months';
+                                                    } elseif ($plan['duration'] > 1 && $plan['duration_unit'] === 'year') {
+                                                        $billing_duration_text = $plan['duration'] . ' years';
+                                                    }
+                                                    ?>
+                                                    <p class="plan-billing">
+                                                        <span class="trial-info">
+                                                            <?php echo esc_html($trial_duration_text); ?> trial for <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['trial_price'], 2)); ?>
+                                                        </span>
+                                                        <br>
+                                                        <span class="plan-billing">
+                                                            Then <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['price'], 2)); ?> every <?php echo esc_html($billing_duration_text); ?>
+                                                        </span>
+                                                    </p>
+                                                <?php else: ?>
+                                                    <p class="plan-billing"><?php esc_html_e('Recurring Charge / Billed As', 'flexpress'); ?> <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['price'], 2)); ?></p>
+                                                <?php endif; ?>
+                                            <?php elseif ($plan['plan_type'] === 'one_time'): ?>
+                                                <p class="plan-billing"><?php esc_html_e('One time charge Billed As', 'flexpress'); ?> <?php echo esc_html($plan['currency']); ?><?php echo esc_html(number_format($plan['price'], 2)); ?></p>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="plan-pricing">
+                                            <div class="price">
+                                                <span class="price-amount"><?php echo esc_html(flexpress_get_daily_rate_display($plan)); ?></span>
+                                                <small class="price-period">/Per Day<?php if (!empty($plan['trial_enabled']) && !empty($plan['trial_price']) && !empty($plan['trial_duration'])): ?> <span class="trial-rate-indicator">(Trial Rate)</span><?php endif; ?></small>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="col-12 text-center">
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <p class="mb-0"><?php esc_html_e('No pricing plans are currently available. Please contact support.', 'flexpress'); ?></p>
+                                </div>
                             </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="col-12 text-center">
-                            <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <p class="mb-0"><?php esc_html_e('No pricing plans are currently available. Please contact support.', 'flexpress'); ?></p>
-                            </div>
-                        </div>
-                    <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
-        </div>
         <?php endif; ?>
 
         <?php if (!$is_logged_in): ?>
@@ -492,7 +492,18 @@ $plan_selection_step_number = 1;
                         <p class="legal-disclaimer" id="dynamic-legal-text">
                             <?php esc_html_e('By clicking CONTINUE, you confirm that you are at least 18 years old and agree to our', 'flexpress'); ?>
                             <a href="<?php echo esc_url(home_url('/terms')); ?>" class="legal-link"><?php esc_html_e('Terms of Service', 'flexpress'); ?></a>.
-                            <span id="billing-text"><?php esc_html_e('Your subscription will automatically renew at $29.95 every 30 days unless cancelled. You may cancel at any time', 'flexpress'); ?></span>
+                            <span id="billing-text">
+                                <?php if ($trial_valid && $trial_link_data): ?>
+                                    <?php
+                                    echo sprintf(
+                                        esc_html__('You\'re signing up for a %d-day free trial. After the trial, your access will be terminated and you will be prompted to purchase access', 'flexpress'),
+                                        $trial_link_data->duration
+                                    );
+                                    ?>
+                                <?php else: ?>
+                                    <?php esc_html_e('Your subscription will automatically renew at $29.95 every 30 days unless cancelled. You may cancel at any time', 'flexpress'); ?>
+                                <?php endif; ?>
+                            </span>
                             <span id="dashboard-link-section">
                                 <a href="<?php echo esc_url(home_url('/dashboard')); ?>" class="legal-link"><?php esc_html_e('here', 'flexpress'); ?></a>.
                             </span>
@@ -747,21 +758,21 @@ $plan_selection_step_number = 1;
     .membership-page .promo-code-input .form-control::placeholder {
         color: rgba(255, 255, 255, 0.6) !important;
     }
-    
+
     /* Promo Code Message Styling */
     .membership-page .promo-code-message {
         font-size: 0.9rem;
         margin-top: 0.5rem;
     }
-    
+
     .membership-page .promo-code-message.success {
         color: var(--color-success);
     }
-    
+
     .membership-page .promo-code-message.error {
         color: var(--color-danger);
     }
-    
+
     .membership-page .promo-code-message.info {
         color: var(--color-info);
     }
@@ -864,7 +875,7 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
             nonce: '<?php echo wp_create_nonce('flexpress_registration_nonce'); ?>'
         };
     }
-    
+
     jQuery(document).ready(function() {
         // Check if promo code is already applied from URL
         let appliedPromo = null;
@@ -886,7 +897,7 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
             const planDuration = planElement.data('duration');
             const planDurationUnit = planElement.data('duration-unit');
             const billingTextElement = jQuery('#billing-text');
-            
+
             // Check if promo is applied (plan has original-price data attribute)
             const originalPrice = planElement.find('.price-amount').data('original-price');
             const hasPromoDiscount = originalPrice && originalPrice > planPrice;
@@ -929,9 +940,12 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
             if (hasPromoDiscount) {
                 priceText = planCurrency + planPrice.toFixed(2) + ' (promo discount applied)';
             }
-            
+
             if (planType === 'recurring') {
-                if (trialEnabled && trialPrice > 0 && trialDuration > 0) {
+                if (trialEnabled && trialPrice === 0 && trialDuration > 0) {
+                    // Free trial - no payment required
+                    billingText = 'You\'re signing up for a ' + trialDurationText + ' free trial. After the trial, your access will be terminated and you will be prompted to purchase access';
+                } else if (trialEnabled && trialPrice > 0 && trialDuration > 0) {
                     // Trial-enabled recurring plan
                     billingText = 'Your subscription starts with a ' + trialDurationText + ' trial for ' + planCurrency + trialPrice.toFixed(2) + ', then automatically renews at ' + priceText + ' every ' + durationText + ' unless cancelled. You may cancel at any time';
                 } else {
@@ -944,7 +958,10 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
                 billingText = 'This is a one-time payment of ' + priceText + ' for lifetime access. No recurring charges will be applied.';
             } else {
                 // Default fallback
-                if (trialEnabled && trialPrice > 0 && trialDuration > 0) {
+                if (trialEnabled && trialPrice === 0 && trialDuration > 0) {
+                    // Free trial - no payment required
+                    billingText = 'You\'re signing up for a ' + trialDurationText + ' free trial. After the trial, your access will be terminated and you will be prompted to purchase access';
+                } else if (trialEnabled && trialPrice > 0 && trialDuration > 0) {
                     billingText = 'Your subscription starts with a ' + trialDurationText + ' trial for ' + planCurrency + trialPrice.toFixed(2) + ', then automatically renews at ' + priceText + ' every ' + durationText + ' unless cancelled. You may cancel at any time';
                 } else {
                     billingText = 'Your subscription will automatically renew at ' + priceText + ' every ' + durationText + ' unless cancelled. You may cancel at any time';
@@ -1046,7 +1063,7 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
 
             // Check if this is a trial link - if so, skip plan selection requirement
             const isTrialLink = <?php echo $trial_valid ? 'true' : 'false'; ?>;
-            
+
             if (!isTrialLink && !selectedPlan) {
                 alert('Please select a membership plan first.');
                 return;
@@ -1120,7 +1137,7 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
                     applied_promo_code: appliedPromo ? appliedPromo.code : '',
                     trial_token: '<?php echo $trial_valid ? esc_js($trial_token) : ''; ?>'
                 };
-                
+
                 console.log('AJAX Request Data:', {
                     action: ajaxData.action,
                     has_nonce: !!ajaxData.nonce,
@@ -1128,7 +1145,7 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
                     is_trial: isTrialLink,
                     trial_token: ajaxData.trial_token ? 'present' : 'missing'
                 });
-                
+
                 jQuery.ajax({
                     url: '<?php echo admin_url('admin-ajax.php'); ?>',
                     type: 'POST',
@@ -1187,7 +1204,7 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
 
         // Initialize: show recurring plans by default (only if not a trial link)
         const isTrialLink = <?php echo $trial_valid ? 'true' : 'false'; ?>;
-        
+
         if (!isTrialLink) {
             jQuery('.membership-plan-item').hide();
             jQuery('.membership-plan-item[data-plan-type="recurring"]').show();
@@ -1219,7 +1236,7 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
                 jQuery('#apply-membership-promo').click();
             }
         });
-        
+
         // Promo code functionality
         jQuery('.promo-code-label').on('click', function() {
             jQuery('.promo-code-input').toggleClass('show');
@@ -1271,7 +1288,7 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
                 messageDiv.hide();
             }, 5000);
         }
-        
+
         // Remove promo code
         function removePromoCode() {
             jQuery.ajax({
@@ -1290,7 +1307,7 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
                 }
             });
         }
-        
+
         function updatePlanPrices() {
             console.log('updatePlanPrices called, appliedPromo:', appliedPromo);
             jQuery('.membership-card').each(function() {
@@ -1298,7 +1315,7 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
                 const $price = $card.find('.price');
                 const originalPrice = parseFloat($price.data('original-price') || $price.text().replace(/[^0-9.]/g, ''));
                 console.log('Processing card, original price:', originalPrice);
-                
+
                 if (appliedPromo && appliedPromo.discount_type && appliedPromo.discount_value) {
                     // Calculate discount based on promo code settings
                     let discountAmount = 0;
@@ -1307,22 +1324,22 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
                     } else {
                         discountAmount = appliedPromo.discount_value;
                     }
-                    
+
                     // Apply maximum discount limit if set
                     if (appliedPromo.maximum_discount > 0 && discountAmount > appliedPromo.maximum_discount) {
                         discountAmount = appliedPromo.maximum_discount;
                     }
-                    
+
                     const discountedPrice = Math.max(0, originalPrice - discountAmount);
-                    
+
                     // Update price display
                     $price.html('<span class="original-price text-decoration-line-through text-muted me-2">$' + originalPrice.toFixed(2) + '</span><span class="discounted-price text-success fw-bold">$' + discountedPrice.toFixed(2) + '</span>');
-                    
+
                     // Add discount indicator
                     if (!$card.find('.discount-indicator').length) {
-                        const discountText = appliedPromo.discount_type === 'percentage' 
-                            ? appliedPromo.discount_value + '% OFF' 
-                            : 'Save $' + discountAmount.toFixed(2);
+                        const discountText = appliedPromo.discount_type === 'percentage' ?
+                            appliedPromo.discount_value + '% OFF' :
+                            'Save $' + discountAmount.toFixed(2);
                         $price.after('<small class="discount-indicator text-success d-block fw-bold">' + discountText + '</small>');
                     }
                 } else {

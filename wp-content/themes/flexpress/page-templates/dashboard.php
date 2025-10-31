@@ -252,6 +252,7 @@ add_filter('body_class', function ($classes) {
                                 $next_rebill = get_user_meta($user_id, 'next_rebill_date', true);
                                 $flowguard_subscription_phase = get_user_meta($user_id, 'flowguard_subscription_phase', true);
                                 $flowguard_next_charge_on = get_user_meta($user_id, 'flowguard_next_charge_on', true);
+                                $flowguard_transaction_id = get_user_meta($user_id, 'flowguard_transaction_id', true);
                                 $trial_expires_at = get_user_meta($user_id, 'trial_expires_at', true);
                                 if (empty($trial_expires_at)) {
                                     global $wpdb;
@@ -366,7 +367,6 @@ add_filter('body_class', function ($classes) {
                                             <?php
                                             // Check if user has Flowguard subscription
                                             $flowguard_sale_id = get_user_meta($user_id, 'flowguard_sale_id', true);
-                                            $flowguard_transaction_id = get_user_meta($user_id, 'flowguard_transaction_id', true);
                                             $has_flowguard_subscription = !empty($flowguard_sale_id) || !empty($flowguard_transaction_id);
                                             ?>
 

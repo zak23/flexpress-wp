@@ -98,6 +98,9 @@ if (isset($_GET['error'])) {
             $error_message = __('An error occurred. Please try again.', 'flexpress');
     }
 }
+
+// Initialize step number for plan selection (first step)
+$plan_selection_step_number = 1;
 ?>
 
 <div class="membership-page">

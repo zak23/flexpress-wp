@@ -39,7 +39,7 @@ class FlexPress_Settings
         add_menu_page(
             __('FlexPress', 'flexpress'),
             __('FlexPress', 'flexpress'),
-            'manage_options',
+            flexpress_get_founder_capability(),
             $this->page_slug,
             array($this, 'render_settings_page'),
             'dashicons-admin-settings',
@@ -51,7 +51,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('General', 'flexpress'),
             __('General', 'flexpress'),
-            'manage_options',
+            flexpress_get_founder_capability(),
             $this->page_slug,
             array($this, 'render_settings_page')
         );
@@ -61,7 +61,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Awards & Recognition', 'flexpress'),
             __('Awards', 'flexpress'),
-            'manage_options',
+            flexpress_get_founder_capability(),
             'flexpress-awards-settings',
             array($this, 'render_awards_settings_page')
         );
@@ -71,7 +71,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Featured On Section', 'flexpress'),
             __('Featured On', 'flexpress'),
-            'manage_options',
+            flexpress_get_founder_capability(),
             'flexpress-featured-on-settings',
             array($this, 'render_featured_on_settings_page')
         );
@@ -81,7 +81,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Collections Settings', 'flexpress'),
             __('Collections', 'flexpress'),
-            'manage_options',
+            flexpress_get_founder_capability(),
             'flexpress-collections-settings',
             array($this, 'render_collections_settings_page')
         );
@@ -91,7 +91,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Coming Soon Mode', 'flexpress'),
             __('Coming Soon', 'flexpress'),
-            'manage_options',
+            flexpress_get_founder_capability(),
             'flexpress-coming-soon-settings',
             array($this, 'render_coming_soon_settings_page')
         );
@@ -101,7 +101,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Pages & Menus', 'flexpress'),
             __('Pages & Menus', 'flexpress'),
-            'manage_options',
+            flexpress_get_founder_capability(),
             'flexpress-pages-menus',
             array($this, 'render_pages_menus_page')
         );
@@ -111,7 +111,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Auto-Setup', 'flexpress'),
             __('Auto-Setup', 'flexpress'),
-            'manage_options',
+            flexpress_get_founder_capability(),
             'flexpress-auto-setup',
             array($this, 'render_auto_setup_page')
         );
@@ -121,7 +121,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Discord Notifications', 'flexpress'),
             __('Discord', 'flexpress'),
-            'manage_options',
+            flexpress_get_founder_capability(),
             'flexpress-discord-settings',
             array($this, 'render_discord_settings_page')
         );
@@ -131,7 +131,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Cloudflare Turnstile', 'flexpress'),
             __('Turnstile', 'flexpress'),
-            'manage_options',
+            flexpress_get_founder_capability(),
             'flexpress-turnstile-settings',
             array($this, 'render_turnstile_settings_page')
         );
@@ -141,7 +141,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Plunk Email Marketing', 'flexpress'),
             __('Plunk', 'flexpress'),
-            'manage_options',
+            flexpress_get_founder_capability(),
             'flexpress-plunk-settings',
             array($this, 'render_plunk_settings_page')
         );
@@ -151,7 +151,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Google SMTP', 'flexpress'),
             __('Google SMTP', 'flexpress'),
-            'manage_options',
+            flexpress_get_founder_capability(),
             'flexpress-google-smtp-settings',
             array($this, 'render_google_smtp_settings_page')
         );
@@ -161,7 +161,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('SMTP2Go', 'flexpress'),
             __('SMTP2Go', 'flexpress'),
-            'manage_options',
+            flexpress_get_founder_capability(),
             'flexpress-smtp2go-settings',
             array($this, 'render_smtp2go_settings_page')
         );
@@ -171,7 +171,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Flowguard', 'flexpress'),
             __('Flowguard', 'flexpress'),
-            'manage_options',
+            flexpress_get_founder_capability(),
             'flexpress-flowguard-settings',
             function () {
                 if (class_exists('FlexPress_Flowguard_Settings')) {
@@ -188,7 +188,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Earnings', 'flexpress'),
             __('Earnings', 'flexpress'),
-            'manage_options',
+            flexpress_get_founder_capability(),
             'flexpress-earnings',
             function () {
                 if (class_exists('FlexPress_Earnings_Settings')) {
@@ -205,7 +205,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Tools', 'flexpress'),
             __('Tools', 'flexpress'),
-            'manage_options',
+            flexpress_get_founder_capability(),
             'flexpress-tools',
             array($this, 'render_tools_page')
         );

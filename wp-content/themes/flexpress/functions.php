@@ -26,6 +26,7 @@ function flexpress_increase_upload_limits()
 add_action('init', 'flexpress_increase_upload_limits');
 
 // Include required files
+require_once FLEXPRESS_PATH . '/includes/flexpress-permissions.php';
 require_once FLEXPRESS_PATH . '/includes/post-types.php';
 require_once FLEXPRESS_PATH . '/includes/bunnycdn.php';
 require_once FLEXPRESS_PATH . '/includes/gallery-system.php';
@@ -130,6 +131,7 @@ add_action('init', 'flexpress_load_acf_fields', 20);
 
 // Include admin files immediately - they contain their own admin checks
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-settings.php';
+require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-permissions-settings.php';
 
 // Include stats helpers (used by admin dashboard)
 require_once FLEXPRESS_PATH . '/includes/admin/flexpress-stats-helpers.php';

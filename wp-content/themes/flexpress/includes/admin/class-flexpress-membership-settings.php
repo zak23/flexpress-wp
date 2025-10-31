@@ -1491,7 +1491,7 @@ class FlexPress_Membership_Settings
      */
     public function save_verotel_user_fields($user_id)
     {
-        if (!current_user_can('edit_users')) {
+        if (!flexpress_current_user_is_founder()) {
             return;
         }
 
@@ -2039,7 +2039,7 @@ class FlexPress_Membership_Settings
         }
 
         // Check user capabilities
-        if (!current_user_can('edit_users')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error(array('message' => __('You do not have permission to manage user episodes.', 'flexpress')));
             return;
         }
@@ -2117,7 +2117,7 @@ class FlexPress_Membership_Settings
         }
 
         // Check user capabilities
-        if (!current_user_can('edit_users')) {
+        if (!flexpress_current_user_is_founder()) {
             wp_send_json_error(array('message' => __('You do not have permission to manage user episodes.', 'flexpress')));
             return;
         }

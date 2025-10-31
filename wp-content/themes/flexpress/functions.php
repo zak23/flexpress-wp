@@ -4207,6 +4207,18 @@ function flexpress_check_episode_access($episode_id = null, $user_id = null, $fo
     $is_released = flexpress_is_episode_released($episode_id);
     $access_info['is_unreleased'] = !$is_released;
 
+    // Founders bypass release, membership, and purchase restrictions
+    if ($user_id && flexpress_user_is_founder($user_id)) {
+        $access_info['has_access'] = true;
+        $access_info['is_member'] = true;
+        $access_info['is_purchased'] = true;
+        $access_info['show_purchase_button'] = false;
+        $access_info['show_membership_button'] = false;
+        $access_info['purchase_reason'] = '';
+        $access_info['is_unreleased'] = false;
+        return $access_info;
+    }
+
     // For unreleased episodes, force trailer-only access regardless of user status
     if (!$is_released) {
         $access_info['has_access'] = false;
@@ -4464,6 +4476,16 @@ function flexpress_check_extras_access($extras_id = null, $user_id = null)
 
     // Check if user is logged in
     $is_logged_in = $user_id > 0;
+
+    // Founders always have access to extras content
+    if ($is_logged_in && flexpress_user_is_founder($user_id)) {
+        $access_info['has_access'] = true;
+        $access_info['is_member'] = true;
+        $access_info['is_purchased'] = true;
+        $access_info['show_purchase_button'] = false;
+        $access_info['purchase_reason'] = '';
+        return $access_info;
+    }
 
     // Check membership status
     $membership_status = '';

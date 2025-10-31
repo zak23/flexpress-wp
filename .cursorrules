@@ -53,7 +53,7 @@ Do not alter `.wakatime-project` once created
 - Settings: Add to `class-flexpress-coming-soon-settings.php` with proper sanitization
 - Template: Create dedicated template in `page-templates/` directory
 - Redirect: Use `template_redirect` hook with priority 1 for early interception
-- Admin bypass: Check `current_user_can('manage_options')` before redirect
+- Admin bypass: Check `flexpress_current_user_is_founder()` before redirect
 - Whitelist Logic: Check `is_page($whitelist_array)` before redirect for page exceptions
 - Assets: Create dedicated CSS/JS files in `assets/` directory
 - Helper Function: Use `flexpress_is_coming_soon_enabled()` to check status in templates
@@ -132,3 +132,10 @@ Do not alter `.wakatime-project` once created
 - Labels: "Free Trial" (active trial), "membership" (active/cancelled until expiry), "none"
 - Frontend: replace direct `subscription_type` meta usage with helper
 - Admin: show derived label in membership panel; do not alter DB schema
+
+## Founder Permissions Model
+
+- Capability: Founders use `manage_flexpress_founder_settings`; grab it via `flexpress_get_founder_capability()` when registering menus or meta caps.
+- Enforcement: Guard FlexPress settings pages, dashboards, AJAX, and REST handlers with `flexpress_current_user_is_founder()` or `flexpress_require_founder_capability()`.
+- Founder Access: Treat founders as members/unlock purchasers by calling `flexpress_user_is_founder()` inside access checks.
+- Management UI: Assign founders from `FlexPress → Permissions`; use `flexpress_set_founder_user_ids()` to persist selections and sync caps.

@@ -184,7 +184,7 @@ function flexpress_user_is_founder($user_id = null)
 
     $founders = flexpress_get_founder_user_ids();
     if (empty($founders)) {
-        return flexpress_is_founder_entity($user_id);
+        return user_can($user_id, 'manage_options');
     }
 
     return in_array((int) $user_id, $founders, true);

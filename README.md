@@ -20,6 +20,16 @@ A modern WordPress website running in Docker containers with MySQL database and 
   - Multi-select whitelist posts a reset marker to clear when nothing selected.
 - Impact: Saving any page no longer wipes other settings; unchecking checkboxes works reliably.
 
+### Founder Permissions (October 2025)
+
+- **Problem**: All administrators with `manage_options` could access sensitive FlexPress tooling, allowing editors/moderators to change payment, membership, or unlock settings.
+- **Solution**:
+  - Introduced dedicated capability `manage_flexpress_founder_settings` with helper APIs in `includes/flexpress-permissions.php` (`flexpress_user_is_founder()`, `flexpress_require_founder_capability()`).
+  - Auto-bootstrap founder list from current administrators (stored in `flexpress_founder_user_ids`) and sync caps on every request.
+  - Added `FlexPress → Permissions` admin screen to safely assign/remove founders while preventing removal of the last founder.
+  - Updated all FlexPress admin menus, AJAX/REST handlers, membership tools, and unlock logic to require founder access; founders bypass episode/extras gating automatically.
+- **Impact**: Only designated founders can modify FlexPress configuration, manage memberships/unlocks, or run setup tooling; founders always retain full content access regardless of membership state.
+
 ### Checkbox Visibility Fix (December 2024)
 
 - **Problem**: Bootstrap 5 form checkboxes on the dark theme didn't show visible checkmarks when checked and checkbox/label were misaligned

@@ -130,6 +130,16 @@ add_action('init', 'flexpress_load_acf_fields', 20);
 
 // Include admin files immediately - they contain their own admin checks
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-settings.php';
+
+// Include stats helpers (used by admin dashboard)
+require_once FLEXPRESS_PATH . '/includes/admin/flexpress-stats-helpers.php';
+
+// Include stats dashboard (admin only)
+if (is_admin()) {
+    require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-stats-dashboard.php';
+    new FlexPress_Stats_Dashboard();
+}
+
 require_once FLEXPRESS_PATH . '/includes/performance-optimization.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-general-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-awards-settings.php';

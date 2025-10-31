@@ -44,8 +44,24 @@ class FlexPress_Email_Blacklist_Settings {
             return;
         }
         
+        // Enqueue jQuery
         wp_enqueue_script('jquery');
-        wp_add_inline_script('jquery', $this->get_admin_js());
+        
+        // Create a unique handle for our script
+        $script_handle = 'flexpress-blacklist-admin';
+        wp_register_script($script_handle, '', array('jquery'), '1.0.0', true);
+        wp_enqueue_script($script_handle);
+        
+        // Add inline script after jQuery is loaded
+        wp_add_inline_script($script_handle, $this->get_admin_js(), 'after');
+        
+        // Localize script with ajaxurl
+        wp_localize_script($script_handle, 'flexpressBlacklist', array(
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('flexpress_blacklist_nonce')
+        ));
+        
+        // Add inline CSS
         wp_add_inline_style('wp-admin', $this->get_admin_css());
     }
     
@@ -107,6 +123,20 @@ class FlexPress_Email_Blacklist_Settings {
                 </div>
             </div>
         </div>
+        
+        <script type="text/javascript">
+        // Localize script variables
+        var flexpressBlacklist = {
+            ajaxurl: '<?php echo admin_url('admin-ajax.php'); ?>',
+            nonce: '<?php echo wp_create_nonce('flexpress_blacklist_nonce'); ?>'
+        };
+        
+        <?php echo $this->get_admin_js(); ?>
+        </script>
+        
+        <style>
+        <?php echo $this->get_admin_css(); ?>
+        </style>
         <?php
     }
     
@@ -163,21 +193,42 @@ class FlexPress_Email_Blacklist_Settings {
     private function get_admin_js() {
         return "
         jQuery(document).ready(function($) {
+            console.log('FlexPress Blacklist: Script loaded');
+            
+            // Get ajaxurl from localized script or fallback
+            var ajaxUrl = (typeof flexpressBlacklist !== 'undefined' && flexpressBlacklist.ajaxurl) 
+                ? flexpressBlacklist.ajaxurl 
+                : (typeof ajaxurl !== 'undefined' ? ajaxurl : '" . admin_url('admin-ajax.php') . "');
+            
+            // Get nonce from localized script or form
+            function getNonce() {
+                if (typeof flexpressBlacklist !== 'undefined' && flexpressBlacklist.nonce) {
+                    return flexpressBlacklist.nonce;
+                }
+                var formNonce = $('#blacklist_nonce').val();
+                return formNonce ? formNonce : '';
+            }
+            
+            console.log('FlexPress Blacklist: AJAX URL =', ajaxUrl);
+            
             // Add to blacklist
             $('#add-blacklist-form').on('submit', function(e) {
                 e.preventDefault();
                 
                 var email = $('#blacklist_email').val();
                 var reason = $('#blacklist_reason').val();
-                var nonce = $('#blacklist_nonce').val();
+                var nonce = getNonce();
                 
                 if (!email) {
                     alert('Please enter an email address.');
                     return;
                 }
                 
+                var submitBtn = $(this).find('input[type=\"submit\"]');
+                submitBtn.prop('disabled', true).val('Adding...');
+                
                 $.ajax({
-                    url: ajaxurl,
+                    url: ajaxUrl,
                     type: 'POST',
                     data: {
                         action: 'flexpress_add_to_blacklist',
@@ -186,51 +237,115 @@ class FlexPress_Email_Blacklist_Settings {
                         nonce: nonce
                     },
                     success: function(response) {
+                        submitBtn.prop('disabled', false).val('Add to Blacklist');
                         if (response.success) {
                             alert('Email added to blacklist successfully.');
                             location.reload();
                         } else {
-                            alert('Error: ' + response.data.message);
+                            alert('Error: ' + (response.data && response.data.message ? response.data.message : 'Unknown error'));
                         }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        submitBtn.prop('disabled', false).val('Add to Blacklist');
+                        console.error('AJAX Error:', {xhr: xhr, status: status, error: error});
                         alert('An error occurred while adding the email to blacklist.');
                     }
                 });
             });
             
-            // Remove from blacklist
-            $('.remove-blacklist-btn').on('click', function() {
+            // Remove from blacklist - use event delegation for dynamic content
+            $(document).on('click', '.remove-blacklist-btn', function(e) {
+                e.preventDefault();
+                
+                console.log('FlexPress Blacklist: Remove button clicked');
+                
                 if (!confirm('Are you sure you want to remove this email from the blacklist?')) {
                     return;
                 }
                 
                 var email = $(this).data('email');
-                var nonce = $('#blacklist_nonce').val();
+                var nonce = getNonce();
                 var row = $(this).closest('tr');
+                var button = $(this);
+                
+                console.log('FlexPress Blacklist: Removing email =', email);
+                console.log('FlexPress Blacklist: Nonce =', nonce ? 'present' : 'missing');
+                
+                if (!email) {
+                    alert('Error: Email address not found.');
+                    console.error('FlexPress Blacklist: Email address not found in data-email attribute');
+                    return;
+                }
+                
+                if (!nonce) {
+                    alert('Error: Security nonce not found.');
+                    console.error('FlexPress Blacklist: Nonce not found');
+                    return;
+                }
+                
+                button.prop('disabled', true).text('Removing...');
                 
                 $.ajax({
-                    url: ajaxurl,
+                    url: ajaxUrl,
                     type: 'POST',
                     data: {
                         action: 'flexpress_remove_from_blacklist',
                         email: email,
                         nonce: nonce
                     },
+                    beforeSend: function() {
+                        console.log('FlexPress Blacklist: Sending AJAX request to remove email');
+                    },
                     success: function(response) {
+                        console.log('FlexPress Blacklist: Remove response:', response);
                         if (response.success) {
-                            row.fadeOut(function() {
+                            row.fadeOut(300, function() {
                                 row.remove();
+                                updateBlacklistStats();
+                                
+                                // If no more rows, show message
+                                var tbody = $('#blacklist-table-container tbody');
+                                if (tbody && tbody.find('tr').length === 0) {
+                                    $('#blacklist-table-container').html('<p>No emails are currently blacklisted.</p>');
+                                }
                             });
+                            alert(response.data && response.data.message ? response.data.message : 'Email removed from blacklist successfully.');
                         } else {
-                            alert('Error: ' + response.data.message);
+                            button.prop('disabled', false).text('Remove');
+                            alert('Error: ' + (response.data && response.data.message ? response.data.message : 'Unknown error'));
                         }
                     },
-                    error: function() {
-                        alert('An error occurred while removing the email from blacklist.');
+                    error: function(xhr, status, error) {
+                        button.prop('disabled', false).text('Remove');
+                        console.error('AJAX Error:', {
+                            status: xhr.status,
+                            statusText: xhr.statusText,
+                            responseText: xhr.responseText,
+                            error: error
+                        });
+                        
+                        var errorMessage = 'An error occurred while removing the email from blacklist.';
+                        if (xhr.responseText) {
+                            try {
+                                var response = JSON.parse(xhr.responseText);
+                                if (response.data && response.data.message) {
+                                    errorMessage = response.data.message;
+                                }
+                            } catch(e) {
+                                // Not JSON, use default
+                            }
+                        }
+                        alert(errorMessage);
                     }
                 });
             });
+            
+            // Update blacklist stats after removal
+            function updateBlacklistStats() {
+                var tbody = $('#blacklist-table-container tbody');
+                var count = tbody ? tbody.find('tr').length : 0;
+                $('.stat-number').text(count);
+            }
         });
         ";
     }

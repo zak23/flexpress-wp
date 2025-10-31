@@ -854,6 +854,14 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
 ?>
 
 <script>
+    // Ensure nonce is available - fallback if wp_localize_script didn't work
+    if (typeof flexpressJoinForm === 'undefined') {
+        var flexpressJoinForm = {
+            ajaxurl: '<?php echo admin_url('admin-ajax.php'); ?>',
+            nonce: '<?php echo wp_create_nonce('flexpress_registration_nonce'); ?>'
+        };
+    }
+    
     jQuery(document).ready(function() {
         // Check if promo code is already applied from URL
         let appliedPromo = null;
@@ -1062,10 +1070,7 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
             // Check if user is logged in
             const isLoggedIn = <?php echo $is_logged_in ? 'true' : 'false'; ?>;
 
-            // For trial links, skip payment flow - go directly to registration
-            if (isTrialLink && !isLoggedIn) {
-                // Skip to registration validation below
-            } else if (isLoggedIn) {
+            if (isLoggedIn) {
                 // Logged in user - proceed to payment (but not for trial links)
                 if (isTrialLink) {
                     // Trial links don't need payment
@@ -1103,19 +1108,30 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
                 }
 
                 // Submit registration via AJAX
+                const ajaxData = {
+                    action: 'flexpress_process_registration_and_payment',
+                    nonce: flexpressJoinForm ? flexpressJoinForm.nonce : '',
+                    email: email,
+                    password: password,
+                    selected_plan: isTrialLink ? '' : planId,
+                    applied_promo_code: appliedPromo ? appliedPromo.code : '',
+                    trial_token: '<?php echo $trial_valid ? esc_js($trial_token) : ''; ?>'
+                };
+                
+                console.log('AJAX Request Data:', {
+                    action: ajaxData.action,
+                    has_nonce: !!ajaxData.nonce,
+                    email: ajaxData.email,
+                    is_trial: isTrialLink,
+                    trial_token: ajaxData.trial_token ? 'present' : 'missing'
+                });
+                
                 jQuery.ajax({
                     url: '<?php echo admin_url('admin-ajax.php'); ?>',
                     type: 'POST',
-                    data: {
-                        action: 'flexpress_process_registration_and_payment',
-                        nonce: flexpressJoinForm.nonce,
-                        email: email,
-                        password: password,
-                        selected_plan: isTrialLink ? '' : planId,
-                        applied_promo_code: appliedPromo ? appliedPromo.code : '',
-                        trial_token: '<?php echo $trial_valid ? esc_js($trial_token) : ''; ?>'
-                    },
+                    data: ajaxData,
                     success: function(response) {
+                        console.log('AJAX Success Response:', response);
                         if (response.success) {
                             // Registration successful, redirect to payment or account
                             if (response.data.payment_url) {
@@ -1124,11 +1140,43 @@ wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
                                 window.location.href = '<?php echo home_url('/dashboard/'); ?>';
                             }
                         } else {
-                            alert('Registration failed: ' + response.data.message);
+                            alert('Registration failed: ' + (response.data?.message || 'Unknown error'));
                         }
                     },
-                    error: function() {
-                        alert('An error occurred during registration. Please try again.');
+                    error: function(xhr, status, error) {
+                        console.error('AJAX Error:', {
+                            status: xhr.status,
+                            statusText: xhr.statusText,
+                            responseText: xhr.responseText,
+                            error: error
+                        });
+                        let errorMessage = 'An error occurred during registration. Please try again.';
+                        if (xhr.responseText) {
+                            try {
+                                const response = JSON.parse(xhr.responseText);
+                                if (response.data && response.data.message) {
+                                    errorMessage = response.data.message;
+                                } else if (response.message) {
+                                    errorMessage = response.message;
+                                }
+                            } catch (e) {
+                                // Not JSON - try to extract error message from HTML/text response
+                                const responseText = xhr.responseText;
+                                // Check if it's a wp_die() response with error message
+                                if (responseText.includes('Registration failed:')) {
+                                    const match = responseText.match(/Registration failed:([^<]+)/);
+                                    if (match && match[1]) {
+                                        errorMessage = 'Registration failed:' + match[1].trim();
+                                    }
+                                } else if (responseText.includes('This email address is not allowed')) {
+                                    const match = responseText.match(/This email address is not allowed[^<]*/);
+                                    if (match && match[0]) {
+                                        errorMessage = match[0].trim();
+                                    }
+                                }
+                            }
+                        }
+                        alert(errorMessage);
                     }
                 });
             }

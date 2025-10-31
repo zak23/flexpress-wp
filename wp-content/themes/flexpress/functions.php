@@ -3315,6 +3315,20 @@ function flexpress_process_registration_and_payment()
         return;
     }
 
+    // Check if email is blacklisted
+    if (class_exists('FlexPress_Email_Blacklist')) {
+        $blacklist_info = FlexPress_Email_Blacklist::is_blacklisted($email);
+        if ($blacklist_info) {
+            wp_send_json_error(array(
+                'message' => sprintf(
+                    'This email address is not allowed to register. Reason: %s',
+                    $blacklist_info['reason'] ?: 'Not specified'
+                )
+            ));
+            return;
+        }
+    }
+
     // Get the selected pricing plan (include promo code to unlock promo-only plans)
     // For trial registrations, plan validation is skipped
     $plan = null;

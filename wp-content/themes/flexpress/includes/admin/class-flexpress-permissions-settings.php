@@ -49,6 +49,16 @@ class FlexPress_Permissions_Settings
             return;
         }
 
+        $current_user_id = get_current_user_id();
+        if ($current_user_id && !in_array($current_user_id, $submitted, true)) {
+            add_settings_error(
+                'flexpress_permissions',
+                'cannot_remove_self',
+                __('You cannot remove yourself from the founders list. Ask another founder to make that change.', 'flexpress')
+            );
+            return;
+        }
+
         flexpress_set_founder_user_ids($submitted);
 
         add_settings_error(

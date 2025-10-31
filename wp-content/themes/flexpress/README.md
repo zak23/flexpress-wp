@@ -27,6 +27,7 @@ FlexPress is designed specifically for content websites (primarily adult content
   - `flexpress_require_founder_capability()` for hard-stop permission enforcement.
   - `flexpress_set_founder_user_ids()` keeps the stored founder list and capability assignments in sync.
 - Admin UI at `FlexPress → Permissions` lets founders assign/remove other founders with nonce protection and last-founder safeguards.
+- Self-demotion guard: founders cannot remove themselves; another founder must make that change to prevent accidental lockout.
 - Founders automatically bypass membership/unlock gating in `flexpress_check_episode_access()` and `flexpress_check_extras_access()`, ensuring full content visibility even without an active membership.
 
 ### Date Format Standardization (October 2025)

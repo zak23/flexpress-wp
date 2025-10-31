@@ -139,3 +139,4 @@ Do not alter `.wakatime-project` once created
 - Enforcement: Guard FlexPress settings pages, dashboards, AJAX, and REST handlers with `flexpress_current_user_is_founder()` or `flexpress_require_founder_capability()`.
 - Founder Access: Treat founders as members/unlock purchasers by calling `flexpress_user_is_founder()` inside access checks.
 - Management UI: Assign founders from `FlexPress → Permissions`; use `flexpress_set_founder_user_ids()` to persist selections and sync caps.
+- Safeguard: Founders cannot remove themselves—demote via another founder to avoid lockouts (UI blocks self-removal).

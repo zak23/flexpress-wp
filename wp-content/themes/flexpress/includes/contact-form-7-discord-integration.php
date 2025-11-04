@@ -413,6 +413,13 @@ class FlexPress_CF7_Discord_Integration {
                         'inline' => true
                     ];
                 }
+                if (isset($posted_data['link']) && !empty($posted_data['link'])) {
+                    $fields[] = [
+                        'name' => __('Link to Work', 'flexpress'),
+                        'value' => $sanitize_field_value($posted_data['link']),
+                        'inline' => true
+                    ];
+                }
                 if (isset($posted_data['about_you'])) {
                     $fields[] = [
                         'name' => __('About You', 'flexpress'),

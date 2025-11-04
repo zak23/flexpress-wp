@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Contact Form 7 Templates for FlexPress
  * 
@@ -15,7 +16,8 @@ if (!defined('ABSPATH')) {
 /**
  * Create Contact Form 7 forms programmatically
  */
-function flexpress_create_cf7_forms() {
+function flexpress_create_cf7_forms()
+{
     // Only run if Contact Form 7 is active
     if (!class_exists('WPCF7_ContactForm')) {
         return;
@@ -23,13 +25,13 @@ function flexpress_create_cf7_forms() {
 
     // Create Contact Form
     flexpress_create_contact_form();
-    
+
     // Create Casting Form
     flexpress_create_casting_form();
-    
+
     // Create Support Form
     flexpress_create_support_form();
-    
+
     // Create Content Removal Form
     flexpress_create_content_removal_form();
 }
@@ -37,9 +39,10 @@ function flexpress_create_cf7_forms() {
 /**
  * Create the main contact form
  */
-function flexpress_create_contact_form() {
+function flexpress_create_contact_form()
+{
     $form_id = get_option('flexpress_contact_form_id');
-    
+
     // Check if form already exists
     if ($form_id && get_post($form_id)) {
         return $form_id;
@@ -130,25 +133,22 @@ function flexpress_create_contact_form() {
     );
 
     $form_id = wp_insert_post($form_data);
-    
+
     if ($form_id && !is_wp_error($form_id)) {
         update_option('flexpress_contact_form_id', $form_id);
         return $form_id;
     }
-    
+
     return false;
 }
 
 /**
  * Create the casting application form
  */
-function flexpress_create_casting_form() {
+function flexpress_create_casting_form()
+{
     $form_id = get_option('flexpress_casting_form_id');
-    
-    // Check if form already exists
-    if ($form_id && get_post($form_id)) {
-        return $form_id;
-    }
+    $existing_form = $form_id && get_post($form_id) ? get_post($form_id) : null;
 
     $form_content = '
 <div class="alert alert-info mb-4">
@@ -185,17 +185,23 @@ function flexpress_create_casting_form() {
 <div class="row">
     <div class="col-md-6 mb-3">
         <label for="instagram" class="form-label">' . __('Instagram', 'flexpress') . '</label>
-        [text instagram id:instagram class:form-control placeholder "' . __('Your Instagram handle (optional)', 'flexpress') . '"]
+        [text instagram id:instagram class:form-control placeholder "' . __('Your Instagram handle', 'flexpress') . '"]
     </div>
     <div class="col-md-6 mb-3">
         <label for="twitter" class="form-label">' . __('Twitter', 'flexpress') . '</label>
-        [text twitter id:twitter class:form-control placeholder "' . __('Your Twitter handle (optional)', 'flexpress') . '"]
+        [text twitter id:twitter class:form-control placeholder "' . __('Your Twitter handle', 'flexpress') . '"]
     </div>
 </div>
 
 <div class="mb-3">
+    <label for="link" class="form-label">' . __('Link to Your Work', 'flexpress') . '</label>
+    [url link id:link class:form-control placeholder "' . __('https://onlyfans.com/username, linktr.ee/username, or model profile URL', 'flexpress') . '"]
+    <small class="form-text text-muted">' . __('Please provide at least one: Instagram handle, Twitter handle, or a link to your work (OnlyFans, Linktree, model profile, etc.).', 'flexpress') . '</small>
+</div>
+
+<div class="mb-3">
     <label for="about_you" class="form-label">' . __('About You', 'flexpress') . ' <span class="text-danger">*</span></label>
-    [textarea* about_you id:about_you class:form-control rows:5 placeholder "' . __('Tell us about yourself, including any relevant experience, links to your work, social media profiles, and professional references...', 'flexpress') . '"]
+    [textarea* about_you id:about_you class:form-control rows:5 placeholder "' . __('Tell us about yourself, including any relevant experience, social media profiles, and professional references...', 'flexpress') . '"]
     <div class="invalid-feedback">' . __('Please tell us about yourself.', 'flexpress') . '</div>
 </div>
 
@@ -225,6 +231,7 @@ function flexpress_create_casting_form() {
 <p><strong>' . __('Social Media:', 'flexpress') . '</strong></p>
 <p><strong>' . __('Instagram:', 'flexpress') . '</strong> [instagram]</p>
 <p><strong>' . __('Twitter:', 'flexpress') . '</strong> [twitter]</p>
+<p><strong>' . __('Link to Work:', 'flexpress') . '</strong> [link]</p>
 
 <p><strong>' . __('About You:', 'flexpress') . '</strong></p>
 <p>[about_you]</p>
@@ -280,22 +287,37 @@ function flexpress_create_casting_form() {
         )
     );
 
-    $form_id = wp_insert_post($form_data);
-    
-    if ($form_id && !is_wp_error($form_id)) {
-        update_option('flexpress_casting_form_id', $form_id);
-        return $form_id;
+    // Update existing form or create new one
+    if ($existing_form) {
+        $form_data['ID'] = $existing_form->ID;
+        $form_id = wp_update_post($form_data);
+
+        if ($form_id && !is_wp_error($form_id)) {
+            // Update Contact Form 7 specific meta fields
+            update_post_meta($form_id, '_form', $form_content);
+            update_post_meta($form_id, '_mail', $form_data['meta_input']['_mail']);
+            update_post_meta($form_id, '_mail_2', $form_data['meta_input']['_mail_2']);
+            return $form_id;
+        }
+    } else {
+        $form_id = wp_insert_post($form_data);
+
+        if ($form_id && !is_wp_error($form_id)) {
+            update_option('flexpress_casting_form_id', $form_id);
+            return $form_id;
+        }
     }
-    
+
     return false;
 }
 
 /**
  * Create the support form
  */
-function flexpress_create_support_form() {
+function flexpress_create_support_form()
+{
     $form_id = get_option('flexpress_support_form_id');
-    
+
     // Check if form already exists
     if ($form_id && get_post($form_id)) {
         return $form_id;
@@ -450,19 +472,20 @@ function flexpress_create_support_form() {
     );
 
     $form_id = wp_insert_post($form_data);
-    
+
     if ($form_id && !is_wp_error($form_id)) {
         update_option('flexpress_support_form_id', $form_id);
         return $form_id;
     }
-    
+
     return false;
 }
 
 /**
  * Get Contact Form 7 form ID by type
  */
-function flexpress_get_cf7_form_id($type) {
+function flexpress_get_cf7_form_id($type)
+{
     switch ($type) {
         case 'contact':
             return get_option('flexpress_contact_form_id');
@@ -480,9 +503,10 @@ function flexpress_get_cf7_form_id($type) {
 /**
  * Display Contact Form 7 form by type
  */
-function flexpress_display_cf7_form($type, $args = array()) {
+function flexpress_display_cf7_form($type, $args = array())
+{
     $form_id = flexpress_get_cf7_form_id($type);
-    
+
     if (!$form_id) {
         // Create form if it doesn't exist
         switch ($type) {
@@ -500,7 +524,7 @@ function flexpress_display_cf7_form($type, $args = array()) {
                 break;
         }
     }
-    
+
     if ($form_id) {
         $class = isset($args['class']) ? $args['class'] : 'needs-validation';
         echo '<div class="' . esc_attr($class) . '">';
@@ -516,9 +540,10 @@ function flexpress_display_cf7_form($type, $args = array()) {
 /**
  * Create the content removal form
  */
-function flexpress_create_content_removal_form() {
+function flexpress_create_content_removal_form()
+{
     $form_id = get_option('flexpress_content_removal_form_id');
-    
+
     // Check if form already exists
     if ($form_id && get_post($form_id)) {
         return $form_id;
@@ -659,12 +684,12 @@ function flexpress_create_content_removal_form() {
     );
 
     $form_id = wp_insert_post($form_data);
-    
+
     if ($form_id && !is_wp_error($form_id)) {
         update_option('flexpress_content_removal_form_id', $form_id);
         return $form_id;
     }
-    
+
     return false;
 }
 
@@ -678,63 +703,55 @@ add_action('wpcf7_init', 'flexpress_create_cf7_forms');
  * @param array $tags Form tags
  * @return WPCF7_Validation Modified validation result
  */
-function flexpress_validate_casting_form($result, $tags) {
+function flexpress_validate_casting_form($result, $tags)
+{
     // Get the current form ID
     $submission = WPCF7_Submission::get_instance();
     if (!$submission) {
         return $result;
     }
-    
+
     $contact_form = $submission->get_contact_form();
     if (!$contact_form) {
         return $result;
     }
-    
+
     $form_id = $contact_form->id();
-    
+
     // Only validate casting form
     $casting_form_id = get_option('flexpress_casting_form_id');
     if (!$form_id || $form_id != $casting_form_id) {
         return $result;
     }
-    
+
     // Get posted data
     $posted_data = $submission->get_posted_data();
-    
+
     // Check if at least one social media link or URL is provided
     $has_instagram = !empty($posted_data['instagram'] ?? '');
     $has_twitter = !empty($posted_data['twitter'] ?? '');
-    $has_url = false;
-    
-    // Check if about_you contains a URL pattern
-    $about_you = $posted_data['about_you'] ?? '';
-    if (!empty($about_you)) {
-        // Check for URL patterns: http://, https://, www.
-        $url_patterns = [
-            '/(https?:\/\/[^\s]+)/i',
-            '/(www\.[^\s]+)/i',
-            '/([a-zA-Z0-9-]+\.(com|net|org|io|co|tv|me|cc|xyz|info|biz|us|uk|au|ca)[^\s]*)/i'
-        ];
-        
-        foreach ($url_patterns as $pattern) {
-            if (preg_match($pattern, $about_you)) {
-                $has_url = true;
-                break;
-            }
-        }
-    }
-    
+    $has_link = !empty($posted_data['link'] ?? '');
+
     // If none of the above are provided, show validation error
-    if (!$has_instagram && !$has_twitter && !$has_url) {
-        // Find the about_you tag to attach the error
+    if (!$has_instagram && !$has_twitter && !$has_link) {
+        // Find the link tag to attach the error (or instagram/twitter as fallback)
+        $error_tag = null;
         foreach ($tags as $tag) {
-            if ($tag->name === 'about_you') {
-                $result->invalidate($tag, __('Please provide at least one social media handle (Instagram or Twitter) or include a link to your work in the About You section.', 'flexpress'));
+            if ($tag->name === 'link') {
+                $error_tag = $tag;
                 break;
+            } elseif ($tag->name === 'instagram' && !$error_tag) {
+                $error_tag = $tag;
+            } elseif ($tag->name === 'twitter' && !$error_tag) {
+                $error_tag = $tag;
             }
         }
+
+        if ($error_tag) {
+            $result->invalidate($error_tag, __('Please provide at least one: Instagram handle, Twitter handle, or a link to your work.', 'flexpress'));
+        }
     }
-    
+
     return $result;
 }
 add_filter('wpcf7_validate', 'flexpress_validate_casting_form', 10, 2);

@@ -505,7 +505,7 @@ $plan_selection_step_number = 1;
                                 <?php endif; ?>
                             </span>
                             <span id="dashboard-link-section">
-                                <a href="<?php echo esc_url(home_url('/dashboard')); ?>" class="legal-link"><?php esc_html_e('here', 'flexpress'); ?></a>.
+                                <a href="<?php echo esc_url(home_url('/fne')); ?>" class="legal-link"><?php esc_html_e('here', 'flexpress'); ?></a>.
                             </span>
                         </p>
                     </div>

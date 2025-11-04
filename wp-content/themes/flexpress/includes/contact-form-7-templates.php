@@ -158,8 +158,8 @@ function flexpress_create_casting_form() {
 
 <div class="row">
     <div class="col-md-6 mb-3">
-        <label for="name" class="form-label">' . __('Your Name', 'flexpress') . ' <span class="text-danger">*</span></label>
-        [text* name id:name class:form-control placeholder "' . __('Enter your full name', 'flexpress') . '"]
+        <label for="applicant_name" class="form-label">' . __('Your Name', 'flexpress') . ' <span class="text-danger">*</span></label>
+        [text* applicant_name id:applicant_name class:form-control placeholder "' . __('Enter your full name', 'flexpress') . '"]
         <div class="invalid-feedback">' . __('Please enter your full name.', 'flexpress') . '</div>
     </div>
     <div class="col-md-6 mb-3">
@@ -217,7 +217,7 @@ function flexpress_create_casting_form() {
 <p><strong>' . __('Casting Application Received', 'flexpress') . '</strong></p>
 
 <p><strong>' . __('Applicant Details:', 'flexpress') . '</strong></p>
-<p><strong>' . __('Name:', 'flexpress') . '</strong> [name]</p>
+<p><strong>' . __('Name:', 'flexpress') . '</strong> [applicant_name]</p>
 <p><strong>' . __('Email:', 'flexpress') . '</strong> [email]</p>
 <p><strong>' . __('Gender Identity:', 'flexpress') . '</strong> [gender_identity]</p>
 <p><strong>' . __('Preferred Stage Age:', 'flexpress') . '</strong> [stage_age]</p>
@@ -235,7 +235,7 @@ function flexpress_create_casting_form() {
 <p><em>' . __('This casting application was submitted from', 'flexpress') . ' ' . get_bloginfo('name') . '</em></p>';
 
     $mail_2_template = '
-<p>' . __('Hello [name],', 'flexpress') . '</p>
+<p>' . __('Hello [applicant_name],', 'flexpress') . '</p>
 
 <p>' . __('Thank you for your interest in joining our cast! We have received your application and will review it carefully.', 'flexpress') . '</p>
 
@@ -257,8 +257,8 @@ function flexpress_create_casting_form() {
             '_form' => $form_content,
             '_mail' => array(
                 'active' => true,
-                'subject' => sprintf(__('Casting Application: %s', 'flexpress'), '[name]'),
-                'sender' => '[name] <[email]>',
+                'subject' => sprintf(__('Casting Application: %s', 'flexpress'), '[applicant_name]'),
+                'sender' => '[applicant_name] <[email]>',
                 'body' => $mail_template,
                 'recipient' => flexpress_get_contact_email('contact'),
                 'additional_headers' => 'Reply-To: [email]',
@@ -670,3 +670,71 @@ function flexpress_create_content_removal_form() {
 
 // Initialize forms when Contact Form 7 is active
 add_action('wpcf7_init', 'flexpress_create_cf7_forms');
+
+/**
+ * Validate casting form to require at least one social media link or URL
+ * 
+ * @param WPCF7_Validation $result Validation result
+ * @param array $tags Form tags
+ * @return WPCF7_Validation Modified validation result
+ */
+function flexpress_validate_casting_form($result, $tags) {
+    // Get the current form ID
+    $submission = WPCF7_Submission::get_instance();
+    if (!$submission) {
+        return $result;
+    }
+    
+    $contact_form = $submission->get_contact_form();
+    if (!$contact_form) {
+        return $result;
+    }
+    
+    $form_id = $contact_form->id();
+    
+    // Only validate casting form
+    $casting_form_id = get_option('flexpress_casting_form_id');
+    if (!$form_id || $form_id != $casting_form_id) {
+        return $result;
+    }
+    
+    // Get posted data
+    $posted_data = $submission->get_posted_data();
+    
+    // Check if at least one social media link or URL is provided
+    $has_instagram = !empty($posted_data['instagram'] ?? '');
+    $has_twitter = !empty($posted_data['twitter'] ?? '');
+    $has_url = false;
+    
+    // Check if about_you contains a URL pattern
+    $about_you = $posted_data['about_you'] ?? '';
+    if (!empty($about_you)) {
+        // Check for URL patterns: http://, https://, www.
+        $url_patterns = [
+            '/(https?:\/\/[^\s]+)/i',
+            '/(www\.[^\s]+)/i',
+            '/([a-zA-Z0-9-]+\.(com|net|org|io|co|tv|me|cc|xyz|info|biz|us|uk|au|ca)[^\s]*)/i'
+        ];
+        
+        foreach ($url_patterns as $pattern) {
+            if (preg_match($pattern, $about_you)) {
+                $has_url = true;
+                break;
+            }
+        }
+    }
+    
+    // If none of the above are provided, show validation error
+    if (!$has_instagram && !$has_twitter && !$has_url) {
+        // Find the about_you tag to attach the error
+        foreach ($tags as $tag) {
+            if ($tag->name === 'about_you') {
+                $result->invalidate($tag, __('Please provide at least one social media handle (Instagram or Twitter) or include a link to your work in the About You section.', 'flexpress'));
+                break;
+            }
+        }
+    }
+    
+    return $result;
+}
+add_filter('wpcf7_validate', 'flexpress_validate_casting_form', 10, 2);

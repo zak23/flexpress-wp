@@ -333,8 +333,8 @@ class FlexPress_CF7_Discord_Integration {
             return $value;
         };
         
-        // Common fields for all forms
-        if (isset($posted_data['name'])) {
+        // Common fields for all forms (excluding name for casting form which uses applicant_name)
+        if ($form_type !== 'casting' && isset($posted_data['name'])) {
             $fields[] = [
                 'name' => __('Name', 'flexpress'),
                 'value' => $sanitize_field_value($posted_data['name']),
@@ -370,6 +370,21 @@ class FlexPress_CF7_Discord_Integration {
                 break;
                 
             case 'casting':
+                // Use applicant_name for casting form instead of name
+                if (isset($posted_data['applicant_name'])) {
+                    $fields[] = [
+                        'name' => __('Name', 'flexpress'),
+                        'value' => $sanitize_field_value($posted_data['applicant_name']),
+                        'inline' => true
+                    ];
+                } elseif (isset($posted_data['name'])) {
+                    // Fallback to name for backward compatibility
+                    $fields[] = [
+                        'name' => __('Name', 'flexpress'),
+                        'value' => $sanitize_field_value($posted_data['name']),
+                        'inline' => true
+                    ];
+                }
                 if (isset($posted_data['gender_identity'])) {
                     $fields[] = [
                         'name' => __('Gender Identity', 'flexpress'),

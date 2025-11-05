@@ -5,7 +5,7 @@
  */
 
 // Define theme constants
-define('FLEXPRESS_VERSION', '1.0.12');
+define('FLEXPRESS_VERSION', '1.0.13');
 define('FLEXPRESS_PATH', get_template_directory());
 define('FLEXPRESS_URL', get_template_directory_uri());
 
@@ -424,6 +424,17 @@ function flexpress_combine_theme_css()
  */
 function flexpress_enqueue_scripts_and_styles()
 {
+    // Inline critical CSS to unblock first paint
+    $critical_css_path = get_template_directory() . '/assets/css/critical.css';
+    if (file_exists($critical_css_path)) {
+        $critical_css = file_get_contents($critical_css_path);
+        if (!empty($critical_css)) {
+            wp_register_style('flexpress-critical-inline', false, array(), null);
+            wp_enqueue_style('flexpress-critical-inline');
+            wp_add_inline_style('flexpress-critical-inline', $critical_css);
+        }
+    }
+
     // Preload critical external resources
     add_action('wp_head', 'flexpress_preload_critical_resources', 1);
 
@@ -471,7 +482,12 @@ function flexpress_enqueue_scripts_and_styles()
 
     // Enqueue jQuery with defer
     wp_enqueue_script('jquery');
+    wp_script_add_data('jquery', 'group', 1);
+    wp_script_add_data('jquery-core', 'group', 1);
+    wp_script_add_data('jquery-migrate', 'group', 1);
     wp_script_add_data('jquery', 'defer', true);
+    wp_script_add_data('jquery-core', 'defer', true);
+    wp_script_add_data('jquery-migrate', 'defer', true);
     // In production, mute jQuery Migrate banner/warnings as early as possible
     if (!defined('WP_DEBUG') || !WP_DEBUG) {
         // Ensure the flag is set before jquery-migrate executes
@@ -707,25 +723,131 @@ add_action('wp_enqueue_scripts', 'flexpress_enqueue_scripts_and_styles');
  */
 function flexpress_preload_critical_resources()
 {
-    // Preload critical vendor CSS from local assets
-    echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/vendor/css/bootstrap.min.css" as="style">' . "\n";
-    echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/vendor/css/font-awesome.min.css" as="style">' . "\n";
-
-    // Preload critical theme CSS (combined if available, otherwise individual files)
-    $combined_file = flexpress_combine_theme_css();
-    if ($combined_file) {
-        echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/css/combined.css" as="style">' . "\n";
-    } else {
-        echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/css/variables.css" as="style">' . "\n";
-        echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/css/main.css" as="style">' . "\n";
+    if (is_admin()) {
+        return;
     }
 
-    // Preload critical JavaScript from local vendor
-    echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/vendor/js/bootstrap.bundle.min.js" as="script">' . "\n";
-
-    // DNS prefetch for BunnyCDN (video storage)
+    // DNS hinting for BunnyCDN (video storage)
     echo '<link rel="dns-prefetch" href="//storage.bunnycdn.com">' . "\n";
+    echo '<link rel="preconnect" href="https://storage.bunnycdn.com" crossorigin>' . "\n";
 }
+
+/**
+ * Handles to convert to asynchronous stylesheet loading
+ */
+function flexpress_get_async_style_handles()
+{
+    $default_handles = array(
+        'bootstrap-css',
+        'font-awesome',
+        'flexpress-combined',
+        'flexpress-style',
+        'flexpress-variables',
+        'flexpress-main',
+        'flexpress-gallery',
+        'flexpress-age-verification',
+        'flexpress-casting-section',
+        'flexpress-join-now-cta',
+        'flexpress-about-page',
+        'flexpress-hero-video',
+        'slick-css',
+        'slick-theme-css'
+    );
+
+    return apply_filters('flexpress_async_style_handles', $default_handles);
+}
+
+/**
+ * Swap blocking stylesheets for async preload + media swap pattern
+ */
+function flexpress_async_style_loader_tag($html, $handle, $href, $media)
+{
+    if (is_admin()) {
+        return $html;
+    }
+
+    $async_handles = flexpress_get_async_style_handles();
+    if (!in_array($handle, $async_handles, true)) {
+        return $html;
+    }
+
+    $target_media = $media ?: 'all';
+    $href_attr = esc_url($href);
+    $media_attr = esc_attr($target_media);
+    $id_attr = esc_attr($handle . '-css');
+    $noscript_id = esc_attr($handle . '-css-noscript');
+
+    $preload = sprintf('<link rel="preload" href="%1$s" as="style">', $href_attr);
+    $stylesheet = sprintf(
+        '<link rel="stylesheet" id="%1$s" href="%2$s" media="print" onload="this.onload=null;this.media=\'%3$s\';">',
+        $id_attr,
+        $href_attr,
+        $media_attr
+    );
+    $noscript = sprintf('<noscript><link rel="stylesheet" id="%1$s" href="%2$s" media="%3$s"></noscript>', $noscript_id, $href_attr, $media_attr);
+
+    return $preload . "\n" . $stylesheet . "\n" . $noscript;
+}
+add_filter('style_loader_tag', 'flexpress_async_style_loader_tag', 10, 4);
+
+/**
+ * Determine whether the current request needs Gutenberg block styles
+ */
+function flexpress_should_keep_block_styles()
+{
+    if (is_admin()) {
+        return true;
+    }
+
+    if (!function_exists('has_blocks')) {
+        return false;
+    }
+
+    if (is_singular()) {
+        $post = get_post();
+        if ($post instanceof WP_Post && has_blocks($post)) {
+            return true;
+        }
+    }
+
+    if (is_home() && !is_front_page()) {
+        $posts_page = get_option('page_for_posts');
+        if ($posts_page) {
+            $posts_page_post = get_post($posts_page);
+            if ($posts_page_post instanceof WP_Post && has_blocks($posts_page_post)) {
+                return true;
+            }
+        }
+    }
+
+    if (is_front_page()) {
+        $front_page = get_option('page_on_front');
+        if ($front_page) {
+            $front_page_post = get_post($front_page);
+            if ($front_page_post instanceof WP_Post && has_blocks($front_page_post)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Drop Gutenberg block styles on views that do not render blocks
+ */
+function flexpress_maybe_dequeue_block_styles()
+{
+    if (flexpress_should_keep_block_styles()) {
+        return;
+    }
+
+    wp_dequeue_style('wp-block-library');
+    wp_dequeue_style('wp-block-library-theme');
+    wp_dequeue_style('global-styles');
+    wp_dequeue_style('classic-theme-styles');
+}
+add_action('wp_enqueue_scripts', 'flexpress_maybe_dequeue_block_styles', 100);
 
 /**
  * Add defer attribute to script tags

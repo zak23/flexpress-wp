@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node test-archives.mjs && node test-mobile-previews.mjs"
+    "test": "node test-archives.mjs && node test-mobile-previews.mjs && node test-critical-assets.mjs"
   },
   "devDependencies": {
     "puppeteer": "^23.7.0"

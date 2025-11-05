@@ -68,6 +68,14 @@ FlexPress is designed specifically for content websites (primarily adult content
   - Added swap descriptor to Slick slider icons in `assets/vendor/css/slick-theme.css`
 - **Impact**: PageSpeed no longer flags blocked text rendering while fonts load; layout shifts are minimized
 
+### Render Blocking Optimizations (November 2025)
+
+- **Critical CSS Inline**: New `assets/css/critical.css` captures hero/header essentials and is injected via the virtual `flexpress-critical-inline` style handle so above-the-fold paint is unblocked.
+- **Async Stylesheet Loader**: `flexpress_async_style_loader_tag()` rewrites enqueued styles (see `flexpress_get_async_style_handles()` in `functions.php`) into preload plus `media="print"` swaps with a `<noscript>` fallback—extend the allowlist when adding new global CSS bundles.
+- **Gutenberg CSS Pruning**: `flexpress_maybe_dequeue_block_styles()` keeps core block styles off views without blocks; update `flexpress_should_keep_block_styles()` if new block-based templates roll out.
+- **Deferred jQuery**: Core jQuery, jQuery Migrate, and jQuery Core now load deferred from the footer to keep the critical path clear—front-end scripts must declare jQuery as a dependency instead of relying on inline head snippets.
+- **Automation**: Puppeteer coverage in `tests/puppeteer/test-critical-assets.mjs` asserts the async CSS markup and deferred jQuery placement.
+
 ### JavaScript MutationObserver Error Fix (October 2025)
 
 - **Fixed TypeError**: Resolved `Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'` error

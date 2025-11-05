@@ -9,6 +9,15 @@ PHP indent: 4 spaces; JS: 2 spaces; CSS: 2 spaces
 Do not alter `.wakatime-project` once created
 Bundled webfonts must use `font-display: swap`
 
+## Render Blocking Optimizations (November 2025)
+
+- Critical above-the-fold rules live in `assets/css/critical.css` and are inlined via the `flexpress-critical-inline` handle; keep the file lean and ASCII-only.
+- Blocking stylesheets are transformed into preload + `media="print"` swap tags by `flexpress_async_style_loader_tag()`; update the handle allowlist in `flexpress_get_async_style_handles()` when adding new global CSS bundles.
+- `flexpress_preload_critical_resources()` only emits DNS hints—avoid reintroducing synchronous `<link rel="stylesheet">` output inside `wp_head`.
+- `flexpress_maybe_dequeue_block_styles()` removes Gutenberg CSS when `flexpress_should_keep_block_styles()` reports no blocks; extend the helper if new block-based templates ship.
+- jQuery runs deferred from the footer (`group` = 1); never inject inline head scripts that expect jQuery before the footer executes.
+- Puppeteer coverage in `tests/puppeteer/test-critical-assets.mjs` asserts async CSS markup and script placement—keep it updated alongside enqueue changes.
+
 ## Settings Save Robustness Pattern
 
 - All feature settings that share `flexpress_general_settings` MUST:

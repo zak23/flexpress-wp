@@ -186,6 +186,14 @@ A modern WordPress website running in Docker containers with MySQL database and 
   - Added to Slick slider icon font in `assets/vendor/css/slick-theme.css`
 - **Impact**: Text remains visible during font loading, reducing layout shifts flagged by PageSpeed
 
+### Render Blocking Optimizations (November 2025)
+
+- **Critical Above-the-Fold CSS**: `wp-content/themes/flexpress/assets/css/critical.css` now contains the minimal hero/header rules and is inlined via the `flexpress-critical-inline` style handle so the first paint does not wait on external CSS.
+- **Async Stylesheets**: `flexpress_async_style_loader_tag()` rewrites targeted handles (see `flexpress_get_async_style_handles()` in `functions.php`) into `rel="preload"` + `media="print"` swaps with `<noscript>` fallbacks—update the allowlist when shipping new global CSS bundles.
+- **Block CSS Guardrails**: `flexpress_maybe_dequeue_block_styles()` removes Gutenberg assets on views without blocks; if you add block-based templates, extend `flexpress_should_keep_block_styles()`.
+- **Deferred jQuery**: Core jQuery, jQuery Migrate, and jQuery Core now load deferred from the footer (`group = 1`) to keep render blocking requests off the critical path. Scripts must declare jQuery as a dependency instead of relying on head inlines.
+- **Regression Coverage**: `tests/puppeteer/test-critical-assets.mjs` verifies async stylesheet markup and footer jQuery placement alongside existing archive/mobile smoke tests.
+
 ### Earnings Dashboard (New Feature - October 2025)
 
 - **Comprehensive Revenue Tracking**: New admin dashboard at FlexPress → Earnings provides complete financial oversight

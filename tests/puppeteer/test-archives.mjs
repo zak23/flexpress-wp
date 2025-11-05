@@ -2,6 +2,10 @@ import puppeteer from "puppeteer";
 
 const WP_IP = process.env.FLEXPRESS_IP || "127.0.0.1";
 const WP_PORT = process.env.FLEXPRESS_PORT || "8085";
+const PUPPETEER_LAUNCH_CONFIG = {
+  headless: "new",
+  args: ["--no-sandbox", "--disable-setuid-sandbox"],
+};
 
 function url(path) {
   return `http://${WP_IP}:${WP_PORT}${path}`;
@@ -14,15 +18,19 @@ async function getFilterTexts(page, selector) {
 }
 
 async function run() {
-  const browser = await puppeteer.launch({ headless: "new" });
+  const browser = await puppeteer.launch(PUPPETEER_LAUNCH_CONFIG);
   const page = await browser.newPage();
   page.setDefaultTimeout(30000);
 
   // Emulate a mobile device (hover: none, coarse pointer)
-  await page.emulateMediaFeatures([
-    { name: 'hover', value: 'none' },
-    { name: 'pointer', value: 'coarse' }
-  ]);
+  try {
+    await page.emulateMediaFeatures([
+      { name: "hover", value: "none" },
+      { name: "pointer", value: "coarse" },
+    ]);
+  } catch (err) {
+    console.warn(`Media feature emulation skipped: ${err.message}`);
+  }
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
 
   // Episodes: ensure category filter shows at least one tag and items have counts

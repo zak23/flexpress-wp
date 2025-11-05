@@ -699,6 +699,30 @@ a:hover {
   position: relative;
 }
 
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    align-items: center !important;
+    text-align: center;
+  }
+
+  .navbar-nav {
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .navbar-nav .nav-item {
+    width: 100%;
+  }
+
+  .navbar-nav .nav-link {
+    width: 100%;
+    display: inline-block;
+    text-align: center;
+  }
+}
+
 .membership-page .alert-trial,
 .alert-trial {
   background: var(--color-accent) !important;
@@ -6662,12 +6686,11 @@ footer.bg-black .row.footer {
   background-color: var(--color-accent);
 }
 
-/* Mobile navigation active link - left-aligned underline */
+/* Mobile navigation active link underline stays centered */
 @media (max-width: 991.98px) {
   .navbar-nav .nav-link.active::after {
-    left: 15px;
-    transform: none;
-    width: 30px;
+    left: 50%;
+    transform: translateX(-50%);
   }
 }
 

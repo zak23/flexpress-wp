@@ -32,11 +32,11 @@ if (!empty($token_key) && !empty($coming_soon_video_id)) {
     $token = hash('sha256', $token_key . $coming_soon_video_id . $expires);
 }
 
-// Get primary logo URL (prioritize site logo, fall back to coming soon logo)
+// Get primary logo URL (prioritize FlexPress logo, fall back to coming soon logo)
 $logo_url = '';
-$site_logo_id = get_theme_mod('custom_logo');
-if ($site_logo_id) {
-    $logo_url = wp_get_attachment_image_url($site_logo_id, 'full');
+$primary_logo = flexpress_get_custom_logo('full', 'primary');
+if ($primary_logo && !empty($primary_logo['url'])) {
+    $logo_url = $primary_logo['url'];
 } elseif (!empty($coming_soon_logo)) {
     $logo_url = wp_get_attachment_image_url($coming_soon_logo, 'full');
 }

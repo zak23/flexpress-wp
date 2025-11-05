@@ -9852,6 +9852,7 @@ function flexpress_add_console_cleanup()
         });
         ' : '') . '
         </script>';
+}
 
 /**
  * Tag Collection Helper Functions

@@ -5,7 +5,7 @@
 set -e
 
 # Get the script directory (project root)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 THEME_DIR="${SCRIPT_DIR}/wp-content/themes/flexpress"
 OUTPUT_DIR="${SCRIPT_DIR}"
 ZIP_NAME="flexpress-theme.zip"
@@ -22,10 +22,9 @@ bump_version() {
     CURRENT_VERSION=$(grep "Version:" "${STYLE_CSS}" | sed -n 's/.*Version:[[:space:]]*\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p' || echo "1.0.0")
     
     # Parse version components
-    IFS='.' read -r -a VERSION_PARTS <<< "$CURRENT_VERSION"
-    MAJOR=${VERSION_PARTS[0]}
-    MINOR=${VERSION_PARTS[1]}
-    PATCH=${VERSION_PARTS[2]}
+    MAJOR=$(echo "$CURRENT_VERSION" | cut -d. -f1)
+    MINOR=$(echo "$CURRENT_VERSION" | cut -d. -f2)
+    PATCH=$(echo "$CURRENT_VERSION" | cut -d. -f3)
     
     # Increment patch version by 1 (0.1 increment)
     NEW_PATCH=$((PATCH + 1))

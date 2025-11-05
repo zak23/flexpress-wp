@@ -278,7 +278,9 @@ class FlexPress_General_Settings
     public function render_accent_color_field()
     {
         $options = get_option('flexpress_general_settings');
+        error_log('FlexPress Accent Color Render: Raw options from DB: ' . print_r($options, true));
         $value = isset($options['accent_color']) ? $options['accent_color'] : '#ff5093';
+        error_log('FlexPress Accent Color Render: Value to display: "' . $value . '"');
     ?>
         <input type="color"
             name="flexpress_general_settings[accent_color]"
@@ -296,8 +298,29 @@ class FlexPress_General_Settings
             </div>
         </div>
 
+        <div id="flexpress-accent-color-debug" style="margin-top: 20px; padding: 15px; background: #f0f0f0; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 12px;">
+            <strong>🔍 Accent Color Debug Info:</strong><br>
+            <span id="flexpress-debug-current-value">Current Value (DB): <code><?php echo esc_html($value); ?></code></span><br>
+            <span id="flexpress-debug-picker-value">Picker Value: <code id="flexpress-picker-code"><?php echo esc_html($value); ?></code></span><br>
+            <span id="flexpress-debug-form-value" style="color: #666;">Last Submitted Value: <code id="flexpress-form-code">-</code></span><br>
+            <span id="flexpress-debug-save-status" style="color: #666;">Save Status: <code id="flexpress-save-code">Waiting...</code></span>
+            <div id="flexpress-debug-comparison" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ccc; display: none;">
+                <strong>Comparison:</strong><br>
+                <span id="flexpress-comparison-text"></span>
+            </div>
+        </div>
+
         <script type="text/javascript">
             jQuery(document).ready(function($) {
+                console.log('FlexPress Accent Color Debug: Page loaded');
+                console.log('FlexPress Accent Color Debug: Current value from DB:', '<?php echo esc_js($value); ?>');
+                
+                var $picker = $('input[name="flexpress_general_settings[accent_color]"]');
+                var $debugDiv = $('#flexpress-accent-color-debug');
+                var $pickerCode = $('#flexpress-picker-code');
+                var $formCode = $('#flexpress-form-code');
+                var $saveCode = $('#flexpress-save-code');
+                
                 // Function to determine if a color is light or dark
                 function isLightColor(hex) {
                     // Remove # if present
@@ -326,9 +349,170 @@ class FlexPress_General_Settings
                 }
 
                 // Update preview on color change
-                $('input[name="flexpress_general_settings[accent_color]"]').on('change', function() {
-                    updatePreview($(this).val());
+                $picker.on('change input', function() {
+                    var newValue = $(this).val();
+                    console.log('FlexPress Accent Color Debug: Color picker changed to:', newValue);
+                    $pickerCode.text(newValue);
+                    $pickerCode.css('color', '#0066cc');
+                    updatePreview(newValue);
                 });
+
+                // Check for previously submitted value from sessionStorage
+                var lastSubmitted = sessionStorage.getItem('flexpress_last_accent_submit');
+                if (lastSubmitted) {
+                    console.log('FlexPress Accent Color Debug: Last submitted value (from storage):', lastSubmitted);
+                    $formCode.text(lastSubmitted);
+                    $formCode.css('color', '#cc6600');
+                    
+                    // Compare with current DB value
+                    var currentDbValue = '<?php echo esc_js($value); ?>';
+                    if (lastSubmitted !== currentDbValue) {
+                        console.warn('FlexPress Accent Color Debug: ⚠️ MISMATCH! Last submitted:', lastSubmitted, 'Current DB:', currentDbValue);
+                        $('#flexpress-debug-comparison').show();
+                        $('#flexpress-comparison-text').html(
+                            '<span style="color: #cc0000;">⚠️ Value mismatch detected!</span><br>' +
+                            'Submitted: <code>' + lastSubmitted + '</code><br>' +
+                            'Saved to DB: <code>' + currentDbValue + '</code>'
+                        );
+                        $saveCode.text('⚠️ Mismatch!');
+                        $saveCode.css('color', '#cc0000');
+                    } else {
+                        console.log('FlexPress Accent Color Debug: ✓ Values match!');
+                        $('#flexpress-debug-comparison').show();
+                        $('#flexpress-comparison-text').html(
+                            '<span style="color: #006600;">✓ Values match!</span><br>' +
+                            'Submitted: <code>' + lastSubmitted + '</code><br>' +
+                            'Saved to DB: <code>' + currentDbValue + '</code>'
+                        );
+                        $saveCode.text('✓ Saved');
+                        $saveCode.css('color', '#006600');
+                    }
+                }
+                
+                // Track form submission
+                $('form').on('submit', function(e) {
+                    var formValue = $picker.val();
+                    console.log('FlexPress Accent Color Debug: Form submitting with value:', formValue);
+                    
+                    // Store in sessionStorage before page reload
+                    sessionStorage.setItem('flexpress_last_accent_submit', formValue);
+                    console.log('FlexPress Accent Color Debug: Stored in sessionStorage:', formValue);
+                    
+                    $formCode.text(formValue);
+                    $formCode.css('color', '#cc6600');
+                    $saveCode.text('Saving...');
+                    $saveCode.css('color', '#cc6600');
+                    
+                    // Log form data
+                    var formData = new FormData(this);
+                    var formValues = {};
+                    for (var pair of formData.entries()) {
+                        if (pair[0].includes('accent_color')) {
+                            console.log('FlexPress Accent Color Debug: Form field:', pair[0], '=', pair[1]);
+                            formValues[pair[0]] = pair[1];
+                        }
+                    }
+                    console.log('FlexPress Accent Color Debug: All form values:', formValues);
+                    console.log('FlexPress Accent Color Debug: Full form data:', Array.from(formData.entries()));
+                });
+
+                // Check for save success message (if still on page)
+                var checkSaveStatus = setInterval(function() {
+                    if ($('.notice-success').length > 0) {
+                        console.log('FlexPress Accent Color Debug: Save successful!');
+                        clearInterval(checkSaveStatus);
+                        
+                        // Get the submitted value from sessionStorage
+                        var submittedValue = sessionStorage.getItem('flexpress_last_accent_submit');
+                        var currentDbValue = '<?php echo esc_js($value); ?>';
+                        
+                        // Check what value was actually saved after a short delay
+                        setTimeout(function() {
+                            $.ajax({
+                                url: ajaxurl || '/wp-admin/admin-ajax.php',
+                                type: 'POST',
+                                data: {
+                                    action: 'flexpress_get_accent_color',
+                                    nonce: '<?php echo wp_create_nonce('flexpress_debug'); ?>'
+                                },
+                                success: function(response) {
+                                    if (response.success) {
+                                        console.log('FlexPress Accent Color Debug: Value after save:', response.data.value);
+                                        console.log('FlexPress Accent Color Debug: Submitted value was:', submittedValue);
+                                        
+                                        $('#flexpress-debug-current-value code').text(response.data.value);
+                                        
+                                        // Compare submitted vs saved
+                                        if (submittedValue && submittedValue !== response.data.value) {
+                                            console.warn('FlexPress Accent Color Debug: ⚠️ MISMATCH! Submitted:', submittedValue, 'Saved:', response.data.value);
+                                            $('#flexpress-debug-comparison').show();
+                                            $('#flexpress-comparison-text').html(
+                                                '<span style="color: #cc0000;">⚠️ Value mismatch detected!</span><br>' +
+                                                'Submitted: <code>' + submittedValue + '</code><br>' +
+                                                'Saved to DB: <code>' + response.data.value + '</code>'
+                                            );
+                                            $saveCode.text('⚠️ Mismatch!');
+                                            $saveCode.css('color', '#cc0000');
+                                        } else if (submittedValue && submittedValue === response.data.value) {
+                                            console.log('FlexPress Accent Color Debug: ✓ Values match!');
+                                            $('#flexpress-debug-comparison').show();
+                                            $('#flexpress-comparison-text').html(
+                                                '<span style="color: #006600;">✓ Values match!</span><br>' +
+                                                'Submitted: <code>' + submittedValue + '</code><br>' +
+                                                'Saved to DB: <code>' + response.data.value + '</code>'
+                                            );
+                                            $saveCode.text('✓ Saved');
+                                            $saveCode.css('color', '#006600');
+                                        }
+                                    }
+                                }
+                            });
+                        }, 1000);
+                    } else if ($('.notice-error').length > 0) {
+                        console.error('FlexPress Accent Color Debug: Save failed!');
+                        $saveCode.text('✗ Error');
+                        $saveCode.css('color', '#cc0000');
+                        clearInterval(checkSaveStatus);
+                    }
+                }, 500);
+                
+                // Check if we just came back from a save (settings-updated=true in URL)
+                if (window.location.search.indexOf('settings-updated=true') !== -1) {
+                    console.log('FlexPress Accent Color Debug: Page loaded after save');
+                    var submittedValue = sessionStorage.getItem('flexpress_last_accent_submit');
+                    var currentDbValue = '<?php echo esc_js($value); ?>';
+                    
+                    if (submittedValue) {
+                        console.log('FlexPress Accent Color Debug: Comparing submitted vs saved');
+                        console.log('FlexPress Accent Color Debug: Submitted:', submittedValue);
+                        console.log('FlexPress Accent Color Debug: Current DB:', currentDbValue);
+                        
+                        $formCode.text(submittedValue);
+                        $formCode.css('color', '#cc6600');
+                        
+                        if (submittedValue !== currentDbValue) {
+                            console.warn('FlexPress Accent Color Debug: ⚠️ MISMATCH!');
+                            $('#flexpress-debug-comparison').show();
+                            $('#flexpress-comparison-text').html(
+                                '<span style="color: #cc0000;">⚠️ Value mismatch detected!</span><br>' +
+                                'Submitted: <code>' + submittedValue + '</code><br>' +
+                                'Saved to DB: <code>' + currentDbValue + '</code>'
+                            );
+                            $saveCode.text('⚠️ Mismatch!');
+                            $saveCode.css('color', '#cc0000');
+                        } else {
+                            console.log('FlexPress Accent Color Debug: ✓ Values match!');
+                            $('#flexpress-debug-comparison').show();
+                            $('#flexpress-comparison-text').html(
+                                '<span style="color: #006600;">✓ Values match!</span><br>' +
+                                'Submitted: <code>' + submittedValue + '</code><br>' +
+                                'Saved to DB: <code>' + currentDbValue + '</code>'
+                            );
+                            $saveCode.text('✓ Saved');
+                            $saveCode.css('color', '#006600');
+                        }
+                    }
+                }
 
                 // Initialize preview with current color
                 updatePreview('<?php echo esc_js($value); ?>');

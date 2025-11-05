@@ -371,7 +371,7 @@ function flexpress_add_service_worker()
         echo '<script>
         if ("serviceWorker" in navigator) {
             window.addEventListener("load", function() {
-                navigator.serviceWorker.register("' . get_template_directory_uri() . '/sw.js")
+                navigator.serviceWorker.register("' . home_url('/wp-content/themes/flexpress/sw.js') . '")
                     .then(function(registration) {
                         // Only log success in debug mode
                         if (' . (defined('WP_DEBUG') && WP_DEBUG ? 'true' : 'false') . ') {

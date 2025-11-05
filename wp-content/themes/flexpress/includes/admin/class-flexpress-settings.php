@@ -345,11 +345,19 @@ class FlexPress_Settings
      */
     public function render_settings_page()
     {
+        // Get current accent color for debug
+        $options = get_option('flexpress_general_settings', array());
+        $current_accent = isset($options['accent_color']) ? $options['accent_color'] : '#ff5093';
 ?>
         <div class="wrap">
             <h1><?php echo esc_html__('FlexPress General Settings', 'flexpress'); ?></h1>
 
-            <form method="post" action="options.php">
+            <script type="text/javascript">
+                console.log('FlexPress Settings Page Loaded');
+                console.log('FlexPress Current Accent Color (from DB):', '<?php echo esc_js($current_accent); ?>');
+            </script>
+
+            <form method="post" action="options.php" id="flexpress-general-settings-form">
                 <?php
                 settings_fields('flexpress_general_settings');
                 do_settings_sections('flexpress_general_settings');

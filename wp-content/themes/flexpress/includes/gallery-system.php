@@ -1586,8 +1586,14 @@ function flexpress_display_episode_gallery($post_id = null, $columns = null, $ha
                             echo '<a href="' . esc_url(home_url('/join')) . '" class="text-white">Get membership to view all</a>';
                         }
                     } else {
-                        // User not logged in - link to login
-                        echo '<a href="' . esc_url(home_url('/login?redirect_to=' . urlencode(get_permalink($post_id)))) . '" class="text-white">Login to view all</a>';
+                        // User not logged in - differentiate based on access type
+                        if (isset($access_info['show_purchase_button']) && $access_info['show_purchase_button']) {
+                            // Purchasable content - show purchase option
+                            echo '<a href="' . esc_url(home_url('/login?redirect_to=' . urlencode(get_permalink($post_id)))) . '" class="text-white">Login or purchase to view all</a>';
+                        } else {
+                            // Membership-only content - show membership option
+                            echo '<a href="' . esc_url(home_url('/join')) . '" class="text-white">Join membership to view all</a>';
+                        }
                     }
                     ?>
                 </p>

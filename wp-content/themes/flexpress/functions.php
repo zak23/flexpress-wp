@@ -4913,8 +4913,14 @@ function flexpress_display_extras_gallery($extras_id = null, $columns = null, $h
                             echo '<a href="' . esc_url(home_url('/join')) . '" class="text-white">Get membership to view all</a>';
                         }
                     } else {
-                        // User not logged in - link to login
-                        echo '<a href="' . esc_url(home_url('/login?redirect_to=' . urlencode(get_permalink($extras_id)))) . '" class="text-white">Login to view all</a>';
+                        // User not logged in - differentiate based on access type
+                        if ($access_info['show_purchase_button']) {
+                            // Purchasable content - show purchase option
+                            echo '<a href="' . esc_url(home_url('/login?redirect_to=' . urlencode(get_permalink($extras_id)))) . '" class="text-white">Login or purchase to view all</a>';
+                        } else {
+                            // Membership-only content - show membership option
+                            echo '<a href="' . esc_url(home_url('/join')) . '" class="text-white">Join membership to view all</a>';
+                        }
                     }
                     ?>
                 </p>

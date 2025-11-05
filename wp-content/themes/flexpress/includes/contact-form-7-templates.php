@@ -151,11 +151,6 @@ function flexpress_create_casting_form()
     $existing_form = $form_id && get_post($form_id) ? get_post($form_id) : null;
 
     $form_content = '
-<div class="alert alert-info mb-4">
-    <i class="bi bi-info-circle-fill me-2"></i>
-    ' . __('All applicants must be at least 18 years of age. ID verification will be required if selected.', 'flexpress') . '
-</div>
-
 <div class="row">
     <div class="col-md-6 mb-3">
         <label for="applicant_name" class="form-label">' . __('Your Name', 'flexpress') . ' <span class="text-danger">*</span></label>
@@ -172,12 +167,12 @@ function flexpress_create_casting_form()
 <div class="row">
     <div class="col-md-6 mb-3">
         <label for="gender_identity" class="form-label">' . __('Gender Identity', 'flexpress') . ' <span class="text-danger">*</span></label>
-        [select* gender_identity id:gender_identity class:form-control include_blank "' . __('Please select...', 'flexpress') . '" "' . __('Female', 'flexpress') . '" "' . __('Male', 'flexpress') . '" "' . __('Non-binary', 'flexpress') . '" "' . __('Transgender', 'flexpress') . '" "' . __('Genderfluid', 'flexpress') . '" "' . __('Agender', 'flexpress') . '" "' . __('Other', 'flexpress') . '"]
+        [select* gender_identity id:gender_identity class:form-control first_as_label "' . __('Please select...', 'flexpress') . '" "' . __('Female', 'flexpress') . '" "' . __('Male', 'flexpress') . '" "' . __('Non-binary', 'flexpress') . '" "' . __('Transgender', 'flexpress') . '" "' . __('Genderfluid', 'flexpress') . '" "' . __('Agender', 'flexpress') . '" "' . __('Other', 'flexpress') . '"]
         <div class="invalid-feedback">' . __('Please select your gender identity.', 'flexpress') . '</div>
     </div>
     <div class="col-md-6 mb-3">
         <label for="stage_age" class="form-label">' . __('Preferred Stage Age', 'flexpress') . ' <span class="text-danger">*</span></label>
-        [select* stage_age id:stage_age class:form-control include_blank "' . __('Please select...', 'flexpress') . '" "' . __('18-21', 'flexpress') . '" "' . __('22-25', 'flexpress') . '" "' . __('26-30', 'flexpress') . '" "' . __('31-35', 'flexpress') . '" "' . __('36-40', 'flexpress') . '" "' . __('41-45', 'flexpress') . '" "' . __('46-50', 'flexpress') . '" "' . __('50+', 'flexpress') . '"]
+        [select* stage_age id:stage_age class:form-control first_as_label "' . __('Please select...', 'flexpress') . '" "' . __('18-21', 'flexpress') . '" "' . __('22-25', 'flexpress') . '" "' . __('26-30', 'flexpress') . '" "' . __('31-35', 'flexpress') . '" "' . __('36-40', 'flexpress') . '" "' . __('41-45', 'flexpress') . '" "' . __('46-50', 'flexpress') . '" "' . __('50+', 'flexpress') . '"]
         <div class="invalid-feedback">' . __('Please select your preferred stage age.', 'flexpress') . '</div>
     </div>
 </div>
@@ -203,6 +198,11 @@ function flexpress_create_casting_form()
     <label for="about_you" class="form-label">' . __('About You', 'flexpress') . ' <span class="text-danger">*</span></label>
     [textarea* about_you id:about_you class:form-control rows:5 placeholder "' . __('Tell us about yourself, including any relevant experience, social media profiles, and professional references...', 'flexpress') . '"]
     <div class="invalid-feedback">' . __('Please tell us about yourself.', 'flexpress') . '</div>
+</div>
+
+<div class="alert alert-info mb-4">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    ' . __('All applicants must be at least 18 years of age. ID verification will be required if selected.', 'flexpress') . '
 </div>
 
 <div class="mb-3">

@@ -136,15 +136,5 @@ $thumbnail = flexpress_get_extras_thumbnail(get_the_ID(), 'medium');
             ?>
             <span class="extras-date"><?php echo esc_html($formatted_date); ?></span>
         </div>
-
-        <!-- Price Display -->
-        <?php if ($price): ?>
-            <div class="extras-info-row">
-                <span class="extras-price">
-                    <i class="fas fa-tag me-1"></i>
-                    $<?php echo number_format($price, 2); ?>
-                </span>
-            </div>
-        <?php endif; ?>
     </div>
 </div>

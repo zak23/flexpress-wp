@@ -193,24 +193,41 @@ while (have_posts()):
                                         </iframe>
                                     </div>
                                 <?php else: ?>
-                                    <!-- Locked content with featured image thumbnail -->
+                                    <!-- Locked content with BunnyCDN thumbnail -->
+                                    <?php
+                                    $thumbnail = flexpress_get_extras_thumbnail(get_the_ID(), 'large');
+                                    // Determine message based on whether content is purchasable
+                                    $is_purchasable = $access_info['show_purchase_button'];
+                                    ?>
                                     <div class="d-flex align-items-center justify-content-center" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
-                                        <?php if (has_post_thumbnail()): ?>
+                                        <?php if ($thumbnail && !empty($thumbnail['url'])): ?>
                                             <div class="locked-thumbnail" style="position: relative; width: 100%; height: 100%;">
-                                                <?php the_post_thumbnail('large', array('style' => 'width: 100%; height: 100%; object-fit: cover; opacity: 0.3;')); ?>
+                                                <img src="<?php echo esc_url($thumbnail['url']); ?>"
+                                                    alt="<?php echo esc_attr($thumbnail['alt'] ?? get_the_title()); ?>"
+                                                    style="width: 100%; height: 100%; object-fit: cover; opacity: 0.3;">
                                                 <div class="locked-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;">
                                                     <div class="text-center text-light">
                                                         <i class="fas fa-lock fa-3x mb-3"></i>
-                                                        <h4><?php esc_html_e('Premium Extra Content', 'flexpress'); ?></h4>
-                                                        <p><?php esc_html_e('Please purchase this extra content to view.', 'flexpress'); ?></p>
+                                                        <?php if ($is_purchasable): ?>
+                                                            <h4><?php esc_html_e('Premium Extra Content', 'flexpress'); ?></h4>
+                                                            <p><?php esc_html_e('Please purchase this extra content to view.', 'flexpress'); ?></p>
+                                                        <?php else: ?>
+                                                            <h4><?php esc_html_e('Members Only', 'flexpress'); ?></h4>
+                                                            <p><?php esc_html_e('Join our membership to access this content.', 'flexpress'); ?></p>
+                                                        <?php endif; ?>
                                                     </div>
                                                 </div>
                                             </div>
                                         <?php else: ?>
                                             <div class="text-center text-light">
                                                 <i class="fas fa-lock fa-3x mb-3"></i>
-                                                <h4><?php esc_html_e('Premium Extra Content', 'flexpress'); ?></h4>
-                                                <p><?php esc_html_e('Please purchase this extra content to view.', 'flexpress'); ?></p>
+                                                <?php if ($is_purchasable): ?>
+                                                    <h4><?php esc_html_e('Premium Extra Content', 'flexpress'); ?></h4>
+                                                    <p><?php esc_html_e('Please purchase this extra content to view.', 'flexpress'); ?></p>
+                                                <?php else: ?>
+                                                    <h4><?php esc_html_e('Members Only', 'flexpress'); ?></h4>
+                                                    <p><?php esc_html_e('Join our membership to access this content.', 'flexpress'); ?></p>
+                                                <?php endif; ?>
                                             </div>
                                         <?php endif; ?>
                                     </div>

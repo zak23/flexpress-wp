@@ -23,10 +23,9 @@ FlexPress is designed specifically for content websites (primarily adult content
   - Border-left uses accent-hover color for emphasis
   - White text ensures readability on any accent color
   - Selector specificity ensures proper override of membership-page alert defaults
-- **Default Accent Color**: Changed from hot pink (#ff69b4) to green (#28a745)
+- **Default Accent Color**: Pink (#ff5093) - rgb(255, 80, 147)
   - Updated in: `functions.php`, `class-flexpress-general-settings.php`, `assets/css/variables.css`
-  - Matches Bootstrap alert-success styling for consistency
-  - Automatically generates hover, light, and dark variants
+  - Auto-generates hover, light, and dark variants
 
 ### Subscription Type Labeling (October 2025)
 
@@ -2933,7 +2932,7 @@ if ($featured_models && !empty($featured_models)) {
 ### Color System
 
 - **Primary Color**: `var(--color-primary)` for white elements
-- **Accent Color**: `var(--color-accent)` for buttons, links, and interactive elements (default: #28a745)
+- **Accent Color**: `var(--color-accent)` for buttons, links, and interactive elements (default: #ff5093)
 - **Accent Hover**: `var(--color-accent-hover)` for hover states
 - **Accent Light**: `var(--color-accent-light)` for backgrounds and shadows
 - **Accent Dark**: `var(--color-accent-dark)` for gradients and borders

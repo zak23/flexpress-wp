@@ -5,7 +5,7 @@
  */
 
 // Define theme constants
-define('FLEXPRESS_VERSION', '1.0.1');
+define('FLEXPRESS_VERSION', '1.0.3');
 define('FLEXPRESS_PATH', get_template_directory());
 define('FLEXPRESS_URL', get_template_directory_uri());
 
@@ -355,7 +355,7 @@ function flexpress_combine_theme_css()
     $assets_dir = $theme_dir . '/assets';
     $css_dir = $assets_dir . '/css';
     $combined_file = $css_dir . '/combined.css';
-    
+
     // Files to combine in order
     $css_files = array(
         'variables.css',
@@ -365,11 +365,11 @@ function flexpress_combine_theme_css()
         'casting-section.css',
         'join-now-cta.css'
     );
-    
+
     // Get the latest modification time of source files
     $latest_mtime = 0;
     $all_exist = true;
-    
+
     foreach ($css_files as $file) {
         $file_path = $css_dir . '/' . $file;
         if (file_exists($file_path)) {
@@ -381,7 +381,7 @@ function flexpress_combine_theme_css()
             $all_exist = false;
         }
     }
-    
+
     // Check if combined file exists and is up to date
     if ($all_exist && file_exists($combined_file)) {
         $combined_mtime = filemtime($combined_file);
@@ -390,16 +390,16 @@ function flexpress_combine_theme_css()
             return $combined_file;
         }
     }
-    
+
     // Combine files
     if (!$all_exist) {
         return false;
     }
-    
+
     $combined_content = '';
     $combined_content .= "/* Combined FlexPress Theme CSS - Generated: " . date('Y-m-d H:i:s') . " */\n";
     $combined_content .= "/* Files: " . implode(', ', $css_files) . " */\n\n";
-    
+
     foreach ($css_files as $file) {
         $file_path = $css_dir . '/' . $file;
         $content = file_get_contents($file_path);
@@ -408,14 +408,14 @@ function flexpress_combine_theme_css()
             $combined_content .= $content . "\n\n";
         }
     }
-    
+
     // Write combined file
     $result = file_put_contents($combined_file, $combined_content);
     if ($result === false) {
         error_log('FlexPress: Failed to write combined CSS file at ' . $combined_file);
         return false;
     }
-    
+
     return $combined_file;
 }
 
@@ -749,7 +749,7 @@ add_filter('script_loader_tag', 'flexpress_add_defer_to_scripts', 10, 3);
 function flexpress_add_accent_color_styles()
 {
     $options = get_option('flexpress_general_settings');
-    $accent_color = isset($options['accent_color']) ? $options['accent_color'] : '#28a745';
+    $accent_color = isset($options['accent_color']) ? $options['accent_color'] : '#ff5093';
 
     // Generate lighter and darker variants
     $accent_rgb = flexpress_hex_to_rgb($accent_color);
@@ -1024,7 +1024,7 @@ function flexpress_sanitize_general_settings($input)
     // Sanitize accent color - ensure it's a valid hex color
     if (isset($input['accent_color'])) {
         $color = sanitize_hex_color($input['accent_color']);
-        $sanitized['accent_color'] = $color ? $color : '#ff6b35'; // Fallback to default
+        $sanitized['accent_color'] = $color ? $color : '#ff5093'; // Fallback to default
     }
 
     // Sanitize age verification exit URL
@@ -3343,7 +3343,7 @@ function flexpress_process_registration_and_payment()
     $password = $_POST['password'];
     $selected_plan = sanitize_text_field($_POST['selected_plan']);
     $applied_promo_code = sanitize_text_field($_POST['applied_promo_code'] ?? '');
-    
+
     // Check for trial token in POST data, session, or cookie
     $trial_token = '';
     if (isset($_POST['trial_token']) && !empty($_POST['trial_token'])) {
@@ -3353,10 +3353,10 @@ function flexpress_process_registration_and_payment()
     } elseif (isset($_COOKIE['flexpress_trial_token'])) {
         $trial_token = sanitize_text_field($_COOKIE['flexpress_trial_token']);
     }
-    
+
     $is_trial_registration = false;
     $trial_link_data = null;
-    
+
     // Validate trial token if present
     if (!empty($trial_token)) {
         $validation = flexpress_validate_trial_token($trial_token);
@@ -3377,7 +3377,7 @@ function flexpress_process_registration_and_payment()
         wp_send_json_error(array('message' => 'Please fill in all required fields.'));
         return;
     }
-    
+
     // For non-trial registrations, plan is required
     if (!$is_trial_registration && empty($selected_plan)) {
         wp_send_json_error(array('message' => 'Please select a membership plan.'));
@@ -3485,16 +3485,16 @@ function flexpress_process_registration_and_payment()
         update_user_meta($user_id, 'membership_status', 'active');
         // Don't set subscription_plan for trial links - trial access is independent of plans
         update_user_meta($user_id, 'subscription_start', current_time('mysql'));
-        
+
         // Calculate trial expiration date
         $trial_expires_at = date('Y-m-d H:i:s', strtotime('+' . $trial_link_data->duration . ' days'));
         update_user_meta($user_id, 'trial_expires_at', $trial_expires_at);
         update_user_meta($user_id, 'trial_link_id', $trial_link_data->id);
         update_user_meta($user_id, 'trial_token', $trial_token);
-        
+
         // Mark trial link as used
         flexpress_mark_trial_link_used($trial_link_data->id);
-        
+
         // Log activity
         if (class_exists('FlexPress_Activity_Logger')) {
             FlexPress_Activity_Logger::log_activity($user_id, 'trial_link_used', sprintf(
@@ -3504,16 +3504,16 @@ function flexpress_process_registration_and_payment()
                 $trial_link_data->duration
             ));
         }
-        
+
         // Send Discord notification
         if (function_exists('flexpress_discord_notify_trial_link_used')) {
             flexpress_discord_notify_trial_link_used($user_id, $trial_link_data, null);
         }
-        
+
         // Log the user in
         wp_set_current_user($user_id);
         wp_set_auth_cookie($user_id);
-        
+
         // Clear trial token from session/cookie
         if (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['trial_token'])) {
             unset($_SESSION['trial_token']);
@@ -3521,7 +3521,7 @@ function flexpress_process_registration_and_payment()
         if (isset($_COOKIE['flexpress_trial_token'])) {
             setcookie('flexpress_trial_token', '', time() - 3600, '/');
         }
-        
+
         wp_send_json_success(array(
             'message' => 'Free trial activated! Welcome to ' . get_bloginfo('name') . '!',
             'redirect_url' => home_url('/dashboard/'),
@@ -8776,12 +8776,13 @@ function flexpress_get_membership_status($user_id = null)
  * @param int $user_id User ID
  * @return bool True if trial expired
  */
-function flexpress_check_trial_expiration($user_id) {
+function flexpress_check_trial_expiration($user_id)
+{
     $trial_expires_at = get_user_meta($user_id, 'trial_expires_at', true);
     if (empty($trial_expires_at)) {
         return false; // No trial
     }
-    
+
     $expires_timestamp = strtotime($trial_expires_at);
     // Add 1 day grace period
     $expires_with_grace = $expires_timestamp + (1 * DAY_IN_SECONDS);
@@ -9739,7 +9740,7 @@ function flexpress_add_console_cleanup()
     // Always suppress WebGPU errors (third-party Cloudflare Turnstile)
     // Other suppressions only in production (when WP_DEBUG is false)
     $is_production = !defined('WP_DEBUG') || !WP_DEBUG;
-    
+
     echo '<script>
         // Always suppress WebGPU errors (third-party Cloudflare Turnstile)
         // Suppress WebGPU errors and warnings from Cloudflare Turnstile

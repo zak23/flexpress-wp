@@ -278,14 +278,14 @@ class FlexPress_General_Settings
     public function render_accent_color_field()
     {
         $options = get_option('flexpress_general_settings');
-        $value = isset($options['accent_color']) ? $options['accent_color'] : '#28a745';
+        $value = isset($options['accent_color']) ? $options['accent_color'] : '#ff5093';
     ?>
         <input type="color"
             name="flexpress_general_settings[accent_color]"
             value="<?php echo esc_attr($value); ?>"
             class="color-picker">
         <p class="description">
-            <?php esc_html_e('Choose an accent color for buttons, links, and important elements. Default is green (#28a745).', 'flexpress'); ?>
+            <?php esc_html_e('Choose an accent color for buttons, links, and important elements. Default is pink (#ff5093).', 'flexpress'); ?>
         </p>
         <div class="accent-color-preview" style="margin-top: 10px;">
             <div style="background-color: <?php echo esc_attr($value); ?>; padding: 10px 20px; border-radius: 4px; display: inline-block; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">

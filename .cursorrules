@@ -144,7 +144,7 @@ Do not alter `.wakatime-project` once created
   - Background: `var(--color-accent)` with white text for contrast
   - Border-left: `var(--color-accent-hover)` for emphasis (4px solid)
   - Selector must match `.membership-page .alert` specificity to override defaults
-- **Default Accent Color**: Theme default is green (#28a745) matching Bootstrap alert-success
+- **Default Accent Color**: Theme default is pink (#ff5093) - rgb(255, 80, 147)
   - Updated in: `functions.php`, `class-flexpress-general-settings.php`, `assets/css/variables.css`
   - Auto-generates hover, light, and dark variants
 - Documentation: Update README.md when changing signup flow or styling

@@ -31,7 +31,7 @@ function flexpress_enable_gzip_compression()
                 }
             }
         }
-        
+
         // Only enable if compression isn't already handled
         if (!$content_encoding && extension_loaded('zlib') && !ini_get('zlib.output_compression')) {
             // Check if client accepts gzip
@@ -371,17 +371,7 @@ function flexpress_add_service_worker()
         echo '<script>
         if ("serviceWorker" in navigator) {
             window.addEventListener("load", function() {
-                navigator.serviceWorker.register("' . home_url('/wp-content/themes/flexpress/sw.js') . '")
-                    .then(function(registration) {
-                        // Only log success in debug mode
-                        if (' . (defined('WP_DEBUG') && WP_DEBUG ? 'true' : 'false') . ') {
-                            console.log("ServiceWorker registration successful");
-                        }
-                    })
-                    .catch(function(err) {
-                        // Always log errors (important for debugging)
-                        console.log("ServiceWorker registration failed: " + err.message);
-                    });
+                navigator.serviceWorker.register("' . home_url('/wp-content/themes/flexpress/sw.js') . '");
             });
         }
         </script>';
@@ -464,14 +454,10 @@ self.addEventListener("fetch", (event) => {
 
     // Check if file is writable before attempting to write
     if (!is_writable($sw_file) && file_exists($sw_file)) {
-        error_log('FlexPress: Service worker file is not writable at ' . $sw_file . '. Please check file permissions.');
         return;
     }
 
-    $result = file_put_contents($sw_file, $sw_content);
-    if ($result === false) {
-        error_log('FlexPress: Failed to write service worker file at ' . $sw_file . '. Check file permissions.');
-    }
+    file_put_contents($sw_file, $sw_content);
 }
 // Create service worker on admin init instead of theme setup to avoid header conflicts
 add_action('admin_init', 'flexpress_create_service_worker');

@@ -5,7 +5,7 @@
  */
 
 // Define theme constants
-define('FLEXPRESS_VERSION', '1.0.9');
+define('FLEXPRESS_VERSION', '1.0.11');
 define('FLEXPRESS_PATH', get_template_directory());
 define('FLEXPRESS_URL', get_template_directory_uri());
 
@@ -782,22 +782,22 @@ function flexpress_add_accent_color_styles()
         .membership-plan-item.selected { background: {$accent_featured_bg} !important; }
     ";
 
-    wp_add_inline_style('flexpress-main', $custom_css);
-}
+    // Attach to whichever stylesheet is active so combined builds receive the override
+    $style_handle = 'flexpress-style';
 
-/**
- * Debug function to output accent color in HTML comments
- */
-function flexpress_debug_accent_color()
-{
-    if (WP_DEBUG || isset($_GET['debug_colors'])) {
-        $options = get_option('flexpress_general_settings');
-        $accent_color = isset($options['accent_color']) ? $options['accent_color'] : 'NOT SET';
-        echo "<!-- FlexPress Debug: Accent Color = {$accent_color} -->\n";
-        echo "<!-- FlexPress Debug: General Settings = " . print_r($options, true) . " -->\n";
+    if (wp_style_is('flexpress-combined', 'enqueued')) {
+        $style_handle = 'flexpress-combined';
+    } elseif (wp_style_is('flexpress-main', 'enqueued')) {
+        $style_handle = 'flexpress-main';
     }
+
+    // Fallback to theme style handle if target isn't enqueued for any reason
+    if (!wp_style_is($style_handle, 'enqueued')) {
+        $style_handle = 'flexpress-style';
+    }
+
+    wp_add_inline_style($style_handle, $custom_css);
 }
-add_action('wp_head', 'flexpress_debug_accent_color');
 
 /**
  * Detect if we're in development mode
@@ -999,17 +999,17 @@ add_action('wp_ajax_flexpress_get_accent_color', 'flexpress_get_accent_color_deb
 function flexpress_get_accent_color_debug()
 {
     check_ajax_referer('flexpress_debug', 'nonce');
-    
+
     if (!current_user_can('manage_options')) {
         wp_send_json_error('Insufficient permissions');
         return;
     }
-    
+
     $options = get_option('flexpress_general_settings', array());
     $accent_color = isset($options['accent_color']) ? $options['accent_color'] : '#ff5093';
-    
+
     error_log('FlexPress Accent Color AJAX: Current value from DB: ' . $accent_color);
-    
+
     wp_send_json_success(array(
         'value' => $accent_color,
         'options' => $options
@@ -1023,7 +1023,7 @@ function flexpress_sanitize_general_settings($input)
 {
     error_log('FlexPress Sanitize: Function called with input keys: ' . implode(', ', array_keys($input)));
     error_log('FlexPress Sanitize: Full input data: ' . print_r($input, true));
-    
+
     // Start from existing settings and only overwrite provided keys
     $current = get_option('flexpress_general_settings', array());
     error_log('FlexPress Sanitize: Current settings from DB: ' . print_r($current, true));
@@ -1055,19 +1055,19 @@ function flexpress_sanitize_general_settings($input)
         $color_value = trim($input['accent_color']);
         error_log('FlexPress Accent Color Debug: After trim: "' . $color_value . '"');
         error_log('FlexPress Accent Color Debug: Current value from DB: ' . (isset($current['accent_color']) ? $current['accent_color'] : 'NOT SET'));
-        
+
         // Normalize: ensure it starts with #
         if (!empty($color_value) && substr($color_value, 0, 1) !== '#') {
             $color_value = '#' . $color_value;
             error_log('FlexPress Accent Color Debug: Added # prefix, now: "' . $color_value . '"');
         }
-        
+
         // If color is provided, sanitize it
         if (!empty($color_value) && strlen($color_value) >= 4) {
             error_log('FlexPress Accent Color Debug: Color value length: ' . strlen($color_value));
             $color = sanitize_hex_color($color_value);
             error_log('FlexPress Accent Color Debug: After sanitize_hex_color(): ' . ($color ? $color : 'EMPTY/FALSE'));
-            
+
             // If sanitize_hex_color returns empty/false, use the provided value if it looks valid
             if (empty($color) && preg_match('/^#[0-9A-Fa-f]{6}$/', $color_value)) {
                 $color = strtoupper($color_value);
@@ -1077,7 +1077,7 @@ function flexpress_sanitize_general_settings($input)
                 $color = '#' . str_repeat(substr($color_value, 1, 1), 2) . str_repeat(substr($color_value, 2, 1), 2) . str_repeat(substr($color_value, 3, 1), 2);
                 error_log('FlexPress Accent Color Debug: Matched 3-digit pattern, expanded to: "' . $color . '"');
             }
-            
+
             $final_color = !empty($color) ? $color : '#ff5093'; // Fallback to default
             error_log('FlexPress Accent Color Debug: Final color to save: "' . $final_color . '"');
             $sanitized['accent_color'] = $final_color;
@@ -1305,7 +1305,7 @@ function flexpress_sanitize_general_settings($input)
     $merged = array_merge($current, $sanitized);
     error_log('FlexPress General Settings: Merged result (what will be saved): ' . print_r($merged, true));
     error_log('FlexPress General Settings: Merged accent_color value: ' . (isset($merged['accent_color']) ? $merged['accent_color'] : 'NOT SET'));
-    
+
     return $merged;
 }
 
@@ -1407,7 +1407,7 @@ add_action('update_option_flexpress_general_settings', 'flexpress_flush_rewrite_
 /**
  * Debug hook to track accent color saves
  */
-add_action('update_option_flexpress_general_settings', function($old_value, $value, $option) {
+add_action('update_option_flexpress_general_settings', function ($old_value, $value, $option) {
     error_log('FlexPress Accent Color Save Hook: update_option triggered');
     error_log('FlexPress Accent Color Save Hook: Old value accent_color: ' . (isset($old_value['accent_color']) ? $old_value['accent_color'] : 'NOT SET'));
     error_log('FlexPress Accent Color Save Hook: New value accent_color: ' . (isset($value['accent_color']) ? $value['accent_color'] : 'NOT SET'));

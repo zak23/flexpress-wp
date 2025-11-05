@@ -28,7 +28,7 @@ body.flexpress-coming-soon-page {
 }
 
 .coming-soon-logo img {
-    height: 80px;
+    height: 120px;
     width: auto;
     filter: brightness(1.1);
 }
@@ -243,7 +243,7 @@ body.flexpress-coming-soon-page {
     }
     
     .coming-soon-logo img {
-        height: 60px;
+        height: 90px;
     }
     
     .coming-soon-wrapper {

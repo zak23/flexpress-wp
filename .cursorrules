@@ -7,6 +7,7 @@ Cache: Redis enabled; logged-in HTML private/no-store; add `Vary: Cookie`; never
 Use Puppeteer tests against the test site; prefer IPs for navigation and screenshots
 PHP indent: 4 spaces; JS: 2 spaces; CSS: 2 spaces
 Do not alter `.wakatime-project` once created
+Bundled webfonts must use `font-display: swap`
 
 ## Settings Save Robustness Pattern
 

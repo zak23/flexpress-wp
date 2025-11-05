@@ -61,6 +61,13 @@ FlexPress is designed specifically for content websites (primarily adult content
   - Updated `flexpress_is_episode_released()` function with proper date parsing
   - Episodes no longer remain stuck in Draft status after their release date passes
 
+### Font Loading Performance (November 2025)
+
+- **font-display Swap**: Ensured all bundled webfonts use `font-display: swap`
+  - Updated Font Awesome compatibility faces in `assets/vendor/css/font-awesome.min.css`
+  - Added swap descriptor to Slick slider icons in `assets/vendor/css/slick-theme.css`
+- **Impact**: PageSpeed no longer flags blocked text rendering while fonts load; layout shifts are minimized
+
 ### JavaScript MutationObserver Error Fix (October 2025)
 
 - **Fixed TypeError**: Resolved `Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'` error

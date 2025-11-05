@@ -179,6 +179,13 @@ A modern WordPress website running in Docker containers with MySQL database and 
   - `wp-content/themes/flexpress/template-parts/content-featured-episode.php` - Date parsing logic
   - `wp-content/themes/flexpress/template-parts/content-episode-card-home.php` - Date parsing logic
 
+### Font Loading Performance (November 2025)
+
+- **Font Display Swap**: Updated bundled webfonts to use `font-display: swap` for faster First Contentful Paint
+  - Applied to Font Awesome 5/6 compatibility faces in `assets/vendor/css/font-awesome.min.css`
+  - Added to Slick slider icon font in `assets/vendor/css/slick-theme.css`
+- **Impact**: Text remains visible during font loading, reducing layout shifts flagged by PageSpeed
+
 ### Earnings Dashboard (New Feature - October 2025)
 
 - **Comprehensive Revenue Tracking**: New admin dashboard at FlexPress → Earnings provides complete financial oversight

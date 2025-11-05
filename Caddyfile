@@ -36,6 +36,24 @@ zakspov.com {
             path *.eot
         }
 
+        # Expires header for static assets (1 year from now)
+        # Note: Caddy doesn't support dynamic date calculation, so we use a fixed future date
+        # This is set to expire in 1 year from configuration time
+        Expires "Thu, 31 Dec 2026 23:59:59 GMT" {
+            path *.css
+            path *.js
+            path *.png
+            path *.jpg
+            path *.jpeg
+            path *.gif
+            path *.webp
+            path *.svg
+            path *.woff
+            path *.woff2
+            path *.ttf
+            path *.eot
+        }
+
         # NOTE: Do not cache HTML globally; admin/logged-in responses are explicitly bypassed below
 
         # Add ETag header for better caching
@@ -82,7 +100,9 @@ zakspov.com {
         -Server
     }
 
-    # Enable gzip compression
+    # Enable gzip compression for all compressible content types
+    # Caddy automatically compresses: text/html, text/css, text/javascript, 
+    # application/javascript, application/json, text/xml, application/xml, image/svg+xml
     encode gzip
 
     # Security headers

@@ -13,6 +13,39 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Enable PHP-level gzip compression as fallback if Caddy compression fails
+ * Only activates if Content-Encoding header is not already set
+ */
+function flexpress_enable_gzip_compression()
+{
+    // Only enable if not already compressed and not in admin/AJAX
+    if (!is_admin() && !wp_doing_ajax() && !headers_sent()) {
+        // Check if compression is already enabled by Caddy
+        $content_encoding = false;
+        if (function_exists('headers_list')) {
+            $headers = headers_list();
+            foreach ($headers as $header) {
+                if (stripos($header, 'Content-Encoding:') === 0) {
+                    $content_encoding = true;
+                    break;
+                }
+            }
+        }
+        
+        // Only enable if compression isn't already handled
+        if (!$content_encoding && extension_loaded('zlib') && !ini_get('zlib.output_compression')) {
+            // Check if client accepts gzip
+            $accept_encoding = isset($_SERVER['HTTP_ACCEPT_ENCODING']) ? $_SERVER['HTTP_ACCEPT_ENCODING'] : '';
+            if (strpos($accept_encoding, 'gzip') !== false) {
+                ob_start('ob_gzhandler');
+            }
+        }
+    }
+}
+// Hook early to ensure compression starts before any output
+add_action('init', 'flexpress_enable_gzip_compression', 1);
+
+/**
  * Add performance optimization headers
  */
 function flexpress_add_performance_headers()
@@ -24,9 +57,12 @@ function flexpress_add_performance_headers()
         // Help proxies/CDNs differentiate based on login cookies
         header('Vary: Cookie');
 
-        // Cache static assets for 1 year
+        // Cache static assets for 1 year with Expires header
         if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/', $request_uri)) {
             header('Cache-Control: public, max-age=31536000, immutable');
+            // Add Expires header (1 year from now)
+            $expires = gmdate('D, d M Y H:i:s', time() + 31536000) . ' GMT';
+            header('Expires: ' . $expires);
         } else {
             // For HTML and other dynamic responses, ensure private/no-store for logged-in users
             if (is_user_logged_in()) {
@@ -157,9 +193,7 @@ add_filter('post_thumbnail_html', 'flexpress_add_lazy_loading_to_images');
 function flexpress_add_resource_hints()
 {
     if (!is_admin() && !wp_doing_ajax()) {
-        // Preconnect to external domains
-        echo '<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>' . "\n";
-        echo '<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>' . "\n";
+        // Preconnect to BunnyCDN for video storage
         echo '<link rel="preconnect" href="https://storage.bunnycdn.com" crossorigin>' . "\n";
 
         // Prefetch next page

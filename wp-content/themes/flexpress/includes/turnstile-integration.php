@@ -374,15 +374,15 @@ function flexpress_enqueue_turnstile_frontend() {
         // Add Turnstile callback functions
         wp_add_inline_script('cloudflare-turnstile', '
             function flexpressTurnstileCallback(token) {
-                console.log("Turnstile token received:", token);
+                // Callback handled silently
             }
             
             function flexpressTurnstileExpired() {
-                console.log("Turnstile token expired");
+                // Token expired callback handled silently
             }
             
             function flexpressTurnstileError(error) {
-                console.log("Turnstile error:", error);
+                // Error callback handled silently
             }
         ');
     }
@@ -399,15 +399,15 @@ function flexpress_enqueue_turnstile_login() {
         // Add Turnstile callback functions
         wp_add_inline_script('cloudflare-turnstile', '
             function flexpressTurnstileCallback(token) {
-                console.log("Turnstile token received:", token);
+                // Callback handled silently
             }
             
             function flexpressTurnstileExpired() {
-                console.log("Turnstile token expired");
+                // Token expired callback handled silently
             }
             
             function flexpressTurnstileError(error) {
-                console.log("Turnstile error:", error);
+                // Error callback handled silently
             }
         ');
     }

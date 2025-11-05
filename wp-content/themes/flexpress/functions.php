@@ -345,6 +345,81 @@ function flexpress_disable_admin_bar_for_non_admins()
 add_action('after_setup_theme', 'flexpress_disable_admin_bar_for_non_admins');
 
 /**
+ * Combine theme CSS files for better performance
+ * 
+ * @return string Combined CSS file path or false on failure
+ */
+function flexpress_combine_theme_css()
+{
+    $theme_dir = get_template_directory();
+    $assets_dir = $theme_dir . '/assets';
+    $css_dir = $assets_dir . '/css';
+    $combined_file = $css_dir . '/combined.css';
+    
+    // Files to combine in order
+    $css_files = array(
+        'variables.css',
+        'main.css',
+        'gallery.css',
+        'age-verification.css',
+        'casting-section.css',
+        'join-now-cta.css'
+    );
+    
+    // Get the latest modification time of source files
+    $latest_mtime = 0;
+    $all_exist = true;
+    
+    foreach ($css_files as $file) {
+        $file_path = $css_dir . '/' . $file;
+        if (file_exists($file_path)) {
+            $mtime = filemtime($file_path);
+            if ($mtime > $latest_mtime) {
+                $latest_mtime = $mtime;
+            }
+        } else {
+            $all_exist = false;
+        }
+    }
+    
+    // Check if combined file exists and is up to date
+    if ($all_exist && file_exists($combined_file)) {
+        $combined_mtime = filemtime($combined_file);
+        if ($combined_mtime >= $latest_mtime) {
+            // Combined file is up to date
+            return $combined_file;
+        }
+    }
+    
+    // Combine files
+    if (!$all_exist) {
+        return false;
+    }
+    
+    $combined_content = '';
+    $combined_content .= "/* Combined FlexPress Theme CSS - Generated: " . date('Y-m-d H:i:s') . " */\n";
+    $combined_content .= "/* Files: " . implode(', ', $css_files) . " */\n\n";
+    
+    foreach ($css_files as $file) {
+        $file_path = $css_dir . '/' . $file;
+        $content = file_get_contents($file_path);
+        if ($content !== false) {
+            $combined_content .= "/* === " . $file . " === */\n";
+            $combined_content .= $content . "\n\n";
+        }
+    }
+    
+    // Write combined file
+    $result = file_put_contents($combined_file, $combined_content);
+    if ($result === false) {
+        error_log('FlexPress: Failed to write combined CSS file at ' . $combined_file);
+        return false;
+    }
+    
+    return $combined_file;
+}
+
+/**
  * Enqueue scripts and styles
  */
 function flexpress_enqueue_scripts_and_styles()
@@ -352,40 +427,45 @@ function flexpress_enqueue_scripts_and_styles()
     // Preload critical external resources
     add_action('wp_head', 'flexpress_preload_critical_resources', 1);
 
-    // Enqueue Bootstrap CSS with preload
-    wp_enqueue_style('bootstrap-css', 'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css', array(), '5.1.3');
+    // Enqueue Bootstrap CSS from local vendor
+    wp_enqueue_style('bootstrap-css', get_template_directory_uri() . '/assets/vendor/css/bootstrap.min.css', array(), '5.1.3');
 
-    // Enqueue Font Awesome with preload
-    wp_enqueue_style('font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', array(), '6.4.2');
+    // Enqueue Font Awesome from local vendor
+    wp_enqueue_style('font-awesome', get_template_directory_uri() . '/assets/vendor/css/font-awesome.min.css', array(), '6.4.2');
 
-    // Enqueue theme CSS files
-    wp_enqueue_style('flexpress-variables', get_template_directory_uri() . '/assets/css/variables.css', array(), wp_get_theme()->get('Version'));
-    wp_enqueue_style('flexpress-main', get_template_directory_uri() . '/assets/css/main.css', array('flexpress-variables'), wp_get_theme()->get('Version'));
-    wp_enqueue_style('flexpress-gallery', get_template_directory_uri() . '/assets/css/gallery.css', array('flexpress-main'), wp_get_theme()->get('Version'));
-    wp_enqueue_style('flexpress-style', get_stylesheet_uri(), array('flexpress-main'), wp_get_theme()->get('Version'));
-
-    // Enqueue age verification CSS (always loaded)
-    wp_enqueue_style('flexpress-age-verification', get_template_directory_uri() . '/assets/css/age-verification.css', array('flexpress-main'), wp_get_theme()->get('Version'));
-
-    // Enqueue casting section CSS (always loaded)
-    wp_enqueue_style('flexpress-casting-section', get_template_directory_uri() . '/assets/css/casting-section.css', array('flexpress-main'), wp_get_theme()->get('Version'));
-
-    // Enqueue join now CTA CSS (always loaded)
-    wp_enqueue_style('flexpress-join-now-cta', get_template_directory_uri() . '/assets/css/join-now-cta.css', array('flexpress-main'), wp_get_theme()->get('Version'));
+    // Combine and enqueue theme CSS files
+    $combined_file = flexpress_combine_theme_css();
+    if ($combined_file) {
+        $combined_mtime = filemtime($combined_file);
+        $version = wp_get_theme()->get('Version') . '.' . $combined_mtime;
+        wp_enqueue_style('flexpress-combined', get_template_directory_uri() . '/assets/css/combined.css', array(), $version);
+        wp_enqueue_style('flexpress-style', get_stylesheet_uri(), array('flexpress-combined'), wp_get_theme()->get('Version'));
+    } else {
+        // Fallback to individual files if combination fails
+        wp_enqueue_style('flexpress-variables', get_template_directory_uri() . '/assets/css/variables.css', array(), wp_get_theme()->get('Version'));
+        wp_enqueue_style('flexpress-main', get_template_directory_uri() . '/assets/css/main.css', array('flexpress-variables'), wp_get_theme()->get('Version'));
+        wp_enqueue_style('flexpress-gallery', get_template_directory_uri() . '/assets/css/gallery.css', array('flexpress-main'), wp_get_theme()->get('Version'));
+        wp_enqueue_style('flexpress-style', get_stylesheet_uri(), array('flexpress-main'), wp_get_theme()->get('Version'));
+        wp_enqueue_style('flexpress-age-verification', get_template_directory_uri() . '/assets/css/age-verification.css', array('flexpress-main'), wp_get_theme()->get('Version'));
+        wp_enqueue_style('flexpress-casting-section', get_template_directory_uri() . '/assets/css/casting-section.css', array('flexpress-main'), wp_get_theme()->get('Version'));
+        wp_enqueue_style('flexpress-join-now-cta', get_template_directory_uri() . '/assets/css/join-now-cta.css', array('flexpress-main'), wp_get_theme()->get('Version'));
+    }
 
     // Enqueue about page CSS
     if (is_page_template('page-templates/about.php')) {
-        wp_enqueue_style('flexpress-about-page', get_template_directory_uri() . '/assets/css/about-page.css', array('flexpress-main'), wp_get_theme()->get('Version'));
+        $about_deps = $combined_file ? array('flexpress-combined') : array('flexpress-main');
+        wp_enqueue_style('flexpress-about-page', get_template_directory_uri() . '/assets/css/about-page.css', $about_deps, wp_get_theme()->get('Version'));
     }
 
     // Enqueue hero video CSS on homepage
     if (is_page_template('page-templates/page-home.php')) {
-        wp_enqueue_style('flexpress-hero-video', get_template_directory_uri() . '/assets/css/hero-video.css', array('flexpress-main'), wp_get_theme()->get('Version'));
+        $hero_deps = $combined_file ? array('flexpress-combined') : array('flexpress-main');
+        wp_enqueue_style('flexpress-hero-video', get_template_directory_uri() . '/assets/css/hero-video.css', $hero_deps, wp_get_theme()->get('Version'));
 
-        // Enqueue Slick slider for Featured On section
-        wp_enqueue_style('slick-css', 'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css', array(), '1.8.1');
-        wp_enqueue_style('slick-theme-css', 'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css', array('slick-css'), '1.8.1');
-        wp_enqueue_script('slick-js', 'https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js', array('jquery'), '1.8.1', true);
+        // Enqueue Slick slider for Featured On section from local vendor
+        wp_enqueue_style('slick-css', get_template_directory_uri() . '/assets/vendor/css/slick.css', array(), '1.8.1');
+        wp_enqueue_style('slick-theme-css', get_template_directory_uri() . '/assets/vendor/css/slick-theme.css', array('slick-css'), '1.8.1');
+        wp_enqueue_script('slick-js', get_template_directory_uri() . '/assets/vendor/js/slick.min.js', array('jquery'), '1.8.1', true);
         // Remove defer to ensure Slick loads before initialization script
     }
 
@@ -401,8 +481,8 @@ function flexpress_enqueue_scripts_and_styles()
     // Add global error handler and jQuery Migrate configuration
     add_action('wp_footer', 'flexpress_add_console_cleanup');
 
-    // Enqueue Bootstrap JS with defer
-    wp_enqueue_script('bootstrap-js', 'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js', array(), '5.1.3', true);
+    // Enqueue Bootstrap JS from local vendor with defer
+    wp_enqueue_script('bootstrap-js', get_template_directory_uri() . '/assets/vendor/js/bootstrap.bundle.min.js', array(), '5.1.3', true);
     wp_script_add_data('bootstrap-js', 'defer', true);
 
     // Enqueue age verification JavaScript (always loaded) - critical, no defer
@@ -581,8 +661,9 @@ function flexpress_enqueue_scripts_and_styles()
 
     // Enqueue affiliate dashboard script on affiliate dashboard page
     if (is_page_template('page-templates/affiliate-dashboard.php')) {
-        wp_enqueue_style('flexpress-affiliate-styles', get_template_directory_uri() . '/assets/css/affiliate-styles.css', array('flexpress-main'), wp_get_theme()->get('Version'));
-        wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js', array(), '3.9.1', true);
+        $affiliate_deps = $combined_file ? array('flexpress-combined') : array('flexpress-main');
+        wp_enqueue_style('flexpress-affiliate-styles', get_template_directory_uri() . '/assets/css/affiliate-styles.css', $affiliate_deps, wp_get_theme()->get('Version'));
+        wp_enqueue_script('chart-js', get_template_directory_uri() . '/assets/vendor/js/chart.min.js', array(), '3.9.1', true);
         wp_script_add_data('chart-js', 'defer', true);
         wp_enqueue_script('flexpress-affiliate-dashboard', get_template_directory_uri() . '/assets/js/affiliate-dashboard.js', array('jquery', 'chart-js'), wp_get_theme()->get('Version'), true);
         wp_script_add_data('flexpress-affiliate-dashboard', 'defer', true);
@@ -626,23 +707,23 @@ add_action('wp_enqueue_scripts', 'flexpress_enqueue_scripts_and_styles');
  */
 function flexpress_preload_critical_resources()
 {
-    // Preload critical external CSS
-    echo '<link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">' . "\n";
-    echo '<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"></noscript>' . "\n";
+    // Preload critical vendor CSS from local assets
+    echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/vendor/css/bootstrap.min.css" as="style">' . "\n";
+    echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/vendor/css/font-awesome.min.css" as="style">' . "\n";
 
-    echo '<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">' . "\n";
-    echo '<noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"></noscript>' . "\n";
+    // Preload critical theme CSS (combined if available, otherwise individual files)
+    $combined_file = flexpress_combine_theme_css();
+    if ($combined_file) {
+        echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/css/combined.css" as="style">' . "\n";
+    } else {
+        echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/css/variables.css" as="style">' . "\n";
+        echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/css/main.css" as="style">' . "\n";
+    }
 
-    // Preload critical theme CSS
-    echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/css/variables.css" as="style">' . "\n";
-    echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/css/main.css" as="style">' . "\n";
+    // Preload critical JavaScript from local vendor
+    echo '<link rel="preload" href="' . get_template_directory_uri() . '/assets/vendor/js/bootstrap.bundle.min.js" as="script">' . "\n";
 
-    // Preload critical JavaScript
-    echo '<link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" as="script">' . "\n";
-
-    // DNS prefetch for external domains
-    echo '<link rel="dns-prefetch" href="//cdn.jsdelivr.net">' . "\n";
-    echo '<link rel="dns-prefetch" href="//cdnjs.cloudflare.com">' . "\n";
+    // DNS prefetch for BunnyCDN (video storage)
     echo '<link rel="dns-prefetch" href="//storage.bunnycdn.com">' . "\n";
 }
 
@@ -9655,10 +9736,69 @@ function flexpress_delete_transactions()
  */
 function flexpress_add_console_cleanup()
 {
-    // Only add in production (when WP_DEBUG is false)
-    if (!defined('WP_DEBUG') || !WP_DEBUG) {
-        echo '<script>
-        // Suppress third-party MutationObserver errors
+    // Always suppress WebGPU errors (third-party Cloudflare Turnstile)
+    // Other suppressions only in production (when WP_DEBUG is false)
+    $is_production = !defined('WP_DEBUG') || !WP_DEBUG;
+    
+    echo '<script>
+        // Always suppress WebGPU errors (third-party Cloudflare Turnstile)
+        // Suppress WebGPU errors and warnings from Cloudflare Turnstile
+        const originalConsoleWarn = console.warn;
+        const originalConsoleError = console.error;
+        
+        console.warn = function(...args) {
+            const message = args.join(" ");
+            // Suppress WebGPU experimental warnings
+            if (message.includes("WebGPU is experimental") || 
+                message.includes("Implementation-Status")) {
+                return;
+            }
+            // Suppress CSP warnings about script-src fallback
+            if (message.includes("script-src") && message.includes("default-src")) {
+                return;
+            }
+            // Suppress preload warnings
+            if (message.includes("preloaded using link preload but not used")) {
+                return;
+            }
+            originalConsoleWarn.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            const message = args.join(" ");
+            // Suppress WebGPU context provider errors from Cloudflare
+            if (message.includes("Failed to create WebGPU Context Provider") ||
+                message.includes("WebGPU")) {
+                return;
+            }
+            originalConsoleError.apply(console, args);
+        };
+        
+        // Suppress WebGPU errors via error event listener
+        window.addEventListener("error", function(event) {
+            if (event.message && (
+                event.message.includes("Failed to create WebGPU Context Provider") ||
+                event.message.includes("WebGPU is experimental") ||
+                event.message.includes("WebGPU")
+            )) {
+                event.preventDefault();
+                return false;
+            }
+        }, true);
+        
+        // Suppress WebGPU unhandled rejections
+        window.addEventListener("unhandledrejection", function(event) {
+            if (event.reason && (
+                (typeof event.reason === "string" && event.reason.includes("WebGPU")) ||
+                (event.reason.message && event.reason.message.includes("WebGPU"))
+            )) {
+                event.preventDefault();
+                return false;
+            }
+        });
+        
+        ' . ($is_production ? '
+        // Suppress third-party MutationObserver errors (production only)
         window.addEventListener("error", function(event) {
             if (event.error && event.error.message && 
                 event.error.message.includes("Failed to execute \'observe\' on \'MutationObserver\'")) {
@@ -9669,10 +9809,12 @@ function flexpress_add_console_cleanup()
         
         // Suppress jQuery Migrate warnings in production
         if (typeof jQuery !== "undefined" && jQuery.migrateWarnings) {
-            jQuery.migrateWarnings = false;
+            // migrateWarnings should be an array, so we override push to prevent warnings
+            jQuery.migrateWarnings = [];
+            jQuery.migrateWarnings.push = function() {}; // Disable push to suppress warnings
         }
         
-        // Suppress BunnyCDN RUM network errors
+        // Suppress BunnyCDN RUM network errors (production only)
         window.addEventListener("error", function(event) {
             if (event.target && event.target.src && 
                 event.target.src.includes("bunnyinfra.net")) {
@@ -9681,7 +9823,7 @@ function flexpress_add_console_cleanup()
             }
         });
         
-        // Suppress HLS.js non-fatal buffer warnings
+        // Suppress HLS.js non-fatal buffer warnings (production only)
         window.addEventListener("error", function(event) {
             if (event.error && event.error.message && 
                 (event.error.message.includes("bufferStalledError") || 
@@ -9691,7 +9833,7 @@ function flexpress_add_console_cleanup()
             }
         });
         
-        // Suppress specific third-party script errors
+        // Suppress specific third-party script errors (production only)
         window.addEventListener("unhandledrejection", function(event) {
             if (event.reason && event.reason.message && 
                 event.reason.message.includes("Failed to execute \'observe\' on \'MutationObserver\'")) {
@@ -9700,7 +9842,7 @@ function flexpress_add_console_cleanup()
             }
         });
         
-        // Suppress BunnyCDN RUM unhandled rejections
+        // Suppress BunnyCDN RUM unhandled rejections (production only)
         window.addEventListener("unhandledrejection", function(event) {
             if (event.reason && event.reason.message && 
                 event.reason.message.includes("bunnyinfra.net")) {
@@ -9708,9 +9850,8 @@ function flexpress_add_console_cleanup()
                 return false;
             }
         });
+        ' : '') . '
         </script>';
-    }
-}
 
 /**
  * Tag Collection Helper Functions

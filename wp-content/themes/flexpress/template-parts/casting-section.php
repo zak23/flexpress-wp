@@ -31,34 +31,50 @@ if (!defined('ABSPATH')) {
         </div>
 
         <div class="row justify-content-center">
-            <div class="col-lg-10">
+            <div class="col-lg-12">
                 <div class="casting-content-container bg-dark rounded-3 p-4 shadow-lg">
                     <div class="row align-items-center">
                         <!-- Large Image on the Left -->
-                        <div class="col-md-6 mb-4 mb-md-0">
-                            <div class="casting-image">
-                                <?php
-                                // Get casting image from theme options or use default
-                                $general_settings = get_option('flexpress_general_settings', array());
-                                $casting_image_id = isset($general_settings['casting_image']) ? $general_settings['casting_image'] : '';
+                        <?php
+                        // Get casting image from theme options
+                        $general_settings = get_option('flexpress_general_settings', array());
+                        $casting_image_id = isset($general_settings['casting_image']) ? $general_settings['casting_image'] : '';
 
+                        $optimized_image_url = '';
+                        if ($casting_image_id) {
+                            $optimized_image_url = wp_get_attachment_url($casting_image_id);
+                        }
 
-                                if ($casting_image_id) {
-                                    $image_url = wp_get_attachment_url($casting_image_id);
-                                    echo wp_get_attachment_image($casting_image_id, 'casting-image', false, array(
-                                        'alt' => esc_attr__('Join Our Cast', 'flexpress'),
-                                        'class' => 'img-fluid rounded-3 shadow'
-                                    ));
-                                } else {
-                                    // Fallback to a default image or placeholder
-                                    echo '<img src="' . get_template_directory_uri() . '/assets/images/casting-default.svg" alt="' . esc_attr__('Join Our Cast', 'flexpress') . '" class="img-fluid rounded-3 shadow">';
-                                }
-                                ?>
+                        // Apply BunnyCDN optimizer if we have a URL
+                        if (!empty($optimized_image_url)) {
+                            $optimizer_params = [
+                                'width'   => 650,
+                                'format'  => 'webp',
+                                'quality' => 75,
+                            ];
+                            $query_string = http_build_query($optimizer_params);
+
+                            $video_settings = get_option('flexpress_video_settings', array());
+                            $cdn_host = !empty($video_settings['bunnycdn_static_host']) ? $video_settings['bunnycdn_static_host'] : 'static.zakspov.com';
+                            $cdn_host = preg_replace('#^https?://#', '', $cdn_host);
+                            $source_host = parse_url($optimized_image_url, PHP_URL_HOST);
+                            if (!empty($source_host)) {
+                                $optimized_image_url = str_replace($source_host, $cdn_host, $optimized_image_url);
+                            }
+                            $optimized_image_url .= (strpos($optimized_image_url, '?') === false ? '?' : '&') . $query_string;
+                        }
+                        ?>
+
+                        <?php if (!empty($optimized_image_url)) : ?>
+                            <div class="col-md-6 mb-4 mb-md-0">
+                                <div class="casting-image">
+                                    <img src="<?php echo esc_url($optimized_image_url); ?>" alt="<?php echo esc_attr__('Join Our Cast', 'flexpress'); ?>" class="img-fluid rounded-3 shadow">
+                                </div>
                             </div>
-                        </div>
+                        <?php endif; ?>
 
                         <!-- Benefits on the Right -->
-                        <div class="col-md-6">
+                        <div class="<?php echo !empty($optimized_image_url) ? 'col-md-6' : 'col-12'; ?>">
                             <div class="casting-benefits">
                                 <ul class="casting-benefits-list list-unstyled">
                                     <?php

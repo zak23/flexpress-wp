@@ -11,6 +11,13 @@ FlexPress is designed specifically for content websites (primarily adult content
 
 ## 🌟 Core Features
 
+### Casting Section – Optimized Image + Fallback Removed (November 2025)
+
+- The casting section image now uses BunnyCDN Image Optimizer (`width=650&format=webp&quality=75`).
+- Removed the default placeholder; if no image is configured, the image column is omitted and the content spans full width.
+- Host is swapped to the Static CDN host set in FlexPress Video settings (`bunnycdn_static_host`), default `static.zakspov.com`.
+- Affects: `template-parts/casting-section.php`.
+
 ### Join Now CTA – Fallback Image Removed (November 2025)
 
 - The Join Now CTA no longer uses a default/fallback image.

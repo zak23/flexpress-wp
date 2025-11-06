@@ -22,6 +22,12 @@ A modern WordPress website running in Docker containers with MySQL database and 
 - No synchronous asset is emitted for a missing image; CDN optimizer still applies when present.
 - Docs: Theme README updated accordingly.
 
+### Casting Section Image Optimization + Fallback Removal (November 2025)
+
+- Applied BunnyCDN Image Optimizer to the casting section image with `width=650&format=webp&quality=75`.
+- Removed default placeholder; when no image is configured the image column is omitted and content spans full width.
+- Host is swapped to the Static CDN host from settings (`bunnycdn_static_host`), defaulting to `static.zakspov.com`.
+
 ### Settings Save Robustness (October 2025)
 
 - Problem: Saving one settings page (e.g., Featured On) cleared unrelated settings because only posted fields were saved.

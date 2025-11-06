@@ -54,7 +54,7 @@ class FlexPress_Casting_Settings
         $image_id      = isset($options['casting_image']) ? absint($options['casting_image']) : 0;
 
         $image_url = $image_id ? wp_get_attachment_image_url($image_id, 'medium') : '';
-        ?>
+?>
         <div class="wrap">
             <h1><?php echo esc_html__('Casting', 'flexpress'); ?></h1>
 
@@ -86,8 +86,8 @@ class FlexPress_Casting_Settings
                                     <?php if (!empty($benefits)) : ?>
                                         <?php foreach ($benefits as $idx => $benefit) : ?>
                                             <?php
-                                                $icon_class = isset($benefit['icon_class']) ? $benefit['icon_class'] : '';
-                                                $text = isset($benefit['text']) ? $benefit['text'] : '';
+                                            $icon_class = isset($benefit['icon_class']) ? $benefit['icon_class'] : '';
+                                            $text = isset($benefit['text']) ? $benefit['text'] : '';
                                             ?>
                                             <div class="casting-benefit-item" style="margin-bottom:8px;display:flex;gap:8px;align-items:center;">
                                                 <input type="text" name="flexpress_general_settings[casting_benefits][<?php echo esc_attr($idx); ?>][icon_class]" value="<?php echo esc_attr($icon_class); ?>" class="regular-text" placeholder="fas fa-film" style="width:220px;" />
@@ -153,8 +153,8 @@ class FlexPress_Casting_Settings
                     var idx = container.children('.casting-benefit-item').length;
                     var row = $('<div class="casting-benefit-item" style="margin-bottom:8px;display:flex;gap:8px;align-items:center;"></div>');
                     row.html('<input type="text" name="flexpress_general_settings[casting_benefits][' + idx + '][icon_class]" value="" class="regular-text" placeholder="fas fa-film" style="width:220px;" />' +
-                             '<input type="text" name="flexpress_general_settings[casting_benefits][' + idx + '][text]" value="" class="regular-text" placeholder="Professional production environment" style="flex:1;" />' +
-                             '<button type="button" class="button remove-benefit">&times;</button>');
+                        '<input type="text" name="flexpress_general_settings[casting_benefits][' + idx + '][text]" value="" class="regular-text" placeholder="Professional production environment" style="flex:1;" />' +
+                        '<button type="button" class="button remove-benefit">&times;</button>');
                     container.append(row);
                 });
 
@@ -177,10 +177,15 @@ class FlexPress_Casting_Settings
 
                 uploadBtn.on('click', function(e) {
                     e.preventDefault();
-                    if (frame) { frame.open(); return; }
+                    if (frame) {
+                        frame.open();
+                        return;
+                    }
                     frame = wp.media({
                         title: '<?php echo esc_js(__('Select or Upload Casting Image', 'flexpress')); ?>',
-                        button: { text: '<?php echo esc_js(__('Use this image', 'flexpress')); ?>' },
+                        button: {
+                            text: '<?php echo esc_js(__('Use this image', 'flexpress')); ?>'
+                        },
                         multiple: false
                     });
                     frame.on('select', function() {
@@ -205,8 +210,6 @@ class FlexPress_Casting_Settings
                 });
             });
         </script>
-        <?php
+<?php
     }
 }
-
-

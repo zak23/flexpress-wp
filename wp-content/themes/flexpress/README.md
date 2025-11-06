@@ -247,6 +247,21 @@ Frontend template: `wp-content/themes/flexpress/single-model.php` renders these 
 - `flexpress_update_membership_status()` now invalidates caches after updating the status
 - This prevents sticky membership state after purchases, cancellations, or PPV unlocks when Redis object cache is enabled
 
+### Join CTA – Dedicated Editable Settings (November 2025)
+
+- Location: FlexPress → Join CTA (founders only)
+- Storage: All fields persist in `flexpress_general_settings`
+- Fields:
+  - Headline, Subtitle
+  - Features list (dynamic add/remove)
+  - Offer text
+  - Button text and URL
+  - Security note text
+  - Login prompt, Login link text, Login URL
+  - CTA Image (convenience control; same key as General → Join CTA Image)
+- Frontend: `template-parts/join-now-cta.php` renders from settings with safe fallbacks matching previous hardcoded strings
+- Save robustness: Sanitizer merges with existing keys to preserve non-posted values
+
 ### Redis/Object Cache & Logged-in Users (October 2025)
 
 - Added strict cache headers for authenticated sessions:
@@ -1119,6 +1134,7 @@ gross_revenue - affiliate_commissions - refunds - chargebacks
 - Backward-compatible keys continue when applicable: `subscription_amount`, `subscription_currency`, `next_rebill_date`, `membership_expires`.
 
 Example access:
+
 ```php
 $amount = get_user_meta($user_id, 'flowguard_price_amount', true);
 $phase  = get_user_meta($user_id, 'flowguard_subscription_phase', true);
@@ -1177,6 +1193,7 @@ wp_flexpress_affiliate_payouts:
 - **Join Now CTA** (`template-parts/join-now-cta.php`)
   - Compelling call-to-action section for homepage
   - Dynamic featured episode image with hover play button
+  - Optimized via Bunny Dynamic Image API when Bunny Serve URL is configured (WebP + srcset)
   - Features list with checkmark icons
   - Promotional offer display (50% off first month)
   - Direct links to join and login pages

@@ -149,9 +149,12 @@ class FlexPress_Gallery_System
                 <div class="gallery-images-grid" id="gallery-images-grid">
                     <?php if (!empty($gallery_images)) : ?>
                         <?php foreach ($gallery_images as $index => $image) : ?>
-                            <div class="gallery-image-item" data-image-id="<?php echo esc_attr($image['id']); ?>">
+                            <div class="gallery-image-item" data-image-id="<?php echo esc_attr(isset($image['identifier']) ? $image['identifier'] : ''); ?>">
                                 <div class="image-preview">
-                                    <img src="<?php echo esc_url($image['thumbnail']); ?>" alt="<?php echo esc_attr($image['alt']); ?>">
+                                    <?php
+                                    $admin_thumb = !empty($image['bunnycdn_thumbnail_url']) ? FlexPress_Gallery_System::generate_bunnycdn_token_url($image['bunnycdn_thumbnail_url'], 24) : (!empty($image['bunnycdn_url']) ? FlexPress_Gallery_System::generate_bunnycdn_token_url($image['bunnycdn_url'], 24) : '');
+                                    ?>
+                                    <img src="<?php echo esc_url($admin_thumb); ?>" alt="<?php echo esc_attr($image['alt']); ?>">
                                     <div class="image-overlay">
                                         <button type="button" class="button button-small edit-image" title="<?php _e('Edit Image', 'flexpress'); ?>">
                                             <span class="dashicons dashicons-edit"></span>
@@ -419,9 +422,12 @@ class FlexPress_Gallery_System
                 <div class="gallery-images-grid" id="extras-gallery-images-grid">
                     <?php if (!empty($gallery_images)) : ?>
                         <?php foreach ($gallery_images as $index => $image) : ?>
-                            <div class="gallery-image-item" data-image-id="<?php echo esc_attr($image['id']); ?>">
+                            <div class="gallery-image-item" data-image-id="<?php echo esc_attr(isset($image['identifier']) ? $image['identifier'] : ''); ?>">
                                 <div class="image-preview">
-                                    <img src="<?php echo esc_url($image['thumbnail']); ?>" alt="<?php echo esc_attr($image['alt']); ?>">
+                                    <?php
+                                    $admin_thumb = !empty($image['bunnycdn_thumbnail_url']) ? FlexPress_Gallery_System::generate_bunnycdn_token_url($image['bunnycdn_thumbnail_url'], 24) : (!empty($image['bunnycdn_url']) ? FlexPress_Gallery_System::generate_bunnycdn_token_url($image['bunnycdn_url'], 24) : '');
+                                    ?>
+                                    <img src="<?php echo esc_url($admin_thumb); ?>" alt="<?php echo esc_attr($image['alt']); ?>">
                                     <div class="image-overlay">
                                         <button type="button" class="button button-small edit-image" title="<?php _e('Edit Image', 'flexpress'); ?>">
                                             <span class="dashicons dashicons-edit"></span>
@@ -802,51 +808,15 @@ class FlexPress_Gallery_System
         error_log("  Type: " . $file['type']);
         error_log("  Temp file: " . $file['tmp_name']);
 
-        $upload = wp_handle_upload($file, array('test_form' => false));
-
-        if (isset($upload['error'])) {
-            error_log("❌ WordPress upload error: " . $upload['error']);
-            wp_send_json_error('WordPress upload failed: ' . $upload['error']);
-        }
-
-        error_log("✅ WordPress upload successful:");
-        error_log("  Upload file: " . $upload['file']);
-        error_log("  Upload URL: " . $upload['url']);
-        error_log("  Upload type: " . $upload['type']);
-
-        // Create attachment
-        $attachment_id = wp_insert_attachment(array(
-            'post_title' => sanitize_text_field($_POST['title']),
-            'post_content' => sanitize_textarea_field($_POST['description']),
-            'post_excerpt' => sanitize_text_field($_POST['caption']),
-            'post_status' => 'inherit',
-            'post_parent' => $post_id,
-            'post_mime_type' => $upload['type']
-        ), $upload['file'], $post_id);
-
-        if (is_wp_error($attachment_id)) {
-            error_log("❌ Failed to create attachment: " . $attachment_id->get_error_message());
-            wp_send_json_error('Failed to create attachment: ' . $attachment_id->get_error_message());
-        }
-
-        error_log("✅ Attachment created with ID: $attachment_id");
-
-        // Generate image sizes
-        require_once(ABSPATH . 'wp-admin/includes/image.php');
-        $attachment_data = wp_generate_attachment_metadata($attachment_id, $upload['file']);
-        wp_update_attachment_metadata($attachment_id, $attachment_data);
-        error_log("✅ Image sizes generated");
+        // Skip WordPress media library and upload directly to BunnyCDN
+        $tmp_path = $file['tmp_name'];
+        $original_client_name = sanitize_file_name($file['name']);
+        $original_filename_base = pathinfo($original_client_name, PATHINFO_FILENAME);
 
         // Upload to BunnyCDN if configured
         error_log("Starting BunnyCDN upload...");
-        $bunnycdn_result = $this->upload_to_bunnycdn($attachment_id, $upload['file'], $post_id);
+        $bunnycdn_result = $this->upload_to_bunnycdn($tmp_path, $post_id, $original_filename_base);
         error_log("BunnyCDN upload result: " . ($bunnycdn_result ?: 'FAILED'));
-
-        // Get image URLs
-        $thumbnail_url = wp_get_attachment_image_url($attachment_id, 'gallery-thumbnail');
-        $medium_url = wp_get_attachment_image_url($attachment_id, 'gallery-medium');
-        $large_url = wp_get_attachment_image_url($attachment_id, 'gallery-large');
-        $full_url = wp_get_attachment_image_url($attachment_id, 'full');
 
         // Add to gallery based on post type
         $meta_key = ($post_type === 'episode') ? '_episode_gallery_images' : '_extras_gallery_images';
@@ -855,23 +825,19 @@ class FlexPress_Gallery_System
             $gallery_images = array();
         }
 
+        // Build gallery image record (BunnyCDN-only)
         $new_image = array(
-            'id' => $attachment_id,
+            'identifier' => md5($original_client_name . '|' . microtime(true) . '|' . wp_generate_password(8, false)),
             'title' => sanitize_text_field($_POST['title']),
             'alt' => sanitize_text_field($_POST['alt']),
             'caption' => sanitize_text_field($_POST['caption']),
-            'filename' => sanitize_file_name($file['name']),
-            'thumbnail' => $thumbnail_url,
-            'medium' => $medium_url,
-            'large' => $large_url,
-            'full' => $full_url,
+            'filename' => $original_client_name,
             'bunnycdn_url' => $bunnycdn_result,
             'bunnycdn_thumbnail_url' => $this->get_bunnycdn_thumbnail_url($bunnycdn_result),
             'upload_date' => current_time('mysql')
         );
 
         error_log("Gallery image data:");
-        error_log("  WordPress URLs: thumbnail=$thumbnail_url, medium=$medium_url, large=$large_url, full=$full_url");
         error_log("  BunnyCDN URL: " . ($bunnycdn_result ?: 'NOT SET'));
 
         $gallery_images[] = $new_image;
@@ -904,10 +870,10 @@ class FlexPress_Gallery_System
         }
 
         $post_id = intval($_POST['post_id']);
-        $image_id = intval($_POST['image_id']);
+        $image_identifier = isset($_POST['image_identifier']) ? sanitize_text_field($_POST['image_identifier']) : '';
         $post_type = get_post_type($post_id);
 
-        if (!$post_id || !$image_id || !in_array($post_type, array('episode', 'extras'))) {
+        if (!$post_id || empty($image_identifier) || !in_array($post_type, array('episode', 'extras'))) {
             wp_die('Invalid IDs or post type');
         }
 
@@ -915,14 +881,11 @@ class FlexPress_Gallery_System
         $meta_key = ($post_type === 'episode') ? '_episode_gallery_images' : '_extras_gallery_images';
         $gallery_images = get_post_meta($post_id, $meta_key, true);
         if (is_array($gallery_images)) {
-            $gallery_images = array_filter($gallery_images, function ($img) use ($image_id) {
-                return $img['id'] != $image_id;
-            });
+            $gallery_images = array_values(array_filter($gallery_images, function ($img) use ($image_identifier) {
+                return isset($img['identifier']) ? ($img['identifier'] !== $image_identifier) : true;
+            }));
             update_post_meta($post_id, $meta_key, $gallery_images);
         }
-
-        // Delete attachment
-        wp_delete_attachment($image_id, true);
 
         wp_send_json_success('Image deleted successfully');
     }
@@ -954,14 +917,7 @@ class FlexPress_Gallery_System
             wp_send_json_success('No images to delete');
         }
 
-        // Delete all attachments
-        foreach ($gallery_images as $image) {
-            if (isset($image['id'])) {
-                wp_delete_attachment($image['id'], true);
-            }
-        }
-
-        // Clear gallery meta
+        // Clear gallery meta only (do not delete from BunnyCDN)
         delete_post_meta($post_id, $meta_key);
 
         wp_send_json_success('All gallery images deleted successfully');
@@ -981,7 +937,7 @@ class FlexPress_Gallery_System
         }
 
         $post_id = intval($_POST['post_id']);
-        $image_order = array_map('intval', $_POST['image_order']);
+        $image_order = isset($_POST['image_order']) && is_array($_POST['image_order']) ? array_map('sanitize_text_field', $_POST['image_order']) : array();
         $post_type = get_post_type($post_id);
 
         if (!$post_id || empty($image_order) || !in_array($post_type, array('episode', 'extras'))) {
@@ -993,9 +949,9 @@ class FlexPress_Gallery_System
         $gallery_images = get_post_meta($post_id, $meta_key, true);
         if (is_array($gallery_images)) {
             $reordered = array();
-            foreach ($image_order as $image_id) {
+            foreach ($image_order as $identifier) {
                 foreach ($gallery_images as $image) {
-                    if ($image['id'] == $image_id) {
+                    if (isset($image['identifier']) && $image['identifier'] === $identifier) {
                         $reordered[] = $image;
                         break;
                     }
@@ -1010,10 +966,9 @@ class FlexPress_Gallery_System
     /**
      * Upload image to BunnyCDN Storage
      */
-    private function upload_to_bunnycdn($attachment_id, $file_path, $post_id)
+    private function upload_to_bunnycdn($file_path, $post_id, $original_filename)
     {
         error_log("=== FLEXPRESS GALLERY UPLOAD START ===");
-        error_log("Attachment ID: $attachment_id");
         error_log("Post ID: $post_id");
         error_log("File Path: $file_path");
 
@@ -1039,9 +994,7 @@ class FlexPress_Gallery_System
             return ''; // BunnyCDN Storage not configured
         }
 
-        // Generate unique filename with post_id folder structure
-        $file_info = pathinfo($file_path);
-        $original_filename = $file_info['filename'];
+        // Generate unique filename with post_id folder structure (JPEG output)
         $random_string = wp_generate_password(8, false);
         $unix_timestamp = time();
         $filename = $original_filename . '-' . $random_string . '-' . $unix_timestamp . '.jpg';
@@ -1056,6 +1009,37 @@ class FlexPress_Gallery_System
         error_log("  Generated filename: $filename");
         error_log("  Remote path: $remote_path");
 
+        // OPTIONAL RESIZE: Constrain longest side to 1280px and convert to JPEG for consistent delivery
+        $processed_temp = '';
+        $source_for_upload = $file_path;
+        $content_type_for_upload = 'image/jpeg';
+
+        $image_editor = wp_get_image_editor($file_path);
+        if (!is_wp_error($image_editor)) {
+            $size = $image_editor->get_size();
+            error_log("Original image size: {$size['width']}x{$size['height']}");
+
+            // Resize within 1280x1280 box without cropping (keeps aspect ratio)
+            $resize_result = $image_editor->resize(1280, 1280, false);
+            if (is_wp_error($resize_result)) {
+                error_log('❌ Failed to resize original: ' . $resize_result->get_error_message());
+            } else {
+                $uploads = wp_upload_dir();
+                $processed_temp = trailingslashit($uploads['path']) . 'temp_full_' . $filename;
+                $save_result = $image_editor->save($processed_temp, 'image/jpeg');
+                if (is_wp_error($save_result)) {
+                    error_log('❌ Failed to save processed original: ' . $save_result->get_error_message());
+                    $processed_temp = '';
+                } else {
+                    error_log('✅ Processed original saved: ' . $processed_temp);
+                    $source_for_upload = $processed_temp;
+                    $content_type_for_upload = 'image/jpeg';
+                }
+            }
+        } else {
+            error_log('❌ Image editor init failed: ' . $image_editor->get_error_message());
+        }
+
         // Upload original image to BunnyCDN Storage via HTTP API
         $upload_url = 'https://' . $storage_url . '/' . $storage_zone . '/' . $remote_path;
 
@@ -1065,9 +1049,13 @@ class FlexPress_Gallery_System
         error_log("  API Key: " . substr($storage_api_key, 0, 8) . "...");
 
         // Read file content
-        $file_content = file_get_contents($file_path);
+        $file_content = file_get_contents($source_for_upload);
         if ($file_content === false) {
             error_log('❌ Failed to read file content');
+            // Clean up temp if it exists
+            if ($processed_temp && file_exists($processed_temp)) {
+                unlink($processed_temp);
+            }
             return '';
         }
 
@@ -1078,7 +1066,7 @@ class FlexPress_Gallery_System
             'method' => 'PUT',
             'headers' => array(
                 'AccessKey' => $storage_api_key,
-                'Content-Type' => mime_content_type($file_path)
+                'Content-Type' => $content_type_for_upload
             ),
             'body' => $file_content,
             'timeout' => 60
@@ -1102,8 +1090,14 @@ class FlexPress_Gallery_System
 
         error_log('✅ Original file uploaded successfully to BunnyCDN Storage via HTTP API');
 
-        // Generate and upload thumbnail
-        $thumbnail_url = $this->generate_and_upload_thumbnail($file_path, $filename, $post_id, $post_type, $storage_api_key, $storage_zone, $storage_url, $serve_url);
+        // Clean up processed temp file if created
+        if ($processed_temp && file_exists($processed_temp)) {
+            unlink($processed_temp);
+        }
+
+        // Generate and upload thumbnail from processed (or original) file
+        $thumbnail_source = $processed_temp && file_exists($processed_temp) ? $processed_temp : $file_path;
+        $thumbnail_url = $this->generate_and_upload_thumbnail($thumbnail_source, $filename, $post_id, $post_type, $storage_api_key, $storage_zone, $storage_url, $serve_url);
 
         // Return CDN URL (use serve URL if available, otherwise storage URL)
         $cdn_url = !empty($serve_url) ? $serve_url : $storage_url;
@@ -1112,9 +1106,6 @@ class FlexPress_Gallery_System
         error_log("Final CDN URL: $final_url");
         error_log("Thumbnail URL: " . ($thumbnail_url ?: 'NOT GENERATED'));
         error_log("=== FLEXPRESS GALLERY UPLOAD COMPLETE ===");
-
-        // Store thumbnail URL for later retrieval
-        update_post_meta($attachment_id, '_bunnycdn_thumbnail_url', $thumbnail_url);
 
         return $final_url;
     }
@@ -1457,6 +1448,17 @@ function flexpress_has_episode_gallery($post_id = null)
  */
 function flexpress_display_episode_gallery($post_id = null, $columns = null, $has_access = null)
 {
+    // Ensure lightbox script is available whenever a gallery is rendered
+    if (!is_admin()) {
+        wp_enqueue_script(
+            'flexpress-gallery-lightbox',
+            get_template_directory_uri() . '/assets/js/gallery-lightbox.js',
+            array('jquery'),
+            wp_get_theme()->get('Version'),
+            true
+        );
+        wp_script_add_data('flexpress-gallery-lightbox', 'defer', true);
+    }
     if (!$post_id) {
         $post_id = get_the_ID();
     }

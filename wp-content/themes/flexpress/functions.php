@@ -144,6 +144,7 @@ if (is_admin()) {
 
 require_once FLEXPRESS_PATH . '/includes/performance-optimization.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-general-settings.php';
+require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-join-cta-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-awards-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-featured-on-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-coming-soon-settings.php';
@@ -639,7 +640,7 @@ function flexpress_enqueue_scripts_and_styles()
         ));
     }
 
-    // Enqueue gallery lightbox script on single episode and extras pages
+    // Enqueue gallery lightbox script on single episode and extras pages (kept for compatibility)
     if (is_singular('episode') || is_singular('extras')) {
         wp_enqueue_script(
             'flexpress-gallery-lightbox',
@@ -1117,26 +1118,7 @@ add_action('wp_ajax_flexpress_test_settings', 'flexpress_test_settings_save');
 /**
  * AJAX handler to get current accent color (for debugging)
  */
-add_action('wp_ajax_flexpress_get_accent_color', 'flexpress_get_accent_color_debug');
-function flexpress_get_accent_color_debug()
-{
-    check_ajax_referer('flexpress_debug', 'nonce');
 
-    if (!current_user_can('manage_options')) {
-        wp_send_json_error('Insufficient permissions');
-        return;
-    }
-
-    $options = get_option('flexpress_general_settings', array());
-    $accent_color = isset($options['accent_color']) ? $options['accent_color'] : '#ff5093';
-
-    error_log('FlexPress Accent Color AJAX: Current value from DB: ' . $accent_color);
-
-    wp_send_json_success(array(
-        'value' => $accent_color,
-        'options' => $options
-    ));
-}
 
 /**
  * Sanitize general settings - shared function for both classes
@@ -1173,50 +1155,38 @@ function flexpress_sanitize_general_settings($input)
 
     // Sanitize accent color - ensure it's a valid hex color
     if (isset($input['accent_color'])) {
-        error_log('FlexPress Accent Color Debug: Raw input received: ' . print_r($input['accent_color'], true));
         $color_value = trim($input['accent_color']);
-        error_log('FlexPress Accent Color Debug: After trim: "' . $color_value . '"');
-        error_log('FlexPress Accent Color Debug: Current value from DB: ' . (isset($current['accent_color']) ? $current['accent_color'] : 'NOT SET'));
 
         // Normalize: ensure it starts with #
         if (!empty($color_value) && substr($color_value, 0, 1) !== '#') {
             $color_value = '#' . $color_value;
-            error_log('FlexPress Accent Color Debug: Added # prefix, now: "' . $color_value . '"');
         }
 
         // If color is provided, sanitize it
         if (!empty($color_value) && strlen($color_value) >= 4) {
-            error_log('FlexPress Accent Color Debug: Color value length: ' . strlen($color_value));
             $color = sanitize_hex_color($color_value);
-            error_log('FlexPress Accent Color Debug: After sanitize_hex_color(): ' . ($color ? $color : 'EMPTY/FALSE'));
 
             // If sanitize_hex_color returns empty/false, use the provided value if it looks valid
             if (empty($color) && preg_match('/^#[0-9A-Fa-f]{6}$/', $color_value)) {
                 $color = strtoupper($color_value);
-                error_log('FlexPress Accent Color Debug: Matched 6-digit pattern, using: "' . $color . '"');
             } elseif (empty($color) && preg_match('/^#[0-9A-Fa-f]{3}$/', $color_value)) {
                 // Handle 3-digit hex colors (expand to 6 digits)
                 $color = '#' . str_repeat(substr($color_value, 1, 1), 2) . str_repeat(substr($color_value, 2, 1), 2) . str_repeat(substr($color_value, 3, 1), 2);
-                error_log('FlexPress Accent Color Debug: Matched 3-digit pattern, expanded to: "' . $color . '"');
             }
 
             $final_color = !empty($color) ? $color : '#ff5093'; // Fallback to default
-            error_log('FlexPress Accent Color Debug: Final color to save: "' . $final_color . '"');
             $sanitized['accent_color'] = $final_color;
         } else {
-            error_log('FlexPress Accent Color Debug: Color value is empty or too short. Empty: ' . (empty($color_value) ? 'YES' : 'NO') . ', Length: ' . strlen($color_value));
             // If empty or invalid, keep existing value (don't override)
             // This handles cases where the color picker might post empty
             if (isset($current['accent_color']) && !empty($current['accent_color'])) {
                 $sanitized['accent_color'] = $current['accent_color'];
-                error_log('FlexPress Accent Color Debug: Keeping existing value: "' . $current['accent_color'] . '"');
             } else {
                 $sanitized['accent_color'] = '#ff5093'; // Default if no existing value
-                error_log('FlexPress Accent Color Debug: Using fallback default: "#ff5093"');
             }
         }
     } else {
-        error_log('FlexPress Accent Color Debug: accent_color NOT in input array. Keys: ' . implode(', ', array_keys($input)));
+        // accent_color not provided; keep existing or default handled elsewhere
     }
 
     // Sanitize age verification exit URL
@@ -1345,6 +1315,56 @@ function flexpress_sanitize_general_settings($input)
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('FlexPress General Settings: No join_cta_image in input data');
         }
+    }
+
+    // Sanitize Join CTA textual fields
+    if (isset($input['join_cta_headline'])) {
+        $sanitized['join_cta_headline'] = sanitize_text_field($input['join_cta_headline']);
+    }
+
+    if (isset($input['join_cta_subtitle'])) {
+        $sanitized['join_cta_subtitle'] = sanitize_text_field($input['join_cta_subtitle']);
+    }
+
+    if (isset($input['join_cta_features']) && is_array($input['join_cta_features'])) {
+        $clean_features = array();
+        foreach ($input['join_cta_features'] as $feature) {
+            $feature_text = sanitize_text_field($feature);
+            if ($feature_text !== '') {
+                $clean_features[] = $feature_text;
+            }
+        }
+        $sanitized['join_cta_features'] = $clean_features;
+    }
+
+    if (isset($input['join_cta_offer_text'])) {
+        $sanitized['join_cta_offer_text'] = sanitize_text_field($input['join_cta_offer_text']);
+    }
+
+    if (isset($input['join_cta_button_text'])) {
+        $sanitized['join_cta_button_text'] = sanitize_text_field($input['join_cta_button_text']);
+    }
+
+    if (isset($input['join_cta_button_url'])) {
+        $url = esc_url_raw($input['join_cta_button_url']);
+        $sanitized['join_cta_button_url'] = $url ? $url : '';
+    }
+
+    if (isset($input['join_cta_security_text'])) {
+        $sanitized['join_cta_security_text'] = sanitize_text_field($input['join_cta_security_text']);
+    }
+
+    if (isset($input['join_cta_login_prompt'])) {
+        $sanitized['join_cta_login_prompt'] = sanitize_text_field($input['join_cta_login_prompt']);
+    }
+
+    if (isset($input['join_cta_login_text'])) {
+        $sanitized['join_cta_login_text'] = sanitize_text_field($input['join_cta_login_text']);
+    }
+
+    if (isset($input['join_cta_login_url'])) {
+        $url = esc_url_raw($input['join_cta_login_url']);
+        $sanitized['join_cta_login_url'] = $url ? $url : '';
     }
 
     // Sanitize Coming Soon enabled (checkbox)
@@ -8580,7 +8600,7 @@ function flexpress_sanitize_discord_settings($input)
         $sanitized['notify_talent_applications'] = (bool) $input['notify_talent_applications'];
     }
 
-    return $sanitized;
+    return array_merge($current, $sanitized);
 }
 
 // AJAX handlers

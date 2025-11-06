@@ -1,8 +1,8 @@
 /**
- * FlexPress Gallery Lightbox
+ * FlexPress Gallery Lightbox (vanilla JS, no jQuery dependency)
  */
 
-(function ($) {
+(function () {
   "use strict";
 
   class FlexPressGalleryLightbox {
@@ -10,6 +10,10 @@
       this.currentIndex = 0;
       this.images = [];
       this.isOpen = false;
+      this.lightbox = null;
+      this.image = null;
+      this.caption = null;
+      this.counter = null;
 
       this.init();
     }
@@ -21,48 +25,69 @@
 
     createLightboxHTML() {
       const lightboxHTML = `
-                <div class="gallery-lightbox" id="gallery-lightbox">
-                    <div class="lightbox-content">
-                        <img class="lightbox-image" src="" alt="">
-                        <div class="lightbox-caption"></div>
-                    </div>
-                    <button class="lightbox-nav lightbox-prev" aria-label="Previous image">‹</button>
-                    <button class="lightbox-nav lightbox-next" aria-label="Next image">›</button>
-                    <button class="lightbox-close" aria-label="Close lightbox">×</button>
-                    <div class="lightbox-counter"></div>
-                </div>
-            `;
+        <div class="gallery-lightbox" id="gallery-lightbox">
+          <div class="lightbox-content">
+            <img class="lightbox-image" src="" alt="">
+            <div class="lightbox-caption"></div>
+          </div>
+          <button class="lightbox-nav lightbox-prev" aria-label="Previous image">‹</button>
+          <button class="lightbox-nav lightbox-next" aria-label="Next image">›</button>
+          <button class="lightbox-close" aria-label="Close lightbox">×</button>
+          <div class="lightbox-counter"></div>
+        </div>
+      `;
 
-      $("body").append(lightboxHTML);
-      this.lightbox = $("#gallery-lightbox");
-      this.image = this.lightbox.find(".lightbox-image");
-      this.caption = this.lightbox.find(".lightbox-caption");
-      this.counter = this.lightbox.find(".lightbox-counter");
+      document.body.insertAdjacentHTML("beforeend", lightboxHTML);
+      this.lightbox = document.getElementById("gallery-lightbox");
+      this.image = this.lightbox.querySelector(".lightbox-image");
+      this.caption = this.lightbox.querySelector(".lightbox-caption");
+      this.counter = this.lightbox.querySelector(".lightbox-counter");
     }
 
     bindEvents() {
-      // Open lightbox when gallery images are clicked
-      $(document).on("click", ".gallery-link", (e) => {
-        e.preventDefault();
-        this.openLightbox(e.currentTarget);
-      });
+      // Open lightbox when gallery images are clicked (capture phase to beat other handlers)
+      document.addEventListener(
+        "click",
+        (evt) => {
+          const target = evt.target;
+          if (!target) return;
+          const link = target.closest && target.closest(".gallery-link");
+          if (!link) return;
+
+          const inGallery = link.closest(".episode-gallery, .extras-gallery");
+          if (!inGallery) return;
+
+          evt.preventDefault();
+          if (typeof evt.stopImmediatePropagation === "function") {
+            evt.stopImmediatePropagation();
+          }
+          evt.stopPropagation();
+
+          this.openLightbox(link);
+        },
+        true
+      );
 
       // Close lightbox
-      this.lightbox.on("click", ".lightbox-close", () => this.closeLightbox());
-      this.lightbox.on("click", (e) => {
-        if (e.target === this.lightbox[0]) {
+      this.lightbox.addEventListener("click", (e) => {
+        if (
+          e.target.classList.contains("lightbox-close") ||
+          e.target === this.lightbox
+        ) {
           this.closeLightbox();
         }
       });
 
       // Navigation
-      this.lightbox.on("click", ".lightbox-prev", () => this.previousImage());
-      this.lightbox.on("click", ".lightbox-next", () => this.nextImage());
+      const prevBtn = this.lightbox.querySelector(".lightbox-prev");
+      const nextBtn = this.lightbox.querySelector(".lightbox-next");
+      if (prevBtn)
+        prevBtn.addEventListener("click", () => this.previousImage());
+      if (nextBtn) nextBtn.addEventListener("click", () => this.nextImage());
 
       // Keyboard navigation
-      $(document).on("keydown", (e) => {
+      document.addEventListener("keydown", (e) => {
         if (!this.isOpen) return;
-
         switch (e.key) {
           case "Escape":
             this.closeLightbox();
@@ -76,118 +101,108 @@
         }
       });
 
-      // Handle window resize
-      $(window).on("resize", () => {
+      // Resize handling
+      window.addEventListener("resize", () => {
         if (this.isOpen) {
           this.fitImageToViewport();
         }
       });
     }
 
-    openLightbox(clickedElement) {
-      const $gallery = $(clickedElement).closest(
-        ".episode-gallery, .extras-gallery"
-      );
-      const $images = $gallery.find(".gallery-item");
+    openLightbox(clickedLink) {
+      const gallery = clickedLink.closest(".episode-gallery, .extras-gallery");
+      if (!gallery) return;
 
-      // Build images array
-      this.images = [];
-      $images.each((index, item) => {
-        const $item = $(item);
-        const $link = $item.find(".gallery-link");
-        const $img = $item.find("img");
-        const $caption = $item.find(".gallery-caption");
+      const links = Array.from(gallery.querySelectorAll(".gallery-link"));
 
-        this.images.push({
-          src: $link.attr("href"),
-          alt: $img.attr("alt"),
-          caption: $caption.text().trim(),
-        });
-      });
+      // Build images array from links
+      this.images = links
+        .map((link) => {
+          const item = link.closest(".gallery-item");
+          const img = item ? item.querySelector("img") : null;
+          const captionEl = item
+            ? item.querySelector(".gallery-caption")
+            : null;
+          const href = link.getAttribute("href") || "";
+          if (!href) return null;
+          return {
+            src: href,
+            alt: img ? img.getAttribute("alt") || "" : "",
+            caption: captionEl ? captionEl.textContent.trim() : "",
+          };
+        })
+        .filter(Boolean);
 
-      // Find clicked image index
-      this.currentIndex = $images.index(
-        $(clickedElement).closest(".gallery-item")
-      );
+      this.currentIndex = Math.max(0, links.indexOf(clickedLink));
 
-      // Show lightbox
-      this.showImage();
-      this.lightbox.addClass("active");
+      this.lightbox.classList.add("active");
       this.isOpen = true;
-
-      // Prevent body scroll
-      $("body").addClass("lightbox-open");
+      this.showImage();
+      document.body.classList.add("lightbox-open");
     }
 
     closeLightbox() {
-      this.lightbox.removeClass("active");
+      this.lightbox.classList.remove("active");
       this.isOpen = false;
-      $("body").removeClass("lightbox-open");
+      document.body.classList.remove("lightbox-open");
     }
 
     showImage() {
-      if (this.images.length === 0) return;
-
+      if (!this.images.length) return;
       const image = this.images[this.currentIndex];
 
-      // Add loading state
-      this.image.addClass("loading");
+      // Loading state
+      this.image.classList.add("loading");
 
-      // Create new image to preload
       const img = new Image();
       img.onload = () => {
-        this.image.attr("src", image.src).attr("alt", image.alt);
-        this.image.removeClass("loading");
-
-        // Ensure image fits within viewport
+        this.image.setAttribute("src", image.src);
+        this.image.setAttribute("alt", image.alt);
+        this.image.classList.remove("loading");
         this.fitImageToViewport();
       };
       img.onerror = () => {
-        this.image.removeClass("loading");
+        this.image.classList.remove("loading");
         console.error("Failed to load image:", image.src);
       };
       img.src = image.src;
 
-      this.caption.text(image.caption);
-      this.counter.text(`${this.currentIndex + 1} / ${this.images.length}`);
+      this.caption.textContent = image.caption;
+      this.counter.textContent = `${this.currentIndex + 1} / ${
+        this.images.length
+      }`;
 
-      // Update navigation button states
-      this.lightbox
-        .find(".lightbox-prev")
-        .prop("disabled", this.currentIndex === 0);
-      this.lightbox
-        .find(".lightbox-next")
-        .prop("disabled", this.currentIndex === this.images.length - 1);
+      // Update nav disabled state
+      const prevBtn = this.lightbox.querySelector(".lightbox-prev");
+      const nextBtn = this.lightbox.querySelector(".lightbox-next");
+      if (prevBtn) prevBtn.disabled = this.currentIndex === 0;
+      if (nextBtn)
+        nextBtn.disabled = this.currentIndex === this.images.length - 1;
     }
 
     fitImageToViewport() {
-      const $img = this.image;
-      const $content = this.lightbox.find(".lightbox-content");
+      const img = this.image;
+      const content = this.lightbox.querySelector(".lightbox-content");
+      if (!img || !content) return;
 
-      // Reset any previous sizing
-      $img.css({
-        "max-width": "",
-        "max-height": "",
-        width: "",
-        height: "",
-      });
+      // Reset
+      img.style.maxWidth = "";
+      img.style.maxHeight = "";
+      img.style.width = "";
+      img.style.height = "";
 
-      // Get viewport dimensions
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-
-      // Calculate available space (accounting for padding and caption)
-      const availableWidth = Math.min(viewportWidth * 0.9, $content.width());
+      // Use viewport-based sizing; fallback if content has no size yet
+      const availableWidth = viewportWidth * 0.9;
+      const contentHeight = content.clientHeight || viewportHeight * 0.9;
       const availableHeight =
-        Math.min(viewportHeight * 0.9, $content.height()) - 60; // Account for caption
+        Math.min(viewportHeight * 0.9, contentHeight) - 60;
 
-      // Set max dimensions
-      $img.css({
-        "max-width": availableWidth + "px",
-        "max-height": availableHeight + "px",
-        width: "auto",
-        height: "auto",
-      });
+      img.style.maxWidth = availableWidth + "px";
+      img.style.maxHeight = availableHeight + "px";
+      img.style.width = "auto";
+      img.style.height = "auto";
     }
 
     previousImage() {
@@ -205,10 +220,11 @@
     }
   }
 
-  // Initialize lightbox when document is ready
-  $(document).ready(() => {
-    if ($(".episode-gallery").length || $(".extras-gallery").length) {
-      new FlexPressGalleryLightbox();
-    }
-  });
-})(jQuery);
+  // Initialize immediately (no jQuery needed)
+  if (
+    document.querySelector(".episode-gallery") ||
+    document.querySelector(".extras-gallery")
+  ) {
+    new FlexPressGalleryLightbox();
+  }
+})();

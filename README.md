@@ -1,3 +1,14 @@
+## Plugin installation in Docker
+
+When running in Docker, WordPress config is injected via `WORDPRESS_CONFIG_EXTRA` in `.env`. To enable the Plugins → Add New screen and in-dashboard updates, ensure:
+
+```
+define('DISALLOW_FILE_MODS', false);
+define('DISALLOW_FILE_EDIT', true);
+```
+
+These are already set in `.env` for this project. Access wp-admin at your host IP on port 8085 (not localhost), e.g. `http://YOUR-IP:8085/wp-admin/`.
+
 # FlexPress WordPress Project
 
 A modern WordPress website running in Docker containers with MySQL database and phpMyAdmin for database management.
@@ -193,6 +204,14 @@ A modern WordPress website running in Docker containers with MySQL database and 
 - **Block CSS Guardrails**: `flexpress_maybe_dequeue_block_styles()` removes Gutenberg assets on views without blocks; if you add block-based templates, extend `flexpress_should_keep_block_styles()`.
 - **Deferred jQuery**: Core jQuery, jQuery Migrate, and jQuery Core now load deferred from the footer (`group = 1`) to keep render blocking requests off the critical path. Scripts must declare jQuery as a dependency instead of relying on head inlines.
 - **Regression Coverage**: `tests/puppeteer/test-critical-assets.mjs` verifies async stylesheet markup and footer jQuery placement alongside existing archive/mobile smoke tests.
+
+### Join CTA – Dedicated Editable Settings (November 2025)
+
+- Location: FlexPress → Join CTA (founders only)
+- Storage: All fields persist in `flexpress_general_settings`
+- Fields: Headline, Subtitle, Features list (dynamic), Offer text, Button text/URL, Security note, Login prompt, Login link text/URL, CTA Image
+- Frontend: `wp-content/themes/flexpress/template-parts/join-now-cta.php` consumes settings with sensible fallbacks
+- Save Robustness: Sanitizer merges with existing option keys to preserve non-posted values
 
 ### Earnings Dashboard (New Feature - October 2025)
 
@@ -3263,6 +3282,7 @@ FlexPress automatically redirects WordPress branded URLs to custom pages while p
 - Backward-compatible keys continue when applicable: `subscription_amount`, `subscription_currency`, `next_rebill_date`, `membership_expires`.
 
 Example access:
+
 ```php
 $amount = get_user_meta($user_id, 'flowguard_price_amount', true);
 $phase  = get_user_meta($user_id, 'flowguard_subscription_phase', true);

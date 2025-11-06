@@ -166,23 +166,6 @@ class FlexPress_General_Settings
             'flexpress_casting_section'
         );
 
-        // Add Join CTA Section
-        add_settings_section(
-            'flexpress_join_cta_section',
-            __('Join CTA Section', 'flexpress'),
-            array($this, 'render_join_cta_section_description'),
-            'flexpress_general_settings'
-        );
-
-        // Add join CTA image field
-        add_settings_field(
-            'flexpress_join_cta_image',
-            __('Join CTA Image', 'flexpress'),
-            array($this, 'render_join_cta_image_field'),
-            'flexpress_general_settings',
-            'flexpress_join_cta_section'
-        );
-
         // Add Featured Banner Section
         add_settings_section(
             'flexpress_featured_banner_section',
@@ -278,9 +261,7 @@ class FlexPress_General_Settings
     public function render_accent_color_field()
     {
         $options = get_option('flexpress_general_settings');
-        error_log('FlexPress Accent Color Render: Raw options from DB: ' . print_r($options, true));
         $value = isset($options['accent_color']) ? $options['accent_color'] : '#ff5093';
-        error_log('FlexPress Accent Color Render: Value to display: "' . $value . '"');
     ?>
         <input type="color"
             name="flexpress_general_settings[accent_color]"
@@ -298,29 +279,12 @@ class FlexPress_General_Settings
             </div>
         </div>
 
-        <div id="flexpress-accent-color-debug" style="margin-top: 20px; padding: 15px; background: #f0f0f0; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 12px;">
-            <strong>🔍 Accent Color Debug Info:</strong><br>
-            <span id="flexpress-debug-current-value">Current Value (DB): <code><?php echo esc_html($value); ?></code></span><br>
-            <span id="flexpress-debug-picker-value">Picker Value: <code id="flexpress-picker-code"><?php echo esc_html($value); ?></code></span><br>
-            <span id="flexpress-debug-form-value" style="color: #666;">Last Submitted Value: <code id="flexpress-form-code">-</code></span><br>
-            <span id="flexpress-debug-save-status" style="color: #666;">Save Status: <code id="flexpress-save-code">Waiting...</code></span>
-            <div id="flexpress-debug-comparison" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ccc; display: none;">
-                <strong>Comparison:</strong><br>
-                <span id="flexpress-comparison-text"></span>
-            </div>
-        </div>
+
 
         <script type="text/javascript">
             jQuery(document).ready(function($) {
-                console.log('FlexPress Accent Color Debug: Page loaded');
-                console.log('FlexPress Accent Color Debug: Current value from DB:', '<?php echo esc_js($value); ?>');
-                
                 var $picker = $('input[name="flexpress_general_settings[accent_color]"]');
-                var $debugDiv = $('#flexpress-accent-color-debug');
-                var $pickerCode = $('#flexpress-picker-code');
-                var $formCode = $('#flexpress-form-code');
-                var $saveCode = $('#flexpress-save-code');
-                
+
                 // Function to determine if a color is light or dark
                 function isLightColor(hex) {
                     // Remove # if present
@@ -351,168 +315,8 @@ class FlexPress_General_Settings
                 // Update preview on color change
                 $picker.on('change input', function() {
                     var newValue = $(this).val();
-                    console.log('FlexPress Accent Color Debug: Color picker changed to:', newValue);
-                    $pickerCode.text(newValue);
-                    $pickerCode.css('color', '#0066cc');
                     updatePreview(newValue);
                 });
-
-                // Check for previously submitted value from sessionStorage
-                var lastSubmitted = sessionStorage.getItem('flexpress_last_accent_submit');
-                if (lastSubmitted) {
-                    console.log('FlexPress Accent Color Debug: Last submitted value (from storage):', lastSubmitted);
-                    $formCode.text(lastSubmitted);
-                    $formCode.css('color', '#cc6600');
-                    
-                    // Compare with current DB value
-                    var currentDbValue = '<?php echo esc_js($value); ?>';
-                    if (lastSubmitted !== currentDbValue) {
-                        console.warn('FlexPress Accent Color Debug: ⚠️ MISMATCH! Last submitted:', lastSubmitted, 'Current DB:', currentDbValue);
-                        $('#flexpress-debug-comparison').show();
-                        $('#flexpress-comparison-text').html(
-                            '<span style="color: #cc0000;">⚠️ Value mismatch detected!</span><br>' +
-                            'Submitted: <code>' + lastSubmitted + '</code><br>' +
-                            'Saved to DB: <code>' + currentDbValue + '</code>'
-                        );
-                        $saveCode.text('⚠️ Mismatch!');
-                        $saveCode.css('color', '#cc0000');
-                    } else {
-                        console.log('FlexPress Accent Color Debug: ✓ Values match!');
-                        $('#flexpress-debug-comparison').show();
-                        $('#flexpress-comparison-text').html(
-                            '<span style="color: #006600;">✓ Values match!</span><br>' +
-                            'Submitted: <code>' + lastSubmitted + '</code><br>' +
-                            'Saved to DB: <code>' + currentDbValue + '</code>'
-                        );
-                        $saveCode.text('✓ Saved');
-                        $saveCode.css('color', '#006600');
-                    }
-                }
-                
-                // Track form submission
-                $('form').on('submit', function(e) {
-                    var formValue = $picker.val();
-                    console.log('FlexPress Accent Color Debug: Form submitting with value:', formValue);
-                    
-                    // Store in sessionStorage before page reload
-                    sessionStorage.setItem('flexpress_last_accent_submit', formValue);
-                    console.log('FlexPress Accent Color Debug: Stored in sessionStorage:', formValue);
-                    
-                    $formCode.text(formValue);
-                    $formCode.css('color', '#cc6600');
-                    $saveCode.text('Saving...');
-                    $saveCode.css('color', '#cc6600');
-                    
-                    // Log form data
-                    var formData = new FormData(this);
-                    var formValues = {};
-                    for (var pair of formData.entries()) {
-                        if (pair[0].includes('accent_color')) {
-                            console.log('FlexPress Accent Color Debug: Form field:', pair[0], '=', pair[1]);
-                            formValues[pair[0]] = pair[1];
-                        }
-                    }
-                    console.log('FlexPress Accent Color Debug: All form values:', formValues);
-                    console.log('FlexPress Accent Color Debug: Full form data:', Array.from(formData.entries()));
-                });
-
-                // Check for save success message (if still on page)
-                var checkSaveStatus = setInterval(function() {
-                    if ($('.notice-success').length > 0) {
-                        console.log('FlexPress Accent Color Debug: Save successful!');
-                        clearInterval(checkSaveStatus);
-                        
-                        // Get the submitted value from sessionStorage
-                        var submittedValue = sessionStorage.getItem('flexpress_last_accent_submit');
-                        var currentDbValue = '<?php echo esc_js($value); ?>';
-                        
-                        // Check what value was actually saved after a short delay
-                        setTimeout(function() {
-                            $.ajax({
-                                url: ajaxurl || '/wp-admin/admin-ajax.php',
-                                type: 'POST',
-                                data: {
-                                    action: 'flexpress_get_accent_color',
-                                    nonce: '<?php echo wp_create_nonce('flexpress_debug'); ?>'
-                                },
-                                success: function(response) {
-                                    if (response.success) {
-                                        console.log('FlexPress Accent Color Debug: Value after save:', response.data.value);
-                                        console.log('FlexPress Accent Color Debug: Submitted value was:', submittedValue);
-                                        
-                                        $('#flexpress-debug-current-value code').text(response.data.value);
-                                        
-                                        // Compare submitted vs saved
-                                        if (submittedValue && submittedValue !== response.data.value) {
-                                            console.warn('FlexPress Accent Color Debug: ⚠️ MISMATCH! Submitted:', submittedValue, 'Saved:', response.data.value);
-                                            $('#flexpress-debug-comparison').show();
-                                            $('#flexpress-comparison-text').html(
-                                                '<span style="color: #cc0000;">⚠️ Value mismatch detected!</span><br>' +
-                                                'Submitted: <code>' + submittedValue + '</code><br>' +
-                                                'Saved to DB: <code>' + response.data.value + '</code>'
-                                            );
-                                            $saveCode.text('⚠️ Mismatch!');
-                                            $saveCode.css('color', '#cc0000');
-                                        } else if (submittedValue && submittedValue === response.data.value) {
-                                            console.log('FlexPress Accent Color Debug: ✓ Values match!');
-                                            $('#flexpress-debug-comparison').show();
-                                            $('#flexpress-comparison-text').html(
-                                                '<span style="color: #006600;">✓ Values match!</span><br>' +
-                                                'Submitted: <code>' + submittedValue + '</code><br>' +
-                                                'Saved to DB: <code>' + response.data.value + '</code>'
-                                            );
-                                            $saveCode.text('✓ Saved');
-                                            $saveCode.css('color', '#006600');
-                                        }
-                                    }
-                                }
-                            });
-                        }, 1000);
-                    } else if ($('.notice-error').length > 0) {
-                        console.error('FlexPress Accent Color Debug: Save failed!');
-                        $saveCode.text('✗ Error');
-                        $saveCode.css('color', '#cc0000');
-                        clearInterval(checkSaveStatus);
-                    }
-                }, 500);
-                
-                // Check if we just came back from a save (settings-updated=true in URL)
-                if (window.location.search.indexOf('settings-updated=true') !== -1) {
-                    console.log('FlexPress Accent Color Debug: Page loaded after save');
-                    var submittedValue = sessionStorage.getItem('flexpress_last_accent_submit');
-                    var currentDbValue = '<?php echo esc_js($value); ?>';
-                    
-                    if (submittedValue) {
-                        console.log('FlexPress Accent Color Debug: Comparing submitted vs saved');
-                        console.log('FlexPress Accent Color Debug: Submitted:', submittedValue);
-                        console.log('FlexPress Accent Color Debug: Current DB:', currentDbValue);
-                        
-                        $formCode.text(submittedValue);
-                        $formCode.css('color', '#cc6600');
-                        
-                        if (submittedValue !== currentDbValue) {
-                            console.warn('FlexPress Accent Color Debug: ⚠️ MISMATCH!');
-                            $('#flexpress-debug-comparison').show();
-                            $('#flexpress-comparison-text').html(
-                                '<span style="color: #cc0000;">⚠️ Value mismatch detected!</span><br>' +
-                                'Submitted: <code>' + submittedValue + '</code><br>' +
-                                'Saved to DB: <code>' + currentDbValue + '</code>'
-                            );
-                            $saveCode.text('⚠️ Mismatch!');
-                            $saveCode.css('color', '#cc0000');
-                        } else {
-                            console.log('FlexPress Accent Color Debug: ✓ Values match!');
-                            $('#flexpress-debug-comparison').show();
-                            $('#flexpress-comparison-text').html(
-                                '<span style="color: #006600;">✓ Values match!</span><br>' +
-                                'Submitted: <code>' + submittedValue + '</code><br>' +
-                                'Saved to DB: <code>' + currentDbValue + '</code>'
-                            );
-                            $saveCode.text('✓ Saved');
-                            $saveCode.css('color', '#006600');
-                        }
-                    }
-                }
 
                 // Initialize preview with current color
                 updatePreview('<?php echo esc_js($value); ?>');
@@ -896,103 +700,6 @@ class FlexPress_General_Settings
                     e.preventDefault();
                     $('#flexpress_casting_image').val('');
                     $('.flexpress-casting-image-preview').remove();
-                    $(this).remove();
-                });
-            });
-        </script>
-    <?php
-    }
-
-    /**
-     * Render join CTA section description
-     */
-    public function render_join_cta_section_description()
-    {
-    ?>
-        <p>
-            <?php esc_html_e('Configure the image for the Join Now call-to-action section that appears on the homepage.', 'flexpress'); ?>
-        </p>
-    <?php
-    }
-
-    /**
-     * Render join CTA image field
-     */
-    public function render_join_cta_image_field()
-    {
-        $options = get_option('flexpress_general_settings');
-        $join_cta_image_id = isset($options['join_cta_image']) ? $options['join_cta_image'] : '';
-
-
-        // Display the current image if it exists
-        if (!empty($join_cta_image_id)) {
-            $image_url = wp_get_attachment_image_url($join_cta_image_id, 'medium');
-            if ($image_url) {
-                echo '<div class="flexpress-join-cta-image-preview">';
-                echo '<img src="' . esc_url($image_url) . '" style="max-width: 300px; height: auto; margin-bottom: 10px;" />';
-                echo '</div>';
-            }
-        } else {
-        }
-    ?>
-        <input type="hidden" name="flexpress_general_settings[join_cta_image]" id="flexpress_join_cta_image" value="<?php echo esc_attr($join_cta_image_id); ?>" />
-        <input type="button" class="button button-secondary" id="flexpress_upload_join_cta_image_button" value="<?php esc_attr_e('Upload Join CTA Image', 'flexpress'); ?>" />
-        <?php if (!empty($join_cta_image_id)) : ?>
-            <input type="button" class="button button-secondary" id="flexpress_remove_join_cta_image_button" value="<?php esc_attr_e('Remove Image', 'flexpress'); ?>" />
-        <?php endif; ?>
-        <p class="description"><?php esc_html_e('Upload an image for the Join Now call-to-action section. This image will be displayed on the homepage. Recommended size: 800x1200px (portrait orientation).', 'flexpress'); ?></p>
-
-        <script type="text/javascript">
-            jQuery(document).ready(function($) {
-                // Media uploader for join CTA image
-                var joinCtaMediaUploader;
-
-                $('#flexpress_upload_join_cta_image_button').on('click', function(e) {
-                    e.preventDefault();
-
-                    // If the media uploader already exists, open it
-                    if (joinCtaMediaUploader) {
-                        joinCtaMediaUploader.open();
-                        return;
-                    }
-
-                    // Create the media uploader
-                    joinCtaMediaUploader = wp.media({
-                        title: '<?php esc_html_e('Select or Upload Join CTA Image', 'flexpress'); ?>',
-                        button: {
-                            text: '<?php esc_html_e('Use this image', 'flexpress'); ?>'
-                        },
-                        multiple: false
-                    });
-
-                    // When an image is selected, run a callback
-                    joinCtaMediaUploader.on('select', function() {
-                        var attachment = joinCtaMediaUploader.state().get('selection').first().toJSON();
-                        $('#flexpress_join_cta_image').val(attachment.id);
-
-                        // Update preview
-                        if (attachment.url) {
-                            if ($('.flexpress-join-cta-image-preview').length === 0) {
-                                $('<div class="flexpress-join-cta-image-preview"><img style="max-width: 300px; height: auto; margin-bottom: 10px;" /></div>').insertBefore('#flexpress_upload_join_cta_image_button');
-                            }
-                            $('.flexpress-join-cta-image-preview img').attr('src', attachment.url);
-
-                            // Show remove button if not already visible
-                            if ($('#flexpress_remove_join_cta_image_button').length === 0) {
-                                $('<input type="button" class="button button-secondary" id="flexpress_remove_join_cta_image_button" value="<?php esc_attr_e('Remove Image', 'flexpress'); ?>" />').insertAfter('#flexpress_upload_join_cta_image_button');
-                            }
-                        }
-                    });
-
-                    // Open the media uploader
-                    joinCtaMediaUploader.open();
-                });
-
-                // Handle remove button
-                $(document).on('click', '#flexpress_remove_join_cta_image_button', function(e) {
-                    e.preventDefault();
-                    $('#flexpress_join_cta_image').val('');
-                    $('.flexpress-join-cta-image-preview').remove();
                     $(this).remove();
                 });
             });

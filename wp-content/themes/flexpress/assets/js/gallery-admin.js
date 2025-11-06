@@ -481,7 +481,7 @@
       }
 
       const $item = $(e.target).closest(".gallery-image-item");
-      const imageId = $item.data("image-id");
+      const imageIdentifier = $item.data("image-id");
 
       $.ajax({
         url: flexpressGallery.ajaxUrl,
@@ -490,7 +490,7 @@
           action: "flexpress_delete_gallery_image",
           nonce: flexpressGallery.deleteNonce,
           post_id: flexpressGallery.postId,
-          image_id: imageId,
+          image_identifier: imageIdentifier,
         },
         success: (response) => {
           if (response.success) {
@@ -534,7 +534,8 @@
         success: (response) => {
           if (response.success) {
             // Hide the delete all button
-            $("#delete-all-gallery-images").hide();
+            const prefix = flexpressGallery.postType === "extras" ? "extras-" : "";
+            $(`#delete-all-${prefix}gallery-images`).hide();
 
             // Remove all gallery images
             this.imagesGrid.find(".gallery-image-item").fadeOut(300, () => {

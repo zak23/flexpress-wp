@@ -183,6 +183,23 @@ class FlexPress_Settings
             }
         );
 
+        // Add Join CTA submenu
+        add_submenu_page(
+            $this->page_slug,
+            __('Join CTA', 'flexpress'),
+            __('Join CTA', 'flexpress'),
+            flexpress_get_founder_capability(),
+            'flexpress_join_cta_settings',
+            function () {
+                if (class_exists('FlexPress_Join_CTA_Settings')) {
+                    $obj = new FlexPress_Join_CTA_Settings();
+                    $obj->render_settings_page();
+                } else {
+                    echo '<div class="wrap"><h1>Join CTA</h1><p>Join CTA settings class not found.</p></div>';
+                }
+            }
+        );
+
         // Add Earnings submenu
         add_submenu_page(
             $this->page_slug,

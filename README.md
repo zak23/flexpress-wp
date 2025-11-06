@@ -15,6 +15,13 @@ A modern WordPress website running in Docker containers with MySQL database and 
 
 ## 🔧 Recent Fixes
 
+### Model Hero Image Optimization (November 2025)
+
+- Model profile hero banner now uses a 12:5 aspect ratio (1920x800) with center crop for better composition.
+- Added BunnyCDN Image Optimizer for model hero and profile images to deliver high‑resolution, compressed `webp` assets via the configured Static CDN host (`bunnycdn_static_host`).
+- Hero images use center crop via width=1920, height=800 parameters to maintain the 12:5 ratio.
+- Files updated: `wp-content/themes/flexpress/assets/css/critical.css`, `wp-content/themes/flexpress/assets/css/hero-video.css`, `wp-content/themes/flexpress/functions.php`, `wp-content/themes/flexpress/single-model.php`.
+
 ### Join Now CTA Fallback Removal (November 2025)
 
 - Removed hardcoded fallback image in `wp-content/themes/flexpress/template-parts/join-now-cta.php`.

@@ -769,6 +769,15 @@ a:hover {
   user-select: none;
 }
 
+.model-hero-image-section .hero-video-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding-top: 0; /* Override padding for model hero - uses parent aspect-ratio */
+}
+
 .hero-thumbnail {
   position: absolute;
   top: 0;

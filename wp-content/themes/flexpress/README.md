@@ -11,6 +11,15 @@ FlexPress is designed specifically for content websites (primarily adult content
 
 ## 🌟 Core Features
 
+### Model Hero Image + Profile Image Optimization (November 2025)
+
+- Model profile hero banner uses a 12:5 aspect ratio (1920x800) with center crop for improved visual balance.
+- BunnyCDN Image Optimizer now powers model hero and profile images:
+  - Hero: `width=1920&height=800&format=webp&quality=85` (center crop to 12:5 ratio)
+  - Profile: `width=776&format=webp&quality=80`
+- CDN host is taken from FlexPress Video settings (`bunnycdn_static_host`), default `static.zakspov.com`.
+- Affects: `assets/css/critical.css`, `assets/css/hero-video.css`, `single-model.php`, and helper `flexpress_get_bunnycdn_optimized_image_url()` in `functions.php`.
+
 ### Casting Section – Optimized Image + Fallback Removed (November 2025)
 
 - The casting section image now uses BunnyCDN Image Optimizer (`width=650&format=webp&quality=75`).

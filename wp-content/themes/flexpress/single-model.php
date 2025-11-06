@@ -17,13 +17,16 @@ get_header();
             <?php
             $hero_image = get_field('model_hero_image');
             if ($hero_image) :
-                $hero_src = isset($hero_image['sizes']['hero-desktop']) ? $hero_image['sizes']['hero-desktop'] : (isset($hero_image['sizes']['large']) ? $hero_image['sizes']['large'] : (isset($hero_image['url']) ? $hero_image['url'] : ''));
+                $hero_original = isset($hero_image['url']) ? $hero_image['url'] : '';
+                $hero_src = function_exists('flexpress_get_bunnycdn_optimized_image_url')
+                    ? flexpress_get_bunnycdn_optimized_image_url($hero_original, array('width' => 1920, 'height' => 800, 'format' => 'webp', 'quality' => 85))
+                    : $hero_original;
             ?>
                 <div class="hero-section-wrapper">
                     <div class="container">
                         <div class="row">
                             <div class="col-12">
-                                <div class="hero-section">
+                                <div class="model-hero-image-section">
                                     <div class="hero-video-container">
                                         <div class="hero-thumbnail" style="background-image: url('<?php echo esc_url($hero_src); ?>');"></div>
                                         <div class="hero-content-overlay">
@@ -52,15 +55,11 @@ get_header();
                             <?php
                             $profile_image = get_field('model_profile_image');
                             if ($profile_image) :
-                                $profile_id = isset($profile_image['ID']) ? (int)$profile_image['ID'] : 0;
-                                if ($profile_id) {
-                                    echo wp_get_attachment_image($profile_id, 'model-portrait', false, array(
-                                        'class' => 'img-fluid rounded',
-                                        'alt' => get_the_title()
-                                    ));
-                                } else {
-                                    echo '<img src="' . esc_url(isset($profile_image['url']) ? $profile_image['url'] : '') . '" alt="' . esc_attr(get_the_title()) . '" class="img-fluid rounded">';
-                                }
+                                $profile_src_original = isset($profile_image['url']) ? $profile_image['url'] : '';
+                                $profile_src = function_exists('flexpress_get_bunnycdn_optimized_image_url')
+                                    ? flexpress_get_bunnycdn_optimized_image_url($profile_src_original, array('width' => 776, 'format' => 'webp', 'quality' => 80))
+                                    : $profile_src_original;
+                                echo '<img src="' . esc_url($profile_src) . '" alt="' . esc_attr(get_the_title()) . '" class="img-fluid rounded">';
                             ?>
                             <?php elseif (has_post_thumbnail()) : ?>
                                 <?php the_post_thumbnail('model-portrait', array('class' => 'img-fluid rounded')); ?>
@@ -341,8 +340,10 @@ get_header();
 
                 // Get video details for hero
                 $preview_video = get_field('preview_video');
-                $library_id = get_option('flexpress_video_bunnycdn_library_id');
-                $token_key = get_option('flexpress_video_bunnycdn_token_key');
+                $video_settings = get_option('flexpress_video_settings', array());
+                $library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
+                $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
+                $bunnycdn_url = isset($video_settings['bunnycdn_url']) ? $video_settings['bunnycdn_url'] : '';
 
                 // Generate thumbnail URL
                 $thumbnail_url = flexpress_get_bunnycdn_thumbnail_url($preview_video);
@@ -376,8 +377,20 @@ get_header();
                                                 <?php if ($thumbnail_url): ?>
                                                     <div class="hero-thumbnail" style="background-image: url('<?php echo esc_url($thumbnail_url); ?>')"></div>
                                                 <?php endif; ?>
+
+                                                <!-- Video element (hidden initially, plays on hover) -->
+                                                <?php if ($preview_video && $bunnycdn_url && $token): ?>
+                                                    <video class="hero-video"
+                                                        muted
+                                                        loop
+                                                        playsinline
+                                                        preload="metadata"
+                                                        style="display: none;">
+                                                        <source src="https://<?php echo esc_attr($bunnycdn_url); ?>/<?php echo esc_attr($preview_video); ?>/play_720p.mp4?token=<?php echo esc_attr($token); ?>&expires=<?php echo esc_attr($expires); ?>" type="video/mp4">
+                                                    </video>
+                                                <?php endif; ?>
+
                                                 <div class="hero-transition-overlay"></div>
-                                                <div class="hero-video-wrapper"></div>
                                             </div>
                                         <?php elseif ($thumbnail_url): ?>
                                             <div class="hero-video-container">

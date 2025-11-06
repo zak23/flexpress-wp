@@ -10507,3 +10507,54 @@ function flexpress_register_collection_acf_fields()
         ));
     }
 }
+
+/**
+ * Build a BunnyCDN Image Optimizer URL for a given image.
+ * Replaces the source host with the configured static CDN host and appends optimizer params.
+ *
+ * @param string $image_url The original image URL
+ * @param array  $params    Optimizer params: width, height, format (e.g., webp), quality (0-100)
+ * @return string Optimized CDN URL (or original URL if not applicable)
+ */
+function flexpress_get_bunnycdn_optimized_image_url($image_url, $params = array())
+{
+    if (empty($image_url)) {
+        return '';
+    }
+
+    // Defaults suitable for hero imagery; callers can override
+    $defaults = array(
+        'width'   => null,
+        'height'  => null,
+        'format'  => 'webp',
+        'quality' => 85,
+    );
+
+    // Merge and remove null/empty params so query is clean
+    $merged = array_merge($defaults, is_array($params) ? $params : array());
+    $filtered = array();
+    foreach ($merged as $key => $value) {
+        if ($value !== null && $value !== '') {
+            $filtered[$key] = $value;
+        }
+    }
+
+    // Resolve static CDN host from settings (fallback provided)
+    $video_settings = get_option('flexpress_video_settings', array());
+    $cdn_host = !empty($video_settings['bunnycdn_static_host']) ? $video_settings['bunnycdn_static_host'] : 'static.zakspov.com';
+    $cdn_host = preg_replace('#^https?://#', '', $cdn_host);
+
+    // Swap the source host for the CDN host
+    $source_host = parse_url($image_url, PHP_URL_HOST);
+    if (!empty($source_host)) {
+        $image_url = str_replace($source_host, $cdn_host, $image_url);
+    }
+
+    // Append optimizer query parameters
+    if (!empty($filtered)) {
+        $query = http_build_query($filtered);
+        $image_url .= (strpos($image_url, '?') === false ? '?' : '&') . $query;
+    }
+
+    return $image_url;
+}

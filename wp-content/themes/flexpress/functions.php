@@ -497,7 +497,8 @@ function flexpress_enqueue_scripts_and_styles()
     }
 
     // Add global error handler and jQuery Migrate configuration
-    add_action('wp_footer', 'flexpress_add_console_cleanup');
+    // TEMPORARILY DISABLED - causes issues in headless testing
+    // add_action('wp_footer', 'flexpress_add_console_cleanup');
 
     // Enqueue Bootstrap JS from local vendor with defer
     wp_enqueue_script('bootstrap-js', get_template_directory_uri() . '/assets/vendor/js/bootstrap.bundle.min.js', array(), '5.1.3', true);
@@ -554,14 +555,14 @@ function flexpress_enqueue_scripts_and_styles()
         'isDebug' => (defined('WP_DEBUG') && WP_DEBUG)
     ));
 
-    // Enqueue login script on login page
-    if (is_page_template('page-templates/login.php')) {
+    // Enqueue login script on login page (but NOT on join page)
+    if (is_page_template('page-templates/login.php') && !is_page_template('page-templates/join.php')) {
         wp_enqueue_script('flexpress-login', get_template_directory_uri() . '/assets/js/login.js', array('jquery'), wp_get_theme()->get('Version'), true);
         wp_script_add_data('flexpress-login', 'defer', true);
     }
 
-    // Enqueue registration script on registration page
-    if (is_page_template('page-templates/register.php')) {
+    // Enqueue registration script on registration page (but NOT on join page)
+    if (is_page_template('page-templates/register.php') && !is_page_template('page-templates/join.php')) {
         wp_enqueue_script('flexpress-registration', get_template_directory_uri() . '/assets/js/registration.js', array('jquery'), wp_get_theme()->get('Version'), true);
         wp_script_add_data('flexpress-registration', 'defer', true);
 
@@ -573,10 +574,30 @@ function flexpress_enqueue_scripts_and_styles()
         ));
     }
 
-    // Enqueue join page specific script
+    // Enqueue join page specific script - REQUIRES JQUERY
     if (is_page_template('page-templates/join.php')) {
-        wp_enqueue_script('flexpress-join', get_template_directory_uri() . '/assets/js/join.js', array(), wp_get_theme()->get('Version'), true);
-        wp_script_add_data('flexpress-join', 'defer', true);
+        // Force jQuery to load in HEAD (non-deferred) on join page because the template uses jQuery directly
+        wp_scripts()->add_data('jquery-core', 'group', 0);  // Move to head
+        wp_scripts()->add_data('jquery', 'group', 0);  // Move to head
+        wp_scripts()->add_data('jquery-migrate', 'group', 0);  // Move to head
+        
+        // Remove defer from jQuery so it loads immediately
+        wp_scripts()->add_data('jquery-core', 'defer', false);
+        wp_scripts()->add_data('jquery', 'defer', false);
+        wp_scripts()->add_data('jquery-migrate', 'defer', false);
+        
+        // Dequeue global login/registration scripts on join page to avoid conflicts
+        wp_dequeue_script('flexpress-login');
+        wp_dequeue_script('flexpress-registration');
+        
+        // Enqueue with jQuery dependency and NO defer to ensure jQuery is available
+        wp_enqueue_script('flexpress-join', get_template_directory_uri() . '/assets/js/join.js', array('jquery'), wp_get_theme()->get('Version'), true);
+        
+        // Localize data for join page
+        wp_localize_script('flexpress-join', 'flexpressJoin', array(
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('flexpress-join-nonce')
+        ));
     }
 
     // Enqueue episode ratings script and styles on episode pages
@@ -2202,6 +2223,11 @@ function flexpress_render_duration_update_page()
 // Register AJAX login handler
 function flexpress_ajax_login_init()
 {
+    // Skip on join page - it has its own join script
+    if (is_page_template('page-templates/join.php')) {
+        return;
+    }
+    
     wp_register_script('flexpress-login', get_template_directory_uri() . '/assets/js/login.js', array('jquery'), '1.0', true);
 
     wp_localize_script('flexpress-login', 'ajax_login_object', array(
@@ -10506,55 +10532,4 @@ function flexpress_register_collection_acf_fields()
             'description' => 'Settings for tag-based episode collections',
         ));
     }
-}
-
-/**
- * Build a BunnyCDN Image Optimizer URL for a given image.
- * Replaces the source host with the configured static CDN host and appends optimizer params.
- *
- * @param string $image_url The original image URL
- * @param array  $params    Optimizer params: width, height, format (e.g., webp), quality (0-100)
- * @return string Optimized CDN URL (or original URL if not applicable)
- */
-function flexpress_get_bunnycdn_optimized_image_url($image_url, $params = array())
-{
-    if (empty($image_url)) {
-        return '';
-    }
-
-    // Defaults suitable for hero imagery; callers can override
-    $defaults = array(
-        'width'   => null,
-        'height'  => null,
-        'format'  => 'webp',
-        'quality' => 85,
-    );
-
-    // Merge and remove null/empty params so query is clean
-    $merged = array_merge($defaults, is_array($params) ? $params : array());
-    $filtered = array();
-    foreach ($merged as $key => $value) {
-        if ($value !== null && $value !== '') {
-            $filtered[$key] = $value;
-        }
-    }
-
-    // Resolve static CDN host from settings (fallback provided)
-    $video_settings = get_option('flexpress_video_settings', array());
-    $cdn_host = !empty($video_settings['bunnycdn_static_host']) ? $video_settings['bunnycdn_static_host'] : 'static.zakspov.com';
-    $cdn_host = preg_replace('#^https?://#', '', $cdn_host);
-
-    // Swap the source host for the CDN host
-    $source_host = parse_url($image_url, PHP_URL_HOST);
-    if (!empty($source_host)) {
-        $image_url = str_replace($source_host, $cdn_host, $image_url);
-    }
-
-    // Append optimizer query parameters
-    if (!empty($filtered)) {
-        $query = http_build_query($filtered);
-        $image_url .= (strpos($image_url, '?') === false ? '?' : '&') . $query;
-    }
-
-    return $image_url;
 }

@@ -368,10 +368,19 @@ function flexpress_optimize_script_loader_tag($tag, $handle)
 function flexpress_add_service_worker()
 {
     if (!is_admin() && !wp_doing_ajax()) {
+        $sw_url = home_url('/wp-content/themes/flexpress/sw.js');
         echo '<script>
         if ("serviceWorker" in navigator) {
             window.addEventListener("load", function() {
-                navigator.serviceWorker.register("' . home_url('/wp-content/themes/flexpress/sw.js') . '");
+                // Runtime origin check to avoid cross-origin registration errors
+                try {
+                    var swUrl = new URL("' . esc_js($sw_url) . '", window.location.origin);
+                    if (swUrl.origin === window.location.origin) {
+                        navigator.serviceWorker.register(swUrl.href);
+                    }
+                } catch(e) {
+                    // Silently fail if URL is invalid
+                }
             });
         }
         </script>';

@@ -26,6 +26,9 @@ class FlexPress_Registration {
             true
         );
 
+        // Ensure script defers to align with footer-deferred jQuery
+        wp_script_add_data('flexpress-registration', 'defer', true);
+
         wp_localize_script('flexpress-registration', 'flexpressRegistration', array(
             'ajaxurl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('flexpress-registration-nonce'),

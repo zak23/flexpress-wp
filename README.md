@@ -225,6 +225,16 @@ A modern WordPress website running in Docker containers with MySQL database and 
 - **Deferred jQuery**: Core jQuery, jQuery Migrate, and jQuery Core now load deferred from the footer (`group = 1`) to keep render blocking requests off the critical path. Scripts must declare jQuery as a dependency instead of relying on head inlines.
 - **Regression Coverage**: `tests/puppeteer/test-critical-assets.mjs` verifies async stylesheet markup and footer jQuery placement alongside existing archive/mobile smoke tests.
 
+### JavaScript & Service Worker Fixes (November 2025)
+
+- **Login/Registration jQuery Race Fixed**: Removed `defer` from `flexpress-login` and `flexpress-registration` scripts to prevent a race with footer-deferred jQuery. These scripts still load in the footer and declare `jquery` as a dependency.
+- **Service Worker Origin Alignment**: `flexpress_add_service_worker()` now registers via `get_template_directory_uri() . '/sw.js'` to ensure a same-origin URL. Exclude `sw.js` from Bunny CDN (pull zone) rewrite/serving to avoid cross-origin registration errors.
+- **Autoplay Console Noise Suppressed**: Added production-only suppression for `NotAllowedError: play() failed because the user didn't interact` to keep logs clean without changing autoplay behavior.
+
+- **Files Updated**:
+  - `wp-content/themes/flexpress/functions.php` – script enqueue adjustments; console suppression additions
+  - `wp-content/themes/flexpress/includes/performance-optimization.php` – service worker registration URL origin fix
+
 ### Join CTA – Dedicated Editable Settings (November 2025)
 
 - Location: FlexPress → Join CTA (founders only)

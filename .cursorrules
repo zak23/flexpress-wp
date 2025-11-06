@@ -25,6 +25,13 @@ Bundled webfonts must use `font-display: swap`
 - jQuery runs deferred from the footer (`group` = 1); never inject inline head scripts that expect jQuery before the footer executes.
 - Puppeteer coverage in `tests/puppeteer/test-critical-assets.mjs` asserts async CSS markup and script placement—keep it updated alongside enqueue changes.
 
+## Service Worker Origin Constraint (November 2025)
+
+- Service Worker file `wp-content/themes/flexpress/sw.js` must be served from the same origin as the page.
+- Registration uses `get_template_directory_uri() . '/sw.js'` to ensure origin URL.
+- Exclude `sw.js` from CDN rewrite/serving (Bunny CDN pull zone) to prevent cross-origin registration failures.
+- Never cache HTML in the service worker. Static assets only.
+
 ## Settings Save Robustness Pattern
 
 - All feature settings that share `flexpress_general_settings` MUST:

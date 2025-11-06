@@ -845,30 +845,24 @@ $plan_selection_step_number = 1;
 <?php
 // Enqueue and localize promo code script data
 wp_enqueue_script('jquery');
-
-// Create a unique script handle for localization
-$script_handle = 'flexpress-promo-script';
-wp_register_script($script_handle, '', array('jquery'), '1.0', true);
-wp_enqueue_script($script_handle);
-
-wp_localize_script($script_handle, 'flexpressPromo', array(
-    'ajaxurl' => admin_url('admin-ajax.php'),
-    'nonce' => wp_create_nonce('flexpress_promo_nonce')
-));
-
-// Create a separate script handle for registration operations
-$registration_script_handle = 'flexpress-join-form-script';
-wp_register_script($registration_script_handle, '', array('jquery'), '1.0', true);
-wp_enqueue_script($registration_script_handle);
-
-wp_localize_script($registration_script_handle, 'flexpressJoinForm', array(
-    'ajaxurl' => admin_url('admin-ajax.php'),
-    'nonce' => wp_create_nonce('flexpress_registration_nonce')
-));
 ?>
 
 <script>
-    // Ensure nonce is available - fallback if wp_localize_script didn't work
+    // Define localized data for promo code handling
+    var flexpressPromo = {
+        ajaxurl: '<?php echo admin_url('admin-ajax.php'); ?>',
+        nonce: '<?php echo wp_create_nonce('flexpress_promo_nonce'); ?>'
+    };
+
+    // Define localized data for form handling
+    var flexpressJoinForm = {
+        ajaxurl: '<?php echo admin_url('admin-ajax.php'); ?>',
+        nonce: '<?php echo wp_create_nonce('flexpress_registration_nonce'); ?>'
+    };
+</script>
+
+<script>
+    // Ensure localized data is available (defined above)
     if (typeof flexpressJoinForm === 'undefined') {
         var flexpressJoinForm = {
             ajaxurl: '<?php echo admin_url('admin-ajax.php'); ?>',

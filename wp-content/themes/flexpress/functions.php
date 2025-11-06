@@ -574,9 +574,19 @@ function flexpress_enqueue_scripts_and_styles()
         ));
     }
 
-    // Enqueue join page specific script - REQUIRES JQUERY
-    if (is_page_template('page-templates/join.php')) {
-        // Force jQuery to load in HEAD (non-deferred) on join page because the template uses jQuery directly
+    // Force jQuery to load in HEAD (non-deferred) on pages that use inline jQuery
+    // This includes: join, membership, my-account, dashboard, cancel-membership, affiliate-signup
+    $jquery_dependent_templates = array(
+        'page-templates/join.php',
+        'page-templates/membership.php',
+        'page-templates/my-account.php',
+        'page-templates/dashboard.php',
+        'page-templates/cancel-membership.php',
+        'page-templates/affiliate-signup.php'
+    );
+    
+    if (is_page_template($jquery_dependent_templates)) {
+        // Force jQuery to load in HEAD (non-deferred) because these templates use jQuery directly
         wp_scripts()->add_data('jquery-core', 'group', 0);  // Move to head
         wp_scripts()->add_data('jquery', 'group', 0);  // Move to head
         wp_scripts()->add_data('jquery-migrate', 'group', 0);  // Move to head
@@ -586,10 +596,13 @@ function flexpress_enqueue_scripts_and_styles()
         wp_scripts()->add_data('jquery', 'defer', false);
         wp_scripts()->add_data('jquery-migrate', 'defer', false);
         
-        // Dequeue global login/registration scripts on join page to avoid conflicts
+        // Dequeue global login/registration scripts to avoid conflicts
         wp_dequeue_script('flexpress-login');
         wp_dequeue_script('flexpress-registration');
-        
+    }
+
+    // Enqueue join page specific script
+    if (is_page_template('page-templates/join.php')) {
         // Enqueue with jQuery dependency and NO defer to ensure jQuery is available
         wp_enqueue_script('flexpress-join', get_template_directory_uri() . '/assets/js/join.js', array('jquery'), wp_get_theme()->get('Version'), true);
         

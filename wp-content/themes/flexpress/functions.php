@@ -2520,6 +2520,21 @@ function flexpress_coming_soon_redirect()
         return;
     }
 
+    // Allow access to admin area and login pages
+    if (is_admin()) {
+        return;
+    }
+
+    // Allow access to wp-admin
+    if (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false) {
+        return;
+    }
+
+    // Allow access to wp-login.php
+    if (strpos($_SERVER['REQUEST_URI'], 'wp-login.php') !== false) {
+        return;
+    }
+
     // Check if coming soon mode is enabled
     $general_settings = get_option('flexpress_general_settings');
     if (!empty($general_settings['coming_soon_enabled'])) {

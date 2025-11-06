@@ -11,6 +11,13 @@ FlexPress is designed specifically for content websites (primarily adult content
 
 ## 🌟 Core Features
 
+### Join Now CTA – Fallback Image Removed (November 2025)
+
+- The Join Now CTA no longer uses a default/fallback image.
+- If no image is configured in FlexPress settings (or legacy Customizer), the image column is omitted and the content spans full width.
+- Affects: `template-parts/join-now-cta.php`.
+- CDN/optimizer query parameters are applied only when an image URL exists.
+
 ### Free Trial Signup UX Updates (October 2025)
 
 - **Updated Signup Text**: Free trial signups now display clearer messaging
@@ -260,6 +267,18 @@ Frontend template: `wp-content/themes/flexpress/single-model.php` renders these 
   - Login prompt, Login link text, Login URL
   - CTA Image (convenience control; same key as General → Join CTA Image)
 - Frontend: `template-parts/join-now-cta.php` renders from settings with safe fallbacks matching previous hardcoded strings
+- Save robustness: Sanitizer merges with existing keys to preserve non-posted values
+
+### Casting – Dedicated Editable Settings (November 2025)
+
+- Location: FlexPress → Casting (founders only)
+- Storage: All fields persist in `flexpress_general_settings`
+- Fields:
+  - Title, Subtitle
+  - Benefits list (FontAwesome icon class + text, dynamic add/remove)
+  - Button text and URL
+  - Casting Image
+- Frontend: `template-parts/casting-section.php` renders from settings with safe fallbacks matching the previous hardcoded strings
 - Save robustness: Sanitizer merges with existing keys to preserve non-posted values
 
 ### Redis/Object Cache & Logged-in Users (October 2025)

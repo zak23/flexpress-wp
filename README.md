@@ -15,6 +15,13 @@ A modern WordPress website running in Docker containers with MySQL database and 
 
 ## 🔧 Recent Fixes
 
+### Join Now CTA Fallback Removal (November 2025)
+
+- Removed hardcoded fallback image in `wp-content/themes/flexpress/template-parts/join-now-cta.php`.
+- Image column now renders only when a CTA image is configured in FlexPress settings or legacy Customizer key; otherwise the content expands full width.
+- No synchronous asset is emitted for a missing image; CDN optimizer still applies when present.
+- Docs: Theme README updated accordingly.
+
 ### Settings Save Robustness (October 2025)
 
 - Problem: Saving one settings page (e.g., Featured On) cleared unrelated settings because only posted fields were saved.
@@ -211,6 +218,14 @@ A modern WordPress website running in Docker containers with MySQL database and 
 - Storage: All fields persist in `flexpress_general_settings`
 - Fields: Headline, Subtitle, Features list (dynamic), Offer text, Button text/URL, Security note, Login prompt, Login link text/URL, CTA Image
 - Frontend: `wp-content/themes/flexpress/template-parts/join-now-cta.php` consumes settings with sensible fallbacks
+- Save Robustness: Sanitizer merges with existing option keys to preserve non-posted values
+
+### Casting – Dedicated Editable Settings (November 2025)
+
+- Location: FlexPress → Casting (founders only)
+- Storage: All fields persist in `flexpress_general_settings`
+- Fields: Title, Subtitle, Benefits list (icon class + text, dynamic), Button text/URL, Casting Image
+- Frontend: `wp-content/themes/flexpress/template-parts/casting-section.php` consumes settings with sensible fallbacks
 - Save Robustness: Sanitizer merges with existing option keys to preserve non-posted values
 
 ### Earnings Dashboard (New Feature - October 2025)

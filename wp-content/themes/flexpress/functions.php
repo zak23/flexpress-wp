@@ -145,6 +145,7 @@ if (is_admin()) {
 require_once FLEXPRESS_PATH . '/includes/performance-optimization.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-general-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-join-cta-settings.php';
+require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-casting-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-awards-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-featured-on-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-coming-soon-settings.php';
@@ -1290,6 +1291,41 @@ function flexpress_sanitize_general_settings($input)
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('FlexPress General Settings: No casting_image in input data');
         }
+    }
+
+    // Sanitize Casting textual fields
+    if (isset($input['casting_title'])) {
+        $sanitized['casting_title'] = sanitize_text_field($input['casting_title']);
+    }
+
+    if (isset($input['casting_subtitle'])) {
+        $sanitized['casting_subtitle'] = sanitize_text_field($input['casting_subtitle']);
+    }
+
+    if (isset($input['casting_benefits']) && is_array($input['casting_benefits'])) {
+        $clean_benefits = array();
+        foreach ($input['casting_benefits'] as $index => $benefit) {
+            if (is_array($benefit)) {
+                $icon_class = sanitize_text_field($benefit['icon_class'] ?? '');
+                $text = sanitize_text_field($benefit['text'] ?? '');
+                if ($icon_class !== '' || $text !== '') {
+                    $clean_benefits[] = array(
+                        'icon_class' => $icon_class,
+                        'text' => $text,
+                    );
+                }
+            }
+        }
+        $sanitized['casting_benefits'] = $clean_benefits;
+    }
+
+    if (isset($input['casting_button_text'])) {
+        $sanitized['casting_button_text'] = sanitize_text_field($input['casting_button_text']);
+    }
+
+    if (isset($input['casting_button_url'])) {
+        $url = esc_url_raw($input['casting_button_url']);
+        $sanitized['casting_button_url'] = $url ? $url : '';
     }
 
     // Sanitize join CTA image

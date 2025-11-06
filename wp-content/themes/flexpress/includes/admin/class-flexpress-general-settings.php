@@ -149,22 +149,7 @@ class FlexPress_General_Settings
             'flexpress_extras_section'
         );
 
-        // Add Casting Section
-        add_settings_section(
-            'flexpress_casting_section',
-            __('Casting Section', 'flexpress'),
-            array($this, 'render_casting_section_description'),
-            'flexpress_general_settings'
-        );
-
-        // Add casting image field
-        add_settings_field(
-            'flexpress_casting_image',
-            __('Casting Section Image', 'flexpress'),
-            array($this, 'render_casting_image_field'),
-            'flexpress_general_settings',
-            'flexpress_casting_section'
-        );
+        // Casting settings moved to dedicated page (FlexPress → Casting)
 
         // Add Featured Banner Section
         add_settings_section(
@@ -610,102 +595,7 @@ class FlexPress_General_Settings
     <?php
     }
 
-    /**
-     * Render casting section description
-     */
-    public function render_casting_section_description()
-    {
-    ?>
-        <p>
-            <?php esc_html_e('Configure the casting section image that appears on the homepage and casting page.', 'flexpress'); ?>
-        </p>
-    <?php
-    }
-
-    /**
-     * Render casting image field
-     */
-    public function render_casting_image_field()
-    {
-        $options = get_option('flexpress_general_settings');
-        $casting_image_id = isset($options['casting_image']) ? $options['casting_image'] : '';
-
-
-        // Display the current image if it exists
-        if (!empty($casting_image_id)) {
-            $image_url = wp_get_attachment_image_url($casting_image_id, 'medium');
-            if ($image_url) {
-                echo '<div class="flexpress-casting-image-preview">';
-                echo '<img src="' . esc_url($image_url) . '" style="max-width: 300px; height: auto; margin-bottom: 10px;" />';
-                echo '</div>';
-            }
-        } else {
-        }
-    ?>
-        <input type="hidden" name="flexpress_general_settings[casting_image]" id="flexpress_casting_image" value="<?php echo esc_attr($casting_image_id); ?>" />
-        <input type="button" class="button button-secondary" id="flexpress_upload_casting_image_button" value="<?php esc_attr_e('Upload Casting Image', 'flexpress'); ?>" />
-        <?php if (!empty($casting_image_id)) : ?>
-            <input type="button" class="button button-secondary" id="flexpress_remove_casting_image_button" value="<?php esc_attr_e('Remove Image', 'flexpress'); ?>" />
-        <?php endif; ?>
-        <p class="description"><?php esc_html_e('Upload an image for the casting section. This image will be displayed on both the homepage and casting page. Recommended size: 600x400px.', 'flexpress'); ?></p>
-
-        <script type="text/javascript">
-            jQuery(document).ready(function($) {
-                // Media uploader for casting image
-                var castingMediaUploader;
-
-                $('#flexpress_upload_casting_image_button').on('click', function(e) {
-                    e.preventDefault();
-
-                    // If the media uploader already exists, open it
-                    if (castingMediaUploader) {
-                        castingMediaUploader.open();
-                        return;
-                    }
-
-                    // Create the media uploader
-                    castingMediaUploader = wp.media({
-                        title: '<?php esc_html_e('Select or Upload Casting Image', 'flexpress'); ?>',
-                        button: {
-                            text: '<?php esc_html_e('Use this image', 'flexpress'); ?>'
-                        },
-                        multiple: false
-                    });
-
-                    // When an image is selected, run a callback
-                    castingMediaUploader.on('select', function() {
-                        var attachment = castingMediaUploader.state().get('selection').first().toJSON();
-                        $('#flexpress_casting_image').val(attachment.id);
-
-                        // Update preview
-                        if (attachment.url) {
-                            if ($('.flexpress-casting-image-preview').length === 0) {
-                                $('<div class="flexpress-casting-image-preview"><img style="max-width: 300px; height: auto; margin-bottom: 10px;" /></div>').insertBefore('#flexpress_upload_casting_image_button');
-                            }
-                            $('.flexpress-casting-image-preview img').attr('src', attachment.url);
-
-                            // Show remove button if not already visible
-                            if ($('#flexpress_remove_casting_image_button').length === 0) {
-                                $('<input type="button" class="button button-secondary" id="flexpress_remove_casting_image_button" value="<?php esc_attr_e('Remove Image', 'flexpress'); ?>" />').insertAfter('#flexpress_upload_casting_image_button');
-                            }
-                        }
-                    });
-
-                    // Open the media uploader
-                    castingMediaUploader.open();
-                });
-
-                // Handle remove button
-                $(document).on('click', '#flexpress_remove_casting_image_button', function(e) {
-                    e.preventDefault();
-                    $('#flexpress_casting_image').val('');
-                    $('.flexpress-casting-image-preview').remove();
-                    $(this).remove();
-                });
-            });
-        </script>
-    <?php
-    }
+    // Casting renderers removed; moved to dedicated Casting settings page.
 
     /**
      * Enqueue media scripts on settings page

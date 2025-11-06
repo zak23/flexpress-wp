@@ -226,6 +226,23 @@ class FlexPress_Settings
             'flexpress-tools',
             array($this, 'render_tools_page')
         );
+
+        // Add Casting submenu
+        add_submenu_page(
+            $this->page_slug,
+            __('Casting', 'flexpress'),
+            __('Casting', 'flexpress'),
+            flexpress_get_founder_capability(),
+            'flexpress_casting_settings',
+            function () {
+                if (class_exists('FlexPress_Casting_Settings')) {
+                    $obj = new FlexPress_Casting_Settings();
+                    $obj->render_settings_page();
+                } else {
+                    echo '<div class="wrap"><h1>Casting</h1><p>Casting settings class not found.</p></div>';
+                }
+            }
+        );
     }
 
     /**

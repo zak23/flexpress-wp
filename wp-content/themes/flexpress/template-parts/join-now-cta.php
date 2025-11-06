@@ -30,15 +30,11 @@ if (!empty($join_cta_image_id)) {
     if (!empty($legacy_cta_url)) {
         $cta_image_url = $legacy_cta_url;
     } else {
-        // Fallback to default image
-        $cta_image_url = home_url('/wp-content/uploads/2025/06/002-Zak_Mercedes-Green-scaled-800x1200.jpg');
+        $cta_image_url = '';
     }
 }
 
-// Ensure we have a valid image URL
-if (empty($cta_image_url)) {
-    $cta_image_url = home_url('/wp-content/uploads/2025/06/002-Zak_Mercedes-Green-scaled-800x1200.jpg');
-}
+// No fallback image: if empty, the image column will be omitted
 
 // Get site name for dynamic content
 $site_name = get_bloginfo('name');
@@ -121,16 +117,18 @@ if (!empty($cta_image_url)) {
 
 <div class="row g-0 join-now-cta">
     <!-- Image Column -->
-    <div class="col-md-12 col-lg-6">
-        <div class="cta-image-container">
-            <img src="<?php echo esc_url($cta_image_url); ?>"
-                alt="<?php echo esc_attr(sprintf(__('Join %s for Exclusive Content', 'flexpress'), $site_name)); ?>"
-                class="cta-image">
+    <?php if (!empty($cta_image_url)) : ?>
+        <div class="col-md-12 col-lg-6">
+            <div class="cta-image-container">
+                <img src="<?php echo esc_url($cta_image_url); ?>"
+                    alt="<?php echo esc_attr(sprintf(__('Join %s for Exclusive Content', 'flexpress'), $site_name)); ?>"
+                    class="cta-image">
+            </div>
         </div>
-    </div>
+    <?php endif; ?>
 
     <!-- Content Column -->
-    <div class="col-md-12 col-lg-6">
+    <div class="col-md-12 <?php echo !empty($cta_image_url) ? 'col-lg-6' : 'col-lg-12'; ?>">
         <div class="cta-content-container">
             <div class="cta-content-wrapper">
                 <!-- Main Headline -->

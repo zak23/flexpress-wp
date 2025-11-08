@@ -26,6 +26,18 @@ get_header();
 
                         <?php
                         // Show any error messages
+                        if (isset($_GET['error'])) {
+                            if ($_GET['error'] === 'invalidkey') {
+                                echo '<div class="alert alert-danger">';
+                                echo esc_html__('Invalid password reset key. Please request a new password reset link.', 'flexpress');
+                                echo '</div>';
+                            } elseif ($_GET['error'] === 'expiredkey') {
+                                echo '<div class="alert alert-danger">';
+                                echo esc_html__('Password reset key has expired. Please request a new password reset link.', 'flexpress');
+                                echo '</div>';
+                            }
+                        }
+
                         if (isset($_GET['reset']) && $_GET['reset'] === 'failed') {
                             echo '<div class="alert alert-danger">';
                             echo esc_html__('Password reset failed. Please try again.', 'flexpress');

@@ -5346,31 +5346,41 @@ function flexpress_get_extras_thumbnail($extras_id = null, $size = 'medium')
     if (flexpress_is_extras_gallery($extras_id)) {
         $gallery = flexpress_get_extras_gallery($extras_id);
         if (!empty($gallery)) {
-            $first_image = $gallery[0];
-            // Use the appropriate size key directly (not nested in 'sizes')
-            $url = '';
-            if ($size === 'thumbnail') {
-                $url = $first_image['thumbnail'] ?? '';
-            } elseif ($size === 'medium') {
-                $url = $first_image['medium'] ?? '';
-            } elseif ($size === 'large') {
-                $url = $first_image['large'] ?? '';
-            } else {
-                $url = $first_image['full'] ?? '';
-            }
+			$first_image = $gallery[0];
+			// Prefer BunnyCDN URLs with token; fall back to any legacy WP size keys if present
+			$optimized_url = '';
+			if (!empty($first_image['bunnycdn_thumbnail_url']) && ($size === 'thumbnail' || $size === 'medium')) {
+				$optimized_url = FlexPress_Gallery_System::generate_bunnycdn_token_url($first_image['bunnycdn_thumbnail_url'], 24);
+			} elseif (!empty($first_image['bunnycdn_url'])) {
+				$optimized_url = FlexPress_Gallery_System::generate_bunnycdn_token_url($first_image['bunnycdn_url'], 24);
+			} else {
+				// Legacy fallback if older arrays still contain WP-generated sizes
+				if ($size === 'thumbnail') {
+					$optimized_url = $first_image['thumbnail'] ?? '';
+				} elseif ($size === 'medium') {
+					$optimized_url = $first_image['medium'] ?? '';
+				} elseif ($size === 'large') {
+					$optimized_url = $first_image['large'] ?? '';
+				} else {
+					$optimized_url = $first_image['full'] ?? '';
+				}
+			}
 
-            return array(
-                'url' => $url,
-                'alt' => $first_image['alt'] ?? '',
-                'title' => $first_image['title'] ?? ''
-            );
+			if (!empty($optimized_url)) {
+				return array(
+					'url' => $optimized_url,
+					'alt' => $first_image['alt'] ?? '',
+					'title' => $first_image['title'] ?? ''
+				);
+			}
         }
     }
     // Check if it's video content
     elseif (flexpress_is_extras_video($extras_id)) {
         $video_id = flexpress_get_primary_extras_video_id($extras_id);
         if ($video_id) {
-            $thumbnail_url = flexpress_get_bunnycdn_video_thumbnail($video_id);
+			// Use helper with API-first + fallback behavior
+			$thumbnail_url = flexpress_get_bunnycdn_thumbnail_url($video_id);
             if ($thumbnail_url) {
                 return array(
                     'url' => $thumbnail_url,

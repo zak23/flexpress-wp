@@ -34,6 +34,13 @@ FlexPress is designed specifically for content websites (primarily adult content
 - Affects: `template-parts/join-now-cta.php`.
 - CDN/optimizer query parameters are applied only when an image URL exists.
 
+### Extras Thumbnails – BunnyCDN Migration Fix (November 2025)
+
+- Fixed broken thumbnails on Extras archive/listing pages after migrating galleries to BunnyCDN.
+- Now uses tokenized BunnyCDN URLs from gallery data (`bunnycdn_thumbnail_url`/`bunnycdn_url`) with fallbacks (featured image → placeholder).
+- Video extras thumbnails use API-first + fallback helper to avoid empty images when the API is unavailable.
+- Affects: `functions.php` (`flexpress_get_extras_thumbnail()` and video thumbnail helper usage).
+
 ### Free Trial Signup UX Updates (October 2025)
 
 - **Updated Signup Text**: Free trial signups now display clearer messaging

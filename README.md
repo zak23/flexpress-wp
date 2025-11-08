@@ -35,6 +35,13 @@ A modern WordPress website running in Docker containers with MySQL database and 
 - Removed default placeholder; when no image is configured the image column is omitted and content spans full width.
 - Host is swapped to the Static CDN host from settings (`bunnycdn_static_host`), defaulting to `static.zakspov.com`.
 
+### Extras Thumbnails – BunnyCDN Migration Fix (November 2025)
+
+- Fixed broken Extras thumbnails on archive/listing pages after shifting galleries to BunnyCDN storage.
+- Thumbnails now use tokenized BunnyCDN URLs (`bunnycdn_thumbnail_url`/`bunnycdn_url`) with graceful fallbacks (featured image → placeholder).
+- Video extras thumbnails use the API-first + fallback helper to avoid empty images when the API response is unavailable.
+- Updated file: `wp-content/themes/flexpress/functions.php`.
+
 ### Settings Save Robustness (October 2025)
 
 - Problem: Saving one settings page (e.g., Featured On) cleared unrelated settings because only posted fields were saved.

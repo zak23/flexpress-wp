@@ -311,7 +311,7 @@ while (have_posts()):
                                 </span>
                             <?php endif; ?>
 
-                            <?php if ($price && !$has_access): ?>
+                            <?php if ($price && !$has_access && $access_info['access_type'] !== 'membership_only'): ?>
                                 <span>
                                     <i class="fas fa-tag me-1"></i>
                                     <?php

@@ -247,12 +247,18 @@ while (have_posts()):
                     <!-- Purchase Section -->
                     <?php if (!$has_access): ?>
                         <div class="extras-purchase-section" id="purchase-section">
-                            <?php if ($access_info['show_purchase_button']): ?>
+                            <?php if ($access_info['show_purchase_button'] || (!empty($access_info['access_type']) && $access_info['access_type'] === 'membership_only') || (!empty($access_info['show_membership_button']) && $access_info['show_membership_button'])): ?>
                                 <div class="card bg-dark border-secondary">
                                     <div class="card-body">
                                         <h5 class="text-white mb-3 text-center">
                                             <i class="fas fa-unlock me-2"></i>
-                                            <?php esc_html_e('Unlock Extra Content', 'flexpress'); ?>
+                                            <?php
+                                            if ((!empty($access_info['access_type']) && $access_info['access_type'] === 'membership_only') || (!empty($access_info['show_membership_button']) && $access_info['show_membership_button'])) {
+                                                esc_html_e('Membership Required', 'flexpress');
+                                            } else {
+                                                esc_html_e('Unlock Extra Content', 'flexpress');
+                                            }
+                                            ?>
                                         </h5>
 
                                         <!-- Access Type Badge -->
@@ -283,7 +289,7 @@ while (have_posts()):
                                         <?php endif; ?>
 
                                         <!-- Price Display -->
-                                        <?php if ($access_info['price'] > 0): ?>
+                                        <?php if (!empty($access_info['show_purchase_button']) && $access_info['price'] > 0): ?>
                                             <div class="price-display mb-3 text-center p-3 bg-dark border border-secondary rounded">
                                                 <?php if ($access_info['discount'] > 0): ?>
                                                     <div class="original-price text-secondary text-decoration-line-through mb-1">
@@ -304,31 +310,51 @@ while (have_posts()):
                                         <?php endif; ?>
 
                                         <!-- Purchase Button -->
-                                        <?php if (is_user_logged_in()): ?>
-                                            <button class="btn btn-primary w-100 purchase-btn mb-3"
-                                                data-extras-id="<?php echo get_the_ID(); ?>"
-                                                data-price="<?php echo esc_attr($access_info['final_price']); ?>"
-                                                data-original-price="<?php echo esc_attr($access_info['price']); ?>"
-                                                data-discount="<?php echo esc_attr($access_info['discount']); ?>"
-                                                data-access-type="<?php echo esc_attr($access_info['access_type']); ?>"
-                                                data-is-active-member="<?php echo $is_active_member ? 'true' : 'false'; ?>">
-                                                <i class="fas fa-shopping-cart me-2"></i>
-                                                <?php esc_html_e('Unlock Now', 'flexpress'); ?>
-                                            </button>
-                                        <?php else: ?>
-                                            <a href="<?php echo esc_url(home_url('/login?redirect_to=' . urlencode(get_permalink()))); ?>"
-                                                class="btn btn-primary w-100 mb-3">
-                                                <i class="fas fa-sign-in-alt me-2"></i>
-                                                <?php esc_html_e('Login to Purchase', 'flexpress'); ?>
+                                        <?php if (!empty($access_info['show_purchase_button'])): ?>
+                                            <?php if (is_user_logged_in()): ?>
+                                                <button class="btn btn-primary w-100 purchase-btn mb-3"
+                                                    data-extras-id="<?php echo get_the_ID(); ?>"
+                                                    data-price="<?php echo esc_attr($access_info['final_price']); ?>"
+                                                    data-original-price="<?php echo esc_attr($access_info['price']); ?>"
+                                                    data-discount="<?php echo esc_attr($access_info['discount']); ?>"
+                                                    data-access-type="<?php echo esc_attr($access_info['access_type']); ?>"
+                                                    data-is-active-member="<?php echo $is_active_member ? 'true' : 'false'; ?>">
+                                                    <i class="fas fa-shopping-cart me-2"></i>
+                                                    <?php esc_html_e('Unlock Now', 'flexpress'); ?>
+                                                </button>
+                                            <?php else: ?>
+                                                <a href="<?php echo esc_url(home_url('/login?redirect_to=' . urlencode(get_permalink()))); ?>"
+                                                    class="btn btn-primary w-100 mb-3">
+                                                    <i class="fas fa-sign-in-alt me-2"></i>
+                                                    <?php esc_html_e('Login to Purchase', 'flexpress'); ?>
+                                                </a>
+                                                <div class="text-center mb-3">
+                                                    <small class="text-secondary">
+                                                        <?php esc_html_e('New here?', 'flexpress'); ?>
+                                                        <a href="<?php echo esc_url(home_url('/register?redirect_to=' . urlencode(get_permalink()))); ?>" class="text-white">
+                                                            <?php esc_html_e('Create Account', 'flexpress'); ?>
+                                                        </a>
+                                                    </small>
+                                                </div>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+
+                                        <!-- Membership Button for Membership-Only Extras -->
+                                        <?php if ((!empty($access_info['access_type']) && $access_info['access_type'] === 'membership_only') || (!empty($access_info['show_membership_button']) && $access_info['show_membership_button'])): ?>
+                                            <a href="<?php echo esc_url(home_url('/join')); ?>" class="btn btn-primary w-100 mb-3">
+                                                <i class="fas fa-crown me-2"></i>
+                                                <?php esc_html_e('Join Membership', 'flexpress'); ?>
                                             </a>
-                                            <div class="text-center mb-3">
-                                                <small class="text-secondary">
-                                                    <?php esc_html_e('New here?', 'flexpress'); ?>
-                                                    <a href="<?php echo esc_url(home_url('/register?redirect_to=' . urlencode(get_permalink()))); ?>" class="text-white">
-                                                        <?php esc_html_e('Create Account', 'flexpress'); ?>
-                                                    </a>
-                                                </small>
-                                            </div>
+                                            <?php if (!is_user_logged_in()): ?>
+                                                <div class="text-center mb-3">
+                                                    <small class="text-secondary">
+                                                        <?php esc_html_e('Already have an account?', 'flexpress'); ?>
+                                                        <a href="<?php echo esc_url(home_url('/login?redirect_to=' . urlencode(get_permalink()))); ?>" class="text-white">
+                                                            <?php esc_html_e('Login', 'flexpress'); ?>
+                                                        </a>
+                                                    </small>
+                                                </div>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                 </div>

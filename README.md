@@ -42,6 +42,13 @@ A modern WordPress website running in Docker containers with MySQL database and 
 - Video extras thumbnails use the API-first + fallback helper to avoid empty images when the API response is unavailable.
 - Updated file: `wp-content/themes/flexpress/functions.php`.
 
+### Extras Sidebar Membership CTA (November 2025)
+
+- Improved Extras single sidebar display for membership-only access.
+- When an Extra is set to “Membership Only”, the sidebar now shows a clear “Membership Required” header with a “Join Membership” button, plus a login link when logged out.
+- The small “Or get unlimited access” section remains below for consistent UX.
+- Files updated: `wp-content/themes/flexpress/single-extras.php`, `wp-content/themes/flexpress/functions.php` (badge text only).
+
 ### Settings Save Robustness (October 2025)
 
 - Problem: Saving one settings page (e.g., Featured On) cleared unrelated settings because only posted fields were saved.

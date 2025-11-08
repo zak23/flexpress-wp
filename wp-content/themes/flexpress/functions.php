@@ -4993,6 +4993,9 @@ function flexpress_get_extras_access_summary($extras_id = null)
         case 'ppv_only':
             return $price ? '$' . number_format($price, 2) . ' (PPV Only)' : 'PPV Only';
 
+        case 'membership_only':
+            return 'Members Only';
+
         case 'membership':
             if ($price) {
                 return 'Included in Membership<br />' .

@@ -2017,4 +2017,198 @@ if (function_exists('acf_add_local_field_group')):
         'description' => 'Settings for tag-based episode collections',
     ));
 
+    // Join Page Content Fields
+    acf_add_local_field_group(array(
+        'key' => 'group_join_page_content',
+        'title' => 'Join Page Content',
+        'fields' => array(
+            // Header Section
+            array(
+                'key' => 'field_join_header_tab',
+                'label' => 'Header Section',
+                'name' => '',
+                'type' => 'tab',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'placement' => 'top',
+                'endpoint' => 0,
+            ),
+            array(
+                'key' => 'field_join_header_heading',
+                'label' => 'Header Heading',
+                'name' => 'join_header_heading',
+                'type' => 'text',
+                'instructions' => 'Main heading for the join page header. Use %s to insert site name dynamically, or enter full text.',
+                'required' => 0,
+                'default_value' => 'Join %s Today',
+                'placeholder' => 'Join %s Today',
+            ),
+            array(
+                'key' => 'field_join_header_subheading',
+                'label' => 'Header Subheading',
+                'name' => 'join_header_subheading',
+                'type' => 'textarea',
+                'instructions' => 'Subheading text displayed below the main heading',
+                'required' => 0,
+                'default_value' => 'Join thousands of satisfied members and get instant access to premium content. No commitment required - cancel anytime.',
+                'rows' => 3,
+            ),
+            // Why Members Love Us Section
+            array(
+                'key' => 'field_join_benefits_tab',
+                'label' => 'Why Members Love Us',
+                'name' => '',
+                'type' => 'tab',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'placement' => 'top',
+                'endpoint' => 0,
+            ),
+            array(
+                'key' => 'field_join_benefits_heading',
+                'label' => 'Benefits Section Heading',
+                'name' => 'join_benefits_heading',
+                'type' => 'text',
+                'instructions' => 'Main heading for the benefits section',
+                'required' => 0,
+                'default_value' => 'Why Members Love Us',
+                'placeholder' => 'Why Members Love Us',
+            ),
+            array(
+                'key' => 'field_join_benefits_subheading',
+                'label' => 'Benefits Section Subheading',
+                'name' => 'join_benefits_subheading',
+                'type' => 'textarea',
+                'instructions' => 'Subheading text displayed below the main heading',
+                'required' => 0,
+                'default_value' => 'Join thousands of satisfied members who enjoy unlimited access to premium content',
+                'rows' => 2,
+            ),
+            array(
+                'key' => 'field_join_benefits_items',
+                'label' => 'Benefits Items (JSON)',
+                'name' => 'join_benefits_items',
+                'type' => 'textarea',
+                'instructions' => 'Enter benefit items as JSON. Each item should have: icon, title, description',
+                'required' => 0,
+                'rows' => 15,
+                'default_value' => '[
+    {
+        "icon": "fas fa-film",
+        "title": "Unlimited Streaming",
+        "description": "Watch unlimited content 24/7. No ads, no interruptions, just pure entertainment."
+    },
+    {
+        "icon": "fas fa-calendar-alt",
+        "title": "Fresh Content Weekly",
+        "description": "Never run out of content! We add exclusive new videos every week to keep your entertainment fresh."
+    },
+    {
+        "icon": "fas fa-shield-alt",
+        "title": "Secure & Private",
+        "description": "Your privacy is protected with secure streaming and encrypted connections. Watch with confidence."
+    },
+    {
+        "icon": "fas fa-mobile-alt",
+        "title": "Watch Anywhere, Anytime",
+        "description": "Perfect streaming on all devices - TV, computer, tablet, or phone. Your entertainment, your way."
+    }
+]',
+            ),
+            // Common Questions Section
+            array(
+                'key' => 'field_join_faq_tab',
+                'label' => 'Common Questions',
+                'name' => '',
+                'type' => 'tab',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'placement' => 'top',
+                'endpoint' => 0,
+            ),
+            array(
+                'key' => 'field_join_faq_heading',
+                'label' => 'FAQ Section Heading',
+                'name' => 'join_faq_heading',
+                'type' => 'text',
+                'instructions' => 'Main heading for the FAQ section',
+                'required' => 0,
+                'default_value' => 'Common Questions',
+                'placeholder' => 'Common Questions',
+            ),
+            array(
+                'key' => 'field_join_faq_subheading',
+                'label' => 'FAQ Section Subheading',
+                'name' => 'join_faq_subheading',
+                'type' => 'textarea',
+                'instructions' => 'Subheading text displayed below the main heading',
+                'required' => 0,
+                'default_value' => 'Everything you need to know before joining',
+                'rows' => 2,
+            ),
+            array(
+                'key' => 'field_join_faq_items',
+                'label' => 'FAQ Items (JSON)',
+                'name' => 'join_faq_items',
+                'type' => 'textarea',
+                'instructions' => 'Enter FAQ items as JSON. Each item should have: question, answer, icon',
+                'required' => 0,
+                'rows' => 15,
+                'default_value' => '[
+    {
+        "question": "How do I cancel my subscription?",
+        "answer": "Cancel anytime with just one click from your account dashboard. No questions asked, no hassle - your membership stays active until your current period ends.",
+        "icon": "fas fa-question-circle"
+    },
+    {
+        "question": "Can I switch between plans?",
+        "answer": "Absolutely! Change your plan anytime from your account. Upgrades take effect immediately, downgrades apply at your next billing cycle. No penalties or fees.",
+        "icon": "fas fa-exchange-alt"
+    },
+    {
+        "question": "Is there a free trial?",
+        "answer": "Yes! We regularly offer special trial promotions for new members. Keep an eye on our homepage or join our newsletter to be the first to know about exclusive offers.",
+        "icon": "fas fa-gift"
+    }
+]',
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param' => 'page_template',
+                    'operator' => '==',
+                    'value' => 'page-templates/join.php',
+                ),
+            ),
+        ),
+        'menu_order' => 0,
+        'position' => 'normal',
+        'style' => 'default',
+        'label_placement' => 'top',
+        'instruction_placement' => 'label',
+        'hide_on_screen' => '',
+        'active' => true,
+        'description' => 'Custom fields for the join page benefits and FAQ sections',
+        'show_in_rest' => 0,
+    ));
+
 endif;

@@ -41,6 +41,13 @@ FlexPress is designed specifically for content websites (primarily adult content
 - Video extras thumbnails use API-first + fallback helper to avoid empty images when the API is unavailable.
 - Affects: `functions.php` (`flexpress_get_extras_thumbnail()` and video thumbnail helper usage).
 
+### Extras Sidebar Membership CTA (November 2025)
+
+- Extras single page sidebar now properly renders a membership-only CTA.
+- For `access_type = membership_only`, the sidebar shows “Membership Required” with a “Join Membership” button, and a login link when logged out.
+- Access type badge now reads “Members Only” via `flexpress_get_extras_access_summary()`.
+- Files: `single-extras.php` (display only), `functions.php` (summary badge text).
+
 ### Free Trial Signup UX Updates (October 2025)
 
 - **Updated Signup Text**: Free trial signups now display clearer messaging

@@ -200,10 +200,29 @@ $plan_selection_step_number = 1;
         </div>
 
         <!-- Header Section -->
+        <?php
+        // Get ACF fields for header section
+        $header_heading = get_field('join_header_heading');
+        $header_subheading = get_field('join_header_subheading');
+
+        // Fallback to defaults if ACF fields are empty
+        if (empty($header_heading)) {
+            $header_heading = 'Join %s Today';
+        }
+        if (empty($header_subheading)) {
+            $header_subheading = __('Join thousands of satisfied members and get instant access to premium content. No commitment required - cancel anytime.', 'flexpress');
+        }
+
+        // Replace %s with site name if present in heading
+        $site_name = get_bloginfo('name') ?: 'Our Site';
+        if (strpos($header_heading, '%s') !== false) {
+            $header_heading = sprintf($header_heading, esc_html($site_name));
+        }
+        ?>
         <div class="row justify-content-center mb-5">
             <div class="col-md-10 text-center">
-                <h1 class="display-4 mb-4"><?php echo sprintf(esc_html__('Join %s Today', 'flexpress'), esc_html(get_bloginfo('name') ?: 'Our Site')); ?></h1>
-                <p class="lead mb-4"><?php esc_html_e('Join thousands of satisfied members and get instant access to premium content. No commitment required - cancel anytime.', 'flexpress'); ?></p>
+                <h1 class="display-4 mb-4"><?php echo esc_html($header_heading); ?></h1>
+                <p class="lead mb-4"><?php echo esc_html($header_subheading); ?></p>
 
                 <?php if ($payment_status === 'declined'): ?>
                     <div class="alert alert-danger" role="alert">
@@ -314,7 +333,7 @@ $plan_selection_step_number = 1;
             <div class="row justify-content-center mb-4">
                 <div class="col-lg-8 col-xl-6">
                     <div class="membership-selection-header">
-                        <h2 class="text-center mb-4"><?php echo esc_html($plan_selection_step_number . '. ' . __('Select Deal', 'flexpress')); ?></h2>
+                        <h2 class="text-center mb-4"><?php esc_html_e('Select Deal', 'flexpress'); ?></h2>
 
                         <!-- Plan Type Toggle -->
                         <div class="plan-type-toggle mb-4">
@@ -526,10 +545,63 @@ $plan_selection_step_number = 1;
         </div>
 
         <!-- Benefits Section -->
+        <?php
+        // Get ACF fields for benefits section
+        $benefits_heading = get_field('join_benefits_heading');
+        $benefits_subheading = get_field('join_benefits_subheading');
+        $benefits_json = get_field('join_benefits_items');
+
+        // Fallback to defaults if ACF fields are empty
+        if (empty($benefits_heading)) {
+            $benefits_heading = __('Why Members Love Us', 'flexpress');
+        }
+        if (empty($benefits_subheading)) {
+            $benefits_subheading = __('Join thousands of satisfied members who enjoy unlimited access to premium content', 'flexpress');
+        }
+
+        // Parse JSON or use defaults
+        $benefits_items = array();
+        if (!empty($benefits_json)) {
+            if (is_string($benefits_json)) {
+                $decoded = json_decode($benefits_json, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $benefits_items = $decoded;
+                }
+            } elseif (is_array($benefits_json)) {
+                $benefits_items = $benefits_json;
+            }
+        }
+
+        // Default benefits if parsing failed or empty
+        if (empty($benefits_items) || !is_array($benefits_items)) {
+            $benefits_items = array(
+                array(
+                    'icon' => 'fas fa-film',
+                    'title' => __('Unlimited Streaming', 'flexpress'),
+                    'description' => __('Watch unlimited content 24/7. No ads, no interruptions, just pure entertainment.', 'flexpress'),
+                ),
+                array(
+                    'icon' => 'fas fa-calendar-alt',
+                    'title' => __('Fresh Content Weekly', 'flexpress'),
+                    'description' => __('Never run out of content! We add exclusive new videos every week to keep your entertainment fresh.', 'flexpress'),
+                ),
+                array(
+                    'icon' => 'fas fa-shield-alt',
+                    'title' => __('Secure & Private', 'flexpress'),
+                    'description' => __('Your privacy is protected with secure streaming and encrypted connections. Watch with confidence.', 'flexpress'),
+                ),
+                array(
+                    'icon' => 'fas fa-mobile-alt',
+                    'title' => __('Watch Anywhere, Anytime', 'flexpress'),
+                    'description' => __('Perfect streaming on all devices - TV, computer, tablet, or phone. Your entertainment, your way.', 'flexpress'),
+                ),
+            );
+        }
+        ?>
         <div class="row mt-5 justify-content-center">
             <div class="col-12 text-center mb-5">
-                <h2 class="mb-3"><?php esc_html_e('Why Members Love Us', 'flexpress'); ?></h2>
-                <p class="lead text-muted"><?php esc_html_e('Join thousands of satisfied members who enjoy unlimited access to premium content', 'flexpress'); ?></p>
+                <h2 class="mb-3"><?php echo esc_html($benefits_heading); ?></h2>
+                <p class="lead text-muted"><?php echo esc_html($benefits_subheading); ?></p>
             </div>
         </div>
 
@@ -538,58 +610,26 @@ $plan_selection_step_number = 1;
                 <div class="card bg-dark">
                     <div class="card-body p-5">
                         <div class="row g-4">
-                            <div class="col-md-6">
-                                <div class="benefit-item d-flex align-items-start">
-                                    <div class="benefit-icon flex-shrink-0 me-4">
-                                        <div class="icon-wrapper">
-                                            <i class="fas fa-film fa-2x"></i>
+                            <?php foreach ($benefits_items as $index => $benefit): ?>
+                                <?php
+                                $icon = isset($benefit['icon']) ? $benefit['icon'] : 'fas fa-check';
+                                $title = isset($benefit['title']) ? $benefit['title'] : '';
+                                $description = isset($benefit['description']) ? $benefit['description'] : '';
+                                ?>
+                                <div class="col-md-6">
+                                    <div class="benefit-item d-flex align-items-start">
+                                        <div class="benefit-icon flex-shrink-0 me-4">
+                                            <div class="icon-wrapper">
+                                                <i class="<?php echo esc_attr($icon); ?> fa-2x"></i>
+                                            </div>
+                                        </div>
+                                        <div class="benefit-content">
+                                            <h4 class="benefit-title mb-3"><?php echo esc_html($title); ?></h4>
+                                            <p class="benefit-description mb-0"><?php echo esc_html($description); ?></p>
                                         </div>
                                     </div>
-                                    <div class="benefit-content">
-                                        <h4 class="benefit-title mb-3"><?php esc_html_e('Unlimited Streaming', 'flexpress'); ?></h4>
-                                        <p class="benefit-description mb-0"><?php esc_html_e('Watch unlimited content 24/7. No ads, no interruptions, just pure entertainment.', 'flexpress'); ?></p>
-                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="benefit-item d-flex align-items-start">
-                                    <div class="benefit-icon flex-shrink-0 me-4">
-                                        <div class="icon-wrapper">
-                                            <i class="fas fa-calendar-alt fa-2x"></i>
-                                        </div>
-                                    </div>
-                                    <div class="benefit-content">
-                                        <h4 class="benefit-title mb-3"><?php esc_html_e('Fresh Content Weekly', 'flexpress'); ?></h4>
-                                        <p class="benefit-description mb-0"><?php esc_html_e('Never run out of content! We add exclusive new videos every week to keep your entertainment fresh.', 'flexpress'); ?></p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="benefit-item d-flex align-items-start">
-                                    <div class="benefit-icon flex-shrink-0 me-4">
-                                        <div class="icon-wrapper">
-                                            <i class="fas fa-shield-alt fa-2x"></i>
-                                        </div>
-                                    </div>
-                                    <div class="benefit-content">
-                                        <h4 class="benefit-title mb-3"><?php esc_html_e('Secure & Private', 'flexpress'); ?></h4>
-                                        <p class="benefit-description mb-0"><?php esc_html_e('Your privacy is protected with secure streaming and encrypted connections. Watch with confidence.', 'flexpress'); ?></p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="benefit-item d-flex align-items-start">
-                                    <div class="benefit-icon flex-shrink-0 me-4">
-                                        <div class="icon-wrapper">
-                                            <i class="fas fa-mobile-alt fa-2x"></i>
-                                        </div>
-                                    </div>
-                                    <div class="benefit-content">
-                                        <h4 class="benefit-title mb-3"><?php esc_html_e('Watch Anywhere, Anytime', 'flexpress'); ?></h4>
-                                        <p class="benefit-description mb-0"><?php esc_html_e('Perfect streaming on all devices - TV, computer, tablet, or phone. Your entertainment, your way.', 'flexpress'); ?></p>
-                                    </div>
-                                </div>
-                            </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 </div>
@@ -597,55 +637,86 @@ $plan_selection_step_number = 1;
         </div>
 
         <!-- FAQ Section -->
+        <?php
+        // Get ACF fields for FAQ section
+        $faq_heading = get_field('join_faq_heading');
+        $faq_subheading = get_field('join_faq_subheading');
+        $faq_json = get_field('join_faq_items');
+
+        // Fallback to defaults if ACF fields are empty
+        if (empty($faq_heading)) {
+            $faq_heading = __('Common Questions', 'flexpress');
+        }
+        if (empty($faq_subheading)) {
+            $faq_subheading = __('Everything you need to know before joining', 'flexpress');
+        }
+
+        // Parse JSON or use defaults
+        $faq_items = array();
+        if (!empty($faq_json)) {
+            if (is_string($faq_json)) {
+                $decoded = json_decode($faq_json, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $faq_items = $decoded;
+                }
+            } elseif (is_array($faq_json)) {
+                $faq_items = $faq_json;
+            }
+        }
+
+        // Default FAQ items if parsing failed or empty
+        if (empty($faq_items) || !is_array($faq_items)) {
+            $faq_items = array(
+                array(
+                    'question' => __('How do I cancel my subscription?', 'flexpress'),
+                    'answer' => __('Cancel anytime with just one click from your account dashboard. No questions asked, no hassle - your membership stays active until your current period ends.', 'flexpress'),
+                    'icon' => 'fas fa-question-circle',
+                ),
+                array(
+                    'question' => __('Can I switch between plans?', 'flexpress'),
+                    'answer' => __('Absolutely! Change your plan anytime from your account. Upgrades take effect immediately, downgrades apply at your next billing cycle. No penalties or fees.', 'flexpress'),
+                    'icon' => 'fas fa-exchange-alt',
+                ),
+                array(
+                    'question' => __('Is there a free trial?', 'flexpress'),
+                    'answer' => __('Yes! We regularly offer special trial promotions for new members. Keep an eye on our homepage or join our newsletter to be the first to know about exclusive offers.', 'flexpress'),
+                    'icon' => 'fas fa-gift',
+                ),
+            );
+        }
+        ?>
         <div class="row mt-5 justify-content-center">
             <div class="col-12 text-center mb-5">
-                <h2 class="mb-3"><?php esc_html_e('Common Questions', 'flexpress'); ?></h2>
-                <p class="lead text-muted"><?php esc_html_e('Everything you need to know before joining', 'flexpress'); ?></p>
+                <h2 class="mb-3"><?php echo esc_html($faq_heading); ?></h2>
+                <p class="lead text-muted"><?php echo esc_html($faq_subheading); ?></p>
             </div>
         </div>
 
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="accordion" id="joinFAQ">
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="faqOne">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                <i class="fas fa-question-circle me-3"></i>
-                                <?php esc_html_e('How do I cancel my subscription?', 'flexpress'); ?>
-                            </button>
-                        </h2>
-                        <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="faqOne" data-bs-parent="#joinFAQ">
-                            <div class="accordion-body">
-                                <p class="mb-0"><?php esc_html_e('Cancel anytime with just one click from your account dashboard. No questions asked, no hassle - your membership stays active until your current period ends.', 'flexpress'); ?></p>
+                    <?php foreach ($faq_items as $index => $faq): ?>
+                        <?php
+                        $question = isset($faq['question']) ? $faq['question'] : '';
+                        $answer = isset($faq['answer']) ? $faq['answer'] : '';
+                        $icon = isset($faq['icon']) ? $faq['icon'] : 'fas fa-question-circle';
+                        $faq_id = 'faq' . ($index + 1);
+                        $collapse_id = 'collapse' . ($index + 1);
+                        ?>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="<?php echo esc_attr($faq_id); ?>">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo esc_attr($collapse_id); ?>" aria-expanded="false" aria-controls="<?php echo esc_attr($collapse_id); ?>">
+                                    <i class="<?php echo esc_attr($icon); ?> me-3"></i>
+                                    <?php echo esc_html($question); ?>
+                                </button>
+                            </h2>
+                            <div id="<?php echo esc_attr($collapse_id); ?>" class="accordion-collapse collapse" aria-labelledby="<?php echo esc_attr($faq_id); ?>" data-bs-parent="#joinFAQ">
+                                <div class="accordion-body">
+                                    <p class="mb-0"><?php echo esc_html($answer); ?></p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="faqTwo">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                                <i class="fas fa-exchange-alt me-3"></i>
-                                <?php esc_html_e('Can I switch between plans?', 'flexpress'); ?>
-                            </button>
-                        </h2>
-                        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="faqTwo" data-bs-parent="#joinFAQ">
-                            <div class="accordion-body">
-                                <p class="mb-0"><?php esc_html_e('Absolutely! Change your plan anytime from your account. Upgrades take effect immediately, downgrades apply at your next billing cycle. No penalties or fees.', 'flexpress'); ?></p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="faqThree">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                                <i class="fas fa-gift me-3"></i>
-                                <?php esc_html_e('Is there a free trial?', 'flexpress'); ?>
-                            </button>
-                        </h2>
-                        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="faqThree" data-bs-parent="#joinFAQ">
-                            <div class="accordion-body">
-                                <p class="mb-0"><?php esc_html_e('Yes! We regularly offer special trial promotions for new members. Keep an eye on our homepage or join our newsletter to be the first to know about exclusive offers.', 'flexpress'); ?></p>
-                            </div>
-                        </div>
-                    </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
         </div>

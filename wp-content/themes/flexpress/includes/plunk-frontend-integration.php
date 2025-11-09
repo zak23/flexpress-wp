@@ -96,180 +96,7 @@ function flexpress_render_newsletter_modal() {
             </div>
         </div>
     </div>
-
-    <script>
-    jQuery(document).ready(function($) {
-        // LocalStorage key to persist dismissal
-        var NEWSLETTER_LS_KEY = 'flexpress_newsletter_modal_dismissed';
-
-        function hasDismissedNewsletterModal() {
-            try {
-                return window.localStorage && localStorage.getItem(NEWSLETTER_LS_KEY) === 'true';
-            } catch (e) {
-                return false;
-            }
-        }
-
-        function markNewsletterModalDismissed() {
-            try {
-                if (window.localStorage) {
-                    localStorage.setItem(NEWSLETTER_LS_KEY, 'true');
-                }
-            } catch (e) {}
-        }
-
-        // Show modal after delay if not previously dismissed
-        // Wait for age verification to complete first
-        if (!hasDismissedNewsletterModal()) {
-            function showNewsletterModal() {
-                $('#newsletterModal').modal('show');
-            }
-            
-            // Check if age verification is already completed
-            var ageVerified = false;
-            try {
-                ageVerified = localStorage.getItem('flexpress_age_verified') === 'true';
-            } catch (e) {
-                // If localStorage is not available, assume age verification is needed
-                ageVerified = false;
-            }
-            
-            if (ageVerified) {
-                // Age already verified, show newsletter modal after delay
-                setTimeout(showNewsletterModal, <?php echo $modal_delay * 1000; ?>);
-            } else {
-                // Wait for age verification to complete
-                document.addEventListener('flexpress:ageVerified', function() {
-                    setTimeout(showNewsletterModal, <?php echo $modal_delay * 1000; ?>);
-                }, { once: true });
-            }
-        }
-
-        // When modal fully hides (any dismissal path), remember preference
-        $('#newsletterModal').on('hidden.bs.modal', function() {
-            markNewsletterModalDismissed();
-        });
-
-        <?php if (flexpress_is_turnstile_enabled()): ?>
-        // Explicitly render Turnstile when modal is shown to ensure widget exists
-        var flexpressNewsletterWidgetId = null;
-        var flexpressTurnstileRendered = false;
-
-        $('#newsletterModal').on('shown.bs.modal', function() {
-            try {
-                if (window.turnstile && !flexpressTurnstileRendered) {
-                    flexpressNewsletterWidgetId = turnstile.render('#newsletter-turnstile', {
-                        sitekey: '<?php echo esc_js(flexpress_get_turnstile_site_key()); ?>',
-                        theme: '<?php echo esc_js(flexpress_get_turnstile_theme()); ?>',
-                        size: '<?php echo esc_js(flexpress_get_turnstile_size()); ?>',
-                        callback: 'flexpressNewsletterTurnstileCallback',
-                        'expired-callback': 'flexpressNewsletterTurnstileExpired',
-                        'error-callback': 'flexpressNewsletterTurnstileError'
-                    });
-                    flexpressTurnstileRendered = true;
-                }
-            } catch (e) {
-                console.error('Turnstile render error:', e);
-            }
-        });
-        <?php endif; ?>
-
-        // Handle form submission
-        $('#newsletterForm').on('submit', function(e) {
-            e.preventDefault();
-
-            const $form = $(this);
-            const $submitBtn = $form.find('button[type="submit"]');
-            const email = $('#newsletterEmail').val();
-
-            if (!email) {
-                return;
-            }
-
-            <?php if (flexpress_is_turnstile_enabled()): ?>
-            if (!window.turnstile) {
-                alert('Security system not loaded. Please wait a moment and try again.');
-                return;
-            }
-            var token = null;
-            try {
-                token = flexpressNewsletterWidgetId ? turnstile.getResponse(flexpressNewsletterWidgetId) : turnstile.getResponse();
-            } catch (e) {
-                console.error('Turnstile getResponse error:', e);
-            }
-            if (!token) {
-                alert('Please complete the security verification');
-                return;
-            }
-            <?php endif; ?>
-
-            $submitBtn.prop('disabled', true).text('Subscribing...');
-
-            var ajaxData = {
-                action: 'plunk_newsletter_signup',
-                email: email,
-                website: $form.find('input[name="website"]').val()
-            };
-            
-            <?php if (flexpress_is_turnstile_enabled()): ?>
-            ajaxData['cf-turnstile-response'] = token;
-            <?php endif; ?>
-
-            $.ajax({
-                url: '<?php echo admin_url('admin-ajax.php'); ?>',
-                type: 'POST',
-                data: ajaxData,
-                success: function(response) {
-                    if (response.success) {
-                        // Show success message
-                        const successHtml = `
-                            <div class="text-center newsletter-success">
-                                <div class="bg-white rounded p-4">
-                                    <h4 class="text-pink mb-3">${response.data.message}</h4>
-                                    <p class="text-dark mb-0">Please check your email to confirm your subscription.</p>
-                                </div>
-                            </div>`;
-                        
-                        $form.html(successHtml);
-                        
-                        // Close modal after delay
-                        setTimeout(function() {
-                            $('#newsletterModal').modal('hide');
-                        }, 3000);
-                    } else {
-                        $submitBtn.prop('disabled', false).text('Subscribe Now');
-                        <?php if (flexpress_is_turnstile_enabled()): ?>
-                        try { if (window.turnstile) { turnstile.reset(flexpressNewsletterWidgetId || undefined); } } catch (e) { console.warn('Turnstile reset error:', e); }
-                        <?php endif; ?>
-                        $form.prepend(`<div class="alert alert-danger">${response.data}</div>`);
-                    }
-                },
-                error: function() {
-                    $submitBtn.prop('disabled', false).text('Subscribe Now');
-                    <?php if (flexpress_is_turnstile_enabled()): ?>
-                    try { if (window.turnstile) { turnstile.reset(flexpressNewsletterWidgetId || undefined); } } catch (e) { console.warn('Turnstile reset error:', e); }
-                    <?php endif; ?>
-                    $form.prepend('<div class="alert alert-danger">An error occurred. Please try again.</div>');
-                }
-            });
-        });
-
-        // Turnstile callback functions
-        <?php if (flexpress_is_turnstile_enabled()): ?>
-        window.flexpressNewsletterTurnstileCallback = function(token) {
-            console.log('Newsletter Turnstile token received:', token);
-        };
-        
-        window.flexpressNewsletterTurnstileExpired = function() {
-            console.log('Newsletter Turnstile token expired');
-        };
-        
-        window.flexpressNewsletterTurnstileError = function(error) {
-            console.log('Newsletter Turnstile error:', error);
-        };
-        <?php endif; ?>
-    });
-    </script>
+ 
     <?php
 }
 
@@ -469,6 +296,39 @@ function flexpress_enqueue_plunk_frontend_scripts() {
     }
 }
 add_action('wp_enqueue_scripts', 'flexpress_enqueue_plunk_frontend_scripts');
+
+/**
+ * Enqueue newsletter modal script with proper dependencies and localization
+ */
+function flexpress_enqueue_newsletter_modal_script() {
+    if (!flexpress_should_show_newsletter_modal()) {
+        return;
+    }
+
+    $script_handle = 'flexpress-newsletter-modal';
+    $script_path   = get_template_directory() . '/assets/js/newsletter-modal.js';
+    $script_uri    = get_template_directory_uri() . '/assets/js/newsletter-modal.js';
+    $version       = file_exists($script_path) ? filemtime($script_path) : wp_get_theme()->get('Version');
+
+    // jQuery is required; also ensure Bootstrap is loaded for modal behavior
+    wp_enqueue_script($script_handle, $script_uri, array('jquery', 'bootstrap-js'), $version, true);
+
+    $delay_ms = flexpress_get_newsletter_modal_delay() * 1000;
+    $localize = array(
+        'modalDelayMs'     => $delay_ms,
+        'ajaxurl'          => admin_url('admin-ajax.php'),
+        'turnstileEnabled' => (bool) flexpress_is_turnstile_enabled(),
+    );
+
+    if (flexpress_is_turnstile_enabled()) {
+        $localize['turnstileSiteKey'] = flexpress_get_turnstile_site_key();
+        $localize['turnstileTheme']   = flexpress_get_turnstile_theme();
+        $localize['turnstileSize']    = flexpress_get_turnstile_size();
+    }
+
+    wp_localize_script($script_handle, 'flexpressNewsletter', $localize);
+}
+add_action('wp_enqueue_scripts', 'flexpress_enqueue_newsletter_modal_script');
 
 /**
  * Track user events for Plunk

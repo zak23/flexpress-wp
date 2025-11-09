@@ -244,10 +244,13 @@ A modern WordPress website running in Docker containers with MySQL database and 
 - **Login/Registration jQuery Race Fixed**: Removed `defer` from `flexpress-login` and `flexpress-registration` scripts to prevent a race with footer-deferred jQuery. These scripts still load in the footer and declare `jquery` as a dependency.
 - **Service Worker Origin Alignment**: `flexpress_add_service_worker()` now registers via `get_template_directory_uri() . '/sw.js'` to ensure a same-origin URL. Exclude `sw.js` from Bunny CDN (pull zone) rewrite/serving to avoid cross-origin registration errors.
 - **Autoplay Console Noise Suppressed**: Added production-only suppression for `NotAllowedError: play() failed because the user didn't interact` to keep logs clean without changing autoplay behavior.
+- **Newsletter Modal Script Migration**: Moved inline newsletter modal logic to `wp-content/themes/flexpress/assets/js/newsletter-modal.js` and enqueue it with dependencies (`jquery`, `bootstrap-js`). Data is passed via `wp_localize_script('flexpress-newsletter-modal', 'flexpressNewsletter', {...})` to avoid footer race conditions with deferred jQuery/Bootstrap.
 
 - **Files Updated**:
   - `wp-content/themes/flexpress/functions.php` – script enqueue adjustments; console suppression additions
   - `wp-content/themes/flexpress/includes/performance-optimization.php` – service worker registration URL origin fix
+  - `wp-content/themes/flexpress/includes/plunk-frontend-integration.php` – removed inline modal script, added proper enqueue/localization for the newsletter modal
+  - `wp-content/themes/flexpress/assets/js/newsletter-modal.js` – new newsletter modal implementation
 
 ### Join CTA – Dedicated Editable Settings (November 2025)
 

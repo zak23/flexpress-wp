@@ -113,6 +113,18 @@ FlexPress is designed specifically for content websites (primarily adult content
 - **Deferred jQuery**: Core jQuery, jQuery Migrate, and jQuery Core now load deferred from the footer to keep the critical path clear—front-end scripts must declare jQuery as a dependency instead of relying on inline head snippets.
 - **Automation**: Puppeteer coverage in `tests/puppeteer/test-critical-assets.mjs` asserts the async CSS markup and deferred jQuery placement.
 
+### Newsletter Modal (November 2025)
+
+- The newsletter modal JavaScript was moved from an inline footer block to `assets/js/newsletter-modal.js`.
+- It is enqueued with dependencies on `jquery` and `bootstrap-js`, and localized via `flexpressNewsletter` (delay, AJAX URL, Turnstile flags/options).
+- Rendering/visibility:
+  - Modal HTML is injected by `flexpress_render_newsletter_modal()` on the front page when Plunk is enabled and the modal is enabled in settings.
+  - Showing is delayed (configurable) and waits for the `flexpress:ageVerified` event when age verification is in use.
+- Security:
+  - Turnstile is rendered on `shown.bs.modal` to avoid missing widget errors.
+- Persistence:
+  - Dismissal is remembered in `localStorage` key `flexpress_newsletter_modal_dismissed`.
+
 ### JavaScript MutationObserver Error Fix (October 2025)
 
 - **Fixed TypeError**: Resolved `Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'` error

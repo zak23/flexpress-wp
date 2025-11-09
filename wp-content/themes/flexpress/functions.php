@@ -479,7 +479,8 @@ function flexpress_enqueue_scripts_and_styles()
         wp_enqueue_style('slick-css', get_template_directory_uri() . '/assets/vendor/css/slick.css', array(), '1.8.1');
         wp_enqueue_style('slick-theme-css', get_template_directory_uri() . '/assets/vendor/css/slick-theme.css', array('slick-css'), '1.8.1');
         wp_enqueue_script('slick-js', get_template_directory_uri() . '/assets/vendor/js/slick.min.js', array('jquery'), '1.8.1', true);
-        // Remove defer to ensure Slick loads before initialization script
+        // Ensure slick-js waits for jQuery (don't defer, or ensure jQuery loads first)
+        wp_script_add_data('slick-js', 'defer', false);
     }
 
     // Enqueue jQuery with defer
@@ -558,7 +559,8 @@ function flexpress_enqueue_scripts_and_styles()
     // Enqueue login script on login page (but NOT on join page)
     if (is_page_template('page-templates/login.php') && !is_page_template('page-templates/join.php')) {
         wp_enqueue_script('flexpress-login', get_template_directory_uri() . '/assets/js/login.js', array('jquery'), wp_get_theme()->get('Version'), true);
-        wp_script_add_data('flexpress-login', 'defer', true);
+        // Don't defer login script - it needs jQuery immediately
+        wp_script_add_data('flexpress-login', 'defer', false);
     }
 
     // Enqueue registration script on registration page (but NOT on join page)
@@ -574,8 +576,9 @@ function flexpress_enqueue_scripts_and_styles()
         ));
     }
 
-    // Force jQuery to load in HEAD (non-deferred) on pages that use inline jQuery
+    // Force jQuery to load in HEAD (non-deferred) on pages that use inline jQuery or need jQuery immediately
     // This includes: join, membership, my-account, dashboard, cancel-membership, affiliate-signup
+    // Also includes: homepage (slick slider), login page (login script)
     $jquery_dependent_templates = array(
         'page-templates/join.php',
         'page-templates/membership.php',
@@ -585,7 +588,11 @@ function flexpress_enqueue_scripts_and_styles()
         'page-templates/affiliate-signup.php'
     );
     
-    if (is_page_template($jquery_dependent_templates)) {
+    $needs_jquery_immediately = is_page_template($jquery_dependent_templates) 
+        || is_page_template('page-templates/page-home.php')  // Slick slider needs jQuery
+        || is_page_template('page-templates/login.php');     // Login script needs jQuery
+    
+    if ($needs_jquery_immediately) {
         // Force jQuery to load in HEAD (non-deferred) because these templates use jQuery directly
         wp_scripts()->add_data('jquery-core', 'group', 0);  // Move to head
         wp_scripts()->add_data('jquery', 'group', 0);  // Move to head
@@ -596,9 +603,11 @@ function flexpress_enqueue_scripts_and_styles()
         wp_scripts()->add_data('jquery', 'defer', false);
         wp_scripts()->add_data('jquery-migrate', 'defer', false);
         
-        // Dequeue global login/registration scripts to avoid conflicts
-        wp_dequeue_script('flexpress-login');
-        wp_dequeue_script('flexpress-registration');
+        // Dequeue global login/registration scripts to avoid conflicts (only on specific templates)
+        if (is_page_template($jquery_dependent_templates)) {
+            wp_dequeue_script('flexpress-login');
+            wp_dequeue_script('flexpress-registration');
+        }
     }
 
     // Enqueue join page specific script
@@ -2242,6 +2251,8 @@ function flexpress_ajax_login_init()
     }
     
     wp_register_script('flexpress-login', get_template_directory_uri() . '/assets/js/login.js', array('jquery'), '1.0', true);
+    // Don't defer login script - it needs jQuery immediately
+    wp_script_add_data('flexpress-login', 'defer', false);
 
     wp_localize_script('flexpress-login', 'ajax_login_object', array(
         'ajaxurl' => admin_url('admin-ajax.php'),

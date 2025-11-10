@@ -14,7 +14,7 @@ Bundled webfonts must use `font-display: swap`
 - Model hero uses a 12:5 aspect ratio (1920x800) with center crop across hero components.
 - Model hero and profile images use Bunny Image Optimizer via `flexpress_get_bunnycdn_optimized_image_url()`.
 - Hero images use width=1920, height=800 for center crop to maintain 12:5 ratio.
-- CDN host comes from `bunnycdn_static_host`; default `static.zakspov.com`.
+- CDN host comes from `bunnycdn_static_host`; if not configured, images use WordPress URL with optimizer parameters.
 
 ## Render Blocking Optimizations (November 2025)
 

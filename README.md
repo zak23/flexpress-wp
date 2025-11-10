@@ -33,7 +33,7 @@ A modern WordPress website running in Docker containers with MySQL database and 
 
 - Applied BunnyCDN Image Optimizer to the casting section image with `width=650&format=webp&quality=75`.
 - Removed default placeholder; when no image is configured the image column is omitted and content spans full width.
-- Host is swapped to the Static CDN host from settings (`bunnycdn_static_host`), defaulting to `static.zakspov.com`.
+- Host is swapped to the Static CDN host from settings (`bunnycdn_static_host`) if configured; otherwise uses WordPress URL with optimizer parameters.
 
 ### Extras Thumbnails – BunnyCDN Migration Fix (November 2025)
 

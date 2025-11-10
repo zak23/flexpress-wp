@@ -17,14 +17,14 @@ FlexPress is designed specifically for content websites (primarily adult content
 - BunnyCDN Image Optimizer now powers model hero and profile images:
   - Hero: `width=1920&height=800&format=webp&quality=85` (center crop to 12:5 ratio)
   - Profile: `width=776&format=webp&quality=80`
-- CDN host is taken from FlexPress Video settings (`bunnycdn_static_host`), default `static.zakspov.com`.
+- CDN host is taken from FlexPress Video settings (`bunnycdn_static_host`); if not configured, images use WordPress URL with optimizer parameters.
 - Affects: `assets/css/critical.css`, `assets/css/hero-video.css`, `single-model.php`, and helper `flexpress_get_bunnycdn_optimized_image_url()` in `functions.php`.
 
 ### Casting Section – Optimized Image + Fallback Removed (November 2025)
 
 - The casting section image now uses BunnyCDN Image Optimizer (`width=650&format=webp&quality=75`).
 - Removed the default placeholder; if no image is configured, the image column is omitted and the content spans full width.
-- Host is swapped to the Static CDN host set in FlexPress Video settings (`bunnycdn_static_host`), default `static.zakspov.com`.
+- Host is swapped to the Static CDN host set in FlexPress Video settings (`bunnycdn_static_host`) if configured; otherwise uses WordPress URL with optimizer parameters.
 - Affects: `template-parts/casting-section.php`.
 
 ### Join Now CTA – Fallback Image Removed (November 2025)

@@ -568,6 +568,15 @@ class FlexPress_Membership_Settings
             // Show edit form
             $this->render_user_edit_form($edit_user);
         } else {
+            // Refresh statuses for all users before displaying the list
+            // This ensures trial expiration is checked and statuses are updated before filtering/display
+            if (function_exists('flexpress_get_membership_status')) {
+                foreach ($users as $user) {
+                    // This will check trial expiration and update status if needed
+                    flexpress_get_membership_status($user->ID);
+                }
+            }
+
             // Show users table
         ?>
             <h2><?php esc_html_e('Manage Members', 'flexpress'); ?></h2>
@@ -611,6 +620,7 @@ class FlexPress_Membership_Settings
 
                     foreach ($users as $user) {
                         $user_id = $user->ID;
+                        // Get current status (already refreshed before the loop, so this is just for display)
                         $membership_status = get_user_meta($user_id, 'membership_status', true) ?: 'none';
 
                         // Apply status filter if set

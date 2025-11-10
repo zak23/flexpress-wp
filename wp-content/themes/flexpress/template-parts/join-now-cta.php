@@ -101,13 +101,18 @@ $query_string = http_build_query($optimizer_params);
 
 // Append Bunny CDN Image Optimizer query only if $cta_image_url is not empty
 if (!empty($cta_image_url)) {
-    // Use Static CDN Hostname from settings if provided
+    // Only replace hostname if CDN is configured
     $video_settings = get_option('flexpress_video_settings', array());
-    $cdn_host = !empty($video_settings['bunnycdn_static_host']) ? $video_settings['bunnycdn_static_host'] : 'static.zakspov.com';
-    // Remove any protocol part, just in case
-    $cdn_host = preg_replace('#^https?://#', '', $cdn_host);
-    $cta_image_url = str_replace(parse_url(home_url(), PHP_URL_HOST), $cdn_host, $cta_image_url);
-    // Append query params
+    $cdn_host = !empty($video_settings['bunnycdn_static_host']) ? $video_settings['bunnycdn_static_host'] : '';
+    if (!empty($cdn_host)) {
+        // Remove any protocol part, just in case
+        $cdn_host = preg_replace('#^https?://#', '', $cdn_host);
+        $source_host = parse_url($cta_image_url, PHP_URL_HOST);
+        if (!empty($source_host)) {
+            $cta_image_url = str_replace($source_host, $cdn_host, $cta_image_url);
+        }
+    }
+    // Append query params (works with or without CDN)
     $cta_image_url .= (strpos($cta_image_url, '?') === false ? '?' : '&') . $query_string;
 }
 

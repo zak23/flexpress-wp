@@ -54,13 +54,18 @@ if (!defined('ABSPATH')) {
                             ];
                             $query_string = http_build_query($optimizer_params);
 
+                            // Only replace hostname if CDN is configured
                             $video_settings = get_option('flexpress_video_settings', array());
-                            $cdn_host = !empty($video_settings['bunnycdn_static_host']) ? $video_settings['bunnycdn_static_host'] : 'static.zakspov.com';
-                            $cdn_host = preg_replace('#^https?://#', '', $cdn_host);
-                            $source_host = parse_url($optimized_image_url, PHP_URL_HOST);
-                            if (!empty($source_host)) {
-                                $optimized_image_url = str_replace($source_host, $cdn_host, $optimized_image_url);
+                            $cdn_host = !empty($video_settings['bunnycdn_static_host']) ? $video_settings['bunnycdn_static_host'] : '';
+                            if (!empty($cdn_host)) {
+                                // Remove protocol if present
+                                $cdn_host = preg_replace('#^https?://#', '', $cdn_host);
+                                $source_host = parse_url($optimized_image_url, PHP_URL_HOST);
+                                if (!empty($source_host)) {
+                                    $optimized_image_url = str_replace($source_host, $cdn_host, $optimized_image_url);
+                                }
                             }
+                            // Append optimizer parameters to URL (works with or without CDN)
                             $optimized_image_url .= (strpos($optimized_image_url, '?') === false ? '?' : '&') . $query_string;
                         }
                         ?>

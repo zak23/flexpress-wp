@@ -5,7 +5,7 @@
  */
 
 // Define theme constants
-define('FLEXPRESS_VERSION', '1.0.13');
+define('FLEXPRESS_VERSION', '1.0.17');
 define('FLEXPRESS_PATH', get_template_directory());
 define('FLEXPRESS_URL', get_template_directory_uri());
 
@@ -2644,6 +2644,14 @@ function flexpress_coming_soon_redirect()
     // Allow access to wp-login.php
     if (strpos($_SERVER['REQUEST_URI'], 'wp-login.php') !== false) {
         return;
+    }
+
+    // Allow access to custom login pages
+    $login_pages = array('/login', '/lost-password', '/register');
+    foreach ($login_pages as $login_page) {
+        if (strpos($_SERVER['REQUEST_URI'], $login_page) !== false) {
+            return;
+        }
     }
 
     // Check if coming soon mode is enabled
@@ -9105,6 +9113,9 @@ function flexpress_get_membership_status($user_id = null)
         return 'none';
     }
 
+    // Get current membership status first
+    $membership_status = get_user_meta($user_id, 'membership_status', true);
+
     // Check trial expiration first (with 1-day grace period)
     $trial_expires_at = get_user_meta($user_id, 'trial_expires_at', true);
     if (!empty($trial_expires_at)) {
@@ -9112,13 +9123,13 @@ function flexpress_get_membership_status($user_id = null)
         // Add 1 day grace period (86400 seconds = 1 day)
         $expires_with_grace = $expires_timestamp + (1 * DAY_IN_SECONDS);
         if ($expires_with_grace < current_time('timestamp')) {
-            // Trial expired (past grace period) - auto-update status
-            flexpress_update_membership_status($user_id, 'expired');
+            // Trial expired (past grace period) - auto-update status only if not already expired
+            if ($membership_status !== 'expired') {
+                flexpress_update_membership_status($user_id, 'expired');
+            }
             return 'expired';
         }
     }
-
-    $membership_status = get_user_meta($user_id, 'membership_status', true);
 
     // Return 'none' if no status is set
     if (empty($membership_status)) {

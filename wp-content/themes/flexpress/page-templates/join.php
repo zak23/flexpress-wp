@@ -171,13 +171,37 @@ $plan_selection_step_number = 1;
                             $image = isset($slide['image']) ? $slide['image'] : '';
                             $heading = isset($slide['heading']) ? $slide['heading'] : '';
                             $alt = isset($slide['alt']) ? $slide['alt'] : $heading;
+                            
+                            // Apply BunnyCDN optimizer if we have an image URL
+                            if (!empty($image)) {
+                                $optimizer_params = [
+                                    'width'   => 1300,
+                                    'format'  => 'webp',
+                                    'quality' => 85,
+                                ];
+                                $query_string = http_build_query($optimizer_params);
+                                
+                                // Only replace hostname if CDN is configured
+                                $video_settings = get_option('flexpress_video_settings', array());
+                                $cdn_host = !empty($video_settings['bunnycdn_static_host']) ? $video_settings['bunnycdn_static_host'] : '';
+                                if (!empty($cdn_host)) {
+                                    // Remove protocol if present
+                                    $cdn_host = preg_replace('#^https?://#', '', $cdn_host);
+                                    $source_host = parse_url($image, PHP_URL_HOST);
+                                    if (!empty($source_host)) {
+                                        $image = str_replace($source_host, $cdn_host, $image);
+                                    }
+                                }
+                                // Append optimizer parameters to URL (works with or without CDN)
+                                $image .= (strpos($image, '?') === false ? '?' : '&') . $query_string;
+                            }
                         ?>
                             <div class="carousel-item <?php echo $first_slide ? 'active' : ''; ?>">
                                 <?php if ($image): ?>
-                                    <img src="<?php echo $image; ?>" class="d-block w-100" alt="<?php echo $alt; ?>">
+                                    <img src="<?php echo esc_url($image); ?>" class="d-block w-100" alt="<?php echo esc_attr($alt); ?>">
                                 <?php endif; ?>
                                 <div class="carousel-caption">
-                                    <h1><?php echo $heading; ?></h1>
+                                    <h1><?php echo esc_html($heading); ?></h1>
                                 </div>
                             </div>
                         <?php

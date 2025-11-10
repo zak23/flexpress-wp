@@ -185,6 +185,23 @@ function flexpress_flowguard_handle_subscription_approved($payload) {
     
     // Update user membership status
     flexpress_update_membership_status($user_id, 'active');
+    // Update Plunk membership traits and track event
+    if (function_exists('flexpress_plunk_service')) {
+        $plunk = flexpress_plunk_service();
+        $plunk->update_membership_traits($user_id, 'Current');
+        $plan_id_for_event = '';
+        $reference_id = $payload['referenceId'] ?? '';
+        if (!empty($reference_id) && function_exists('flexpress_flowguard_parse_enhanced_reference')) {
+            $ref = flexpress_flowguard_parse_enhanced_reference($reference_id);
+            $plan_id_for_event = $ref['plan_id'] ?? '';
+        }
+        $plunk->track_user_event($user_id, 'membership_started', array(
+            'plan' => $plan_id_for_event,
+            'price' => $payload['priceAmount'] ?? '',
+            'currency' => $payload['priceCurrency'] ?? '',
+            'timestamp' => date('c')
+        ));
+    }
     // Ensure caches reflect new status immediately
     if (function_exists('flexpress_invalidate_user_cache')) {
         flexpress_invalidate_user_cache($user_id);
@@ -426,6 +443,17 @@ function flexpress_flowguard_handle_purchase_approved($payload) {
             if (function_exists('flexpress_invalidate_user_cache')) {
                 flexpress_invalidate_user_cache($user_id);
             }
+            // Track unlock event in Plunk
+            if (function_exists('flexpress_plunk_service')) {
+                $plunk = flexpress_plunk_service();
+                $plunk->track_user_event($user_id, 'post_unlocked', array(
+                    'post_id' => $episode_id,
+                    'type' => 'episode',
+                    'timestamp' => date('c')
+                ));
+                // Mark unlocker trait
+                $plunk->identify_user($user_id, array('unlocker' => true));
+            }
         } else {
             error_log('Flowguard Webhook: Episode ' . $episode_id . ' already in user purchases');
         }
@@ -542,6 +570,15 @@ function flexpress_flowguard_handle_subscription_cancel($payload) {
     
     // Update membership status
     flexpress_update_membership_status($user_id, 'cancelled');
+    // Update Plunk membership traits and track event
+    if (function_exists('flexpress_plunk_service')) {
+        $plunk = flexpress_plunk_service();
+        $plunk->update_membership_traits($user_id, 'Cancelled');
+        $plunk->track_user_event($user_id, 'membership_cancelled', array(
+            'cancelled_at' => date('c'),
+            'ends_at' => $payload['expiresOn'] ?? ''
+        ));
+    }
     if (function_exists('flexpress_invalidate_user_cache')) {
         flexpress_invalidate_user_cache($user_id);
     }
@@ -599,6 +636,14 @@ function flexpress_flowguard_handle_subscription_expiry($payload) {
     
     // Update membership status
     flexpress_update_membership_status($user_id, 'expired');
+    // Update Plunk membership traits and track event
+    if (function_exists('flexpress_plunk_service')) {
+        $plunk = flexpress_plunk_service();
+        $plunk->update_membership_traits($user_id, 'Expired');
+        $plunk->track_user_event($user_id, 'membership_expired', array(
+            'expired_at' => date('c')
+        ));
+    }
     if (function_exists('flexpress_invalidate_user_cache')) {
         flexpress_invalidate_user_cache($user_id);
     }
@@ -654,6 +699,20 @@ function flexpress_flowguard_handle_refund($payload) {
     
     // Handle access revocation and user banning
     flexpress_handle_refund_access_revocation($user_id, $payload);
+    
+    // Update Plunk: mark as Banned and unsubscribe from newsletter
+    if (function_exists('flexpress_plunk_service')) {
+        $user_obj = get_userdata($user_id);
+        if ($user_obj) {
+            $plunk = flexpress_plunk_service();
+            $plunk->update_membership_traits($user_id, 'Banned');
+            $plunk->set_newsletter_status($user_obj->user_email, 'unsubscribed');
+            $plunk->track_user_event($user_id, 'user_banned', array(
+                'reason' => $payload['postbackType'] ?? 'refund',
+                'timestamp' => date('c')
+            ));
+        }
+    }
     
     // Log activity
     flexpress_flowguard_log_activity(

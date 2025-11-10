@@ -37,7 +37,17 @@ function flexpress_get_plunk_public_api_key() {
  */
 function flexpress_should_show_newsletter_modal() {
     $settings = flexpress_get_plunk_settings();
-    return flexpress_is_plunk_enabled() && !empty($settings['enable_newsletter_modal']) && is_front_page();
+    if (!flexpress_is_plunk_enabled() || empty($settings['enable_newsletter_modal']) || !is_front_page()) {
+        return false;
+    }
+    // Do not show modal to banned members
+    if (is_user_logged_in()) {
+        $status = function_exists('flexpress_get_membership_status') ? flexpress_get_membership_status() : get_user_meta(get_current_user_id(), 'membership_status', true);
+        if ($status === 'banned') {
+            return false;
+        }
+    }
+    return true;
 }
 
 /**

@@ -166,6 +166,11 @@ require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-plunk-settings.ph
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-plunk-api.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-plunk-subscriber.php';
 require_once FLEXPRESS_PATH . '/includes/plunk-frontend-integration.php';
+require_once FLEXPRESS_PATH . '/includes/integrations/plunk.php';
+require_once FLEXPRESS_PATH . '/includes/integrations/class-flexpress-plunk-service.php';
+require_once FLEXPRESS_PATH . '/includes/newsletter-endpoints.php';
+require_once FLEXPRESS_PATH . '/includes/plunk-events.php';
+require_once FLEXPRESS_PATH . '/includes/promo-helpers.php';
 
 // Google SMTP Integration
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-google-smtp.php';

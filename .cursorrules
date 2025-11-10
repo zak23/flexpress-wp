@@ -150,6 +150,13 @@ Bundled webfonts must use `font-display: swap`
 - Usage: Apply Bootstrap's `form-check`, `form-check-input`, and `form-check-label` classes
 - Documentation: Update README.md with checkbox styling implementation details
 
+## Plunk Newsletter & Lifecycle Integration (November 2025)
+
+- Endpoints: `/newsletter/confirm?token=...` and `/newsletter/unsubscribe?token=...` must use signed HMAC tokens (14-day validity).
+- Traits synced to Plunk on membership events: `status`, `subscription_label`, `membership_expires_at`, `newsletter_status`.
+- Events emitted: `membership_started`, `membership_cancelled`, `membership_expired`, `user_banned`, `episode_published`, `news_published`, `post_unlocked`, `newsletter_subscribe_requested`, `newsletter_confirmed`, `newsletter_unsubscribed`.
+- Suppression: Banned users must be unsubscribed immediately and the newsletter modal must not render for logged-in banned users.
+- Helpers available: `flexpress_create_user_promo()` (7-day, single-use) and `flexpress_generate_trial_link()` (7-day, single-use).
 ## Subscription Type Labeling
 
 - Use `flexpress_get_user_subscription_type($userId)` for all displays

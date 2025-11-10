@@ -163,6 +163,16 @@ class FlexPress_Plunk_Subscriber {
             return;
         }
 
+        // Suppress banned users from (re)subscribing
+        $maybe_user = get_user_by('email', $email);
+        if ($maybe_user) {
+            $mstatus = function_exists('flexpress_get_membership_status') ? flexpress_get_membership_status($maybe_user->ID) : get_user_meta($maybe_user->ID, 'membership_status', true);
+            if ($mstatus === 'banned') {
+                wp_send_json_error('This email cannot be subscribed.');
+                return;
+            }
+        }
+
         $existing_contact = $this->api->get_contact_by_email($email);
         
         if (is_wp_error($existing_contact)) {
@@ -180,7 +190,12 @@ class FlexPress_Plunk_Subscriber {
             $result = $this->api->add_contact($contact_data);
             
             if (!is_wp_error($result) && isset($result['id'])) {
+                // Track both generic and plan-specific events for automations
                 $this->api->track_event($result['id'], 'newsletter-signup', $email, array(
+                    'source' => 'modal',
+                    'timestamp' => date('c')
+                ));
+                $this->api->track_event($result['id'], 'newsletter_subscribe_requested', $email, array(
                     'source' => 'modal',
                     'timestamp' => date('c')
                 ));
@@ -195,6 +210,10 @@ class FlexPress_Plunk_Subscriber {
         } else {
             // Track event for existing contact
             $this->api->track_event($existing_contact['id'], 'newsletter-signup', $email, array(
+                'source' => 'modal',
+                'timestamp' => date('c')
+            ));
+            $this->api->track_event($existing_contact['id'], 'newsletter_subscribe_requested', $email, array(
                 'source' => 'modal',
                 'timestamp' => date('c')
             ));

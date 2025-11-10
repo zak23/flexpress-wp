@@ -279,6 +279,21 @@ Frontend template: `wp-content/themes/flexpress/single-model.php` renders these 
 - **Frontend Shortcodes**: Display active promo codes and application forms
 - **Admin Dashboard**: Complete management interface with bulk operations
 
+### Plunk Lifecycle (November 2025)
+
+- Settings: FlexPress → Plunk (API keys, install URL, project ID, double opt‑in)
+- Endpoints: `/newsletter/confirm?token=...`, `/newsletter/unsubscribe?token=...`
+- Traits synced: `status`, `subscription_label`, `membership_expires_at`, `newsletter_status`
+- Events: `membership_started`, `membership_cancelled`, `membership_expired`, `user_banned`, `episode_published`, `news_published`, `post_unlocked`, `newsletter_subscribe_requested`, `newsletter_confirmed`, `newsletter_unsubscribed`
+- Helpers: `flexpress_create_user_promo()`, `flexpress_generate_trial_link()`
+- Suppression: Banned users auto‑unsubscribed; newsletter modal hidden for banned users
+- Files: 
+  - `includes/integrations/plunk.php`
+  - `includes/integrations/class-flexpress-plunk-service.php`
+  - `includes/newsletter-endpoints.php`
+  - `includes/plunk-events.php`
+  - `includes/promo-helpers.php`
+
 ### WordPress Integration
 
 - **Custom Post Types**: Episodes, Extras, and Models

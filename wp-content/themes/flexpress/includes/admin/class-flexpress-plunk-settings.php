@@ -64,6 +64,15 @@ class FlexPress_Plunk_Settings {
             'flexpress_plunk_config_section'
         );
 
+        // Project ID
+        add_settings_field(
+            'project_id',
+            __('Project ID', 'flexpress'),
+            array($this, 'render_project_id_field'),
+            'flexpress_plunk_settings',
+            'flexpress_plunk_config_section'
+        );
+
         // Newsletter Settings Section
         add_settings_section(
             'flexpress_plunk_newsletter_section',
@@ -95,6 +104,15 @@ class FlexPress_Plunk_Settings {
             'modal_delay',
             __('Modal Delay (seconds)', 'flexpress'),
             array($this, 'render_modal_delay_field'),
+            'flexpress_plunk_settings',
+            'flexpress_plunk_newsletter_section'
+        );
+
+        // Double Opt-in Enabled
+        add_settings_field(
+            'double_opt_in_enabled',
+            __('Require Double Opt‑in', 'flexpress'),
+            array($this, 'render_double_opt_in_enabled_field'),
             'flexpress_plunk_settings',
             'flexpress_plunk_newsletter_section'
         );
@@ -143,6 +161,8 @@ class FlexPress_Plunk_Settings {
      * Sanitize Plunk settings
      */
     public function sanitize_plunk_settings($input) {
+        // Start from existing settings and only overwrite provided keys (merge sanitizer)
+        $current = get_option('flexpress_plunk_settings', array());
         $sanitized = array();
 
         // Sanitize public API key
@@ -160,9 +180,15 @@ class FlexPress_Plunk_Settings {
             $sanitized['install_url'] = esc_url_raw($input['install_url']);
         }
 
+        // Project ID
+        if (isset($input['project_id'])) {
+            $sanitized['project_id'] = sanitize_text_field($input['project_id']);
+        }
+
         // Sanitize newsletter settings
         $sanitized['auto_subscribe_users'] = isset($input['auto_subscribe_users']) ? 1 : 0;
         $sanitized['enable_newsletter_modal'] = isset($input['enable_newsletter_modal']) ? 1 : 0;
+        $sanitized['double_opt_in_enabled'] = isset($input['double_opt_in_enabled']) ? 1 : 0;
         
         // Sanitize modal delay
         if (isset($input['modal_delay'])) {
@@ -174,7 +200,8 @@ class FlexPress_Plunk_Settings {
             $sanitized['modal_delay'] = 5;
         }
 
-        return $sanitized;
+        // Merge with current to preserve non-posted keys
+        return array_merge($current, $sanitized);
     }
 
     /**
@@ -315,6 +342,22 @@ class FlexPress_Plunk_Settings {
     }
 
     /**
+     * Render project ID field
+     */
+    public function render_project_id_field() {
+        $options = get_option('flexpress_plunk_settings', array());
+        $project_id = $options['project_id'] ?? '';
+        ?>
+        <input type="text"
+               name="flexpress_plunk_settings[project_id]"
+               value="<?php echo esc_attr($project_id); ?>"
+               class="regular-text"
+               placeholder="proj_..." />
+        <p class="description">Optional Project ID to scope contacts/events if required by your Plunk setup.</p>
+        <?php
+    }
+
+    /**
      * Render install URL field
      */
     public function render_install_url_field() {
@@ -345,6 +388,7 @@ class FlexPress_Plunk_Settings {
         $auto_subscribe_users = $options['auto_subscribe_users'] ?? 1;
         ?>
         <label>
+            <input type="hidden" name="flexpress_plunk_settings[auto_subscribe_users]" value="0" />
             <input type="checkbox" 
                    name="flexpress_plunk_settings[auto_subscribe_users]" 
                    value="1" 
@@ -363,6 +407,7 @@ class FlexPress_Plunk_Settings {
         $enable_newsletter_modal = $options['enable_newsletter_modal'] ?? 1;
         ?>
         <label>
+            <input type="hidden" name="flexpress_plunk_settings[enable_newsletter_modal]" value="0" />
             <input type="checkbox" 
                    name="flexpress_plunk_settings[enable_newsletter_modal]" 
                    value="1" 
@@ -387,6 +432,25 @@ class FlexPress_Plunk_Settings {
                max="60" 
                class="small-text" />
         <p class="description">How many seconds to wait before showing the newsletter modal (1-60 seconds).</p>
+        <?php
+    }
+
+    /**
+     * Render double opt-in enabled field
+     */
+    public function render_double_opt_in_enabled_field() {
+        $options = get_option('flexpress_plunk_settings', array());
+        $enabled = $options['double_opt_in_enabled'] ?? 0;
+        ?>
+        <label>
+            <input type="hidden" name="flexpress_plunk_settings[double_opt_in_enabled]" value="0" />
+            <input type="checkbox"
+                   name="flexpress_plunk_settings[double_opt_in_enabled]"
+                   value="1"
+                   <?php checked($enabled); ?> />
+            Require email confirmation before subscribing (double opt‑in)
+        </label>
+        <p class="description">When enabled, newsletter signups are unconfirmed until they click the confirmation link.</p>
         <?php
     }
 

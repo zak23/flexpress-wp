@@ -1848,6 +1848,30 @@ Track comprehensive user behavior:
 
 #### Newsletter Shortcode
 
+#### Lifecycle Events, Endpoints, and Wrappers (November 2025)
+
+- Endpoints:
+  - Confirm subscription: `/newsletter/confirm?token=...` (HMAC-signed; 14-day validity)
+  - Unsubscribe: `/newsletter/unsubscribe?token=...`
+  - Both implemented in `wp-content/themes/flexpress/includes/newsletter-endpoints.php`
+- Traits synced to Plunk on membership events:
+  - `status` → Current | Cancelled | Expired | Banned
+  - `subscription_label` → via `flexpress_get_user_subscription_type()`
+  - `membership_expires_at` (ISO8601)
+  - `newsletter_status` → unconfirmed | confirmed | unsubscribed
+- Event emissions:
+  - `membership_started`, `membership_cancelled`, `membership_expired`, `user_banned`
+  - `newsletter_subscribe_requested`, `newsletter_confirmed`, `newsletter_unsubscribed`
+  - `episode_published` (with 3 related suggested by Plunk), `news_published`, `post_unlocked`
+- Helpers:
+  - Promo wrapper: `flexpress_create_user_promo($userId, $context, $amountOrPercent, $expiresAt)` → 7-day, single-use code
+  - Trial link wrapper: `flexpress_generate_trial_link($userId, $validUntil, $singleUse=true)` → 7-day, single-use
+- Suppression:
+  - Banned users are unsubscribed and prevented from re-subscribing via modal; UI hides modal for banned users
+- Files:
+  - `includes/integrations/plunk.php`, `includes/integrations/class-flexpress-plunk-service.php`
+  - `includes/newsletter-endpoints.php`, `includes/plunk-events.php`, `includes/promo-helpers.php`
+
 Display subscription management for logged-in users:
 
 ```

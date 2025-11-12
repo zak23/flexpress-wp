@@ -333,6 +333,55 @@ class FlexPress_CF7_Discord_Integration {
             return $value;
         };
         
+        // Helper function to format social media links for Discord
+        $format_social_link = function($platform, $value) {
+            if (empty($value)) {
+                return __('Not provided', 'flexpress');
+            }
+            
+            // Convert to string if not already
+            $value = (string) $value;
+            
+            // Remove leading @ if present
+            $value = ltrim($value, '@');
+            
+            // Check if value is already a URL
+            $is_url = (strpos($value, 'http://') === 0 || strpos($value, 'https://') === 0);
+            
+            if ($is_url) {
+                // Use URL as-is
+                $url = $value;
+                $display_text = $value;
+            } else {
+                // Build URL from handle
+                switch ($platform) {
+                    case 'instagram':
+                        $url = 'https://instagram.com/' . $value;
+                        $display_text = '@' . $value;
+                        break;
+                    case 'twitter':
+                        // Use x.com as primary domain (Twitter's new domain)
+                        $url = 'https://x.com/' . $value;
+                        $display_text = '@' . $value;
+                        break;
+                    default:
+                        // Fallback to sanitize if platform not recognized
+                        return $sanitize_field_value($value);
+                }
+            }
+            
+            // Format as Discord markdown link: [text](url)
+            // Discord supports markdown links in embed field values
+            $link = '[' . $display_text . '](' . $url . ')';
+            
+            // Truncate to Discord's 1024 character limit
+            if (strlen($link) > 1024) {
+                $link = substr($link, 0, 1021) . '...';
+            }
+            
+            return $link;
+        };
+        
         // Common fields for all forms (excluding name for casting form which uses applicant_name)
         if ($form_type !== 'casting' && isset($posted_data['name'])) {
             $fields[] = [
@@ -402,14 +451,14 @@ class FlexPress_CF7_Discord_Integration {
                 if (isset($posted_data['instagram']) && !empty($posted_data['instagram'])) {
                     $fields[] = [
                         'name' => __('Instagram', 'flexpress'),
-                        'value' => $sanitize_field_value($posted_data['instagram']),
+                        'value' => $format_social_link('instagram', $posted_data['instagram']),
                         'inline' => true
                     ];
                 }
                 if (isset($posted_data['twitter']) && !empty($posted_data['twitter'])) {
                     $fields[] = [
                         'name' => __('Twitter', 'flexpress'),
-                        'value' => $sanitize_field_value($posted_data['twitter']),
+                        'value' => $format_social_link('twitter', $posted_data['twitter']),
                         'inline' => true
                     ];
                 }

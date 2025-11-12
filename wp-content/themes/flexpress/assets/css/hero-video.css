@@ -20,8 +20,9 @@
 
 .model-hero-image-section {
     position: relative;
-    width: 100%;
-    aspect-ratio: 12/5;
+    height: 100vh;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
     overflow: hidden;
     background-color: var(--fp-dark);
 }

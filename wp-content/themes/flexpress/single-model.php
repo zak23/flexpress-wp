@@ -18,8 +18,13 @@ get_header();
             $hero_image = get_field('model_hero_image');
             if ($hero_image) :
                 $hero_original = isset($hero_image['url']) ? $hero_image['url'] : '';
+                // Calculate dimensions for full-height hero maintaining 12:5 ratio
+                // For 100vh (~1000px height), width = (12/5) * 1000 = 2400px
+                // Optimize for retina displays (2x)
+                $hero_height = 1000; // Base viewport height
+                $hero_width = (12 / 5) * $hero_height; // 2400px for 12:5 ratio
                 $hero_src = function_exists('flexpress_get_bunnycdn_optimized_image_url')
-                    ? flexpress_get_bunnycdn_optimized_image_url($hero_original, array('width' => 1920, 'height' => 800, 'format' => 'webp', 'quality' => 85))
+                    ? flexpress_get_bunnycdn_optimized_image_url($hero_original, array('width' => $hero_width, 'height' => $hero_height, 'format' => 'webp', 'quality' => 85))
                     : $hero_original;
             ?>
                 <div class="hero-section-wrapper">

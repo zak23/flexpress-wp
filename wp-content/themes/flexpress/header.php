@@ -4,6 +4,7 @@
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#000000">
     <meta name="RATING" content="RTA-5042-1996-1400-1577-RTA" />
     <link rel="profile" href="https://gmpg.org/xfn/11">
     <?php wp_head(); ?>

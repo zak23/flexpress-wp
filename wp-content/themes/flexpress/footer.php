@@ -142,11 +142,6 @@
                             </a>
                         </div>
 
-                        <div class="copyright mb-3">
-                            &copy; 2023 - <?php echo date("Y"); ?> <?php echo esc_html(get_bloginfo('name')); ?>
-                            <br>
-                            Made with ♥ by <a href="https://zakozbourne.com/" target="_blank" title="Adult Web Developer Zak Ozbourne" class="text-white">Zak Ozbourne</a>
-                        </div>
 
                         <?php
                         $general_settings = get_option('flexpress_general_settings');
@@ -154,7 +149,7 @@
                             $accent_color = isset($general_settings['accent_color']) ? $general_settings['accent_color'] : '#ff69b4';
                         ?>
                             <div class="dolls-downunder-network mb-2">
-                                Part of the <a href="https://dollsdownunder.com" target="_blank" class="text-white dolls-downunder-link">Dolls Downunder</a> Network
+                                Part of the <a href="https://dollsdownunder.com" target="_blank" class="text-white dolls-downunder-link">Dolls Down Under</a> Network
                             </div>
                             <style>
                                 .dolls-downunder-link:hover {
@@ -162,6 +157,9 @@
                                 }
                             </style>
                         <?php endif; ?>
+
+
+
 
                         <!-- Small and uppercase -->
                         <div class="legal-text small text-uppercase">
@@ -178,6 +176,12 @@
                                 All performers appearing on this website are 18 years or older.<br>
                                 All video, images, design, graphics are copyright.
                             </span>
+                        </div>
+
+                        <div class="copyright mb-3">
+                            &copy; 2023 - <?php echo date("Y"); ?> <?php echo esc_html(get_bloginfo('name')); ?>
+                            <br>
+                            Made with ♥ by <a href="https://zakozbourne.com/" target="_blank" title="Adult Web Developer Zak Ozbourne" class="text-white">Zak Ozbourne</a>
                         </div>
                     </div>
                 </div>

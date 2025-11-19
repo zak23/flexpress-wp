@@ -20,7 +20,7 @@ The single model page (`single-model.php`) has been enhanced with a modern, mult
   - Model details (birthdate, height, measurements)
   - Social media links (Instagram, Twitter, OnlyFans, Website)
 
-### 3. Latest Scene Hero Section
+### 3. Latest Episode Hero Section
 - **Purpose**: Highlights the model's most recent episode in a prominent hero-style layout
 - **Features**:
   - Large episode thumbnail with hover effects
@@ -90,8 +90,8 @@ Homepage and featured controls:
 - `.model-bio` - Biography text styling
 - `.model-details` - Details grid styling
 
-### Latest Scene
-- `.model-latest-scene` - Latest scene hero container
+### Latest Episode
+- `.model-latest-scene` - Latest episode hero container
 - `.latest-scene-video` - Video thumbnail wrapper
 - `.latest-scene-overlay` - Hover overlay for play button
 - `.latest-scene-info` - Episode information styling

@@ -360,12 +360,12 @@ get_header();
                     $token = hash('sha256', $token_key . $preview_video . $expires);
                 }
             ?>
-                <!-- Latest Scene Hero Section -->
+                <!-- Latest Episode Hero Section -->
                 <div class="hero-section-wrapper">
                     <div class="container">
                         <div class="row">
                             <div class="col-12 text-left mb-4">
-                                <h2 class="section-title">Latest Scene</h2>
+                                <h2 class="section-title">Latest Episode</h2>
                             </div>
                         </div>
                         <div class="row">

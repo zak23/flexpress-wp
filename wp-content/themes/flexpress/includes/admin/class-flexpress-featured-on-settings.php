@@ -155,8 +155,8 @@ class FlexPress_Featured_On_Settings
         }
     ?>
         <div id="featured-on-media-container">
-            <p class="description">
-                <?php esc_html_e('Add media outlets and publications that have featured your site. Each outlet will appear as a slide in the Featured On carousel.', 'flexpress'); ?>
+            <p class="description" style="margin-bottom: 20px;">
+                <?php esc_html_e('Add media outlets and publications that have featured your site. Each outlet will appear as a slide in the Featured On carousel. Use the arrow buttons to reorder items.', 'flexpress'); ?>
             </p>
 
             <div id="featured-on-media-list">
@@ -164,9 +164,17 @@ class FlexPress_Featured_On_Settings
                     <div class="featured-on-outlet" data-index="<?php echo $index; ?>">
                         <div class="featured-on-outlet-header">
                             <h4><?php printf(esc_html__('Media Outlet %d', 'flexpress') ?: 'Media Outlet %d', $index + 1); ?></h4>
-                            <button type="button" class="button button-secondary remove-outlet" data-index="<?php echo $index; ?>">
-                                <?php esc_html_e('Remove Outlet', 'flexpress'); ?>
-                            </button>
+                            <div class="featured-on-outlet-actions">
+                                <button type="button" class="button button-small move-outlet-up" data-index="<?php echo $index; ?>" title="<?php esc_attr_e('Move Up', 'flexpress'); ?>" <?php echo $index === 0 ? 'disabled' : ''; ?>>
+                                    <span class="dashicons dashicons-arrow-up-alt"></span>
+                                </button>
+                                <button type="button" class="button button-small move-outlet-down" data-index="<?php echo $index; ?>" title="<?php esc_attr_e('Move Down', 'flexpress'); ?>" <?php echo $index === count($media_outlets) - 1 ? 'disabled' : ''; ?>>
+                                    <span class="dashicons dashicons-arrow-down-alt"></span>
+                                </button>
+                                <button type="button" class="button button-secondary remove-outlet" data-index="<?php echo $index; ?>">
+                                    <?php esc_html_e('Remove Outlet', 'flexpress'); ?>
+                                </button>
+                            </div>
                         </div>
                         <table class="form-table">
                             <tr>
@@ -268,6 +276,90 @@ class FlexPress_Featured_On_Settings
             <?php esc_html_e('Add media outlets and publications that have featured your site. Each outlet will appear as a slide in the Featured On carousel.', 'flexpress'); ?>
         </p>
 
+        <style>
+            .featured-on-outlet {
+                background: #fff;
+                border: 1px solid #c3c4c7;
+                border-radius: 4px;
+                padding: 15px 20px;
+                margin-bottom: 15px;
+                box-shadow: 0 1px 1px rgba(0,0,0,.04);
+                transition: all 0.2s ease;
+            }
+            .featured-on-outlet:hover {
+                border-color: #8c8f94;
+                box-shadow: 0 1px 3px rgba(0,0,0,.1);
+            }
+            .featured-on-outlet-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid #e5e5e5;
+            }
+            .featured-on-outlet-header h4 {
+                margin: 0;
+                font-size: 14px;
+                font-weight: 600;
+                color: #1d2327;
+            }
+            .featured-on-outlet-actions {
+                display: flex;
+                gap: 6px;
+                align-items: center;
+            }
+            .move-outlet-up,
+            .move-outlet-down {
+                padding: 0 !important;
+                height: 32px !important;
+                width: 32px !important;
+                min-width: 32px !important;
+                line-height: 32px !important;
+                border-radius: 3px !important;
+                border: 1px solid #c3c4c7 !important;
+                background: #f6f7f7 !important;
+                color: #50575e !important;
+                cursor: pointer;
+                transition: all 0.15s ease;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .move-outlet-up:hover:not(:disabled),
+            .move-outlet-down:hover:not(:disabled) {
+                background: #f0f0f1 !important;
+                border-color: #8c8f94 !important;
+                color: #1d2327 !important;
+            }
+            .move-outlet-up .dashicons,
+            .move-outlet-down .dashicons {
+                font-size: 18px;
+                width: 18px;
+                height: 18px;
+                line-height: 18px;
+                margin: 0;
+            }
+            .move-outlet-up:disabled,
+            .move-outlet-down:disabled {
+                opacity: 0.4;
+                cursor: not-allowed;
+                background: #f6f7f7 !important;
+            }
+            .remove-outlet {
+                margin-left: 8px;
+            }
+            #featured-on-media-list {
+                margin-bottom: 20px;
+            }
+            #featured-on-media-container {
+                margin-top: 15px;
+            }
+            #add-media-outlet {
+                margin-top: 10px;
+            }
+        </style>
+
         <script>
             jQuery(document).ready(function($) {
                 var mediaIndex = <?php echo count($media_outlets); ?>;
@@ -279,7 +371,11 @@ class FlexPress_Featured_On_Settings
                         '<div class="featured-on-outlet" data-index="' + mediaIndex + '">' +
                         '<div class="featured-on-outlet-header">' +
                         '<h4>Media Outlet ' + (mediaIndex + 1) + '</h4>' +
+                        '<div class="featured-on-outlet-actions">' +
+                        '<button type="button" class="button button-small move-outlet-up" data-index="' + mediaIndex + '" title="<?php esc_attr_e('Move Up', 'flexpress'); ?>"><span class="dashicons dashicons-arrow-up-alt"></span></button>' +
+                        '<button type="button" class="button button-small move-outlet-down" data-index="' + mediaIndex + '" title="<?php esc_attr_e('Move Down', 'flexpress'); ?>"><span class="dashicons dashicons-arrow-down-alt"></span></button>' +
                         '<button type="button" class="button button-secondary remove-outlet" data-index="' + mediaIndex + '"><?php esc_html_e('Remove Outlet', 'flexpress'); ?></button>' +
+                        '</div>' +
                         '</div>' +
                         '<table class="form-table">' +
                         '<tr>' +
@@ -312,12 +408,33 @@ class FlexPress_Featured_On_Settings
 
                     $('#featured-on-media-list').append(newOutletHtml);
                     mediaIndex++;
+                    updateOutletNumbers();
                 });
 
                 // Remove media outlet
                 $(document).on('click', '.remove-outlet', function() {
                     $(this).closest('.featured-on-outlet').remove();
                     updateOutletNumbers();
+                });
+
+                // Move outlet up
+                $(document).on('click', '.move-outlet-up', function() {
+                    var $outlet = $(this).closest('.featured-on-outlet');
+                    var $prev = $outlet.prev('.featured-on-outlet');
+                    if ($prev.length) {
+                        $outlet.insertBefore($prev);
+                        updateOutletNumbers();
+                    }
+                });
+
+                // Move outlet down
+                $(document).on('click', '.move-outlet-down', function() {
+                    var $outlet = $(this).closest('.featured-on-outlet');
+                    var $next = $outlet.next('.featured-on-outlet');
+                    if ($next.length) {
+                        $outlet.insertAfter($next);
+                        updateOutletNumbers();
+                    }
                 });
 
                 // Upload logo
@@ -376,19 +493,46 @@ class FlexPress_Featured_On_Settings
 
                 // Update outlet numbers
                 function updateOutletNumbers() {
-                    $('#featured-on-media-list .featured-on-outlet').each(function(newIndex) {
-                        $(this).attr('data-index', newIndex);
-                        $(this).find('h4').text('Media Outlet ' + (newIndex + 1));
-                        $(this).find('input, button').each(function() {
+                    var $outlets = $('#featured-on-media-list .featured-on-outlet');
+                    var totalOutlets = $outlets.length;
+                    
+                    $outlets.each(function(newIndex) {
+                        var $outlet = $(this);
+                        $outlet.attr('data-index', newIndex);
+                        $outlet.find('h4').text('Media Outlet ' + (newIndex + 1));
+                        
+                        // Update all inputs and buttons
+                        $outlet.find('input, button').each(function() {
                             var name = $(this).attr('name');
                             var id = $(this).attr('id');
+                            var dataIndex = $(this).attr('data-index');
+                            
                             if (name) {
                                 $(this).attr('name', name.replace(/\[\d+\]/, '[' + newIndex + ']'));
                             }
                             if (id) {
                                 $(this).attr('id', id.replace(/\d+/, newIndex));
                             }
+                            if (dataIndex !== undefined) {
+                                $(this).attr('data-index', newIndex);
+                            }
                         });
+                        
+                        // Update arrow button states
+                        var $upBtn = $outlet.find('.move-outlet-up');
+                        var $downBtn = $outlet.find('.move-outlet-down');
+                        
+                        if (newIndex === 0) {
+                            $upBtn.prop('disabled', true);
+                        } else {
+                            $upBtn.prop('disabled', false);
+                        }
+                        
+                        if (newIndex === totalOutlets - 1) {
+                            $downBtn.prop('disabled', true);
+                        } else {
+                            $downBtn.prop('disabled', false);
+                        }
                     });
                 }
             });

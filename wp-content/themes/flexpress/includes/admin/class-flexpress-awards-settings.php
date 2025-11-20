@@ -171,8 +171,8 @@ class FlexPress_Awards_Settings
         }
     ?>
         <div id="awards-list-container">
-            <p class="description">
-                <?php esc_html_e('Add multiple awards and recognitions. Each award can have its own logo and link.', 'flexpress'); ?>
+            <p class="description" style="margin-bottom: 20px;">
+                <?php esc_html_e('Add multiple awards and recognitions. Each award can have its own logo and link. Use the arrow buttons to reorder items.', 'flexpress'); ?>
             </p>
 
             <div id="awards-list">
@@ -180,9 +180,17 @@ class FlexPress_Awards_Settings
                     <div class="award-item" data-index="<?php echo $index; ?>">
                         <div class="award-item-header">
                             <h4><?php printf(esc_html__('Award %d', 'flexpress') ?: 'Award %d', $index + 1); ?></h4>
-                            <button type="button" class="button button-secondary remove-award" data-index="<?php echo $index; ?>">
-                                <?php esc_html_e('Remove Award', 'flexpress'); ?>
-                            </button>
+                            <div class="award-item-actions">
+                                <button type="button" class="button button-small move-award-up" data-index="<?php echo $index; ?>" title="<?php esc_attr_e('Move Up', 'flexpress'); ?>" <?php echo $index === 0 ? 'disabled' : ''; ?>>
+                                    <span class="dashicons dashicons-arrow-up-alt"></span>
+                                </button>
+                                <button type="button" class="button button-small move-award-down" data-index="<?php echo $index; ?>" title="<?php esc_attr_e('Move Down', 'flexpress'); ?>" <?php echo $index === count($awards_list) - 1 ? 'disabled' : ''; ?>>
+                                    <span class="dashicons dashicons-arrow-down-alt"></span>
+                                </button>
+                                <button type="button" class="button button-secondary remove-award" data-index="<?php echo $index; ?>">
+                                    <?php esc_html_e('Remove Award', 'flexpress'); ?>
+                                </button>
+                            </div>
                         </div>
                         <table class="form-table">
                             <tr>
@@ -264,6 +272,90 @@ class FlexPress_Awards_Settings
             </button>
         </div>
 
+        <style>
+            .award-item {
+                background: #fff;
+                border: 1px solid #c3c4c7;
+                border-radius: 4px;
+                padding: 15px 20px;
+                margin-bottom: 15px;
+                box-shadow: 0 1px 1px rgba(0,0,0,.04);
+                transition: all 0.2s ease;
+            }
+            .award-item:hover {
+                border-color: #8c8f94;
+                box-shadow: 0 1px 3px rgba(0,0,0,.1);
+            }
+            .award-item-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid #e5e5e5;
+            }
+            .award-item-header h4 {
+                margin: 0;
+                font-size: 14px;
+                font-weight: 600;
+                color: #1d2327;
+            }
+            .award-item-actions {
+                display: flex;
+                gap: 6px;
+                align-items: center;
+            }
+            .move-award-up,
+            .move-award-down {
+                padding: 0 !important;
+                height: 32px !important;
+                width: 32px !important;
+                min-width: 32px !important;
+                line-height: 32px !important;
+                border-radius: 3px !important;
+                border: 1px solid #c3c4c7 !important;
+                background: #f6f7f7 !important;
+                color: #50575e !important;
+                cursor: pointer;
+                transition: all 0.15s ease;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .move-award-up:hover:not(:disabled),
+            .move-award-down:hover:not(:disabled) {
+                background: #f0f0f1 !important;
+                border-color: #8c8f94 !important;
+                color: #1d2327 !important;
+            }
+            .move-award-up .dashicons,
+            .move-award-down .dashicons {
+                font-size: 18px;
+                width: 18px;
+                height: 18px;
+                line-height: 18px;
+                margin: 0;
+            }
+            .move-award-up:disabled,
+            .move-award-down:disabled {
+                opacity: 0.4;
+                cursor: not-allowed;
+                background: #f6f7f7 !important;
+            }
+            .remove-award {
+                margin-left: 8px;
+            }
+            #awards-list {
+                margin-bottom: 20px;
+            }
+            #awards-list-container {
+                margin-top: 15px;
+            }
+            #add-award {
+                margin-top: 10px;
+            }
+        </style>
+
         <script type="text/javascript">
             jQuery(document).ready(function($) {
                 var awardIndex = <?php echo count($awards_list); ?>;
@@ -275,9 +367,13 @@ class FlexPress_Awards_Settings
                         <div class="award-item" data-index="${awardIndex}">
                             <div class="award-item-header">
                                 <h4>Award ${awardIndex + 1}</h4>
-                                <button type="button" class="button button-secondary remove-award" data-index="${awardIndex}">
-                                    <?php esc_html_e('Remove Award', 'flexpress'); ?>
-                                </button>
+                                <div class="award-item-actions">
+                                    <button type="button" class="button button-small move-award-up" data-index="${awardIndex}" title="<?php esc_attr_e('Move Up', 'flexpress'); ?>"><span class="dashicons dashicons-arrow-up-alt"></span></button>
+                                    <button type="button" class="button button-small move-award-down" data-index="${awardIndex}" title="<?php esc_attr_e('Move Down', 'flexpress'); ?>"><span class="dashicons dashicons-arrow-down-alt"></span></button>
+                                    <button type="button" class="button button-secondary remove-award" data-index="${awardIndex}">
+                                        <?php esc_html_e('Remove Award', 'flexpress'); ?>
+                                    </button>
+                                </div>
                             </div>
                             <table class="form-table">
                                 <tr>
@@ -347,12 +443,33 @@ class FlexPress_Awards_Settings
 
                     $('#awards-list').append(newAwardHtml);
                     awardIndex++;
+                    updateAwardNumbers();
                 });
 
                 // Remove award
                 $(document).on('click', '.remove-award', function() {
                     $(this).closest('.award-item').remove();
                     updateAwardNumbers();
+                });
+
+                // Move award up
+                $(document).on('click', '.move-award-up', function() {
+                    var $award = $(this).closest('.award-item');
+                    var $prev = $award.prev('.award-item');
+                    if ($prev.length) {
+                        $award.insertBefore($prev);
+                        updateAwardNumbers();
+                    }
+                });
+
+                // Move award down
+                $(document).on('click', '.move-award-down', function() {
+                    var $award = $(this).closest('.award-item');
+                    var $next = $award.next('.award-item');
+                    if ($next.length) {
+                        $award.insertAfter($next);
+                        updateAwardNumbers();
+                    }
                 });
 
                 // Upload award logo
@@ -407,19 +524,46 @@ class FlexPress_Awards_Settings
 
                 // Update award numbers
                 function updateAwardNumbers() {
-                    $('#awards-list .award-item').each(function(newIndex) {
-                        $(this).attr('data-index', newIndex);
-                        $(this).find('h4').text('Award ' + (newIndex + 1));
-                        $(this).find('input, button').each(function() {
+                    var $awards = $('#awards-list .award-item');
+                    var totalAwards = $awards.length;
+                    
+                    $awards.each(function(newIndex) {
+                        var $award = $(this);
+                        $award.attr('data-index', newIndex);
+                        $award.find('h4').text('Award ' + (newIndex + 1));
+                        
+                        // Update all inputs and buttons
+                        $award.find('input, button').each(function() {
                             var name = $(this).attr('name');
                             var id = $(this).attr('id');
+                            var dataIndex = $(this).attr('data-index');
+                            
                             if (name) {
                                 $(this).attr('name', name.replace(/\[\d+\]/, '[' + newIndex + ']'));
                             }
                             if (id) {
                                 $(this).attr('id', id.replace(/\d+/, newIndex));
                             }
+                            if (dataIndex !== undefined) {
+                                $(this).attr('data-index', newIndex);
+                            }
                         });
+                        
+                        // Update arrow button states
+                        var $upBtn = $award.find('.move-award-up');
+                        var $downBtn = $award.find('.move-award-down');
+                        
+                        if (newIndex === 0) {
+                            $upBtn.prop('disabled', true);
+                        } else {
+                            $upBtn.prop('disabled', false);
+                        }
+                        
+                        if (newIndex === totalAwards - 1) {
+                            $downBtn.prop('disabled', true);
+                        } else {
+                            $downBtn.prop('disabled', false);
+                        }
                     });
                 }
             });

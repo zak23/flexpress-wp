@@ -17,6 +17,10 @@ $featured_media = flexpress_get_featured_on_media();
 if (empty($featured_media)) {
     return;
 }
+
+// Count entries to determine layout
+$media_count = count($featured_media);
+$use_carousel = $media_count > 5;
 ?>
 
 <section class="featured-on-section py-5">
@@ -25,37 +29,67 @@ if (empty($featured_media)) {
             <div class="col-12">
                 <h2 class="section-title"><?php esc_html_e('Featured On', 'flexpress'); ?></h2>
 
-                <div class="media-slider-wrapper">
-                    <div class="media-slider" id="mediaSlider">
-                        <?php foreach ($featured_media as $media): ?>
-                            <div class="media-slide">
-                                <div class="text-center d-flex flex-column align-items-center">
-                                    <a href="<?php echo esc_url($media['url']); ?>" target="_blank" class="d-inline-block media-link" rel="noopener">
-                                        <?php if (!empty($media['logo_id'])):
-                                            $logo_image = wp_get_attachment_image($media['logo_id'], 'medium', false, array(
-                                                'class' => 'img-fluid media-logo',
-                                                'alt' => esc_attr($media['alt']),
-                                                'loading' => 'lazy'
-                                            ));
-                                            echo $logo_image;
-                                        else: ?>
-                                            <img src="<?php echo esc_url($media['logo']); ?>"
-                                                class="img-fluid media-logo"
-                                                alt="<?php echo esc_attr($media['alt']); ?>"
-                                                loading="lazy">
-                                        <?php endif; ?>
-                                        <p class="media-name"><?php echo esc_html($media['name']); ?></p>
-                                    </a>
+                <?php if ($use_carousel): ?>
+                    <!-- Carousel layout for more than 5 entries -->
+                    <div class="media-slider-wrapper">
+                        <div class="media-slider" id="mediaSlider">
+                            <?php foreach ($featured_media as $media): ?>
+                                <div class="media-slide">
+                                    <div class="text-center d-flex flex-column align-items-center">
+                                        <a href="<?php echo esc_url($media['url']); ?>" target="_blank" class="d-inline-block media-link" rel="noopener">
+                                            <?php if (!empty($media['logo_id'])):
+                                                $logo_image = wp_get_attachment_image($media['logo_id'], 'medium', false, array(
+                                                    'class' => 'img-fluid media-logo',
+                                                    'alt' => esc_attr($media['alt']),
+                                                    'loading' => 'lazy'
+                                                ));
+                                                echo $logo_image;
+                                            else: ?>
+                                                <img src="<?php echo esc_url($media['logo']); ?>"
+                                                    class="img-fluid media-logo"
+                                                    alt="<?php echo esc_attr($media['alt']); ?>"
+                                                    loading="lazy">
+                                            <?php endif; ?>
+                                            <p class="media-name"><?php echo esc_html($media['name']); ?></p>
+                                        </a>
+                                    </div>
                                 </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <!-- Flex layout for 5 or fewer entries (matching Awards style) -->
+                    <div class="featured-on-logos d-flex flex-wrap align-items-start justify-content-md-end">
+                        <?php foreach ($featured_media as $media): ?>
+                            <div class="featured-item me-4 mb-3">
+                                <a href="<?php echo esc_url($media['url']); ?>" target="_blank" class="featured-link-subtle" rel="noopener">
+                                    <?php if (!empty($media['logo_id'])):
+                                        $logo_image = wp_get_attachment_image($media['logo_id'], 'medium', false, array(
+                                            'class' => 'featured-logo',
+                                            'alt' => esc_attr($media['alt']),
+                                            'loading' => 'lazy'
+                                        ));
+                                        echo $logo_image;
+                                    else: ?>
+                                        <img src="<?php echo esc_url($media['logo']); ?>"
+                                            class="featured-logo"
+                                            alt="<?php echo esc_attr($media['alt']); ?>"
+                                            loading="lazy">
+                                    <?php endif; ?>
+                                    <?php if (!empty($media['name'])): ?>
+                                        <div class="featured-name"><?php echo esc_html($media['name']); ?></div>
+                                    <?php endif; ?>
+                                </a>
                             </div>
                         <?php endforeach; ?>
                     </div>
-                </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 </section>
 
+<?php if ($use_carousel): ?>
 <script>
     function initializeFeaturedOnCarousel() {
         // Check if jQuery and Slick are available
@@ -80,13 +114,13 @@ if (empty($featured_media)) {
         // Count the number of slides
         const slideCount = $slider.find('.media-slide').length;
 
-        // Only initialize if we have more than 1 slide
-        if (slideCount > 1) {
+        // Only initialize if we have more than 5 slides
+        if (slideCount > 5) {
             $slider.slick({
                 dots: true,
                 infinite: true,
                 speed: 500,
-                slidesToShow: 1,
+                slidesToShow: 5,
                 slidesToScroll: 1,
                 autoplay: true,
                 autoplaySpeed: 3000,
@@ -99,8 +133,29 @@ if (empty($featured_media)) {
                 arrows: true,
                 lazyLoad: 'ondemand',
                 responsive: [{
+                    breakpoint: 1200,
+                    settings: {
+                        slidesToShow: 4,
+                        slidesToScroll: 1
+                    }
+                }, {
+                    breakpoint: 992,
+                    settings: {
+                        slidesToShow: 3,
+                        slidesToScroll: 1
+                    }
+                }, {
                     breakpoint: 768,
                     settings: {
+                        slidesToShow: 2,
+                        slidesToScroll: 1,
+                        arrows: false
+                    }
+                }, {
+                    breakpoint: 576,
+                    settings: {
+                        slidesToShow: 1,
+                        slidesToScroll: 1,
                         arrows: false
                     }
                 }]
@@ -126,3 +181,4 @@ if (empty($featured_media)) {
         }
     }, 2000);
 </script>
+<?php endif; ?>

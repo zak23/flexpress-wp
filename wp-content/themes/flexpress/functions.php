@@ -5,7 +5,7 @@
  */
 
 // Define theme constants
-define('FLEXPRESS_VERSION', '1.0.18');
+define('FLEXPRESS_VERSION', '1.0.19');
 define('FLEXPRESS_PATH', get_template_directory());
 define('FLEXPRESS_URL', get_template_directory_uri());
 
@@ -1137,6 +1137,135 @@ function flexpress_output_meta_description()
     }
 }
 add_action('wp_head', 'flexpress_output_meta_description', 5);
+
+/**
+ * Output Open Graph and Twitter Card meta tags for social media link previews
+ * - Skips when popular SEO plugins are active to avoid duplicates
+ * - Uses site name, site description, and site logo from theme settings
+ */
+function flexpress_output_open_graph_tags()
+{
+    if (is_admin() || is_feed()) {
+        return;
+    }
+
+    // Detect common SEO plugins that already handle Open Graph tags
+    $seo_plugin_active = (
+        defined('WPSEO_VERSION') || // Yoast SEO
+        defined('RANK_MATH_VERSION') || // Rank Math
+        defined('AIOSEO_VERSION') || // All in One SEO
+        function_exists('seopress') || // SEOPress
+        function_exists('the_seo_framework') // The SEO Framework
+    );
+
+    if ($seo_plugin_active) {
+        return;
+    }
+
+    // Get theme options
+    $theme_options = get_option('flexpress_general_settings', array());
+    
+    // Get site name - prefer theme settings, fallback to WordPress site name
+    $site_name = '';
+    if (!empty($theme_options['site_title'])) {
+        $site_name = trim(wp_strip_all_tags($theme_options['site_title']));
+    }
+    if (empty($site_name)) {
+        $site_name = get_bloginfo('name');
+    }
+
+    // Get site description - prefer theme settings, fallback to WordPress tagline
+    $site_description = '';
+    if (!empty($theme_options['site_description'])) {
+        $site_description = trim(wp_strip_all_tags($theme_options['site_description']));
+    }
+    if (empty($site_description)) {
+        $site_description = get_bloginfo('description');
+    }
+
+    // Get site URL
+    $site_url = home_url('/');
+    $current_url = (is_singular() || is_front_page()) ? get_permalink() : $site_url;
+
+    // Get logo/image - prefer FlexPress custom logo, fallback to site icon
+    $og_image_url = '';
+    $og_image_width = '';
+    $og_image_height = '';
+    
+    $logo = flexpress_get_custom_logo('full', 'primary');
+    if ($logo && !empty($logo['url'])) {
+        $og_image_url = $logo['url'];
+        $og_image_width = !empty($logo['width']) ? $logo['width'] : '';
+        $og_image_height = !empty($logo['height']) ? $logo['height'] : '';
+    } else {
+        // Fallback to WordPress site icon
+        $site_icon_url = get_site_icon_url(512);
+        if ($site_icon_url) {
+            $og_image_url = $site_icon_url;
+        }
+    }
+
+    // Ensure absolute URL for image
+    if (!empty($og_image_url) && !preg_match('/^https?:\/\//', $og_image_url)) {
+        $og_image_url = home_url($og_image_url);
+    }
+
+    // Output Open Graph tags
+    if (!empty($site_name)) {
+        echo '<meta property="og:title" content="' . esc_attr($site_name) . '" />' . "\n";
+    }
+    
+    if (!empty($site_description)) {
+        // Truncate description to ~200 chars for Open Graph (Discord limit is around 200)
+        $og_description = $site_description;
+        if (function_exists('mb_strlen') && mb_strlen($og_description) > 200) {
+            $og_description = mb_substr($og_description, 0, 197) . '...';
+        } elseif (strlen($og_description) > 200) {
+            $og_description = substr($og_description, 0, 197) . '...';
+        }
+        echo '<meta property="og:description" content="' . esc_attr($og_description) . '" />' . "\n";
+    }
+    
+    if (!empty($og_image_url)) {
+        echo '<meta property="og:image" content="' . esc_url($og_image_url) . '" />' . "\n";
+        if (!empty($og_image_width)) {
+            echo '<meta property="og:image:width" content="' . esc_attr($og_image_width) . '" />' . "\n";
+        }
+        if (!empty($og_image_height)) {
+            echo '<meta property="og:image:height" content="' . esc_attr($og_image_height) . '" />' . "\n";
+        }
+    }
+    
+    echo '<meta property="og:url" content="' . esc_url($current_url) . '" />' . "\n";
+    echo '<meta property="og:type" content="website" />' . "\n";
+    
+    if (!empty($site_name)) {
+        echo '<meta property="og:site_name" content="' . esc_attr($site_name) . '" />' . "\n";
+    }
+
+    // Output Twitter Card tags
+    echo '<meta name="twitter:card" content="summary_large_image" />' . "\n";
+    
+    if (!empty($site_name)) {
+        echo '<meta name="twitter:title" content="' . esc_attr($site_name) . '" />' . "\n";
+    }
+    
+    if (!empty($site_description)) {
+        // Truncate description for Twitter (280 char limit, but we'll use same as OG)
+        $twitter_description = $site_description;
+        if (function_exists('mb_strlen') && mb_strlen($twitter_description) > 200) {
+            $twitter_description = mb_substr($twitter_description, 0, 197) . '...';
+        } elseif (strlen($twitter_description) > 200) {
+            $twitter_description = substr($twitter_description, 0, 197) . '...';
+        }
+        echo '<meta name="twitter:description" content="' . esc_attr($twitter_description) . '" />' . "\n";
+    }
+    
+    if (!empty($og_image_url)) {
+        echo '<meta name="twitter:image" content="' . esc_url($og_image_url) . '" />' . "\n";
+    }
+}
+add_action('wp_head', 'flexpress_output_open_graph_tags', 6);
 
 /**
  * AJAX function to test settings saving

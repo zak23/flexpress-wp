@@ -478,6 +478,19 @@ flexpress/
 - If Yoast SEO, Rank Math, AIOSEO, SEOPress, or The SEO Framework is active, the theme suppresses its own meta description to prevent duplicates.
 - Do not hardcode `<meta name="description">` in templates. Use ACF fields for per-page descriptions instead.
 
+### Open Graph & Social Media Link Previews
+
+- The FlexPress theme outputs Open Graph and Twitter Card meta tags for improved link previews in Discord, Twitter, Facebook, and other social platforms.
+- **Title**: Uses site name from theme settings (`flexpress_general_settings['site_title']`) or falls back to WordPress site name.
+- **Description**: Uses site description from theme settings (`flexpress_general_settings['site_description']`) or falls back to WordPress tagline.
+- **Image**: Uses primary logo from theme settings (`flexpress_get_custom_logo()`) or falls back to WordPress site icon.
+- **SEO Plugin Compatibility**: Automatically detects and skips output when Yoast SEO, Rank Math, AIOSEO, SEOPress, or The SEO Framework is active to prevent duplicate tags.
+- **Meta Tags Output**:
+  - Open Graph: `og:title`, `og:description`, `og:image`, `og:url`, `og:type`, `og:site_name`
+  - Twitter Card: `twitter:card` (summary_large_image), `twitter:title`, `twitter:description`, `twitter:image`
+- All URLs are absolute and properly escaped for security.
+- Image dimensions are included when available for better preview rendering.
+
 - **PHP**: 8.3.26 (Latest stable version with performance improvements)
 - **MySQL**: 8.0 (Latest stable version)
 - **Redis**: 7-alpine (Object caching and session storage)

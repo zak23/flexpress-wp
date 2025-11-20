@@ -53,6 +53,19 @@ $cta_button_url = get_field('about_cta_button_url');
     </section>
 
     <div class="container py-5">
+        <!-- Main Content Section (for SEO) -->
+        <?php if (get_the_content()): ?>
+        <section class="about-content-section mb-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="about-content-wrapper">
+                        <?php the_content(); ?>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <?php endif; ?>
+
         <!-- Mission Statement Section -->
         <?php if ($mission_title && $mission_content): ?>
         <section class="about-mission-section mb-5">
@@ -197,6 +210,11 @@ $cta_button_url = get_field('about_cta_button_url');
             </div>
         </section>
         <?php endif; ?>
+
+        <!-- Casting CTA Section -->
+        <section class="about-casting-section mb-5">
+            <?php get_template_part('template-parts/casting-section'); ?>
+        </section>
 
         <!-- Call to Action Section -->
         <?php if ($cta_title && $cta_content): ?>

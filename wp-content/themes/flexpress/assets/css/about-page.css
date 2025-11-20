@@ -90,6 +90,93 @@
 }
 
 /* ==========================================================================
+   Content Section (for SEO)
+   ========================================================================== */
+.about-content-section {
+    margin-bottom: 5rem;
+}
+
+.about-content-wrapper {
+    background: var(--color-card-background);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 3rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.about-content-wrapper p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--color-text);
+    margin-bottom: 1.5rem;
+}
+
+.about-content-wrapper p:last-child {
+    margin-bottom: 0;
+}
+
+.about-content-wrapper h2,
+.about-content-wrapper h3,
+.about-content-wrapper h4 {
+    color: var(--color-text);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.about-content-wrapper h2 {
+    font-size: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.about-content-wrapper h3 {
+    font-size: 1.5rem;
+}
+
+.about-content-wrapper h4 {
+    font-size: 1.25rem;
+}
+
+.about-content-wrapper ul,
+.about-content-wrapper ol {
+    margin-bottom: 1.5rem;
+    padding-left: 2rem;
+}
+
+.about-content-wrapper li {
+    margin-bottom: 0.75rem;
+    line-height: 1.8;
+    color: var(--color-text);
+}
+
+.about-content-wrapper a {
+    color: var(--color-accent);
+    text-decoration: none;
+    transition: var(--transition-fast);
+}
+
+.about-content-wrapper a:hover {
+    color: var(--color-accent-hover);
+    text-decoration: underline;
+}
+
+.about-content-wrapper img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+}
+
+.about-content-wrapper blockquote {
+    border-left: 4px solid var(--color-accent);
+    padding-left: 1.5rem;
+    margin: 2rem 0;
+    font-style: italic;
+    color: var(--color-text-muted);
+}
+
+/* ==========================================================================
    Mission Section
    ========================================================================== */
 .about-mission-section {
@@ -313,6 +400,13 @@
 }
 
 /* ==========================================================================
+   Casting Section
+   ========================================================================== */
+.about-casting-section {
+    margin-bottom: 5rem;
+}
+
+/* ==========================================================================
    Call to Action Section
    ========================================================================== */
 .about-cta-section {
@@ -416,6 +510,14 @@
         padding: 1.5rem;
     }
     
+    .about-content-wrapper {
+        padding: 2rem 1.5rem;
+    }
+    
+    .about-content-wrapper h2 {
+        font-size: 1.75rem;
+    }
+    
     .about-cta-card {
         padding: 3rem 1.5rem;
     }
@@ -445,5 +547,17 @@
     .about-social-link {
         width: 35px;
         height: 35px;
+    }
+    
+    .about-content-wrapper {
+        padding: 1.5rem;
+    }
+    
+    .about-content-wrapper h2 {
+        font-size: 1.5rem;
+    }
+    
+    .about-content-wrapper p {
+        font-size: 1rem;
     }
 }

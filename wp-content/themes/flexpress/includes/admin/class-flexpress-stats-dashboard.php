@@ -96,7 +96,7 @@ class FlexPress_Stats_Dashboard
             'flexpress-settings',
             __('Dashboard', 'flexpress'),
             __('Dashboard', 'flexpress'),
-            'manage_options',
+            flexpress_get_feature_capability('dashboard'),
             'flexpress-dashboard',
             array($this, 'render_dashboard_page'),
             0 // Position: first submenu item (0 or null = first)

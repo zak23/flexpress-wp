@@ -32,7 +32,7 @@ class FlexPress_SES_Settings {
             'flexpress-settings',
             __('Amazon SES Settings', 'flexpress'),
             __('Amazon SES', 'flexpress'),
-            'manage_options',
+            flexpress_get_feature_capability('amazon_ses'),
             'flexpress-ses-settings',
             array($this, 'render_ses_settings_page')
         );

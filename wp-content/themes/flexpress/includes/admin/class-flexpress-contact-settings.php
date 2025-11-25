@@ -33,7 +33,7 @@ class FlexPress_Contact_Settings
             'flexpress-settings',
             __('Contact & Social', 'flexpress'),
             __('Contact & Social', 'flexpress'),
-            'manage_options',
+            flexpress_get_feature_capability('contact_social'),
             'flexpress-contact-settings',
             array($this, 'render_contact_settings_page')
         );

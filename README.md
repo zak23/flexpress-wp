@@ -2225,7 +2225,7 @@ The FlexPress theme includes a customizable featured banner system that allows y
 - **Customizable Banner**: Upload any image and set a destination URL
 - **Homepage Integration**: Displays below the featured episodes section
 - **Responsive Design**: Mobile-optimized with hover effects
-- **Easy Management**: Configure through FlexPress General Settings
+- **Easy Management**: Configure through dedicated FlexPress settings page
 - **Smart Display**: Only shows when enabled and image is uploaded
 
 ### How It Works
@@ -2240,7 +2240,7 @@ The featured banner system:
 
 ### Configuration
 
-Configure the featured banner in **FlexPress → General → Featured Banner**:
+Configure the featured banner in **FlexPress → Featured Banner**:
 
 - **Enable Featured Banner**: Toggle to show/hide the banner
 - **Banner Image**: Upload image (recommended size: 1200x400px)

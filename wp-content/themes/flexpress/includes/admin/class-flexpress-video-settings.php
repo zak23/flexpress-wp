@@ -634,7 +634,7 @@ class FlexPress_Video_Settings
             'flexpress-settings',
             __('Bunny Stream Settings', 'flexpress'),
             __('Bunny Stream Settings', 'flexpress'),
-            'manage_options',
+            flexpress_get_feature_capability('bunny_stream'),
             'flexpress-bunnycdn-settings',
             array($this, 'render_settings_page')
         );

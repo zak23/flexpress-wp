@@ -251,6 +251,18 @@ function flexpress_get_restricted_features()
         'google_smtp',
         'smtp2go',
         'flowguard',
+        'dashboard',
+        'contact_social',
+        'pricing_plans',
+        'amazon_ses',
+        'bunny_stream',
+        'email_blacklist',
+        'trial_links',
+        'affiliate_system',
+        'flowguard_references',
+        'manage_members',
+        'tools',
+        'earnings',
     );
 }
 

@@ -40,7 +40,7 @@ class FlexPress_Pricing_Settings
             'flexpress-settings',
             __('Pricing Plans', 'flexpress'),
             __('Pricing Plans', 'flexpress'),
-            'manage_options',
+            flexpress_get_feature_capability('pricing_plans'),
             'flexpress-pricing-settings',
             array($this, 'render_pricing_settings_page')
         );

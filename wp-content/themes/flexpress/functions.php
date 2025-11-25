@@ -148,6 +148,7 @@ require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-join-cta-settings
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-casting-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-awards-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-featured-on-settings.php';
+require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-featured-banner-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-coming-soon-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-collections-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-video-settings.php';

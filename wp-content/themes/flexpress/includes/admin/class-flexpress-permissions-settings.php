@@ -187,14 +187,26 @@ class FlexPress_Permissions_Settings
             <?php
             $restricted_features = flexpress_get_restricted_features();
             $feature_labels      = array(
-                'pages_menus'  => __('Pages & Menus', 'flexpress'),
-                'auto_setup'   => __('Auto Setup', 'flexpress'),
-                'discord'      => __('Discord', 'flexpress'),
-                'turnstile'    => __('Turnstile', 'flexpress'),
-                'plunk'        => __('Plunk', 'flexpress'),
-                'google_smtp'  => __('Google SMTP', 'flexpress'),
-                'smtp2go'      => __('SMTP2GO', 'flexpress'),
-                'flowguard'    => __('Flowguard', 'flexpress'),
+                'pages_menus'         => __('Pages & Menus', 'flexpress'),
+                'auto_setup'          => __('Auto Setup', 'flexpress'),
+                'discord'             => __('Discord', 'flexpress'),
+                'turnstile'           => __('Turnstile', 'flexpress'),
+                'plunk'               => __('Plunk', 'flexpress'),
+                'google_smtp'         => __('Google SMTP', 'flexpress'),
+                'smtp2go'             => __('SMTP2GO', 'flexpress'),
+                'flowguard'           => __('Flowguard', 'flexpress'),
+                'dashboard'           => __('Dashboard', 'flexpress'),
+                'contact_social'      => __('Contact & Social', 'flexpress'),
+                'pricing_plans'        => __('Pricing Plans', 'flexpress'),
+                'amazon_ses'          => __('Amazon SES', 'flexpress'),
+                'bunny_stream'        => __('Bunny Stream Settings', 'flexpress'),
+                'email_blacklist'      => __('Email Blacklist', 'flexpress'),
+                'trial_links'         => __('Trial Links', 'flexpress'),
+                'affiliate_system'     => __('Affiliate System', 'flexpress'),
+                'flowguard_references' => __('Flowguard References', 'flexpress'),
+                'manage_members'       => __('Manage Members', 'flexpress'),
+                'tools'                => __('Tools', 'flexpress'),
+                'earnings'             => __('Earnings', 'flexpress'),
             );
             $allowed_features = flexpress_get_founder_feature_access();
             ?>
@@ -223,14 +235,26 @@ class FlexPress_Permissions_Settings
                             $is_allowed = in_array($feature_slug, $allowed_features, true);
                             $label      = isset($feature_labels[$feature_slug]) ? $feature_labels[$feature_slug] : ucwords(str_replace('_', ' ', $feature_slug));
                             $descriptions = array(
-                                'pages_menus'  => __('Create and manage pages and navigation menus', 'flexpress'),
-                                'auto_setup'   => __('Run automatic site setup and configuration', 'flexpress'),
-                                'discord'      => __('Configure Discord webhook notifications', 'flexpress'),
-                                'turnstile'    => __('Configure Cloudflare Turnstile settings', 'flexpress'),
-                                'plunk'        => __('Configure Plunk email marketing integration', 'flexpress'),
-                                'google_smtp'  => __('Configure Google SMTP email settings', 'flexpress'),
-                                'smtp2go'      => __('Configure SMTP2GO email settings', 'flexpress'),
-                                'flowguard'    => __('Configure Flowguard payment integration', 'flexpress'),
+                                'pages_menus'         => __('Create and manage pages and navigation menus', 'flexpress'),
+                                'auto_setup'          => __('Run automatic site setup and configuration', 'flexpress'),
+                                'discord'             => __('Configure Discord webhook notifications', 'flexpress'),
+                                'turnstile'           => __('Configure Cloudflare Turnstile settings', 'flexpress'),
+                                'plunk'               => __('Configure Plunk email marketing integration', 'flexpress'),
+                                'google_smtp'         => __('Configure Google SMTP email settings', 'flexpress'),
+                                'smtp2go'             => __('Configure SMTP2GO email settings', 'flexpress'),
+                                'flowguard'           => __('Configure Flowguard payment integration', 'flexpress'),
+                                'dashboard'           => __('View site statistics and dashboard', 'flexpress'),
+                                'contact_social'      => __('Manage contact information and social media links', 'flexpress'),
+                                'pricing_plans'       => __('Create and manage subscription pricing plans', 'flexpress'),
+                                'amazon_ses'          => __('Configure Amazon SES email delivery', 'flexpress'),
+                                'bunny_stream'        => __('Configure Bunny Stream video settings', 'flexpress'),
+                                'email_blacklist'      => __('Manage email blacklist for newsletter', 'flexpress'),
+                                'trial_links'         => __('Create and manage trial link codes', 'flexpress'),
+                                'affiliate_system'    => __('Manage affiliate system and payouts', 'flexpress'),
+                                'flowguard_references' => __('Manage Flowguard reference IDs and transactions', 'flexpress'),
+                                'manage_members'      => __('Manage user memberships and subscriptions', 'flexpress'),
+                                'tools'               => __('Access administrative tools and utilities', 'flexpress'),
+                                'earnings'            => __('View and manage earnings and transaction data', 'flexpress'),
                             );
                             $description = isset($descriptions[$feature_slug]) ? $descriptions[$feature_slug] : '';
                             ?>

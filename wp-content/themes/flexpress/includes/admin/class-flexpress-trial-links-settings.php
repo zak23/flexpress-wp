@@ -37,7 +37,7 @@ class FlexPress_Trial_Links_Settings
             'flexpress-settings',
             __('Trial Links', 'flexpress'),
             __('Trial Links', 'flexpress'),
-            'manage_options',
+            flexpress_get_feature_capability('trial_links'),
             'flexpress-trial-links-settings',
             array($this, 'render_trial_links_settings_page')
         );

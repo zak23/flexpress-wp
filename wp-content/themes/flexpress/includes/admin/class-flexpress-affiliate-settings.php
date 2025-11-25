@@ -422,7 +422,7 @@ class FlexPress_Affiliate_Settings {
             'flexpress-settings',
             __('Affiliate System', 'flexpress'),
             __('Affiliate System', 'flexpress'),
-            'manage_options',
+            flexpress_get_feature_capability('affiliate_system'),
             'flexpress-affiliate-settings',
             array($this, 'render_affiliate_settings_page')
         );

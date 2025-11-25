@@ -122,7 +122,8 @@ Bundled webfonts must use `font-display: swap`
 
 ## Featured Banner System Implementation Pattern
 
-- Settings: Add to `class-flexpress-general-settings.php` with proper sanitization
+- Settings: Add to `class-flexpress-featured-banner-settings.php` with proper sanitization
+- Admin Menu: Register "Featured Banner" submenu under FlexPress main menu in `class-flexpress-settings.php`
 - Template: Create dedicated template in `template-parts/` directory
 - Integration: Add template part to homepage below featured episodes section
 - Assets: Add CSS styles to `main.css` with hover effects and responsive design
@@ -130,6 +131,7 @@ Bundled webfonts must use `font-display: swap`
 - Sanitization: Use `absint()` for image IDs, `esc_url_raw()` for URLs, checkbox validation
 - Accessibility: Include proper alt text, ARIA labels, and semantic HTML
 - Responsive: Mobile-optimized with disabled hover effects on small screens
+- Settings Store: Use `flexpress_general_settings` option for backward compatibility
 - Documentation: Update README.md with feature details and technical implementation
 
 ## Bootstrap 5 Form Checkbox Styling Pattern

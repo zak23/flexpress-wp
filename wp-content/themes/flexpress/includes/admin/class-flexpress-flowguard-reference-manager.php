@@ -34,7 +34,7 @@ class FlexPress_Flowguard_Reference_Manager {
             'flexpress-settings',
             'Flowguard References',
             'Flowguard References',
-            'manage_options',
+            flexpress_get_feature_capability('flowguard_references'),
             'flexpress-flowguard-references',
             array($this, 'admin_page')
         );

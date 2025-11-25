@@ -30,7 +30,7 @@ class FlexPress_Email_Blacklist_Settings {
             'flexpress-settings',
             __('Email Blacklist', 'flexpress'),
             __('Email Blacklist', 'flexpress'),
-            'manage_options',
+            flexpress_get_feature_capability('email_blacklist'),
             'flexpress-email-blacklist',
             array($this, 'admin_page')
         );

@@ -76,6 +76,16 @@ class FlexPress_Settings
             array($this, 'render_featured_on_settings_page')
         );
 
+        // Add Featured Banner submenu
+        add_submenu_page(
+            $this->page_slug,
+            __('Featured Banner', 'flexpress'),
+            __('Featured Banner', 'flexpress'),
+            flexpress_get_founder_capability(),
+            'flexpress-featured-banner-settings',
+            array($this, 'render_featured_banner_settings_page')
+        );
+
         // Add Collections submenu
         add_submenu_page(
             $this->page_slug,
@@ -205,7 +215,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Earnings', 'flexpress'),
             __('Earnings', 'flexpress'),
-            flexpress_get_founder_capability(),
+            flexpress_get_feature_capability('earnings'),
             'flexpress-earnings',
             function () {
                 if (class_exists('FlexPress_Earnings_Settings')) {
@@ -222,7 +232,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Tools', 'flexpress'),
             __('Tools', 'flexpress'),
-            flexpress_get_founder_capability(),
+            flexpress_get_feature_capability('tools'),
             'flexpress-tools',
             array($this, 'render_tools_page')
         );
@@ -1500,6 +1510,19 @@ class FlexPress_Settings
             $featured_on_settings->render_featured_on_settings_page();
         } else {
             echo '<div class="wrap"><h1>Featured On Section</h1><p>Featured On settings class not found.</p></div>';
+        }
+    }
+
+    /**
+     * Render the Featured Banner settings page
+     */
+    public function render_featured_banner_settings_page()
+    {
+        if (class_exists('FlexPress_Featured_Banner_Settings')) {
+            $featured_banner_settings = new FlexPress_Featured_Banner_Settings();
+            $featured_banner_settings->render_featured_banner_settings_page();
+        } else {
+            echo '<div class="wrap"><h1>Featured Banner</h1><p>Featured Banner settings class not found.</p></div>';
         }
     }
 

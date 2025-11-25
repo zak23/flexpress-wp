@@ -43,7 +43,7 @@ class FlexPress_Membership_Settings
             'flexpress-settings',
             __('Manage Members', 'flexpress'),
             __('Manage Members', 'flexpress'),
-            'edit_users',
+            flexpress_get_feature_capability('manage_members'),
             'flexpress-manage-members',
             array($this, 'render_members_page')
         );
@@ -52,7 +52,7 @@ class FlexPress_Membership_Settings
             'flexpress-settings',
             __('Tools', 'flexpress'),
             __('Tools', 'flexpress'),
-            'edit_users',
+            flexpress_get_feature_capability('tools'),
             'flexpress-tools',
             array($this, 'render_tools_page')
         );

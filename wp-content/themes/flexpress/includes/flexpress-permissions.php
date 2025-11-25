@@ -117,18 +117,30 @@ function flexpress_revoke_founder_capability($user_id)
 
 /**
  * Sync founder capability assignments on each request.
+ * Also grants capability to all administrators so they can always access FlexPress.
  */
 function flexpress_sync_founder_capabilities()
 {
     $capability = flexpress_get_founder_capability();
     $founders   = flexpress_get_founder_user_ids();
 
-    if (empty($founders)) {
-        return;
+    // Grant capability to all administrators (they should always have access)
+    $administrators = get_users(
+        array(
+            'role'   => 'administrator',
+            'fields' => 'ID',
+        )
+    );
+
+    foreach ($administrators as $user_id) {
+        flexpress_grant_founder_capability($user_id);
     }
 
-    foreach ($founders as $user_id) {
-        flexpress_grant_founder_capability($user_id);
+    // Also grant to listed founders
+    if (!empty($founders)) {
+        foreach ($founders as $user_id) {
+            flexpress_grant_founder_capability($user_id);
+        }
     }
 }
 add_action('init', 'flexpress_sync_founder_capabilities', 12);
@@ -376,6 +388,12 @@ function flexpress_filter_feature_capabilities($allcaps, $caps, $args)
 {
     // Get user ID from args if provided
     $user_id = isset($args[0]) ? (int) $args[0] : get_current_user_id();
+
+    // Administrators always have founder capability (can always see FlexPress menu)
+    $founder_cap = flexpress_get_founder_capability();
+    if (in_array($founder_cap, $caps, true) && user_can($user_id, 'manage_options')) {
+        $allcaps[$founder_cap] = true;
+    }
 
     // Check if this is a feature capability check
     foreach ($caps as $cap) {

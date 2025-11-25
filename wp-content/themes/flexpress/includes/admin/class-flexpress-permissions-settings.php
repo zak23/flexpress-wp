@@ -52,13 +52,32 @@ class FlexPress_Permissions_Settings
             }
 
             $current_user_id = get_current_user_id();
+            // Allow administrators to remove themselves, but prevent regular founders from doing so
             if ($current_user_id && !in_array($current_user_id, $submitted, true)) {
-                add_settings_error(
-                    'flexpress_permissions',
-                    'cannot_remove_self',
-                    __('You cannot remove yourself from the founders list. Ask another founder to make that change.', 'flexpress')
+                if (!user_can($current_user_id, 'manage_options')) {
+                    add_settings_error(
+                        'flexpress_permissions',
+                        'cannot_remove_self',
+                        __('You cannot remove yourself from the founders list. Ask another founder or administrator to make that change.', 'flexpress')
+                    );
+                    return;
+                }
+                // Administrator removing themselves - check if at least one administrator remains
+                $remaining_admins = get_users(
+                    array(
+                        'role'   => 'administrator',
+                        'fields' => 'ID',
+                        'exclude' => array($current_user_id),
+                    )
                 );
-                return;
+                if (empty($remaining_admins)) {
+                    add_settings_error(
+                        'flexpress_permissions',
+                        'cannot_remove_last_admin',
+                        __('You cannot remove yourself as you are the only administrator. At least one administrator must remain as a founder.', 'flexpress')
+                    );
+                    return;
+                }
             }
 
             flexpress_set_founder_user_ids($submitted);

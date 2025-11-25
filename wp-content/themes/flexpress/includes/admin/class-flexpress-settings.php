@@ -36,6 +36,7 @@ class FlexPress_Settings
      */
     public function add_settings_page()
     {
+        // Main menu - administrators and founders can see it (handled by capability filter)
         add_menu_page(
             __('FlexPress', 'flexpress'),
             __('FlexPress', 'flexpress'),
@@ -47,6 +48,7 @@ class FlexPress_Settings
         );
 
         // Add submenu pages in the desired order
+        // Non-restricted menus - administrators and founders can see them
         add_submenu_page(
             $this->page_slug,
             __('General', 'flexpress'),

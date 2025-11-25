@@ -92,10 +92,28 @@ class FlexPress_Permissions_Settings
 
         // Handle feature access settings
         if ($_POST['flexpress_permissions_action'] === 'update_feature_access') {
-            $submitted = isset($_POST['feature_access']) ? (array) $_POST['feature_access'] : array();
-            $submitted = array_map('sanitize_text_field', $submitted);
+            $read_access = isset($_POST['feature_read']) ? (array) $_POST['feature_read'] : array();
+            $write_access = isset($_POST['feature_write']) ? (array) $_POST['feature_write'] : array();
+            
+            $read_access = array_map('sanitize_text_field', $read_access);
+            $write_access = array_map('sanitize_text_field', $write_access);
 
-            flexpress_set_founder_feature_access($submitted);
+            // Build permissions array
+            $restricted = flexpress_get_restricted_features();
+            $permissions = array();
+            
+            foreach ($restricted as $feature_slug) {
+                $permissions[$feature_slug] = array(
+                    'read'  => in_array($feature_slug, $read_access, true),
+                    'write' => in_array($feature_slug, $write_access, true),
+                );
+                // Write access implies read access
+                if ($permissions[$feature_slug]['write']) {
+                    $permissions[$feature_slug]['read'] = true;
+                }
+            }
+
+            flexpress_set_founder_feature_permissions($permissions);
 
             add_settings_error(
                 'flexpress_permissions',
@@ -200,7 +218,11 @@ class FlexPress_Permissions_Settings
 
             <h2><?php esc_html_e('Feature Access Control', 'flexpress'); ?></h2>
             <p class="description">
-                <?php esc_html_e('Control which features founders can access. Administrators always have full access to all features.', 'flexpress'); ?>
+                <?php esc_html_e('Control which features founders (non-administrators) can access. Administrators always have full read and write access to all features.', 'flexpress'); ?>
+                <br>
+                <strong><?php esc_html_e('Read:', 'flexpress'); ?></strong> <?php esc_html_e('Can view settings pages and data, but cannot save changes.', 'flexpress'); ?>
+                <br>
+                <strong><?php esc_html_e('Write:', 'flexpress'); ?></strong> <?php esc_html_e('Can view and edit settings. Write access automatically includes read access.', 'flexpress'); ?>
             </p>
 
             <?php
@@ -227,7 +249,7 @@ class FlexPress_Permissions_Settings
                 'tools'                => __('Tools', 'flexpress'),
                 'earnings'             => __('Earnings', 'flexpress'),
             );
-            $allowed_features = flexpress_get_founder_feature_access();
+            $permissions = flexpress_get_founder_feature_permissions();
             ?>
 
             <form method="post" action="">
@@ -237,11 +259,22 @@ class FlexPress_Permissions_Settings
                 <table class="widefat fixed striped">
                     <thead>
                         <tr>
-                            <th scope="col" class="manage-column column-cb check-column">
-                                <input type="checkbox" id="flexpress-select-all-features" />
-                            </th>
                             <th scope="col" class="manage-column">
                                 <?php esc_html_e('Feature', 'flexpress'); ?>
+                            </th>
+                            <th scope="col" class="manage-column" style="width: 150px; text-align: center;">
+                                <?php esc_html_e('Read', 'flexpress'); ?>
+                                <br>
+                                <button type="button" class="button button-small" id="flexpress-check-all-read" style="margin-top: 5px;">
+                                    <?php esc_html_e('Check All', 'flexpress'); ?>
+                                </button>
+                            </th>
+                            <th scope="col" class="manage-column" style="width: 150px; text-align: center;">
+                                <?php esc_html_e('Write', 'flexpress'); ?>
+                                <br>
+                                <button type="button" class="button button-small" id="flexpress-check-all-write" style="margin-top: 5px;">
+                                    <?php esc_html_e('Check None', 'flexpress'); ?>
+                                </button>
                             </th>
                             <th scope="col" class="manage-column">
                                 <?php esc_html_e('Description', 'flexpress'); ?>
@@ -251,8 +284,9 @@ class FlexPress_Permissions_Settings
                     <tbody>
                         <?php foreach ($restricted_features as $feature_slug) : ?>
                             <?php
-                            $is_allowed = in_array($feature_slug, $allowed_features, true);
                             $label      = isset($feature_labels[$feature_slug]) ? $feature_labels[$feature_slug] : ucwords(str_replace('_', ' ', $feature_slug));
+                            $has_read   = isset($permissions[$feature_slug]['read']) && $permissions[$feature_slug]['read'];
+                            $has_write  = isset($permissions[$feature_slug]['write']) && $permissions[$feature_slug]['write'];
                             $descriptions = array(
                                 'pages_menus'         => __('Create and manage pages and navigation menus', 'flexpress'),
                                 'auto_setup'          => __('Run automatic site setup and configuration', 'flexpress'),
@@ -278,13 +312,25 @@ class FlexPress_Permissions_Settings
                             $description = isset($descriptions[$feature_slug]) ? $descriptions[$feature_slug] : '';
                             ?>
                             <tr>
-                                <th scope="row" class="check-column">
-                                    <input type="checkbox" name="feature_access[]" value="<?php echo esc_attr($feature_slug); ?>" id="feature_<?php echo esc_attr($feature_slug); ?>" <?php checked($is_allowed); ?> />
-                                </th>
                                 <td>
-                                    <label for="feature_<?php echo esc_attr($feature_slug); ?>">
-                                        <strong><?php echo esc_html($label); ?></strong>
-                                    </label>
+                                    <strong><?php echo esc_html($label); ?></strong>
+                                </td>
+                                <td style="text-align: center;">
+                                    <input type="checkbox" 
+                                           name="feature_read[]" 
+                                           value="<?php echo esc_attr($feature_slug); ?>" 
+                                           id="feature_read_<?php echo esc_attr($feature_slug); ?>" 
+                                           <?php checked($has_read); ?>
+                                           class="feature-read-checkbox" />
+                                </td>
+                                <td style="text-align: center;">
+                                    <input type="checkbox" 
+                                           name="feature_write[]" 
+                                           value="<?php echo esc_attr($feature_slug); ?>" 
+                                           id="feature_write_<?php echo esc_attr($feature_slug); ?>" 
+                                           <?php checked($has_write); ?>
+                                           class="feature-write-checkbox"
+                                           data-feature="<?php echo esc_attr($feature_slug); ?>" />
                                 </td>
                                 <td>
                                     <?php echo esc_html($description); ?>
@@ -304,24 +350,84 @@ class FlexPress_Permissions_Settings
 
         <script>
             (function () {
-                const selectAllFounders = document.getElementById('flexpress-select-all-founders');
-                if (selectAllFounders) {
-                    selectAllFounders.addEventListener('change', function (event) {
-                        const checkboxes = document.querySelectorAll('input[name="founder_ids[]"]');
-                        checkboxes.forEach(function (checkbox) {
-                            checkbox.checked = event.target.checked;
-                        });
-                    });
+                // Wait for DOM to be ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', init);
+                } else {
+                    init();
                 }
 
-                const selectAllFeatures = document.getElementById('flexpress-select-all-features');
-                if (selectAllFeatures) {
-                    selectAllFeatures.addEventListener('change', function (event) {
-                        const checkboxes = document.querySelectorAll('input[name="feature_access[]"]');
-                        checkboxes.forEach(function (checkbox) {
-                            checkbox.checked = event.target.checked;
+                function init() {
+                    const selectAllFounders = document.getElementById('flexpress-select-all-founders');
+                    if (selectAllFounders) {
+                        selectAllFounders.addEventListener('change', function (event) {
+                            const checkboxes = document.querySelectorAll('input[name="founder_ids[]"]');
+                            checkboxes.forEach(function (checkbox) {
+                                checkbox.checked = event.target.checked;
+                            });
+                        });
+                    }
+
+                    // Auto-check read when write is checked
+                    const writeCheckboxes = document.querySelectorAll('.feature-write-checkbox');
+                    writeCheckboxes.forEach(function (writeCheckbox) {
+                        writeCheckbox.addEventListener('change', function (event) {
+                            if (event.target.checked) {
+                                const featureSlug = event.target.getAttribute('data-feature');
+                                const readCheckbox = document.getElementById('feature_read_' + featureSlug);
+                                if (readCheckbox) {
+                                    readCheckbox.checked = true;
+                                }
+                            }
                         });
                     });
+
+                    // Warn if unchecking read when write is checked
+                    const readCheckboxes = document.querySelectorAll('.feature-read-checkbox');
+                    readCheckboxes.forEach(function (readCheckbox) {
+                        readCheckbox.addEventListener('change', function (event) {
+                            if (!event.target.checked) {
+                                const featureSlug = readCheckbox.id.replace('feature_read_', '');
+                                const writeCheckbox = document.getElementById('feature_write_' + featureSlug);
+                                if (writeCheckbox && writeCheckbox.checked) {
+                                    const message = '<?php echo esc_js(__('Write access requires read access. Unchecking read will also uncheck write. Continue?', 'flexpress')); ?>';
+                                    if (confirm(message)) {
+                                        writeCheckbox.checked = false;
+                                    } else {
+                                        event.target.checked = true;
+                                    }
+                                }
+                            }
+                        });
+                    });
+
+                    // Check All Read button - always checks all read checkboxes
+                    const checkAllReadBtn = document.getElementById('flexpress-check-all-read');
+                    if (checkAllReadBtn) {
+                        checkAllReadBtn.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const readBoxes = document.querySelectorAll('.feature-read-checkbox');
+                            readBoxes.forEach(function (checkbox) {
+                                checkbox.checked = true;
+                            });
+                            return false;
+                        });
+                    }
+
+                    // Check None Write button - always unchecks all write checkboxes
+                    const checkAllWriteBtn = document.getElementById('flexpress-check-all-write');
+                    if (checkAllWriteBtn) {
+                        checkAllWriteBtn.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const writeBoxes = document.querySelectorAll('.feature-write-checkbox');
+                            writeBoxes.forEach(function (writeCheckbox) {
+                                writeCheckbox.checked = false;
+                            });
+                            return false;
+                        });
+                    }
                 }
             })();
         </script>

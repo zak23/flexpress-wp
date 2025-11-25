@@ -26,7 +26,7 @@ class FlexPress_Permissions_Settings
 
     public function handle_submission()
     {
-        if (!isset($_POST['flexpress_permissions_action']) || $_POST['flexpress_permissions_action'] !== 'update_founders') {
+        if (!isset($_POST['flexpress_permissions_action'])) {
             return;
         }
 
@@ -36,37 +36,55 @@ class FlexPress_Permissions_Settings
             flexpress_require_founder_capability();
         }
 
-        $submitted = isset($_POST['founder_ids']) ? (array) $_POST['founder_ids'] : array();
-        $submitted = array_map('absint', $submitted);
-        $submitted = array_filter($submitted);
+        // Handle founder assignments
+        if ($_POST['flexpress_permissions_action'] === 'update_founders') {
+            $submitted = isset($_POST['founder_ids']) ? (array) $_POST['founder_ids'] : array();
+            $submitted = array_map('absint', $submitted);
+            $submitted = array_filter($submitted);
 
-        if (empty($submitted)) {
+            if (empty($submitted)) {
+                add_settings_error(
+                    'flexpress_permissions',
+                    'founder_required',
+                    __('At least one founder must remain assigned.', 'flexpress')
+                );
+                return;
+            }
+
+            $current_user_id = get_current_user_id();
+            if ($current_user_id && !in_array($current_user_id, $submitted, true)) {
+                add_settings_error(
+                    'flexpress_permissions',
+                    'cannot_remove_self',
+                    __('You cannot remove yourself from the founders list. Ask another founder to make that change.', 'flexpress')
+                );
+                return;
+            }
+
+            flexpress_set_founder_user_ids($submitted);
+
             add_settings_error(
                 'flexpress_permissions',
-                'founder_required',
-                __('At least one founder must remain assigned.', 'flexpress')
+                'founder_saved',
+                __('Founder permissions updated successfully.', 'flexpress'),
+                'updated'
             );
-            return;
         }
 
-        $current_user_id = get_current_user_id();
-        if ($current_user_id && !in_array($current_user_id, $submitted, true)) {
+        // Handle feature access settings
+        if ($_POST['flexpress_permissions_action'] === 'update_feature_access') {
+            $submitted = isset($_POST['feature_access']) ? (array) $_POST['feature_access'] : array();
+            $submitted = array_map('sanitize_text_field', $submitted);
+
+            flexpress_set_founder_feature_access($submitted);
+
             add_settings_error(
                 'flexpress_permissions',
-                'cannot_remove_self',
-                __('You cannot remove yourself from the founders list. Ask another founder to make that change.', 'flexpress')
+                'feature_access_saved',
+                __('Feature access permissions updated successfully.', 'flexpress'),
+                'updated'
             );
-            return;
         }
-
-        flexpress_set_founder_user_ids($submitted);
-
-        add_settings_error(
-            'flexpress_permissions',
-            'founder_saved',
-            __('Founder permissions updated successfully.', 'flexpress'),
-            'updated'
-        );
     }
 
     public function render_page()
@@ -121,7 +139,7 @@ class FlexPress_Permissions_Settings
                         <?php else : ?>
                             <?php
                             foreach ($users as $user) :
-                                $is_founder = in_array($user->ID, $current_founders, true);
+                                $is_founder = in_array((int) $user->ID, $current_founders, true);
 
                                 $role_labels = array();
                                 $roles       = wp_roles();
@@ -158,21 +176,110 @@ class FlexPress_Permissions_Settings
                     </button>
                 </p>
             </form>
+
+            <hr style="margin: 30px 0;" />
+
+            <h2><?php esc_html_e('Feature Access Control', 'flexpress'); ?></h2>
+            <p class="description">
+                <?php esc_html_e('Control which features founders can access. Administrators always have full access to all features.', 'flexpress'); ?>
+            </p>
+
+            <?php
+            $restricted_features = flexpress_get_restricted_features();
+            $feature_labels      = array(
+                'pages_menus'  => __('Pages & Menus', 'flexpress'),
+                'auto_setup'   => __('Auto Setup', 'flexpress'),
+                'discord'      => __('Discord', 'flexpress'),
+                'turnstile'    => __('Turnstile', 'flexpress'),
+                'plunk'        => __('Plunk', 'flexpress'),
+                'google_smtp'  => __('Google SMTP', 'flexpress'),
+                'smtp2go'      => __('SMTP2GO', 'flexpress'),
+                'flowguard'    => __('Flowguard', 'flexpress'),
+            );
+            $allowed_features = flexpress_get_founder_feature_access();
+            ?>
+
+            <form method="post" action="">
+                <?php wp_nonce_field('flexpress_permissions_save', 'flexpress_permissions_nonce'); ?>
+                <input type="hidden" name="flexpress_permissions_action" value="update_feature_access" />
+
+                <table class="widefat fixed striped">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="manage-column column-cb check-column">
+                                <input type="checkbox" id="flexpress-select-all-features" />
+                            </th>
+                            <th scope="col" class="manage-column">
+                                <?php esc_html_e('Feature', 'flexpress'); ?>
+                            </th>
+                            <th scope="col" class="manage-column">
+                                <?php esc_html_e('Description', 'flexpress'); ?>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($restricted_features as $feature_slug) : ?>
+                            <?php
+                            $is_allowed = in_array($feature_slug, $allowed_features, true);
+                            $label      = isset($feature_labels[$feature_slug]) ? $feature_labels[$feature_slug] : ucwords(str_replace('_', ' ', $feature_slug));
+                            $descriptions = array(
+                                'pages_menus'  => __('Create and manage pages and navigation menus', 'flexpress'),
+                                'auto_setup'   => __('Run automatic site setup and configuration', 'flexpress'),
+                                'discord'      => __('Configure Discord webhook notifications', 'flexpress'),
+                                'turnstile'    => __('Configure Cloudflare Turnstile settings', 'flexpress'),
+                                'plunk'        => __('Configure Plunk email marketing integration', 'flexpress'),
+                                'google_smtp'  => __('Configure Google SMTP email settings', 'flexpress'),
+                                'smtp2go'      => __('Configure SMTP2GO email settings', 'flexpress'),
+                                'flowguard'    => __('Configure Flowguard payment integration', 'flexpress'),
+                            );
+                            $description = isset($descriptions[$feature_slug]) ? $descriptions[$feature_slug] : '';
+                            ?>
+                            <tr>
+                                <th scope="row" class="check-column">
+                                    <input type="checkbox" name="feature_access[]" value="<?php echo esc_attr($feature_slug); ?>" id="feature_<?php echo esc_attr($feature_slug); ?>" <?php checked($is_allowed); ?> />
+                                </th>
+                                <td>
+                                    <label for="feature_<?php echo esc_attr($feature_slug); ?>">
+                                        <strong><?php echo esc_html($label); ?></strong>
+                                    </label>
+                                </td>
+                                <td>
+                                    <?php echo esc_html($description); ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+
+                <p class="submit">
+                    <button type="submit" class="button button-primary">
+                        <?php esc_html_e('Save Feature Access', 'flexpress'); ?>
+                    </button>
+                </p>
+            </form>
         </div>
 
         <script>
             (function () {
-                const selectAll = document.getElementById('flexpress-select-all-founders');
-                if (!selectAll) {
-                    return;
+                const selectAllFounders = document.getElementById('flexpress-select-all-founders');
+                if (selectAllFounders) {
+                    selectAllFounders.addEventListener('change', function (event) {
+                        const checkboxes = document.querySelectorAll('input[name="founder_ids[]"]');
+                        checkboxes.forEach(function (checkbox) {
+                            checkbox.checked = event.target.checked;
+                        });
+                    });
                 }
 
-                selectAll.addEventListener('change', function (event) {
-                    const checkboxes = document.querySelectorAll('input[name="founder_ids[]"]');
-                    checkboxes.forEach(function (checkbox) {
-                        checkbox.checked = event.target.checked;
+                const selectAllFeatures = document.getElementById('flexpress-select-all-features');
+                if (selectAllFeatures) {
+                    selectAllFeatures.addEventListener('change', function (event) {
+                        const checkboxes = document.querySelectorAll('input[name="feature_access[]"]');
+                        checkboxes.forEach(function (checkbox) {
+                            checkbox.checked = event.target.checked;
+                        });
                     });
-                });
+                }
             })();
         </script>
         <?php

@@ -101,7 +101,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Pages & Menus', 'flexpress'),
             __('Pages & Menus', 'flexpress'),
-            flexpress_get_founder_capability(),
+            flexpress_get_feature_capability('pages_menus'),
             'flexpress-pages-menus',
             array($this, 'render_pages_menus_page')
         );
@@ -111,7 +111,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Auto-Setup', 'flexpress'),
             __('Auto-Setup', 'flexpress'),
-            flexpress_get_founder_capability(),
+            flexpress_get_feature_capability('auto_setup'),
             'flexpress-auto-setup',
             array($this, 'render_auto_setup_page')
         );
@@ -121,7 +121,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Discord Notifications', 'flexpress'),
             __('Discord', 'flexpress'),
-            flexpress_get_founder_capability(),
+            flexpress_get_feature_capability('discord'),
             'flexpress-discord-settings',
             array($this, 'render_discord_settings_page')
         );
@@ -131,7 +131,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Cloudflare Turnstile', 'flexpress'),
             __('Turnstile', 'flexpress'),
-            flexpress_get_founder_capability(),
+            flexpress_get_feature_capability('turnstile'),
             'flexpress-turnstile-settings',
             array($this, 'render_turnstile_settings_page')
         );
@@ -141,7 +141,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Plunk Email Marketing', 'flexpress'),
             __('Plunk', 'flexpress'),
-            flexpress_get_founder_capability(),
+            flexpress_get_feature_capability('plunk'),
             'flexpress-plunk-settings',
             array($this, 'render_plunk_settings_page')
         );
@@ -151,7 +151,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Google SMTP', 'flexpress'),
             __('Google SMTP', 'flexpress'),
-            flexpress_get_founder_capability(),
+            flexpress_get_feature_capability('google_smtp'),
             'flexpress-google-smtp-settings',
             array($this, 'render_google_smtp_settings_page')
         );
@@ -161,7 +161,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('SMTP2Go', 'flexpress'),
             __('SMTP2Go', 'flexpress'),
-            flexpress_get_founder_capability(),
+            flexpress_get_feature_capability('smtp2go'),
             'flexpress-smtp2go-settings',
             array($this, 'render_smtp2go_settings_page')
         );
@@ -171,7 +171,7 @@ class FlexPress_Settings
             $this->page_slug,
             __('Flowguard', 'flexpress'),
             __('Flowguard', 'flexpress'),
-            flexpress_get_founder_capability(),
+            flexpress_get_feature_capability('flowguard'),
             'flexpress-flowguard-settings',
             function () {
                 if (class_exists('FlexPress_Flowguard_Settings')) {

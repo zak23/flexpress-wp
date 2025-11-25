@@ -235,4 +235,148 @@ function flexpress_require_founder_capability()
     );
 }
 
+/**
+ * Get the list of restricted features that require explicit founder access.
+ *
+ * @return array Array of feature slugs
+ */
+function flexpress_get_restricted_features()
+{
+    return array(
+        'pages_menus',
+        'auto_setup',
+        'discord',
+        'turnstile',
+        'plunk',
+        'google_smtp',
+        'smtp2go',
+        'flowguard',
+    );
+}
+
+/**
+ * Get the list of features that founders can access.
+ *
+ * @return array Array of feature slugs that founders can access
+ */
+function flexpress_get_founder_feature_access()
+{
+    $access = get_option('flexpress_founder_feature_access', array());
+    if (!is_array($access)) {
+        return array();
+    }
+
+    return array_values(array_filter($access));
+}
+
+/**
+ * Set the list of features that founders can access.
+ *
+ * @param array $features Array of feature slugs
+ */
+function flexpress_set_founder_feature_access($features)
+{
+    if (!is_array($features)) {
+        $features = array();
+    }
+
+    $restricted = flexpress_get_restricted_features();
+    $features    = array_intersect($features, $restricted);
+    $features    = array_unique($features);
+
+    update_option('flexpress_founder_feature_access', array_values($features), false);
+}
+
+/**
+ * Check if a user can access a specific feature.
+ * Administrators always have access. Founders need explicit permission.
+ *
+ * @param string $feature_slug Feature slug to check
+ * @param int|null $user_id User ID to check (null for current user)
+ * @return bool
+ */
+function flexpress_user_can_access_feature($feature_slug, $user_id = null)
+{
+    if ($user_id === null) {
+        $user_id = get_current_user_id();
+    }
+
+    if (!$user_id) {
+        return false;
+    }
+
+    // Administrators always have access
+    if (user_can($user_id, 'manage_options')) {
+        return true;
+    }
+
+    // Check if feature is restricted
+    $restricted = flexpress_get_restricted_features();
+    if (!in_array($feature_slug, $restricted, true)) {
+        // Not a restricted feature, founders have default access
+        return flexpress_user_is_founder($user_id);
+    }
+
+    // Restricted feature - check if founder has explicit access
+    if (!flexpress_user_is_founder($user_id)) {
+        return false;
+    }
+
+    $allowed_features = flexpress_get_founder_feature_access();
+    return in_array($feature_slug, $allowed_features, true);
+}
+
+/**
+ * Get feature capability for menu registration.
+ * Returns a capability that checks both admin and founder feature access.
+ *
+ * @param string $feature_slug Feature slug
+ * @return string Capability name
+ */
+function flexpress_get_feature_capability($feature_slug)
+{
+    // Use a custom capability that we'll check dynamically
+    return 'flexpress_access_' . $feature_slug;
+}
+
+/**
+ * Check if current user has access to a feature (for capability checks).
+ * This is used as a capability callback for menu registration.
+ *
+ * @param string $feature_slug Feature slug
+ * @return bool
+ */
+function flexpress_check_feature_access($feature_slug)
+{
+    return flexpress_user_can_access_feature($feature_slug);
+}
+
+/**
+ * Filter user capabilities to handle feature access dynamically.
+ * This allows us to use custom capabilities in menu registration.
+ *
+ * @param array $allcaps All capabilities for the user
+ * @param array $caps Required capabilities
+ * @param array $args Additional arguments
+ * @return array
+ */
+function flexpress_filter_feature_capabilities($allcaps, $caps, $args)
+{
+    // Get user ID from args if provided
+    $user_id = isset($args[0]) ? (int) $args[0] : get_current_user_id();
+
+    // Check if this is a feature capability check
+    foreach ($caps as $cap) {
+        if (strpos($cap, 'flexpress_access_') === 0) {
+            $feature_slug = str_replace('flexpress_access_', '', $cap);
+            if (flexpress_user_can_access_feature($feature_slug, $user_id)) {
+                $allcaps[$cap] = true;
+            }
+        }
+    }
+
+    return $allcaps;
+}
+add_filter('user_has_cap', 'flexpress_filter_feature_capabilities', 10, 3);
+
 

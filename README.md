@@ -1054,7 +1054,7 @@ FlexPress includes automatic OnlyFans referral code tracking that appends your r
 
 **Configuration:**
 
-1. Go to `FlexPress Settings → General`
+1. Go to `FlexPress Settings → Tools`
 2. Enter your OnlyFans referral code in the "OnlyFans Referral Code" field (e.g., `17503922`)
 3. Save settings
 4. All OnlyFans links will automatically include `?ref={your-code}`
@@ -1083,7 +1083,7 @@ flexpress_display_social_media_links(); // OnlyFans link includes referral code
 
 **Files Modified:**
 
-- `includes/admin/class-flexpress-general-settings.php` - Added referral code field
+- `includes/admin/class-flexpress-settings.php` - Added referral code field to Tools page
 - `functions.php` - Added helper functions and applied to model social links
 - `single-model.php` - Applied to model profile OnlyFans links
 - `includes/contact-helpers.php` - Applied to site-wide social media links

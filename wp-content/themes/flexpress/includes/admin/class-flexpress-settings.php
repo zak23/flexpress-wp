@@ -489,9 +489,49 @@ class FlexPress_Settings
                 echo '<div class="notice notice-error"><p>' . esc_html__('Invalid reference ID or function not available', 'flexpress') . '</p></div>';
             }
         }
+
+        // Handle OnlyFans referral code save
+        if (isset($_POST['save_onlyfans_referral']) && wp_verify_nonce($_POST['onlyfans_referral_nonce'], 'save_onlyfans_referral')) {
+            $options = get_option('flexpress_general_settings', array());
+            $options['onlyfans_referral_code'] = isset($_POST['onlyfans_referral_code']) ? sanitize_text_field($_POST['onlyfans_referral_code']) : '';
+            update_option('flexpress_general_settings', $options);
+            echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('OnlyFans referral code saved successfully.', 'flexpress') . '</p></div>';
+        }
     ?>
         <div class="wrap">
             <h1><?php esc_html_e('FlexPress Tools', 'flexpress'); ?></h1>
+
+            <div class="card" style="max-width: 600px; margin-bottom: 20px;">
+                <h2><?php esc_html_e('OnlyFans Referral Code', 'flexpress'); ?></h2>
+                <p><?php esc_html_e('Enter your OnlyFans referral code. When set, all OnlyFans links on your site will automatically include ?ref={code} to track referrals.', 'flexpress'); ?></p>
+
+                <form method="post" action="">
+                    <?php wp_nonce_field('save_onlyfans_referral', 'onlyfans_referral_nonce'); ?>
+                    <?php
+                    $options = get_option('flexpress_general_settings', array());
+                    $value = isset($options['onlyfans_referral_code']) ? $options['onlyfans_referral_code'] : '';
+                    ?>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="onlyfans_referral_code"><?php esc_html_e('Referral Code', 'flexpress'); ?></label>
+                            </th>
+                            <td>
+                                <input type="text"
+                                    id="onlyfans_referral_code"
+                                    name="onlyfans_referral_code"
+                                    value="<?php echo esc_attr($value); ?>"
+                                    class="regular-text"
+                                    placeholder="17503922">
+                                <p class="description">
+                                    <?php esc_html_e('Enter your OnlyFans referral code. When set, all OnlyFans links on your site will automatically include ?ref={code} to track referrals.', 'flexpress'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                    <?php submit_button(__('Save Referral Code', 'flexpress'), 'primary', 'save_onlyfans_referral'); ?>
+                </form>
+            </div>
 
             <div class="card" style="max-width: 600px;">
                 <h2><?php esc_html_e('Banned User Management', 'flexpress'); ?></h2>

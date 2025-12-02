@@ -208,3 +208,16 @@ Bundled webfonts must use `font-display: swap`
 - Founder Access: Treat founders as members/unlock purchasers by calling `flexpress_user_is_founder()` inside access checks.
 - Management UI: Assign founders from `FlexPress → Permissions`; use `flexpress_set_founder_user_ids()` to persist selections and sync caps.
 - Safeguard: Founders cannot remove themselves—demote via another founder to avoid lockouts (UI blocks self-removal).
+
+## News / PR Feature Implementation Pattern (November 2025)
+
+- **Post Type**: Uses built-in WordPress `post` type (no custom post type needed)
+- **Archive Template**: `page-templates/news.php` - Page template assigned to a `/news` page
+- **Single Template**: `single.php` - Handles individual blog posts with hero image, meta, share links, and prev/next navigation
+- **Content Partial**: `template-parts/content-post-card.php` - Card component for archive grid
+- **Styling**: `assets/css/news.css` - Scoped styles for archive and single post layouts; enqueued conditionally and added to async handles
+- **Navigation**: News link added to header navigation (after Extras, before menu) - looks up page by slug `news`
+- **Image Optimization**: Featured images use BunnyCDN Image Optimizer via `flexpress_get_bunnycdn_optimized_image_url()` helper
+- **Cache Headers**: Archive and single templates call `flexpress_add_performance_headers()` to ensure `Vary: Cookie` for logged-in users
+- **Category Filtering**: Archive supports category filtering via URL parameter with badge-based UI
+- **Documentation**: Update README.md when modifying news feature behavior

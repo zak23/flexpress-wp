@@ -37,6 +37,21 @@ FlexPress is designed specifically for content websites (primarily adult content
 - CDN host is taken from FlexPress Video settings (`bunnycdn_static_host`); if not configured, images use WordPress URL with optimizer parameters.
 - Affects: `template-parts/content-model/card.php` and helper `flexpress_get_bunnycdn_optimized_image_url()` in `includes/bunnycdn.php`.
 
+### News / PR Feature (November 2025)
+
+- **Lightweight Blog System**: Uses built-in WordPress `post` type for publishing announcements, PRs, and updates
+- **Archive Template**: `page-templates/news.php` - Grid layout with category filtering, pagination, and BunnyCDN-optimized featured images
+- **Single Post Template**: `single.php` - Full-width layout with hero image, breadcrumbs, share links (Twitter, Facebook, copy link), and prev/next navigation
+- **Content Card**: `template-parts/content-post-card.php` - Responsive card component for archive grid
+- **Styling**: `assets/css/news.css` - Scoped styles for archive and single layouts; enqueued conditionally and added to async handles list (`flexpress_get_async_style_handles()`)
+- **Navigation**: News link added to header navigation (after Extras) - looks up page by slug `news`
+- **Image Optimization**: Featured images use BunnyCDN Image Optimizer via `flexpress_get_bunnycdn_optimized_image_url()` helper
+  - Archive cards: `width=600&height=400&format=webp&quality=80`
+  - Single hero: `width=1200&height=630&format=webp&quality=85`
+- **Cache Headers**: Archive and single templates call `flexpress_add_performance_headers()` to ensure `Vary: Cookie` for logged-in users
+- **Category Filtering**: Archive supports category filtering via URL parameter with badge-based UI
+- **Files**: `page-templates/news.php`, `single.php`, `template-parts/content-post-card.php`, `assets/css/news.css`, `functions.php` (enqueue), `header.php` (nav link)
+
 ### Awards Section Images – Bunny Image Optimizer (November 2025)
 
 - Awards section images now use BunnyCDN Image Optimizer via `flexpress_get_bunnycdn_optimized_image_url()` helper function.

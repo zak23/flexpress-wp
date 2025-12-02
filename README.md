@@ -239,6 +239,19 @@ A modern WordPress website running in Docker containers with MySQL database and 
 - **Deferred jQuery**: Core jQuery, jQuery Migrate, and jQuery Core now load deferred from the footer (`group = 1`) to keep render blocking requests off the critical path. Scripts must declare jQuery as a dependency instead of relying on head inlines.
 - **Regression Coverage**: `tests/puppeteer/test-critical-assets.mjs` verifies async stylesheet markup and footer jQuery placement alongside existing archive/mobile smoke tests.
 
+### News / PR Feature (November 2025)
+
+- **Lightweight Blog System**: Uses built-in WordPress `post` type for publishing announcements, PRs, and updates
+- **Archive Template**: `page-templates/news.php` - Grid layout with category filtering, pagination, and BunnyCDN-optimized featured images
+- **Single Post Template**: `single.php` - Full-width layout with hero image, breadcrumbs, share links (Twitter, Facebook, copy link), and prev/next navigation
+- **Content Card**: `template-parts/content-post-card.php` - Responsive card component for archive grid
+- **Styling**: `assets/css/news.css` - Scoped styles for archive and single layouts; enqueued conditionally and added to async handles list
+- **Navigation**: News link added to header navigation (after Extras) - looks up page by slug `news`
+- **Image Optimization**: Featured images use BunnyCDN Image Optimizer via `flexpress_get_bunnycdn_optimized_image_url()` helper
+- **Cache Headers**: Archive and single templates call `flexpress_add_performance_headers()` to ensure `Vary: Cookie` for logged-in users
+- **Category Filtering**: Archive supports category filtering via URL parameter with badge-based UI
+- **Files**: `page-templates/news.php`, `single.php`, `template-parts/content-post-card.php`, `assets/css/news.css`, `functions.php` (enqueue), `header.php` (nav link)
+
 ### JavaScript & Service Worker Fixes (November 2025)
 
 - **Login/Registration jQuery Race Fixed**: Removed `defer` from `flexpress-login` and `flexpress-registration` scripts to prevent a race with footer-deferred jQuery. These scripts still load in the footer and declare `jquery` as a dependency.

@@ -489,6 +489,12 @@ function flexpress_enqueue_scripts_and_styles()
         wp_script_add_data('slick-js', 'defer', false);
     }
 
+    // Enqueue news CSS on news archive and single post pages
+    if (is_page_template('page-templates/news.php') || is_single() && get_post_type() === 'post') {
+        $news_deps = $combined_file ? array('flexpress-combined') : array('flexpress-main');
+        wp_enqueue_style('flexpress-news', get_template_directory_uri() . '/assets/css/news.css', $news_deps, wp_get_theme()->get('Version'));
+    }
+
     // Enqueue jQuery with defer
     wp_enqueue_script('jquery');
     wp_script_add_data('jquery', 'group', 1);
@@ -801,6 +807,7 @@ function flexpress_get_async_style_handles()
         'flexpress-join-now-cta',
         'flexpress-about-page',
         'flexpress-hero-video',
+        'flexpress-news',
         'slick-css',
         'slick-theme-css'
     );
@@ -8096,6 +8103,46 @@ function flexpress_add_promo_url_rewrites()
     );
 }
 add_action('init', 'flexpress_add_promo_url_rewrites');
+
+/**
+ * Add rewrite rules for news posts to use /news/post-slug structure
+ */
+function flexpress_add_news_post_rewrites()
+{
+    // Add rewrite rule for /news/{post-slug}
+    add_rewrite_rule(
+        '^news/([^/]+)/?$',
+        'index.php?name=$matches[1]&post_type=post',
+        'top'
+    );
+}
+add_action('init', 'flexpress_add_news_post_rewrites');
+
+/**
+ * Modify post permalink structure to include /news/ prefix
+ */
+function flexpress_news_post_permalink($permalink, $post, $leavename)
+{
+    // Only modify post type 'post' permalinks
+    if ($post->post_type === 'post' && is_object($post)) {
+        // Check if permalink already has /news/ prefix to avoid duplicates
+        if (strpos($permalink, '/news/') === false) {
+            // Get the post slug
+            $post_slug = $post->post_name;
+            if (empty($post_slug)) {
+                $post_slug = sanitize_title($post->post_title);
+            }
+            
+            // Build new permalink with /news/ prefix
+            $home_url = trailingslashit(home_url());
+            $permalink = $home_url . 'news/' . $post_slug . '/';
+        }
+    }
+    
+    return $permalink;
+}
+add_filter('post_link', 'flexpress_news_post_permalink', 10, 3);
+add_filter('post_type_link', 'flexpress_news_post_permalink', 10, 3);
 
 /**
  * Add query vars for promo codes

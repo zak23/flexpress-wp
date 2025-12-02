@@ -16,6 +16,25 @@ Bundled webfonts must use `font-display: swap`
 - Hero images use width=1920, height=800 for center crop to maintain 12:5 ratio.
 - CDN host comes from `bunnycdn_static_host`; if not configured, images use WordPress URL with optimizer parameters.
 
+## Model Card Image Optimization (November 2025)
+
+- Model card images use Bunny Image Optimizer via `flexpress_get_bunnycdn_optimized_image_url()` helper function.
+- Optimization parameters: width=248, height=331, format=webp, quality=60 (matches CSS aspect-ratio 3/4 and desktop display size).
+- Images are cropped/resized to exact 3/4 aspect ratio before delivery, preventing browser-side cropping with `object-fit: cover`.
+- Replaced `wp_get_attachment_image()` with optimized URL generation for better performance and CDN delivery.
+- Maintains responsive `sizes` attribute: `(max-width: 768px) 184px, 368px`.
+- CDN host comes from `bunnycdn_static_host`; if not configured, images use WordPress URL with optimizer parameters.
+- Helper function located in `includes/bunnycdn.php`; template in `template-parts/content-model/card.php`.
+
+## Awards Section Image Optimization (November 2025)
+
+- Awards section images use Bunny Image Optimizer via `flexpress_get_bunnycdn_optimized_image_url()` helper function.
+- Optimization parameters: width=92, height=60, format=webp, quality=60 (matches display size 92x60).
+- Images are cropped/resized to exact dimensions before delivery for consistent display in both carousel and subtle layouts.
+- Applied to both carousel layout (5+ awards) and flex layout (5 or fewer awards).
+- CDN host comes from `bunnycdn_static_host`; if not configured, images use WordPress URL with optimizer parameters.
+- Helper function located in `includes/bunnycdn.php`; template in `template-parts/awards-nominations.php`.
+
 ## Render Blocking Optimizations (November 2025)
 
 - Critical above-the-fold rules live in `assets/css/critical.css` and are inlined via the `flexpress-critical-inline` handle; keep the file lean and ASCII-only.

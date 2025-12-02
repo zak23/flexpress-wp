@@ -339,26 +339,27 @@ function flexpress_get_founder_feature_permissions()
     }
 
     // Migrate from old format
-    $old_access = get_option('flexpress_founder_feature_access', array());
+    $old_access = get_option('flexpress_founder_feature_access', null);
     if (!is_array($old_access)) {
         $old_access = array();
     }
 
-    // Convert old format to new format (write access implies read access)
-    $permissions = array();
     $restricted = flexpress_get_restricted_features();
+    $permissions = array();
+
+    // If no old access exists (brand new install), default to full read/write to avoid lockout
+    $default_full_access = empty($old_access);
+
     foreach ($restricted as $feature_slug) {
-        $has_access = in_array($feature_slug, $old_access, true);
+        $has_access = $default_full_access || in_array($feature_slug, $old_access, true);
         $permissions[$feature_slug] = array(
             'read'  => $has_access,
             'write' => $has_access,
         );
     }
 
-    // Save migrated format
-    if (!empty($old_access)) {
-        update_option('flexpress_founder_feature_permissions', $permissions, false);
-    }
+    // Save migrated/default format so future loads are faster
+    update_option('flexpress_founder_feature_permissions', $permissions, false);
 
     return $permissions;
 }
@@ -607,40 +608,56 @@ function flexpress_filter_feature_capabilities($allcaps, $caps, $args)
         return $allcaps;
     }
 
-    // Check if user is administrator - check both allcaps and user object to be safe
+    // Determine administrator status (check both allcaps and user object to avoid recursion)
     $is_admin = !empty($allcaps['manage_options']);
-    if (!$is_admin && $user_id) {
+    if (!$is_admin) {
         $user = get_user_by('ID', $user_id);
-        $is_admin = $user && $user->has_cap('manage_options');
+        $is_admin = $user instanceof WP_User && $user->has_cap('manage_options');
     }
 
-    // Administrators always have founder capability (can always see FlexPress menu)
+    // Cache founder list and permissions to avoid repeated lookups
+    static $cached_founders = null;
+    static $cached_permissions = null;
+
+    if ($cached_founders === null) {
+        $cached_founders = flexpress_get_founder_user_ids();
+    }
+
+    if ($cached_permissions === null) {
+        $cached_permissions = flexpress_get_founder_feature_permissions();
+    }
+
+    $is_listed_founder = in_array($user_id, $cached_founders, true);
+
+    // Administrators or listed founders get the founder capability (menu visibility)
     $founder_cap = flexpress_get_founder_capability();
     if (in_array($founder_cap, $caps, true)) {
-        // Grant to administrators
-        if ($is_admin) {
-            $allcaps[$founder_cap] = true;
-        }
-        // Grant to founders (check both capability and user ID list)
-        elseif (flexpress_user_is_founder($user_id)) {
+        if ($is_admin || $is_listed_founder) {
             $allcaps[$founder_cap] = true;
         }
     }
 
-    // Check if this is a feature capability check
+    // Grant feature capabilities
     foreach ($caps as $cap) {
-        if (strpos($cap, 'flexpress_access_') === 0) {
-            // Administrators always get all feature capabilities
-            if ($is_admin) {
-                $allcaps[$cap] = true;
-                continue;
-            }
-            
-            // For non-admins, check feature access
-            $feature_slug = str_replace('flexpress_access_', '', $cap);
-            if (flexpress_user_can_access_feature($feature_slug, $user_id)) {
-                $allcaps[$cap] = true;
-            }
+        if (strpos($cap, 'flexpress_access_') !== 0) {
+            continue;
+        }
+
+        // Administrators always have full access
+        if ($is_admin) {
+            $allcaps[$cap] = true;
+            continue;
+        }
+
+        // Non-admin founders need read access
+        if (!$is_listed_founder) {
+            continue;
+        }
+
+        $feature_slug = str_replace('flexpress_access_', '', $cap);
+        $has_read = !empty($cached_permissions[$feature_slug]['read']);
+        if ($has_read) {
+            $allcaps[$cap] = true;
         }
     }
 

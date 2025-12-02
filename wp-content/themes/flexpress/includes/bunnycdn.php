@@ -462,3 +462,47 @@ function flexpress_get_primary_video_id($post_id = null)
 
     return null;
 }
+
+/**
+ * Get BunnyCDN optimized image URL using Image Optimizer
+ * 
+ * @param string $image_url The original image URL
+ * @param array $params Optimization parameters (width, height, format, quality)
+ * @return string Optimized image URL
+ */
+function flexpress_get_bunnycdn_optimized_image_url($image_url, $params = array())
+{
+    if (empty($image_url)) {
+        return '';
+    }
+
+    // Default parameters
+    $default_params = array(
+        'format' => 'webp',
+        'quality' => 80,
+    );
+
+    // Merge user params with defaults
+    $optimizer_params = array_merge($default_params, $params);
+
+    // Build query string from parameters
+    $query_string = http_build_query($optimizer_params);
+
+    // Only replace hostname if CDN is configured
+    $video_settings = get_option('flexpress_video_settings', array());
+    $cdn_host = !empty($video_settings['bunnycdn_static_host']) ? $video_settings['bunnycdn_static_host'] : '';
+    
+    if (!empty($cdn_host)) {
+        // Remove protocol if present
+        $cdn_host = preg_replace('#^https?://#', '', $cdn_host);
+        $source_host = parse_url($image_url, PHP_URL_HOST);
+        if (!empty($source_host)) {
+            $image_url = str_replace($source_host, $cdn_host, $image_url);
+        }
+    }
+
+    // Append optimizer parameters to URL (works with or without CDN)
+    $optimized_url = $image_url . (strpos($image_url, '?') === false ? '?' : '&') . $query_string;
+
+    return $optimized_url;
+}

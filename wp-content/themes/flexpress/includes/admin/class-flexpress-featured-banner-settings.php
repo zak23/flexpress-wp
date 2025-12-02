@@ -243,3 +243,5 @@ if (is_admin()) {
     new FlexPress_Featured_Banner_Settings();
 }
 
+
+

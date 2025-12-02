@@ -27,6 +27,25 @@ FlexPress is designed specifically for content websites (primarily adult content
 - Host is swapped to the Static CDN host set in FlexPress Video settings (`bunnycdn_static_host`) if configured; otherwise uses WordPress URL with optimizer parameters.
 - Affects: `template-parts/casting-section.php`.
 
+### Model Card Images – Bunny Image Optimizer (November 2025)
+
+- Model card images now use BunnyCDN Image Optimizer via `flexpress_get_bunnycdn_optimized_image_url()` helper function.
+- Optimization parameters: `width=248&height=331&format=webp&quality=60` (matches CSS aspect-ratio 3/4 and desktop display size).
+- Images are cropped/resized to exact 3/4 aspect ratio before delivery, preventing browser-side cropping with `object-fit: cover`.
+- Replaced `wp_get_attachment_image()` with optimized URL generation for better performance and CDN delivery.
+- Maintains responsive `sizes` attribute: `(max-width: 768px) 184px, 368px`.
+- CDN host is taken from FlexPress Video settings (`bunnycdn_static_host`); if not configured, images use WordPress URL with optimizer parameters.
+- Affects: `template-parts/content-model/card.php` and helper `flexpress_get_bunnycdn_optimized_image_url()` in `includes/bunnycdn.php`.
+
+### Awards Section Images – Bunny Image Optimizer (November 2025)
+
+- Awards section images now use BunnyCDN Image Optimizer via `flexpress_get_bunnycdn_optimized_image_url()` helper function.
+- Optimization parameters: `width=92&height=60&format=webp&quality=60` (matches display size 92x60).
+- Images are cropped/resized to exact dimensions before delivery for consistent display in both carousel and subtle layouts.
+- Applied to both carousel layout (5+ awards) and flex layout (5 or fewer awards).
+- CDN host is taken from FlexPress Video settings (`bunnycdn_static_host`); if not configured, images use WordPress URL with optimizer parameters.
+- Affects: `template-parts/awards-nominations.php` and helper `flexpress_get_bunnycdn_optimized_image_url()` in `includes/bunnycdn.php`.
+
 ### Join Now CTA – Fallback Image Removed (November 2025)
 
 - The Join Now CTA no longer uses a default/fallback image.

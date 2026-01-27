@@ -52,6 +52,63 @@ Run the permission fix script whenever you:
 - Install new plugins or themes
 - Update existing files through the web interface
 
+---
+
+## Theme Update Failed
+
+If you see this error when updating the theme from WordPress admin:
+
+> **The update cannot be installed because some files could not be copied. This is usually due to inconsistent file permissions.**
+
+This happens because:
+- The theme directory is owned by your local user (UID 1000) so you can edit files
+- WordPress runs as `www-data` (UID 33) inside the container
+- WordPress cannot delete/overwrite files it doesn't own when performing the update
+
+### Solution
+
+**Step 1: Prepare for update**
+
+Run the prepare script to make the theme writable by WordPress:
+
+```bash
+./prepare-theme-for-update.sh
+```
+
+**Step 2: Run the theme update**
+
+Go to WordPress admin → Appearance → Themes and upload/update the theme. It should succeed now.
+
+**Step 3: Restore editing permissions**
+
+Run the fix script to restore local editing:
+
+```bash
+./fix-permissions-docker.sh
+```
+
+### Manual Alternative
+
+If you prefer to do it manually:
+
+```bash
+# Stop containers
+docker-compose down
+
+# Make theme writable by WordPress
+docker run --rm -v "$(pwd)/wp-content:/wp-content" alpine:latest sh -c "chown -R 33:33 /wp-content/themes/flexpress/"
+
+# Start containers
+docker-compose up -d
+
+# Now run the theme update in WordPress admin...
+
+# After update, restore editing permissions
+./fix-permissions-docker.sh
+```
+
+---
+
 ## Access URLs
 - WordPress: http://localhost:8085
 - phpMyAdmin: http://localhost:8086

@@ -9,6 +9,8 @@ define('DISALLOW_FILE_EDIT', true);
 
 These are already set in `.env` for this project. Access wp-admin at your host IP on port 8085 (not localhost), e.g. `http://YOUR-IP:8085/wp-admin/`.
 
+If in-dashboard theme update fails with "files could not be copied", run `./prepare-theme-for-update.sh`, retry the update, then run `./fix-permissions-docker.sh`. See [PERMISSIONS_FIX.md](PERMISSIONS_FIX.md) for details.
+
 # FlexPress WordPress Project
 
 A modern WordPress website running in Docker containers with MySQL database and phpMyAdmin for database management.

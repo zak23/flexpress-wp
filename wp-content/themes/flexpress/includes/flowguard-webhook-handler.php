@@ -1039,38 +1039,67 @@ function flexpress_flowguard_handle_subscription_extend($payload) {
     
     // Get current membership status - DO NOT change the status, only update dates
     $current_status = flexpress_get_membership_status($user_id);
+    $current_next_rebill = get_user_meta($user_id, 'next_rebill_date', true);
+    $subscription_type = $payload['subscriptionType'] ?? '';
+    $next_charge_on = $payload['nextChargeOn'] ?? '';
+    $is_recurring = $subscription_type === 'recurring';
+    $ignored_recurring_extend = false;
     
     // Handle subscription type and phase
-    if (!empty($payload['subscriptionType'])) {
-        update_user_meta($user_id, 'flowguard_subscription_type', $payload['subscriptionType']);
+    if (!empty($subscription_type)) {
+        update_user_meta($user_id, 'flowguard_subscription_type', $subscription_type);
     }
     if (!empty($payload['subscriptionPhase'])) {
         update_user_meta($user_id, 'flowguard_subscription_phase', $payload['subscriptionPhase']);
     }
     
     // Update dates based on subscription type
-    // nextChargeOn is when Flowguard will initiate the next rebill
-    if (!empty($payload['nextChargeOn'])) {
-        update_user_meta($user_id, 'next_rebill_date', $payload['nextChargeOn']);
-        error_log('Flowguard Webhook: Updated next_rebill_date to ' . $payload['nextChargeOn'] . ' for user ' . $user_id . ' (extend)');
-    }
-    
-    if ($payload['subscriptionType'] === 'one-time' && !empty($payload['expiresOn'])) {
-        update_user_meta($user_id, 'membership_expires', $payload['expiresOn']);
+    // For recurring: do NOT advance next_rebill_date on extend; treat as retry notification only
+    if ($is_recurring) {
+        if (!empty($next_charge_on)) {
+            // Persist attempted next charge for audit but keep current next_rebill_date
+            update_user_meta($user_id, 'flowguard_last_extend_attempt_next_charge', $next_charge_on);
+            error_log('Flowguard Webhook: Recurring extend received - kept existing next_rebill_date (' . ($current_next_rebill ?: 'unset') . '), attempted nextChargeOn ' . $next_charge_on . ' for user ' . $user_id);
+            $ignored_recurring_extend = true;
+        } else {
+            error_log('Flowguard Webhook: Recurring extend received with no nextChargeOn for user ' . $user_id);
+        }
+    } else {
+        // nextChargeOn is when Flowguard will initiate the next rebill for non-recurring (legacy) flows
+        if (!empty($next_charge_on)) {
+            update_user_meta($user_id, 'next_rebill_date', $next_charge_on);
+            error_log('Flowguard Webhook: Updated next_rebill_date to ' . $next_charge_on . ' for user ' . $user_id . ' (extend)');
+        }
+        
+        if ($subscription_type === 'one-time' && !empty($payload['expiresOn'])) {
+            update_user_meta($user_id, 'membership_expires', $payload['expiresOn']);
+        }
     }
     
     // Prepare activity description with new date
-    $description = 'Subscription extended via Flowguard (status preserved: ' . $current_status . ')';
+    $description = 'Subscription extend via Flowguard (status preserved: ' . $current_status . ')';
     
     // Add new date information based on subscription type
-    if ($payload['subscriptionType'] === 'recurring' && !empty($payload['nextChargeOn'])) {
-        $next_charge_date = date('M j, Y', strtotime($payload['nextChargeOn']));
-        $description .= ' - Next charge: ' . $next_charge_date;
-    } elseif ($payload['subscriptionType'] === 'one-time' && !empty($payload['expiresOn'])) {
+    if ($is_recurring) {
+        if (!empty($next_charge_on)) {
+            $description .= ' - Recurring extend treated as rebill retry; kept next_rebill_date at ' . ($current_next_rebill ?: 'unset') . ', ignored requested ' . date('M j, Y', strtotime($next_charge_on));
+        } else {
+            $description .= ' - Recurring extend with no nextChargeOn provided';
+        }
+    } elseif ($subscription_type === 'one-time' && !empty($payload['expiresOn'])) {
         $expiration_date = date('M j, Y', strtotime($payload['expiresOn']));
         $description .= ' - New expiration: ' . $expiration_date;
+    } elseif (!empty($next_charge_on)) {
+        $next_charge_date = date('M j, Y', strtotime($next_charge_on));
+        $description .= ' - Next charge: ' . $next_charge_date;
     }
     
+    // Flag payload for downstream notifications/embeds so they know the date was ignored
+    if ($ignored_recurring_extend) {
+        $payload['extendIgnored'] = true;
+        $payload['currentNextRebillDate'] = $current_next_rebill;
+    }
+
     // Log activity
     flexpress_flowguard_log_activity(
         $user_id,

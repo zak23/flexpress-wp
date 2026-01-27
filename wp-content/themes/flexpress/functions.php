@@ -5,7 +5,7 @@
  */
 
 // Define theme constants
-define('FLEXPRESS_VERSION', '1.0.24');
+define('FLEXPRESS_VERSION', '1.0.26');
 define('FLEXPRESS_PATH', get_template_directory());
 define('FLEXPRESS_URL', get_template_directory_uri());
 
@@ -27,6 +27,7 @@ add_action('init', 'flexpress_increase_upload_limits');
 
 // Include required files
 require_once FLEXPRESS_PATH . '/includes/flexpress-permissions.php';
+require_once FLEXPRESS_PATH . '/flexpress-redis-cache.php';
 require_once FLEXPRESS_PATH . '/includes/post-types.php';
 require_once FLEXPRESS_PATH . '/includes/bunnycdn.php';
 require_once FLEXPRESS_PATH . '/includes/gallery-system.php';
@@ -1311,12 +1312,20 @@ add_action('wp_ajax_flexpress_test_settings', 'flexpress_test_settings_save');
  */
 function flexpress_sanitize_general_settings($input)
 {
-    error_log('FlexPress Sanitize: Function called with input keys: ' . implode(', ', array_keys($input)));
-    error_log('FlexPress Sanitize: Full input data: ' . print_r($input, true));
+    if (!is_array($input)) {
+        return get_option('flexpress_general_settings', array());
+    }
+
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('FlexPress Sanitize: Function called with input keys: ' . implode(', ', array_keys($input)));
+        error_log('FlexPress Sanitize: Full input data: ' . print_r($input, true));
+    }
 
     // Start from existing settings and only overwrite provided keys
     $current = get_option('flexpress_general_settings', array());
-    error_log('FlexPress Sanitize: Current settings from DB: ' . print_r($current, true));
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('FlexPress Sanitize: Current settings from DB: ' . print_r($current, true));
+    }
     $sanitized = array();
 
     // Sanitize site title
@@ -1660,15 +1669,11 @@ function flexpress_sanitize_general_settings($input)
         $sanitized['featured_banner_url'] = esc_url_raw($input['featured_banner_url']);
     }
 
-    // Log the complete sanitized data for debugging
-    error_log('FlexPress General Settings: Complete sanitized (delta) data: ' . print_r($sanitized, true));
-    error_log('FlexPress General Settings: Current data before merge: ' . print_r($current, true));
-
     // Merge with current so non-posted keys persist
     $merged = array_merge($current, $sanitized);
-    error_log('FlexPress General Settings: Merged result (what will be saved): ' . print_r($merged, true));
-    error_log('FlexPress General Settings: Merged accent_color value: ' . (isset($merged['accent_color']) ? $merged['accent_color'] : 'NOT SET'));
-
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('FlexPress General Settings: Merged result accent_color: ' . (isset($merged['accent_color']) ? $merged['accent_color'] : 'NOT SET'));
+    }
     return $merged;
 }
 
@@ -1768,14 +1773,12 @@ function flexpress_flush_rewrite_rules_on_extras_change($old_value, $value, $opt
 add_action('update_option_flexpress_general_settings', 'flexpress_flush_rewrite_rules_on_extras_change', 10, 3);
 
 /**
- * Debug hook to track accent color saves
+ * Debug hook to track accent color saves (WP_DEBUG only)
  */
 add_action('update_option_flexpress_general_settings', function ($old_value, $value, $option) {
-    error_log('FlexPress Accent Color Save Hook: update_option triggered');
-    error_log('FlexPress Accent Color Save Hook: Old value accent_color: ' . (isset($old_value['accent_color']) ? $old_value['accent_color'] : 'NOT SET'));
-    error_log('FlexPress Accent Color Save Hook: New value accent_color: ' . (isset($value['accent_color']) ? $value['accent_color'] : 'NOT SET'));
-    error_log('FlexPress Accent Color Save Hook: Full old value: ' . print_r($old_value, true));
-    error_log('FlexPress Accent Color Save Hook: Full new value: ' . print_r($value, true));
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('FlexPress Accent Color Save Hook: accent_color ' . (isset($old_value['accent_color']) ? $old_value['accent_color'] : 'NOT SET') . ' -> ' . (isset($value['accent_color']) ? $value['accent_color'] : 'NOT SET'));
+    }
 }, 5, 3);
 
 /**

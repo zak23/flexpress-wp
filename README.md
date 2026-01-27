@@ -405,6 +405,10 @@ cd /path/to/flexpress
 
 FlexPress is fully containerized and ready for deployment to multiple sites. See [DOCKER_DEPLOYMENT_GUIDE.md](docs/DOCKER_DEPLOYMENT_GUIDE.md) for complete deployment instructions.
 
+### Theme portability
+
+All FlexPress code lives in `wp-content/themes/flexpress/`. Do not deploy or use `wp-content/plugins/flexpress/` — the theme is self-contained for portability. Redis object cache is **optional and off by default**; the theme loads `flexpress-redis-cache.php` but only replaces the object cache when `define('WP_REDIS_ENABLED', true)` is set in `wp-config.php`. To deploy, copy or extract only the theme folder; nothing else is required outside the theme.
+
 ## 🔧 Troubleshooting
 
 ### Model Profiles – Manual Age and Separate Measurements (October 2025)
@@ -443,7 +447,7 @@ The `.env` file includes automatic URL detection for local development environme
 
 ### Sticky User Meta / Membership State Appearing Outdated (October 2025)
 
-If membership status, PPV access, or other user meta appears "stuck" after login/logout or payments, this was caused by persistent Redis object caching of `user_meta`.
+If membership status, PPV access, or other user meta appears "stuck" after login/logout or payments (and Redis object cache is enabled), this can be caused by persistent Redis object caching of `user_meta`.
 
 Fix implemented:
 
@@ -478,7 +482,7 @@ flexpress/
 | WordPress  | flexpress_wordpress  | 8085            | Main WordPress application |
 | MySQL      | flexpress_mysql      | 3306 (internal) | Database server            |
 | phpMyAdmin | flexpress_phpmyadmin | 8086            | Database administration    |
-| Redis      | flexpress_redis      | 6379 (internal) | Object cache server        |
+| Redis      | flexpress_redis      | 6379 (internal) | Optional object cache (enable with WP_REDIS_ENABLED) |
 
 ### 🚀 Technology Stack
 
@@ -506,7 +510,7 @@ flexpress/
 
 - **PHP**: 8.3.26 (Latest stable version with performance improvements)
 - **MySQL**: 8.0 (Latest stable version)
-- **Redis**: 7-alpine (Object caching and session storage)
+- **Redis**: 7-alpine (Optional object cache; enable with `WP_REDIS_ENABLED` in wp-config)
 - **Apache**: 2.4 (Web server with optimized configuration)
 
 ## ⚡ Performance & Caching
@@ -534,7 +538,7 @@ FlexPress implements a multi-layer caching strategy to ensure optimal performanc
 
 #### Database & Query Optimization
 
-- **Redis Caching**: Object cache for database queries
+- **Redis Caching**: Optional object cache (off by default; set `WP_REDIS_ENABLED` in wp-config to enable)
 - **Query Optimization**: Reduced unnecessary database calls
 - **Post Limits**: Optimized posts per page for better performance
 - **Meta Query Optimization**: Efficient episode and model queries
@@ -552,14 +556,14 @@ FlexPress implements a multi-layer caching strategy to ensure optimal performanc
 1. **Caddy Reverse Proxy** - Adds HTTP caching headers
 2. **Apache Configuration** - Server-level caching directives
 3. **WordPress Headers** - PHP-level caching headers
-4. **Redis Object Cache** - Persistent in-memory object caching
+4. **Redis Object Cache** (optional) - Off by default. Enable with `define('WP_REDIS_ENABLED', true);` in wp-config.php. When disabled, WordPress uses its default in-memory object cache. When enabled, Redis is used if the PHP Redis extension and Redis server are available.
 5. **Bunny Stream Integration** - CDN caching for media assets
 
 #### 📊 Cache Configuration
 
 - **Static Assets**: 1 year cache (CSS, JS, images, fonts)
 - **HTML Pages**: 1 hour cache (dynamic content)
-- **Object Cache**: Persistent Redis caching (database queries, objects)
+- **Object Cache**: Redis optional (enable via WP_REDIS_ENABLED); default in-memory when disabled
 - **Video Content**: Token-based authentication with 1-hour expiry
 - **Thumbnails**: 12-hour cache (configurable)
 
@@ -578,7 +582,7 @@ WordPress now properly detects caching with these headers:
 
 - **Server Response Time**: 258ms (optimized)
 - **Cache Headers**: All required headers present
-- **Object Cache**: Redis persistent caching active
+- **Object Cache**: Redis used when WP_REDIS_ENABLED; otherwise default object cache
 - **Static Assets**: Long-term caching enabled
 - **Bandwidth**: Reduced through proper caching
 
@@ -842,6 +846,15 @@ flexpress_display_cf7_form('content_removal');
 - `includes/contact-form-7-templates.php` - Form templates and creation
 - `includes/contact-form-7-discord-integration.php` - Discord notifications
 - `page-templates/contact.php` - Contact page template
+
+**Email Address Management:**
+
+- Forms are auto-created with email addresses from FlexPress Contact Settings
+- Email addresses can be manually edited in Contact Form 7 admin without being overwritten
+- Form creation/update does not run in the admin (so manual edits to mail recipient, etc. are preserved)
+- Forms are created on first frontend load when missing (e.g. when visiting the contact page)
+- Existing forms never have their `_mail` / `_mail_2` meta overwritten on update (preserves custom recipient addresses set in CF7)
+- To update email addresses globally, use `FlexPress → Contact & Social` settings
 
 **Form Detection:**
 
@@ -1221,6 +1234,7 @@ FlexPress now uses **Flowguard** as the primary payment processing system, repla
 - **Admin Dashboard**: Complete payment management interface
 - **Refund/Chargeback Protection**: Automatic access revocation and user banning
 - **Email Blacklist System**: Prevents refund/chargeback users from re-registering
+- **Recurring Extend Protection (Dec 2025)**: Flowguard `extend` postbacks for recurring subscriptions are treated as rebill retries—`next_rebill_date` is preserved (no free access extension). One-time extends continue to update expiration/next charge.
 
 #### Flowguard Configuration
 
@@ -2635,7 +2649,7 @@ Episode cards throughout the site automatically display appropriate access indic
 
 ### Performance Optimization
 
-- **Cached Access Checks**: Redis caching for access validation
+- **Cached Access Checks**: Object cache for access validation (Redis when enabled, otherwise default)
 - **Conditional Loading**: Only load pricing logic when needed
 - **Efficient Queries**: Optimized database queries for access checks
 - **Lazy Loading**: Defer access checks until necessary

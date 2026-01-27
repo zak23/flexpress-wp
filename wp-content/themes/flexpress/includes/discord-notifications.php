@@ -441,9 +441,17 @@ class FlexPress_Discord_Notifications
     public function create_subscription_extend_embed($payload, $user_id)
     {
         $user_display_name = flexpress_get_user_display_name($user_id);
+        $subscription_type = $payload['subscriptionType'] ?? 'unknown';
+        $is_recurring = $subscription_type === 'recurring';
+        $extend_ignored = !empty($payload['extendIgnored']) && $is_recurring;
+        $attempted_next_charge = $payload['nextChargeOn'] ?? '';
+        $current_next_rebill = $payload['currentNextRebillDate'] ?? '';
+        $title = $extend_ignored
+            ? '🔄 Rebill Retry Scheduled (No Access Extension)'
+            : '🔄 Subscription Extended';
 
         $embed = [
-            'title' => '🔄 Subscription Extended',
+            'title' => $title,
             'color' => 0x00bfff, // Deep Sky Blue
             'fields' => [
                 [
@@ -457,28 +465,38 @@ class FlexPress_Discord_Notifications
                     'inline' => true
                 ],
                 [
-                    'name' => 'Amount',
-                    'value' => $payload['priceCurrency'] . ' ' . $payload['priceAmount'],
-                    'inline' => true
-                ],
-                [
                     'name' => 'Subscription Type',
-                    'value' => ucfirst($payload['subscriptionType'] ?? 'unknown'),
-                    'inline' => true
-                ],
-                [
-                    'name' => 'Transaction ID',
-                    'value' => '`' . $payload['transactionId'] . '`',
-                    'inline' => true
-                ],
-                [
-                    'name' => 'Sale ID',
-                    'value' => '`' . $payload['saleId'] . '`',
+                    'value' => ucfirst($subscription_type),
                     'inline' => true
                 ]
             ],
             'timestamp' => date('c')
         ];
+
+        // Optional financial identifiers if present
+        if (!empty($payload['priceCurrency']) && isset($payload['priceAmount'])) {
+            $embed['fields'][] = [
+                'name' => 'Amount',
+                'value' => $payload['priceCurrency'] . ' ' . $payload['priceAmount'],
+                'inline' => true
+            ];
+        }
+
+        if (!empty($payload['transactionId'])) {
+            $embed['fields'][] = [
+                'name' => 'Transaction ID',
+                'value' => '`' . $payload['transactionId'] . '`',
+                'inline' => true
+            ];
+        }
+
+        if (!empty($payload['saleId'])) {
+            $embed['fields'][] = [
+                'name' => 'Sale ID',
+                'value' => '`' . $payload['saleId'] . '`',
+                'inline' => true
+            ];
+        }
 
         // Build footer with optional icon
         $footer = ['text' => $this->site_name . ' • Flowguard'];
@@ -498,17 +516,32 @@ class FlexPress_Discord_Notifications
             ];
         }
 
-        // Add next charge date for recurring subscriptions
-        if ($payload['subscriptionType'] ?? 'unknown' === 'recurring' && !empty($payload['nextChargeOn'])) {
-            $embed['fields'][] = [
-                'name' => 'Next Charge',
-                'value' => date('M j, Y', strtotime($payload['nextChargeOn'])),
-                'inline' => true
-            ];
+        // Add next charge info for recurring subscriptions
+        if ($is_recurring) {
+            if ($extend_ignored) {
+                $embed['fields'][] = [
+                    'name' => 'Current Next Charge (kept)',
+                    'value' => $current_next_rebill ? date('M j, Y', strtotime($current_next_rebill)) : 'not set',
+                    'inline' => true
+                ];
+                if (!empty($attempted_next_charge)) {
+                    $embed['fields'][] = [
+                        'name' => 'Attempted Next Charge (ignored)',
+                        'value' => date('M j, Y', strtotime($attempted_next_charge)),
+                        'inline' => true
+                    ];
+                }
+            } elseif (!empty($attempted_next_charge)) {
+                $embed['fields'][] = [
+                    'name' => 'Next Charge',
+                    'value' => date('M j, Y', strtotime($attempted_next_charge)),
+                    'inline' => true
+                ];
+            }
         }
 
         // Add expiration date for one-time subscriptions
-        if (($payload['subscriptionType'] ?? 'unknown') === 'one-time' && isset($payload['expiresOn']) && !empty($payload['expiresOn'])) {
+        if ($subscription_type === 'one-time' && isset($payload['expiresOn']) && !empty($payload['expiresOn'])) {
             $embed['fields'][] = [
                 'name' => 'New Expiration',
                 'value' => date('M j, Y', strtotime($payload['expiresOn'])),
@@ -937,7 +970,12 @@ function flexpress_discord_notify_subscription_extend($payload, $user_id)
     $discord = new FlexPress_Discord_Notifications();
     $embed = $discord->create_subscription_extend_embed($payload, $user_id);
 
-    $result = $discord->send_notification($embed, '🔄 **Subscription extended!**', 'financial');
+    $is_recurring = ($payload['subscriptionType'] ?? '') === 'recurring';
+    $message = (!empty($payload['extendIgnored']) && $is_recurring)
+        ? '🔄 **Rebill retry scheduled (no access extension)**'
+        : '🔄 **Subscription extended!**';
+
+    $result = $discord->send_notification($embed, $message, 'financial');
     error_log('Discord Extend: Notification result: ' . ($result ? 'success' : 'failed'));
 }
 

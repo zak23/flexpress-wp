@@ -38,6 +38,10 @@ class Redis_Object_Cache {
     }
     
     private function connect() {
+        if (!extension_loaded('redis') || !class_exists('Redis')) {
+            $this->connected = false;
+            return;
+        }
         try {
             $this->redis = new Redis();
             $this->connected = $this->redis->connect(

@@ -2,7 +2,15 @@
 
 ## Overview
 
-FlexPress now includes Redis as a persistent object cache to significantly improve WordPress performance by caching database queries, object data, and computed results in memory.
+Redis object cache is **optional and off by default**. To enable it, add to `wp-config.php` (before "That's all, stop editing!"):
+
+```php
+define('WP_REDIS_ENABLED', true);
+```
+
+When disabled, WordPress uses its default in-memory object cache. No Redis server or PHP extension is required. When enabled, Redis is used if the PHP Redis extension is available and the Redis server is reachable.
+
+**Theme-only:** All FlexPress code, including Redis object cache, lives in `wp-content/themes/flexpress/`. The Redis cache is loaded by the theme from `flexpress-redis-cache.php` (required in `functions.php`). Do not deploy or use `wp-content/plugins/flexpress/` — the theme is self-contained for portability.
 
 ## Problem Solved
 
@@ -50,6 +58,8 @@ RUN pecl install redis && docker-php-ext-enable redis
 - **Full Redis API**: Complete feature set support
 - **Session Storage**: Can be used for PHP sessions
 - **Object Serialization**: Automatic PHP object handling
+
+**Requirements / Fallback:** The implementation checks for the extension at runtime (`extension_loaded('redis')` and `class_exists('Redis')`). If the Redis PHP extension is not loaded, Redis object cache is skipped and WordPress uses its default in-memory object cache, so the site continues to work without Redis.
 
 ### 3. WordPress Object Cache Drop-in
 

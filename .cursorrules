@@ -2,8 +2,9 @@ Always use IP instead of localhost
 Never use port 3000 (reserved for MCP tools)
 WordPress on port 8085; phpMyAdmin on 8086
 All theme work inside `wp-content/themes/flexpress/`
+No FlexPress code in `wp-content/plugins/` — everything is in the theme for portability. Redis object cache is optional; loaded from `flexpress-redis-cache.php` when `WP_REDIS_ENABLED` is true (off by default).
 Update `README.md` in project root and theme for any feature changes
-Cache: Redis enabled; logged-in HTML private/no-store; add `Vary: Cookie`; never cache HTML via service worker
+Cache: Redis optional (define WP_REDIS_ENABLED in wp-config to enable); logged-in HTML private/no-store; add `Vary: Cookie`; never cache HTML via service worker
 Use Puppeteer tests against the test site; prefer IPs for navigation and screenshots
 PHP indent: 4 spaces; JS: 2 spaces; CSS: 2 spaces
 Do not alter `.wakatime-project` once created
@@ -71,6 +72,7 @@ Bundled webfonts must use `font-display: swap`
 - **Credentials**: Same Shop ID and Signature Key work for both environments
 - **Settings**: Only Shop ID and Signature Key needed in WordPress settings
 - **Documentation**: Update README.md when modifying FlowGuard integration
+- **Recurring Extend Handling (Dec 2025)**: Flowguard `extend` postbacks for recurring subscriptions must NOT advance `next_rebill_date` or extend access; treat them as retry notices only. One-time extends continue to update expiration/next charge.
 
 ## FlexPress Admin Menu Organization Pattern
 
@@ -170,6 +172,16 @@ Bundled webfonts must use `font-display: swap`
   - Contact Form 7: Special CSS for checkboxes wrapped in `<p>` tags: `.form-check p` uses flexbox, `.form-check p br` hidden
 - Usage: Apply Bootstrap's `form-check`, `form-check-input`, and `form-check-label` classes
 - Documentation: Update README.md with checkbox styling implementation details
+
+## Contact Form 7 Email Preservation Pattern (January 2026)
+
+- **Templates**: Forms (contact, casting, support, content removal) are auto-created from `includes/contact-form-7-templates.php`
+- **Create-only for most forms**: Contact, support, and content removal forms only run their create logic once; if the form exists, the code returns early and never touches it
+- **Casting form update path**: The casting form has an update branch that refreshes `_form` (field structure) on every frontend load
+- **Mail settings preserved**: Existing forms never have their `_mail` / `_mail_2` meta overwritten on update; this preserves custom recipient addresses set in CF7 admin
+- **Admin bypass**: Form creation/update does not run when `is_admin()` is true, so CF7 admin edits are never overwritten during admin sessions
+- **Initial values**: New forms get initial email addresses from `flexpress_get_contact_email('contact')` or `flexpress_get_contact_email('support')` at creation time
+- **Global email changes**: To change email addresses globally for new forms, use FlexPress Contact & Social settings; existing forms must be edited in CF7 admin
 
 ## Plunk Newsletter & Lifecycle Integration (November 2025)
 

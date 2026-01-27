@@ -23,6 +23,15 @@ function flexpress_create_cf7_forms()
         return;
     }
 
+    // Never run in admin: Contact Form 7 saves forms via standard post save (post.php).
+    // Our previous skip logic could not reliably detect that, so manual edits (e.g. changing
+    // the mail recipient from contact@ to info@) were still overwritten by the casting form
+    // update logic or by init timing. Skipping in admin preserves all manual edits; forms
+    // are created on first frontend load via flexpress_display_cf7_form() when missing.
+    if (is_admin()) {
+        return;
+    }
+
     // Create Contact Form
     flexpress_create_contact_form();
 
@@ -289,14 +298,14 @@ function flexpress_create_casting_form()
 
     // Update existing form or create new one
     if ($existing_form) {
+        // Never overwrite _mail/_mail_2 on existing casting form so manual edits
+        // in CF7 admin (e.g. custom recipient addresses) are preserved.
+        unset($form_data['meta_input']['_mail']);
+        unset($form_data['meta_input']['_mail_2']);
         $form_data['ID'] = $existing_form->ID;
         $form_id = wp_update_post($form_data);
 
         if ($form_id && !is_wp_error($form_id)) {
-            // Update Contact Form 7 specific meta fields
-            update_post_meta($form_id, '_form', $form_content);
-            update_post_meta($form_id, '_mail', $form_data['meta_input']['_mail']);
-            update_post_meta($form_id, '_mail_2', $form_data['meta_input']['_mail_2']);
             return $form_id;
         }
     } else {

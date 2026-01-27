@@ -4,6 +4,8 @@
 
 FlexPress is designed specifically for content websites (primarily adult content) but can be adapted for any premium content platform. It includes comprehensive built-in integrations and management tools, eliminating the need for multiple plugins.
 
+**Theme portability:** All FlexPress code lives in this theme folder. Nothing is deployed to `wp-content/plugins/flexpress/`. Redis object cache is loaded from `flexpress-redis-cache.php` (required in `functions.php`). Deploy by copying or extracting only the theme folder.
+
 **Live Site:** zakspov.com (production site)  
 **Test Site:** zakspov.com (development data only)
 
@@ -283,6 +285,7 @@ Frontend template: `wp-content/themes/flexpress/single-model.php` renders these 
 - **Webhook Processing**: Real-time payment notifications and status updates
 - **Admin Interface**: Complete payment management and diagnostics
 - **Security**: PCI DSS compliance with 3D Secure support
+- **Recurring Extend Protection (Dec 2025)**: Flowguard `extend` postbacks for recurring subscriptions are treated as rebill retries only—`next_rebill_date` is not advanced and access is not extended. One-time extends still update expiration/next charge as usual.
 
 ### Verotel FlexPay (Legacy)
 

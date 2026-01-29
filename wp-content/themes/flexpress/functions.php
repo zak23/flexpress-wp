@@ -5,7 +5,7 @@
  */
 
 // Define theme constants
-define('FLEXPRESS_VERSION', '1.0.29');
+define('FLEXPRESS_VERSION', '1.0.35');
 define('FLEXPRESS_PATH', get_template_directory());
 define('FLEXPRESS_URL', get_template_directory_uri());
 
@@ -569,12 +569,7 @@ function flexpress_enqueue_scripts_and_styles()
         'isDebug' => (defined('WP_DEBUG') && WP_DEBUG)
     ));
 
-    // Enqueue login script on login page (but NOT on join page)
-    if (is_page_template('page-templates/login.php') && !is_page_template('page-templates/join.php')) {
-        wp_enqueue_script('flexpress-login', get_template_directory_uri() . '/assets/js/login.js', array('jquery'), wp_get_theme()->get('Version'), true);
-        // Don't defer login script - it needs jQuery immediately
-        wp_script_add_data('flexpress-login', 'defer', false);
-    }
+    // Note: login.js is enqueued via flexpress_ajax_login_init() which handles the login page template
 
     // Enqueue registration script on registration page (but NOT on join page)
     if (is_page_template('page-templates/register.php') && !is_page_template('page-templates/join.php')) {
@@ -2387,18 +2382,20 @@ function flexpress_render_duration_update_page()
  * Custom Login and Password Reset Functions
  */
 
-// Register AJAX login handler
+// Register AJAX login handler - only on login page template
 function flexpress_ajax_login_init()
 {
+    // Only load login.js on the login page template where the forms exist
+    if (!is_page_template('page-templates/login.php')) {
+        return;
+    }
+
     // Skip on join page - it has its own join script
-    // Skip on payment page - it doesn't need login.js and jQuery is deferred
-    if (is_page_template('page-templates/join.php') || is_page_template('page-templates/payment.php')) {
+    if (is_page_template('page-templates/join.php')) {
         return;
     }
 
     wp_register_script('flexpress-login', get_template_directory_uri() . '/assets/js/login.js', array('jquery'), '1.0', true);
-    // Don't defer login script - it needs jQuery immediately
-    wp_script_add_data('flexpress-login', 'defer', false);
 
     wp_localize_script('flexpress-login', 'ajax_login_object', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
@@ -4823,16 +4820,10 @@ function flexpress_check_episode_access($episode_id = null, $user_id = null, $fo
         $is_active_member = in_array($membership_status, ['active', 'cancelled']);
         $access_info['is_member'] = $is_active_member;
 
-        // DEBUG: Log the exact values being checked
-        error_log('FlexPress Access Debug [User ' . $user_id . ']: membership_status=' . var_export($membership_status, true) . ', is_active_member=' . var_export($is_active_member, true) . ', in_array_check=' . var_export(in_array($membership_status, ['active', 'cancelled']), true));
-
         // Check if user has purchased this episode
         $purchased_episode_meta = get_user_meta($user_id, 'purchased_episode_' . $episode_id, true);
         $ppv_purchases = get_user_meta($user_id, 'ppv_purchases', true) ?: [];
         $access_info['is_purchased'] = (bool) $purchased_episode_meta || in_array($episode_id, $ppv_purchases);
-
-        // DEBUG: Log purchase info
-        error_log('FlexPress Access Debug [User ' . $user_id . ']: purchased_meta=' . var_export($purchased_episode_meta, true) . ', ppv_purchases=' . var_export($ppv_purchases, true) . ', is_purchased=' . var_export($access_info['is_purchased'], true));
 
         // Log access check for debugging when forcing fresh
         if ($force_fresh) {

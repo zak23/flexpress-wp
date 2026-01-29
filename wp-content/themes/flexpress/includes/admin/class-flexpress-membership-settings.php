@@ -481,9 +481,10 @@ class FlexPress_Membership_Settings
             check_admin_referer('update_user_membership', 'membership_nonce');
 
             $user_id = intval($_POST['user_id']);
-            $membership_status = sanitize_text_field($_POST['membership_status']);
-            $subscription_type = sanitize_text_field($_POST['subscription_type']);
-            $next_rebill_date = sanitize_text_field($_POST['next_rebill_date']);
+            // Use isset to avoid undefined array key notices (subscription_type is display-only in the form)
+            $membership_status = isset($_POST['membership_status']) ? sanitize_text_field($_POST['membership_status']) : get_user_meta($user_id, 'membership_status', true);
+            $subscription_type = isset($_POST['subscription_type']) ? sanitize_text_field($_POST['subscription_type']) : get_user_meta($user_id, 'subscription_type', true);
+            $next_rebill_date = isset($_POST['next_rebill_date']) ? sanitize_text_field($_POST['next_rebill_date']) : '';
             $trial_expires_at = isset($_POST['trial_expires_at']) && !empty($_POST['trial_expires_at']) ? sanitize_text_field($_POST['trial_expires_at']) : '';
             $flowguard_subscriber_id = isset($_POST['flowguard_subscriber_id']) ? sanitize_text_field($_POST['flowguard_subscriber_id']) : '';
 
@@ -998,18 +999,18 @@ class FlexPress_Membership_Settings
             </tr>
 
             <?php if ($flowguard_webhook_last_payload): ?>
-            <tr>
-                <th><?php esc_html_e('Last Webhook Payload', 'flexpress'); ?></th>
-                <td>
-                    <details>
-                        <summary style="cursor: pointer; color: #2271b1; text-decoration: underline;"><?php esc_html_e('View JSON Payload', 'flexpress'); ?></summary>
-                        <pre style="background: #f0f0f1; padding: 15px; border: 1px solid #dcdcde; border-radius: 4px; overflow-x: auto; margin-top: 10px; max-height: 400px; overflow-y: auto;"><?php
-                            $payload_array = json_decode($flowguard_webhook_last_payload, true);
-                            echo esc_html(wp_json_encode($payload_array, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-                        ?></pre>
-                    </details>
-                </td>
-            </tr>
+                <tr>
+                    <th><?php esc_html_e('Last Webhook Payload', 'flexpress'); ?></th>
+                    <td>
+                        <details>
+                            <summary style="cursor: pointer; color: #2271b1; text-decoration: underline;"><?php esc_html_e('View JSON Payload', 'flexpress'); ?></summary>
+                            <pre style="background: #f0f0f1; padding: 15px; border: 1px solid #dcdcde; border-radius: 4px; overflow-x: auto; margin-top: 10px; max-height: 400px; overflow-y: auto;"><?php
+                                                                                                                                                                                                        $payload_array = json_decode($flowguard_webhook_last_payload, true);
+                                                                                                                                                                                                        echo esc_html(wp_json_encode($payload_array, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+                                                                                                                                                                                                        ?></pre>
+                        </details>
+                    </td>
+                </tr>
             <?php endif; ?>
         </table>
 
@@ -1018,46 +1019,46 @@ class FlexPress_Membership_Settings
         $postback_logs = get_user_meta($user_id, 'flowguard_postback_logs', true);
         if (!empty($postback_logs) && is_array($postback_logs)):
         ?>
-        <h2 style="margin-top: 30px;"><?php esc_html_e('Recent Postback Logs', 'flexpress'); ?></h2>
-        <p class="description"><?php esc_html_e('Last 50 postbacks received for this user', 'flexpress'); ?></p>
-        <table class="wp-list-table widefat striped" style="margin-top: 10px;">
-            <thead>
-                <tr>
-                    <th><?php esc_html_e('Timestamp', 'flexpress'); ?></th>
-                    <th><?php esc_html_e('Postback Type', 'flexpress'); ?></th>
-                    <th><?php esc_html_e('Order Type', 'flexpress'); ?></th>
-                    <th><?php esc_html_e('Subscription Type', 'flexpress'); ?></th>
-                    <th><?php esc_html_e('Subscription Phase', 'flexpress'); ?></th>
-                    <th><?php esc_html_e('Sale ID', 'flexpress'); ?></th>
-                    <th><?php esc_html_e('Transaction ID', 'flexpress'); ?></th>
-                    <th><?php esc_html_e('Next Charge', 'flexpress'); ?></th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach (array_reverse($postback_logs) as $log): ?>
+            <h2 style="margin-top: 30px;"><?php esc_html_e('Recent Postback Logs', 'flexpress'); ?></h2>
+            <p class="description"><?php esc_html_e('Last 50 postbacks received for this user', 'flexpress'); ?></p>
+            <table class="wp-list-table widefat striped" style="margin-top: 10px;">
+                <thead>
                     <tr>
-                        <td>
-                            <?php
-                            if (!empty($log['timestamp'])) {
-                                $utc_timestamp = strtotime($log['timestamp']);
-                                $site_time = $utc_timestamp + (get_option('gmt_offset') * HOUR_IN_SECONDS);
-                                echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $site_time));
-                            } else {
-                                echo '—';
-                            }
-                            ?>
-                        </td>
-                        <td><?php echo isset($log['postback_type']) ? esc_html(ucfirst($log['postback_type'])) : '—'; ?></td>
-                        <td><?php echo isset($log['order_type']) ? esc_html(ucfirst($log['order_type'])) : '—'; ?></td>
-                        <td><?php echo isset($log['subscription_type']) ? esc_html(ucfirst($log['subscription_type'])) : '—'; ?></td>
-                        <td><?php echo isset($log['subscription_phase']) ? esc_html(ucfirst($log['subscription_phase'])) : '—'; ?></td>
-                        <td><?php echo isset($log['sale_id']) ? esc_html($log['sale_id']) : '—'; ?></td>
-                        <td><?php echo isset($log['transaction_id']) ? esc_html($log['transaction_id']) : '—'; ?></td>
-                        <td><?php echo isset($log['next_charge_on']) ? esc_html($log['next_charge_on']) : '—'; ?></td>
+                        <th><?php esc_html_e('Timestamp', 'flexpress'); ?></th>
+                        <th><?php esc_html_e('Postback Type', 'flexpress'); ?></th>
+                        <th><?php esc_html_e('Order Type', 'flexpress'); ?></th>
+                        <th><?php esc_html_e('Subscription Type', 'flexpress'); ?></th>
+                        <th><?php esc_html_e('Subscription Phase', 'flexpress'); ?></th>
+                        <th><?php esc_html_e('Sale ID', 'flexpress'); ?></th>
+                        <th><?php esc_html_e('Transaction ID', 'flexpress'); ?></th>
+                        <th><?php esc_html_e('Next Charge', 'flexpress'); ?></th>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php foreach (array_reverse($postback_logs) as $log): ?>
+                        <tr>
+                            <td>
+                                <?php
+                                if (!empty($log['timestamp'])) {
+                                    $utc_timestamp = strtotime($log['timestamp']);
+                                    $site_time = $utc_timestamp + (get_option('gmt_offset') * HOUR_IN_SECONDS);
+                                    echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $site_time));
+                                } else {
+                                    echo '—';
+                                }
+                                ?>
+                            </td>
+                            <td><?php echo isset($log['postback_type']) ? esc_html(ucfirst($log['postback_type'])) : '—'; ?></td>
+                            <td><?php echo isset($log['order_type']) ? esc_html(ucfirst($log['order_type'])) : '—'; ?></td>
+                            <td><?php echo isset($log['subscription_type']) ? esc_html(ucfirst($log['subscription_type'])) : '—'; ?></td>
+                            <td><?php echo isset($log['subscription_phase']) ? esc_html(ucfirst($log['subscription_phase'])) : '—'; ?></td>
+                            <td><?php echo isset($log['sale_id']) ? esc_html($log['sale_id']) : '—'; ?></td>
+                            <td><?php echo isset($log['transaction_id']) ? esc_html($log['transaction_id']) : '—'; ?></td>
+                            <td><?php echo isset($log['next_charge_on']) ? esc_html($log['next_charge_on']) : '—'; ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         <?php endif; ?>
 
         <!-- Episode Access Management -->
@@ -1505,9 +1506,15 @@ class FlexPress_Membership_Settings
             return;
         }
 
-        update_user_meta($user_id, 'membership_status', sanitize_text_field($_POST['membership_status']));
-        update_user_meta($user_id, 'subscription_type', sanitize_text_field($_POST['subscription_type']));
-        update_user_meta($user_id, 'next_rebill_date', sanitize_text_field($_POST['next_rebill_date']));
+        // Use isset to avoid undefined array key notices
+        $membership_status = isset($_POST['membership_status']) ? sanitize_text_field($_POST['membership_status']) : get_user_meta($user_id, 'membership_status', true);
+        $subscription_type = isset($_POST['subscription_type']) ? sanitize_text_field($_POST['subscription_type']) : get_user_meta($user_id, 'subscription_type', true);
+        $next_rebill_date = isset($_POST['next_rebill_date']) ? sanitize_text_field($_POST['next_rebill_date']) : '';
+        $flowguard_subscriber_id = isset($_POST['flowguard_subscriber_id']) ? sanitize_text_field($_POST['flowguard_subscriber_id']) : '';
+
+        update_user_meta($user_id, 'membership_status', $membership_status);
+        update_user_meta($user_id, 'subscription_type', $subscription_type);
+        update_user_meta($user_id, 'next_rebill_date', $next_rebill_date);
 
         // Handle trial expiration date
         $old_trial_expires_at = get_user_meta($user_id, 'trial_expires_at', true);
@@ -1533,7 +1540,7 @@ class FlexPress_Membership_Settings
             delete_user_meta($user_id, 'trial_expires_at');
         }
 
-        update_user_meta($user_id, 'flowguard_subscriber_id', sanitize_text_field($_POST['flowguard_subscriber_id']));
+        update_user_meta($user_id, 'flowguard_subscriber_id', $flowguard_subscriber_id);
 
         // Clear user cache to ensure updated status is reflected immediately
         wp_cache_delete($user_id, 'user_meta');
@@ -1546,7 +1553,7 @@ class FlexPress_Membership_Settings
 
         // Force refresh of user meta
         delete_user_meta($user_id, 'membership_status');
-        update_user_meta($user_id, 'membership_status', sanitize_text_field($_POST['membership_status']));
+        update_user_meta($user_id, 'membership_status', $membership_status);
     }
 
     /**

@@ -600,22 +600,22 @@ function flexpress_enqueue_scripts_and_styles()
         'page-templates/cancel-membership.php',
         'page-templates/affiliate-signup.php'
     );
-    
-    $needs_jquery_immediately = is_page_template($jquery_dependent_templates) 
+
+    $needs_jquery_immediately = is_page_template($jquery_dependent_templates)
         || is_page_template('page-templates/page-home.php')  // Slick slider needs jQuery
         || is_page_template('page-templates/login.php');     // Login script needs jQuery
-    
+
     if ($needs_jquery_immediately) {
         // Force jQuery to load in HEAD (non-deferred) because these templates use jQuery directly
         wp_scripts()->add_data('jquery-core', 'group', 0);  // Move to head
         wp_scripts()->add_data('jquery', 'group', 0);  // Move to head
         wp_scripts()->add_data('jquery-migrate', 'group', 0);  // Move to head
-        
+
         // Remove defer from jQuery so it loads immediately
         wp_scripts()->add_data('jquery-core', 'defer', false);
         wp_scripts()->add_data('jquery', 'defer', false);
         wp_scripts()->add_data('jquery-migrate', 'defer', false);
-        
+
         // Dequeue global login/registration scripts to avoid conflicts (only on specific templates)
         if (is_page_template($jquery_dependent_templates)) {
             wp_dequeue_script('flexpress-login');
@@ -627,7 +627,7 @@ function flexpress_enqueue_scripts_and_styles()
     if (is_page_template('page-templates/join.php')) {
         // Enqueue with jQuery dependency and NO defer to ensure jQuery is available
         wp_enqueue_script('flexpress-join', get_template_directory_uri() . '/assets/js/join.js', array('jquery'), wp_get_theme()->get('Version'), true);
-        
+
         // Localize data for join page
         wp_localize_script('flexpress-join', 'flexpressJoin', array(
             'ajaxurl' => admin_url('admin-ajax.php'),
@@ -1173,7 +1173,7 @@ function flexpress_output_open_graph_tags()
 
     // Get theme options
     $theme_options = get_option('flexpress_general_settings', array());
-    
+
     // Get site name - prefer theme settings, fallback to WordPress site name
     $site_name = '';
     if (!empty($theme_options['site_title'])) {
@@ -1200,7 +1200,7 @@ function flexpress_output_open_graph_tags()
     $og_image_url = '';
     $og_image_width = '';
     $og_image_height = '';
-    
+
     $logo = flexpress_get_custom_logo('full', 'primary');
     if ($logo && !empty($logo['url'])) {
         $og_image_url = $logo['url'];
@@ -1223,7 +1223,7 @@ function flexpress_output_open_graph_tags()
     if (!empty($site_name)) {
         echo '<meta property="og:title" content="' . esc_attr($site_name) . '" />' . "\n";
     }
-    
+
     if (!empty($site_description)) {
         // Truncate description to ~200 chars for Open Graph (Discord limit is around 200)
         $og_description = $site_description;
@@ -1234,7 +1234,7 @@ function flexpress_output_open_graph_tags()
         }
         echo '<meta property="og:description" content="' . esc_attr($og_description) . '" />' . "\n";
     }
-    
+
     if (!empty($og_image_url)) {
         echo '<meta property="og:image" content="' . esc_url($og_image_url) . '" />' . "\n";
         if (!empty($og_image_width)) {
@@ -1244,21 +1244,21 @@ function flexpress_output_open_graph_tags()
             echo '<meta property="og:image:height" content="' . esc_attr($og_image_height) . '" />' . "\n";
         }
     }
-    
+
     echo '<meta property="og:url" content="' . esc_url($current_url) . '" />' . "\n";
     echo '<meta property="og:type" content="website" />' . "\n";
-    
+
     if (!empty($site_name)) {
         echo '<meta property="og:site_name" content="' . esc_attr($site_name) . '" />' . "\n";
     }
 
     // Output Twitter Card tags
     echo '<meta name="twitter:card" content="summary_large_image" />' . "\n";
-    
+
     if (!empty($site_name)) {
         echo '<meta name="twitter:title" content="' . esc_attr($site_name) . '" />' . "\n";
     }
-    
+
     if (!empty($site_description)) {
         // Truncate description for Twitter (280 char limit, but we'll use same as OG)
         $twitter_description = $site_description;
@@ -1269,7 +1269,7 @@ function flexpress_output_open_graph_tags()
         }
         echo '<meta name="twitter:description" content="' . esc_attr($twitter_description) . '" />' . "\n";
     }
-    
+
     if (!empty($og_image_url)) {
         echo '<meta name="twitter:image" content="' . esc_url($og_image_url) . '" />' . "\n";
     }
@@ -2394,7 +2394,7 @@ function flexpress_ajax_login_init()
     if (is_page_template('page-templates/join.php')) {
         return;
     }
-    
+
     wp_register_script('flexpress-login', get_template_directory_uri() . '/assets/js/login.js', array('jquery'), '1.0', true);
     // Don't defer login script - it needs jQuery immediately
     wp_script_add_data('flexpress-login', 'defer', false);
@@ -4808,7 +4808,7 @@ function flexpress_check_episode_access($episode_id = null, $user_id = null, $fo
     // Check if user is logged in
     $is_logged_in = $user_id > 0;
 
-    // Check membership status
+    // Check membership status using canonical function (applies trial expiration logic)
     $membership_status = '';
     $is_active_member = false;
     if ($is_logged_in) {
@@ -4817,7 +4817,8 @@ function flexpress_check_episode_access($episode_id = null, $user_id = null, $fo
             wp_cache_delete($user_id, 'user_meta');
         }
 
-        $membership_status = get_user_meta($user_id, 'membership_status', true);
+        // Use canonical function to get membership status (handles trial expiration)
+        $membership_status = flexpress_get_membership_status($user_id);
         $is_active_member = in_array($membership_status, ['active', 'cancelled']);
         $access_info['is_member'] = $is_active_member;
 
@@ -5064,11 +5065,12 @@ function flexpress_check_extras_access($extras_id = null, $user_id = null)
         return $access_info;
     }
 
-    // Check membership status
+    // Check membership status using canonical function (applies trial expiration logic)
     $membership_status = '';
     $is_active_member = false;
     if ($is_logged_in) {
-        $membership_status = get_user_meta($user_id, 'membership_status', true);
+        // Use canonical function to get membership status (handles trial expiration)
+        $membership_status = flexpress_get_membership_status($user_id);
         $is_active_member = in_array($membership_status, ['active', 'cancelled']);
         $access_info['is_member'] = $is_active_member;
 
@@ -5513,41 +5515,41 @@ function flexpress_get_extras_thumbnail($extras_id = null, $size = 'medium')
     if (flexpress_is_extras_gallery($extras_id)) {
         $gallery = flexpress_get_extras_gallery($extras_id);
         if (!empty($gallery)) {
-			$first_image = $gallery[0];
-			// Prefer BunnyCDN URLs with token; fall back to any legacy WP size keys if present
-			$optimized_url = '';
-			if (!empty($first_image['bunnycdn_thumbnail_url']) && ($size === 'thumbnail' || $size === 'medium')) {
-				$optimized_url = FlexPress_Gallery_System::generate_bunnycdn_token_url($first_image['bunnycdn_thumbnail_url'], 24);
-			} elseif (!empty($first_image['bunnycdn_url'])) {
-				$optimized_url = FlexPress_Gallery_System::generate_bunnycdn_token_url($first_image['bunnycdn_url'], 24);
-			} else {
-				// Legacy fallback if older arrays still contain WP-generated sizes
-				if ($size === 'thumbnail') {
-					$optimized_url = $first_image['thumbnail'] ?? '';
-				} elseif ($size === 'medium') {
-					$optimized_url = $first_image['medium'] ?? '';
-				} elseif ($size === 'large') {
-					$optimized_url = $first_image['large'] ?? '';
-				} else {
-					$optimized_url = $first_image['full'] ?? '';
-				}
-			}
+            $first_image = $gallery[0];
+            // Prefer BunnyCDN URLs with token; fall back to any legacy WP size keys if present
+            $optimized_url = '';
+            if (!empty($first_image['bunnycdn_thumbnail_url']) && ($size === 'thumbnail' || $size === 'medium')) {
+                $optimized_url = FlexPress_Gallery_System::generate_bunnycdn_token_url($first_image['bunnycdn_thumbnail_url'], 24);
+            } elseif (!empty($first_image['bunnycdn_url'])) {
+                $optimized_url = FlexPress_Gallery_System::generate_bunnycdn_token_url($first_image['bunnycdn_url'], 24);
+            } else {
+                // Legacy fallback if older arrays still contain WP-generated sizes
+                if ($size === 'thumbnail') {
+                    $optimized_url = $first_image['thumbnail'] ?? '';
+                } elseif ($size === 'medium') {
+                    $optimized_url = $first_image['medium'] ?? '';
+                } elseif ($size === 'large') {
+                    $optimized_url = $first_image['large'] ?? '';
+                } else {
+                    $optimized_url = $first_image['full'] ?? '';
+                }
+            }
 
-			if (!empty($optimized_url)) {
-				return array(
-					'url' => $optimized_url,
-					'alt' => $first_image['alt'] ?? '',
-					'title' => $first_image['title'] ?? ''
-				);
-			}
+            if (!empty($optimized_url)) {
+                return array(
+                    'url' => $optimized_url,
+                    'alt' => $first_image['alt'] ?? '',
+                    'title' => $first_image['title'] ?? ''
+                );
+            }
         }
     }
     // Check if it's video content
     elseif (flexpress_is_extras_video($extras_id)) {
         $video_id = flexpress_get_primary_extras_video_id($extras_id);
         if ($video_id) {
-			// Use helper with API-first + fallback behavior
-			$thumbnail_url = flexpress_get_bunnycdn_thumbnail_url($video_id);
+            // Use helper with API-first + fallback behavior
+            $thumbnail_url = flexpress_get_bunnycdn_thumbnail_url($video_id);
             if ($thumbnail_url) {
                 return array(
                     'url' => $thumbnail_url,
@@ -8135,13 +8137,13 @@ function flexpress_news_post_permalink($permalink, $post, $leavename)
             if (empty($post_slug)) {
                 $post_slug = sanitize_title($post->post_title);
             }
-            
+
             // Build new permalink with /news/ prefix
             $home_url = trailingslashit(home_url());
             $permalink = $home_url . 'news/' . $post_slug . '/';
         }
     }
-    
+
     return $permalink;
 }
 add_filter('post_link', 'flexpress_news_post_permalink', 10, 3);

@@ -5,7 +5,7 @@
  */
 
 // Define theme constants
-define('FLEXPRESS_VERSION', '1.0.27');
+define('FLEXPRESS_VERSION', '1.0.29');
 define('FLEXPRESS_PATH', get_template_directory());
 define('FLEXPRESS_URL', get_template_directory_uri());
 
@@ -4822,10 +4822,16 @@ function flexpress_check_episode_access($episode_id = null, $user_id = null, $fo
         $is_active_member = in_array($membership_status, ['active', 'cancelled']);
         $access_info['is_member'] = $is_active_member;
 
+        // DEBUG: Log the exact values being checked
+        error_log('FlexPress Access Debug [User ' . $user_id . ']: membership_status=' . var_export($membership_status, true) . ', is_active_member=' . var_export($is_active_member, true) . ', in_array_check=' . var_export(in_array($membership_status, ['active', 'cancelled']), true));
+
         // Check if user has purchased this episode
         $purchased_episode_meta = get_user_meta($user_id, 'purchased_episode_' . $episode_id, true);
         $ppv_purchases = get_user_meta($user_id, 'ppv_purchases', true) ?: [];
         $access_info['is_purchased'] = (bool) $purchased_episode_meta || in_array($episode_id, $ppv_purchases);
+
+        // DEBUG: Log purchase info
+        error_log('FlexPress Access Debug [User ' . $user_id . ']: purchased_meta=' . var_export($purchased_episode_meta, true) . ', ppv_purchases=' . var_export($ppv_purchases, true) . ', is_purchased=' . var_export($access_info['is_purchased'], true));
 
         // Log access check for debugging when forcing fresh
         if ($force_fresh) {

@@ -119,7 +119,36 @@ while (have_posts()):
     if ($video_id) {
         $video_url = flexpress_get_bunnycdn_video_url($video_id);
     }
+
+    // DEBUG: Log access check details to browser console and PHP error log
+    $debug_user_id = get_current_user_id();
+    $debug_membership_status = $debug_user_id ? flexpress_get_membership_status($debug_user_id) : 'not_logged_in';
+    $debug_raw_status = $debug_user_id ? get_user_meta($debug_user_id, 'membership_status', true) : 'not_logged_in';
+    $debug_info = array(
+        'user_id' => $debug_user_id,
+        'membership_status_canonical' => $debug_membership_status,
+        'membership_status_raw' => $debug_raw_status,
+        'has_access' => $has_access,
+        'is_member' => $is_active_member,
+        'is_purchased' => $access_info['is_purchased'],
+        'access_type' => $access_info['access_type'],
+        'video_id_loaded' => $video_id,
+        'full_video_id' => $full_video,
+        'trailer_video_id' => $trailer_video,
+        'episode_id' => get_the_ID(),
+    );
+    error_log('FlexPress Episode Access Debug: ' . json_encode($debug_info));
 ?>
+    <!-- DEBUG: Episode Access Info (timestamp: <?php echo time(); ?>) -->
+    <script>
+        console.log('%c[FlexPress Debug] Episode Access Check (<?php echo date('H:i:s'); ?>)', 'background: #ff5093; color: white; padding: 2px 6px; border-radius: 3px;');
+        console.table(<?php echo json_encode($debug_info); ?>);
+        console.log('Video being loaded:', '<?php echo esc_js($video_id); ?>', '(full_video: <?php echo esc_js($full_video); ?>, trailer: <?php echo esc_js($trailer_video); ?>)');
+        console.log('User Status:', '<?php echo esc_js($debug_membership_status); ?>', '| Has Access:', <?php echo $has_access ? 'true' : 'false'; ?>, '| Is Member:', <?php echo $is_active_member ? 'true' : 'false'; ?>, '| Is Purchased:', <?php echo $access_info['is_purchased'] ? 'true' : 'false'; ?>);
+        console.warn('If is_member=true but status=expired, check PHP error log for FlexPress Access Debug lines');
+    </script>
+    <?php
+    ?>
 
     <div class="episode-single">
         <div class="container pt-3 pb-5">

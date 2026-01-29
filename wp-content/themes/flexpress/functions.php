@@ -2391,7 +2391,8 @@ function flexpress_render_duration_update_page()
 function flexpress_ajax_login_init()
 {
     // Skip on join page - it has its own join script
-    if (is_page_template('page-templates/join.php')) {
+    // Skip on payment page - it doesn't need login.js and jQuery is deferred
+    if (is_page_template('page-templates/join.php') || is_page_template('page-templates/payment.php')) {
         return;
     }
 

@@ -286,6 +286,7 @@ Frontend template: `wp-content/themes/flexpress/single-model.php` renders these 
 - **Admin Interface**: Complete payment management and diagnostics
 - **Security**: PCI DSS compliance with 3D Secure support
 - **Recurring Extend Protection (Dec 2025)**: Flowguard `extend` postbacks for recurring subscriptions are treated as rebill retries only—`next_rebill_date` is not advanced and access is not extended. One-time extends still update expiration/next charge as usual.
+- **Payment Page Script Loading (Jan 2026)**: The payment template (`page-templates/payment.php`) does not load `login.js` to avoid jQuery timing issues (jQuery is deferred on this page). The Flowguard SDK is loaded dynamically and the page polls for `window.Flowguard` constructor availability before initializing the embedded form.
 
 ### Verotel FlexPay (Legacy)
 
@@ -324,7 +325,7 @@ Frontend template: `wp-content/themes/flexpress/single-model.php` renders these 
 - Events: `membership_started`, `membership_cancelled`, `membership_expired`, `user_banned`, `episode_published`, `news_published`, `post_unlocked`, `newsletter_subscribe_requested`, `newsletter_confirmed`, `newsletter_unsubscribed`
 - Helpers: `flexpress_create_user_promo()`, `flexpress_generate_trial_link()`
 - Suppression: Banned users auto‑unsubscribed; newsletter modal hidden for banned users
-- Files: 
+- Files:
   - `includes/integrations/plunk.php`
   - `includes/integrations/class-flexpress-plunk-service.php`
   - `includes/newsletter-endpoints.php`
@@ -963,22 +964,18 @@ Access the earnings dashboard at **FlexPress → Earnings** in the WordPress adm
 The dashboard categorizes all transactions into five types:
 
 1. **New Subscriptions** (🎉)
-
    - Initial subscription purchases
    - Cross-referenced: `order_type='subscription'` + `event_type='approved'`
 
 2. **Rebills** (🔄)
-
    - Recurring subscription payments
    - Identified by: `event_type='rebill'`
 
 3. **PPV Unlocks** (🔓)
-
    - One-time episode purchases
    - Cross-referenced: `order_type='purchase'` + `event_type='approved'`
 
 4. **Refunds** (💸)
-
    - Customer refund requests
    - Identified by: `event_type='credit'`
    - Displayed as negative amounts
@@ -1003,12 +1000,10 @@ Select from multiple time periods:
 Three interactive Chart.js charts provide visual insights:
 
 1. **Revenue Over Time** (Line Chart)
-
    - Daily revenue trends
    - Shows positive revenue minus refunds/chargebacks
 
 2. **Transaction Breakdown** (Doughnut Chart)
-
    - Distribution by transaction type
    - Color-coded segments for easy identification
 
@@ -1052,12 +1047,10 @@ Export functionality provides:
 The earnings system queries three tables:
 
 1. **`wp_flexpress_flowguard_transactions`**
-
    - Primary transaction data
    - Amount, currency, status, order type
 
 2. **`wp_flexpress_flowguard_webhooks`**
-
    - Event type classification
    - Maps transactions to webhook events (approved, rebill, chargeback, credit)
 
@@ -1584,7 +1577,6 @@ $commission_tiers = [
 ```
 
 2. **Bonus Commission Events:**
-
    - Weekend signup bonuses (150% commission rate)
    - Monthly challenges with flat bonus payments
    - Holiday promotional periods with enhanced rates
@@ -1647,7 +1639,6 @@ $payout_methods = [
 ```
 
 2. **Dynamic Payout Form System:**
-
    - **Method-Specific Fields**: Forms dynamically show/hide fields based on selected payout method
    - **Real-time Validation**: Client-side and server-side validation for each method
    - **JSON Data Storage**: Structured storage with legacy compatibility
@@ -1657,32 +1648,26 @@ $payout_methods = [
 3. **Payout Method Details:**
 
    **🇦🇺 Australian Bank Transfer (Free)**
-
    - Bank Name, BSB Number (6 digits), Account Number, Account Holder Name
    - Pattern validation ensures BSB is exactly 6 digits
 
    **💳 Yoursafe (Free)**
-
    - Yoursafe IBAN field with format validation
 
    **🏦 ACH - US Only ($10 USD Fee)**
-
    - Account Number, ABA Routing (9 digits), Account Holder, Bank Name
    - Pattern validation ensures ABA is exactly 9 digits
 
    **🌍 Swift International ($30 USD Fee)**
-
    - Bank Name, SWIFT/BIC Code, IBAN/Account, Account Holder
    - Bank Address, Beneficiary Address
    - Optional: Secondary/Intermediary SWIFT Code, Intermediary IBAN
    - Most comprehensive method with full international transfer support
 
    **💸 PayPal (Free)**
-
    - Email address with format validation
 
    **₿ Cryptocurrency (Free)**
-
    - Cryptocurrency type selection (Bitcoin, Ethereum, Litecoin, Other)
    - Wallet address field with custom type specification
 
@@ -1698,7 +1683,6 @@ $payout_methods = [
    ```
 
 5. **Automated Payout Scheduling:**
-
    - Weekly, bi-weekly, monthly payout cycles
    - Minimum payout thresholds per method
    - Fee deduction from payout amounts for paid methods
@@ -1743,7 +1727,6 @@ class FlexpressDiscordNotifications {
 ```
 
 2. **Email Automation System:**
-
    - Welcome series for new affiliates
    - Weekly performance summaries
    - Commission milestone celebrations
@@ -1759,7 +1742,6 @@ class FlexpressDiscordNotifications {
 **📱 Phase 5: Mobile App & Advanced Analytics (Q1 2025)**
 
 1. **Progressive Web App (PWA):**
-
    - Native app experience for affiliate dashboard
    - Offline capability for viewing reports
    - Push notifications for real-time updates
@@ -1794,14 +1776,12 @@ class FlexpressAffiliateAI {
 **🔗 Phase 6: Third-Party Integrations (Q2 2025)**
 
 1. **Marketing Platform Integration:**
-
    - Mailchimp/Klaviyo for email marketing
    - Facebook Pixel for conversion tracking
    - Google Analytics enhanced ecommerce
    - TikTok/Instagram affiliate tools
 
 2. **CRM Integration:**
-
    - HubSpot contact syncing
    - Salesforce lead management
    - Customer lifecycle tracking
@@ -1816,14 +1796,12 @@ class FlexpressAffiliateAI {
 **⚙️ Technical Debt & Optimization Roadmap**
 
 1. **Performance Enhancements:**
-
    - Redis caching for high-volume commission tracking
    - Database sharding for large affiliate networks
    - CDN integration for dashboard assets
    - GraphQL API for mobile app integration
 
 2. **Security Improvements:**
-
    - Two-factor authentication for affiliate accounts
    - Rate limiting for API endpoints
    - Advanced fraud detection algorithms
@@ -1928,7 +1906,6 @@ Enabled
 #### Filter Types
 
 1. **Category Filtering:**
-
    - Uses WordPress `post_tag` taxonomy
    - **Context-Aware:** Only shows tags used on episode posts
    - Displays tag name with accurate episode count (e.g., "Big Cock (5)")
@@ -1936,7 +1913,6 @@ Enabled
    - Direct URL-based filtering for bookmarkable results
 
 2. **Model Filtering:**
-
    - Integrates with custom `model` post type
    - **Context-Aware:** Only shows models featured in episodes
    - Uses ACF `featured_models` relationship field
@@ -1953,7 +1929,6 @@ Enabled
 #### Layout System
 
 - **Filters Visible Mode:**
-
   - 8-column video area, 4-column filter sidebar
   - 2 videos per row in responsive grid
   - Sticky sidebar positioning
@@ -2119,7 +2094,6 @@ Modern, responsive models archive page with context-aware tag filtering.
 - Template: `archive-model.php`
 - Tag list uses `get_terms()` with `object_ids` limited to model IDs
 - Counts computed via SQL to include only published `model` posts per term
-
   - Smart category filtering by post tags with accurate extras counts
   - Content type filtering (Behind Scenes, Bloopers, Interviews, Photo Shoots, Making Of, Deleted Scenes, Extended Cuts, Other)
   - Model-based filtering using ACF relationship fields
@@ -2146,7 +2120,6 @@ Modern, responsive models archive page with context-aware tag filtering.
 #### Filter Types
 
 1. **Category Filtering:**
-
    - Uses WordPress `post_tag` taxonomy
    - **Context-Aware:** Only shows tags used on extras posts
    - Displays tag name with accurate extras count (e.g., "BTS (3)")
@@ -2155,7 +2128,6 @@ Modern, responsive models archive page with context-aware tag filtering.
    - SQL query ensures counts reflect only extras, not episodes
 
 2. **Content Type Filtering:**
-
    - Exclusive to extras archive
    - Eight predefined content types:
      - Behind the Scenes
@@ -2170,7 +2142,6 @@ Modern, responsive models archive page with context-aware tag filtering.
    - Professional icon-based display
 
 3. **Model Filtering:**
-
    - Integrates with custom `model` post type
    - **Context-Aware:** Only shows models featured in extras posts
    - Uses ACF `featured_models` relationship field
@@ -2602,7 +2573,6 @@ Enabled
 **Solution Applied:**
 
 1. **Capability Fixes:**
-
    - Changed "Manage Members" page capability from `manage_options` to `edit_users`
    - Changed "Tools" page capability from `manage_options` to `edit_users`
    - Updated episode sync tool capability from `manage_options` to `edit_posts`

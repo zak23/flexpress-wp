@@ -265,6 +265,9 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
             loadValidationSystem()
         ]).then(() => {
             initializePaymentForm(sessionId);
+
+            // Setup price container observer AFTER form is initialized (so #price-element exists)
+            setupPriceContainerObserver();
         }).catch(error => {
             console.error('Failed to load payment system:', error);
             document.getElementById('error-message').textContent = '<?php esc_html_e('Error loading payment form. Please try again.', 'flexpress'); ?>';
@@ -272,11 +275,46 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
             document.getElementById('payment-pending').style.display = 'none';
         });
 
+        // Watch for iframe addition and adjust height (called after form is initialized)
+        function setupPriceContainerObserver() {
+            const priceContainer = document.getElementById('price-element');
+            if (priceContainer && priceContainer.nodeType === Node.ELEMENT_NODE) {
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'childList') {
+                            const iframe = priceContainer.querySelector('iframe');
+                            if (iframe) {
+                                console.log('Iframe detected, adjusting height');
+                                iframe.style.height = 'auto';
+                                iframe.style.minHeight = '40px';
+                                iframe.style.maxHeight = 'none';
+                                iframe.style.width = '100%';
+                                iframe.style.display = 'block';
+                                iframe.style.margin = '0 auto';
+                            }
+                        }
+                    });
+                });
+
+                try {
+                    observer.observe(priceContainer, {
+                        childList: true,
+                        subtree: true
+                    });
+                    console.log('Started watching for iframe changes');
+                } catch (error) {
+                    console.error('Failed to observe price container:', error, priceContainer);
+                }
+            } else {
+                console.warn('Price container element not found or invalid:', priceContainer);
+            }
+        }
+
         // Load Flowguard SDK
         function loadFlowguardSDK() {
             return new Promise((resolve, reject) => {
-                // Check if SDK is already loaded
-                if (window.Flowguard) {
+                // Check if SDK is already loaded and constructor available
+                if (typeof window.Flowguard === 'function') {
                     resolve();
                     return;
                 }
@@ -285,13 +323,42 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
                 script.src = 'https://flowguard.yoursafe.com/js/flowguard.js';
                 script.onload = () => {
                     console.log('Flowguard SDK loaded successfully');
-                    resolve();
+                    // Wait for the constructor to be available (SDK may attach it asynchronously)
+                    waitForFlowguardConstructor()
+                        .then(resolve)
+                        .catch(reject);
                 };
                 script.onerror = (error) => {
                     console.error('Failed to load Flowguard SDK:', error);
                     reject(error);
                 };
                 document.head.appendChild(script);
+            });
+        }
+
+        // Wait for Flowguard constructor to be available (poll with timeout)
+        function waitForFlowguardConstructor(maxWait = 10000, interval = 100) {
+            return new Promise((resolve, reject) => {
+                // Check immediately
+                if (typeof window.Flowguard === 'function') {
+                    resolve();
+                    return;
+                }
+
+                const startTime = Date.now();
+                const checkInterval = setInterval(() => {
+                    if (typeof window.Flowguard === 'function') {
+                        clearInterval(checkInterval);
+                        console.log('Flowguard constructor is now available');
+                        resolve();
+                    } else if (Date.now() - startTime >= maxWait) {
+                        clearInterval(checkInterval);
+                        console.error('Flowguard constructor not available after ' + maxWait + 'ms');
+                        console.log('window.Flowguard:', window.Flowguard);
+                        console.log('typeof window.Flowguard:', typeof window.Flowguard);
+                        reject(new Error('Flowguard constructor not available - SDK may not have loaded correctly'));
+                    }
+                }, interval);
             });
         }
 
@@ -940,39 +1007,6 @@ $flowguard_settings = get_option('flexpress_flowguard_settings', []);
                 console.log('Payment page visible - resuming form updates');
             }
         });
-
-        // Watch for iframe addition and adjust height
-        const priceContainer = document.getElementById('price-element');
-        if (priceContainer && priceContainer.nodeType === Node.ELEMENT_NODE) {
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.type === 'childList') {
-                        const iframe = priceContainer.querySelector('iframe');
-                        if (iframe) {
-                            console.log('Iframe detected, adjusting height');
-                            iframe.style.height = 'auto';
-                            iframe.style.minHeight = '40px';
-                            iframe.style.maxHeight = 'none';
-                            iframe.style.width = '100%';
-                            iframe.style.display = 'block';
-                            iframe.style.margin = '0 auto';
-                        }
-                    }
-                });
-            });
-
-            try {
-                observer.observe(priceContainer, {
-                    childList: true,
-                    subtree: true
-                });
-                console.log('Started watching for iframe changes');
-            } catch (error) {
-                console.error('Failed to observe price container:', error, priceContainer);
-            }
-        } else {
-            console.warn('Price container element not found or invalid:', priceContainer);
-        }
     });
 </script>
 

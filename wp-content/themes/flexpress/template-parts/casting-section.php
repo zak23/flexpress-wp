@@ -36,44 +36,31 @@ if (!defined('ABSPATH')) {
                     <div class="row align-items-center">
                         <!-- Large Image on the Left -->
                         <?php
-                        // Get casting image from theme options
+                        // Get casting image from theme options; use BunnyCDN helper with fixed 4:3 aspect
                         $general_settings = get_option('flexpress_general_settings', array());
                         $casting_image_id = isset($general_settings['casting_image']) ? $general_settings['casting_image'] : '';
 
                         $optimized_image_url = '';
                         if ($casting_image_id) {
-                            $optimized_image_url = wp_get_attachment_url($casting_image_id);
-                        }
-
-                        // Apply BunnyCDN optimizer if we have a URL
-                        if (!empty($optimized_image_url)) {
-                            $optimizer_params = [
-                                'width'   => 650,
-                                'format'  => 'webp',
-                                'quality' => 75,
-                            ];
-                            $query_string = http_build_query($optimizer_params);
-
-                            // Only replace hostname if CDN is configured
-                            $video_settings = get_option('flexpress_video_settings', array());
-                            $cdn_host = !empty($video_settings['bunnycdn_static_host']) ? $video_settings['bunnycdn_static_host'] : '';
-                            if (!empty($cdn_host)) {
-                                // Remove protocol if present
-                                $cdn_host = preg_replace('#^https?://#', '', $cdn_host);
-                                $source_host = parse_url($optimized_image_url, PHP_URL_HOST);
-                                if (!empty($source_host)) {
-                                    $optimized_image_url = str_replace($source_host, $cdn_host, $optimized_image_url);
-                                }
+                            $original_url = wp_get_attachment_url($casting_image_id);
+                            if (!empty($original_url) && function_exists('flexpress_get_bunnycdn_optimized_image_url')) {
+                                // Bunny: aspect_ratio crops first, then width resizes (crop has priority over resize)
+                                $optimized_image_url = flexpress_get_bunnycdn_optimized_image_url($original_url, array(
+                                    'aspect_ratio' => '4:3',
+                                    'width'        => 650,
+                                    'format'       => 'webp',
+                                    'quality'      => 80,
+                                ));
+                            } else {
+                                $optimized_image_url = $original_url;
                             }
-                            // Append optimizer parameters to URL (works with or without CDN)
-                            $optimized_image_url .= (strpos($optimized_image_url, '?') === false ? '?' : '&') . $query_string;
                         }
                         ?>
 
                         <?php if (!empty($optimized_image_url)) : ?>
                             <div class="col-md-6 mb-4 mb-md-0">
                                 <div class="casting-image">
-                                    <img src="<?php echo esc_url($optimized_image_url); ?>" alt="<?php echo esc_attr__('Join Our Cast', 'flexpress'); ?>" class="img-fluid rounded-3 shadow">
+                                    <img src="<?php echo esc_url($optimized_image_url); ?>" alt="<?php echo esc_attr__('Join Our Cast', 'flexpress'); ?>" class="img-fluid rounded-3 shadow" sizes="(max-width: 768px) 100vw, 50vw" loading="lazy" decoding="async">
                                 </div>
                             </div>
                         <?php endif; ?>

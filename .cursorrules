@@ -36,6 +36,15 @@ Bundled webfonts must use `font-display: swap`
 - CDN host comes from `bunnycdn_static_host`; if not configured, images use WordPress URL with optimizer parameters.
 - Helper function located in `includes/bunnycdn.php`; template in `template-parts/awards-nominations.php`.
 
+## Casting Section Image Optimization (November 2025)
+
+- Casting section image uses Bunny Image Optimizer via `flexpress_get_bunnycdn_optimized_image_url()` helper function.
+- Optimization parameters: aspect_ratio=4:3 (crop first), width=650, format=webp, quality=80; Bunny applies crop then resize for consistent 4:3 output.
+- Responsive `sizes`: `(max-width: 768px) 100vw, 50vw`; img uses `loading="lazy"` and `decoding="async"`.
+- CSS: `aspect-ratio: 4/3` and `object-fit: cover` on `.casting-image img` in `assets/css/casting-section.css`.
+- CDN host from `bunnycdn_static_host`; if not configured, WordPress URL with optimizer parameters.
+- Helper in `includes/bunnycdn.php`; template in `template-parts/casting-section.php`.
+
 ## Render Blocking Optimizations (November 2025)
 
 - Critical above-the-fold rules live in `assets/css/critical.css` and are inlined via the `flexpress-critical-inline` handle; keep the file lean and ASCII-only.

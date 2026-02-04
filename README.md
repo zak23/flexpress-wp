@@ -33,9 +33,10 @@ A modern WordPress website running in Docker containers with MySQL database and 
 
 ### Casting Section Image Optimization + Fallback Removal (November 2025)
 
-- Applied BunnyCDN Image Optimizer to the casting section image with `width=650&format=webp&quality=75`.
+- Casting section image uses `flexpress_get_bunnycdn_optimized_image_url()` with `aspect_ratio=4:3`, `width=650`, `format=webp`, `quality=80`; Bunny crops then resizes for consistent 4:3.
+- Responsive `sizes`, `loading="lazy"`, `decoding="async"`; CSS `aspect-ratio: 4/3` and `object-fit: cover` in casting-section.css.
 - Removed default placeholder; when no image is configured the image column is omitted and content spans full width.
-- Host is swapped to the Static CDN host from settings (`bunnycdn_static_host`) if configured; otherwise uses WordPress URL with optimizer parameters.
+- Host from `bunnycdn_static_host` if configured; otherwise WordPress URL with optimizer parameters.
 
 ### Extras Thumbnails – BunnyCDN Migration Fix (November 2025)
 
@@ -389,7 +390,6 @@ cd /path/to/flexpress
    ```
 
 4. **Access your WordPress site:**
-
    - WordPress: http://127.0.0.1:8085
    - phpMyAdmin: http://127.0.0.1:8086
 
@@ -479,11 +479,11 @@ flexpress/
 
 ## 🐳 Docker Services
 
-| Service    | Container            | Port            | Description                |
-| ---------- | -------------------- | --------------- | -------------------------- |
-| WordPress  | flexpress_wordpress  | 8085            | Main WordPress application |
-| MySQL      | flexpress_mysql      | 3306 (internal) | Database server            |
-| phpMyAdmin | flexpress_phpmyadmin | 8086            | Database administration    |
+| Service    | Container            | Port            | Description                                          |
+| ---------- | -------------------- | --------------- | ---------------------------------------------------- |
+| WordPress  | flexpress_wordpress  | 8085            | Main WordPress application                           |
+| MySQL      | flexpress_mysql      | 3306 (internal) | Database server                                      |
+| phpMyAdmin | flexpress_phpmyadmin | 8086            | Database administration                              |
 | Redis      | flexpress_redis      | 6379 (internal) | Optional object cache (enable with WP_REDIS_ENABLED) |
 
 ### 🚀 Technology Stack
@@ -1447,14 +1447,12 @@ FlexPress supports **3 webhook categories** for organized notifications:
 #### Discord Setup Instructions
 
 1. **Create Discord Webhooks**:
-
    - Go to your Discord server → Server Settings → Integrations
    - Click "Create Webhook" for each channel you want to use
    - Recommended channels: `#financial-alerts`, `#contact-forms`
    - Copy the webhook URLs
 
 2. **Configure FlexPress**:
-
    - Go to `FlexPress Settings → Discord`
    - **Default Discord Webhook URL** - Fallback for all notifications
    - **Financial Notifications Webhook** - For payment/subscription events
@@ -1596,19 +1594,16 @@ Next Charge: Mar 15, 2025
 **Common Issues Fixed During Implementation:**
 
 1. **Discord 400 "Bad Request" Errors**:
-
    - **Cause**: Data exceeding Discord's character limits or invalid formatting
    - **Solution**: Implemented comprehensive data validation and sanitization
    - **Features**: Automatic field truncation, markdown removal, array handling
 
 2. **PHP Fatal Error: strlen() on Array**:
-
    - **Cause**: Contact Form 7 sending array data (checkboxes, multi-selects)
    - **Solution**: Added array detection and implode() conversion to strings
    - **Location**: `contact-form-7-discord-integration.php` sanitization function
 
 3. **Missing Webhook Fields in Admin**:
-
    - **Cause**: Settings registered in wrong class file
    - **Solution**: Updated `class-flexpress-settings.php` to register all webhook fields
    - **Result**: Now shows Default, Financial, and Contact webhook fields
@@ -2999,7 +2994,6 @@ Notes:
 ### September 2025
 
 - **Enhanced Color Contrast System**: Fixed readability issues with light accent colors by implementing automatic text color detection
-
   - Added `flexpress_get_contrast_text_color()` function that calculates luminance to determine optimal text color
   - Updated admin color picker with real-time preview that automatically adjusts text color (black for light backgrounds, white for dark backgrounds)
   - Enhanced CSS generation to include `--color-accent-text` variable for consistent contrast across the theme

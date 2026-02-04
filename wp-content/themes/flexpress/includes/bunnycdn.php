@@ -464,10 +464,14 @@ function flexpress_get_primary_video_id($post_id = null)
 }
 
 /**
- * Get BunnyCDN optimized image URL using Image Optimizer
- * 
+ * Get BunnyCDN optimized image URL using Image Optimizer (Dynamic Images API)
+ *
+ * For fixed-aspect output use aspect_ratio (crop is applied before resize). Passing only
+ * width/height resizes proportionally; passing both picks the smaller side and keeps aspect.
+ *
  * @param string $image_url The original image URL
- * @param array $params Optimization parameters (width, height, format, quality)
+ * @param array  $params    Optimization parameters: width, height, format, quality,
+ *                          aspect_ratio (e.g. '4:3'), crop (e.g. '650,488')
  * @return string Optimized image URL
  */
 function flexpress_get_bunnycdn_optimized_image_url($image_url, $params = array())
@@ -491,7 +495,7 @@ function flexpress_get_bunnycdn_optimized_image_url($image_url, $params = array(
     // Only replace hostname if CDN is configured
     $video_settings = get_option('flexpress_video_settings', array());
     $cdn_host = !empty($video_settings['bunnycdn_static_host']) ? $video_settings['bunnycdn_static_host'] : '';
-    
+
     if (!empty($cdn_host)) {
         // Remove protocol if present
         $cdn_host = preg_replace('#^https?://#', '', $cdn_host);

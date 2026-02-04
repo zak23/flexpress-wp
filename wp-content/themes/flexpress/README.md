@@ -24,10 +24,12 @@ FlexPress is designed specifically for content websites (primarily adult content
 
 ### Casting Section – Optimized Image + Fallback Removed (November 2025)
 
-- The casting section image now uses BunnyCDN Image Optimizer (`width=650&format=webp&quality=75`).
+- Casting section image uses BunnyCDN Image Optimizer via `flexpress_get_bunnycdn_optimized_image_url()` helper function.
+- Optimization parameters: `aspect_ratio=4:3` (crop first), `width=650`, `format=webp`, `quality=80`; Bunny applies crop then resize so output is consistently 4:3.
+- Responsive `sizes` attribute: `(max-width: 768px) 100vw, 50vw`; `loading="lazy"` and `decoding="async"` for performance.
+- CSS enforces `aspect-ratio: 4/3` and `object-fit: cover` in `assets/css/casting-section.css`.
 - Removed the default placeholder; if no image is configured, the image column is omitted and the content spans full width.
-- Host is swapped to the Static CDN host set in FlexPress Video settings (`bunnycdn_static_host`) if configured; otherwise uses WordPress URL with optimizer parameters.
-- Affects: `template-parts/casting-section.php`.
+- Affects: `template-parts/casting-section.php`, `assets/css/casting-section.css`, helper in `includes/bunnycdn.php`.
 
 ### Model Card Images – Bunny Image Optimizer (November 2025)
 

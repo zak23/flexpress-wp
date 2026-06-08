@@ -2012,7 +2012,7 @@ class FlexPress_Affiliate_Settings
             'flexpress-affiliate-admin',
             get_template_directory_uri() . '/assets/js/affiliate-admin.js',
             array('jquery'),
-            '1.0.0',
+            '1.0.1',
             true
         );
 
@@ -2020,7 +2020,7 @@ class FlexPress_Affiliate_Settings
             'flexpress-admin-affiliate-spa',
             get_template_directory_uri() . '/assets/js/admin-affiliate-spa.js',
             array('jquery'),
-            '1.0.0',
+            '1.0.1',
             true
         );
 
@@ -2031,14 +2031,16 @@ class FlexPress_Affiliate_Settings
 
         wp_localize_script('flexpress-admin-affiliate-spa', 'flexpress_admin', array(
             'rest_url' => rest_url(),
-            'nonce' => wp_create_nonce('wp_rest')
+            'nonce' => wp_create_nonce('wp_rest'),
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'affiliate_nonce' => wp_create_nonce('flexpress_affiliate_nonce'),
         ));
 
         wp_enqueue_style(
             'flexpress-affiliate-admin',
             get_template_directory_uri() . '/assets/css/affiliate-system.css',
             array(),
-            '1.0.0'
+            '1.0.1'
         );
     }
 
@@ -2342,6 +2344,8 @@ class FlexPress_Affiliate_Settings
             wp_send_json_error(['message' => 'Affiliate not found']);
         }
 
+        $affiliate->payout_details = flexpress_decrypt_payout_details($affiliate->payout_details);
+
         // Get promo codes
         $promo_codes = $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM $promo_codes_table WHERE affiliate_id = %d ORDER BY created_at DESC",
@@ -2362,12 +2366,12 @@ class FlexPress_Affiliate_Settings
             $affiliate_id
         ));
 
-        wp_send_json_success([
-            'affiliate' => $affiliate,
-            'promo_codes' => $promo_codes,
-            'transactions' => $transactions,
-            'clicks' => $clicks
-        ]);
+        $payload = (array) $affiliate;
+        $payload['promo_codes'] = $promo_codes;
+        $payload['transactions'] = $transactions;
+        $payload['clicks'] = $clicks;
+
+        wp_send_json_success($payload);
     }
 
     /**

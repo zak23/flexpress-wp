@@ -418,7 +418,7 @@ jQuery(document).ready(function ($) {
         },
         success: function (response) {
           if (response.success) {
-            showAffiliateDetailsModal(response.data);
+            showAffiliateDetailsModal(response.data.affiliate || response.data);
           } else {
             showNotice(
               response.data.message || "Error loading affiliate details",
@@ -455,7 +455,7 @@ jQuery(document).ready(function ($) {
         },
         success: function (response) {
           if (response.success) {
-            showEditAffiliateModal(response.data);
+            showEditAffiliateModal(response.data.affiliate || response.data);
           } else {
             showNotice(
               response.data.message || "Error loading affiliate details",

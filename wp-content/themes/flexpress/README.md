@@ -214,7 +214,7 @@ Frontend template: `wp-content/themes/flexpress/single-model.php` renders these 
 - **Commission Processing**: Automatic commission calculation from Flowguard payment events
 - **Payout Management**: Request, approve, and process affiliate payouts with CSV export
 - **Tracking System**: 30-day cookie tracking with ?aff and ?promo parameter support
-- **Admin Dashboard**: React-based SPA for comprehensive affiliate management
+- **Admin Dashboard**: React-based SPA for comprehensive affiliate management (View/Edit affiliate modals with commission, payout, and status fields)
 - **Affiliate Dashboard**: Secure JWT-protected dashboard for affiliates
 - **Promo Code Integration**: Link promo codes to affiliates with attribution precedence
 - **Security Features**: Encrypted payout details, security headers, and Redis caching rules
@@ -885,7 +885,7 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 - **Commission Processing**: Automatic commission calculation from Flowguard payment events
 - **Payout Management**: Request, approve, and process affiliate payouts with CSV export
 - **Tracking System**: 30-day cookie tracking with ?aff and ?promo parameter support
-- **Admin Dashboard**: React-based SPA for comprehensive affiliate management
+- **Admin Dashboard**: React-based SPA for comprehensive affiliate management (View/Edit affiliate modals with commission, payout, and status fields)
 - **Affiliate Dashboard**: Secure JWT-protected dashboard for affiliates
 - **Promo Code Integration**: Link promo codes to affiliates with attribution precedence
 - **Security Features**: Encrypted payout details, security headers, and Redis caching rules

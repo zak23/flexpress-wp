@@ -83,8 +83,7 @@ function flexpress_affiliate_create_tables() {
         KEY affiliate_id (affiliate_id),
         KEY status (status),
         KEY valid_from (valid_from),
-        KEY valid_until (valid_until),
-        FOREIGN KEY (affiliate_id) REFERENCES {$affiliates_table}(id) ON DELETE SET NULL
+        KEY valid_until (valid_until)
     ) $charset_collate;";
     
     // Create affiliate clicks table
@@ -109,9 +108,7 @@ function flexpress_affiliate_create_tables() {
         KEY ip_address (ip_address),
         KEY cookie_id (cookie_id),
         KEY converted (converted),
-        KEY created_at (created_at),
-        FOREIGN KEY (affiliate_id) REFERENCES {$affiliates_table}(id) ON DELETE CASCADE,
-        FOREIGN KEY (promo_code_id) REFERENCES {$promo_codes_table}(id) ON DELETE SET NULL
+        KEY created_at (created_at)
     ) $charset_collate;";
     
     // Create affiliate transactions table
@@ -142,10 +139,7 @@ function flexpress_affiliate_create_tables() {
         KEY transaction_type (transaction_type),
         KEY status (status),
         KEY transaction_id (transaction_id),
-        KEY created_at (created_at),
-        FOREIGN KEY (affiliate_id) REFERENCES {$affiliates_table}(id) ON DELETE CASCADE,
-        FOREIGN KEY (promo_code_id) REFERENCES {$promo_codes_table}(id) ON DELETE SET NULL,
-        FOREIGN KEY (click_id) REFERENCES {$clicks_table}(id) ON DELETE SET NULL
+        KEY created_at (created_at)
     ) $charset_collate;";
     
     // Create affiliate payouts table
@@ -168,8 +162,7 @@ function flexpress_affiliate_create_tables() {
         KEY affiliate_id (affiliate_id),
         KEY period_end (period_end),
         KEY status (status),
-        KEY created_at (created_at),
-        FOREIGN KEY (affiliate_id) REFERENCES {$affiliates_table}(id) ON DELETE CASCADE
+        KEY created_at (created_at)
     ) $charset_collate;";
     
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');

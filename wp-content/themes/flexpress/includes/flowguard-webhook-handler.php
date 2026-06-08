@@ -754,6 +754,10 @@ function flexpress_flowguard_handle_refund($payload)
     // Handle access revocation and user banning
     flexpress_handle_refund_access_revocation($user_id, $payload);
 
+    if (function_exists('flexpress_cancel_affiliate_commission_for_refund')) {
+        flexpress_cancel_affiliate_commission_for_refund($payload);
+    }
+
     // Update Plunk: mark as Banned and unsubscribe from newsletter
     if (function_exists('flexpress_plunk_service')) {
         $user_obj = get_userdata($user_id);
@@ -1226,8 +1230,12 @@ function flexpress_process_affiliate_commission_from_webhook($payload)
 
     $postback_type = $payload['postbackType'] ?? '';
     $order_type = $payload['orderType'] ?? '';
-    $transaction_id = $payload['transactionId'] ?? '';
-    $amount = floatval($payload['amount'] ?? 0);
+    if (in_array($postback_type, array('chargeback', 'credit', 'cancel', 'expiry', 'uncancel', 'extend'), true)) {
+        return;
+    }
+
+    $transaction_id = sanitize_text_field($payload['transactionId'] ?? '');
+    $amount = floatval($payload['amount'] ?? $payload['priceAmount'] ?? 0);
     $reference_id = $payload['referenceId'] ?? '';
 
     // Get user from reference ID
@@ -1241,6 +1249,8 @@ function flexpress_process_affiliate_commission_from_webhook($payload)
     $affiliate_id = null;
     $promo_code_id = null;
     $click_id = null;
+
+    $reference_data = array();
 
     // Attempt to resolve promo code from session or reference
     $reference_id = $payload['referenceId'] ?? '';
@@ -1257,6 +1267,9 @@ function flexpress_process_affiliate_commission_from_webhook($payload)
             $resolved_promo_code = $reference_data['promo_code'];
         }
     }
+    if (!$reference_data && function_exists('flexpress_flowguard_parse_enhanced_reference')) {
+        $reference_data = flexpress_flowguard_parse_enhanced_reference($reference_id);
+    }
 
     if (!empty($resolved_promo_code)) {
         // Map promo code to affiliate
@@ -1267,7 +1280,33 @@ function flexpress_process_affiliate_commission_from_webhook($payload)
         }
     }
 
-    // If no affiliate via promo, fall back to tracking cookie
+    // If no affiliate via promo, use attribution persisted on the user during registration.
+    if (!$affiliate_id && function_exists('flexpress_get_user_affiliate_tracking_data')) {
+        $tracking_data = flexpress_get_user_affiliate_tracking_data($user_id);
+        if ($tracking_data) {
+            $affiliate_id = intval($tracking_data['affiliate_id']);
+            $promo_code_id = $tracking_data['promo_code_id'] ?? $promo_code_id;
+            $click_id = $tracking_data['click_id'] ?? null;
+        }
+    }
+
+    // Then try the enhanced reference affiliate code.
+    if (!$affiliate_id && !empty($reference_data['affiliate_code'])) {
+        $affiliate = flexpress_get_affiliate_by_code($reference_data['affiliate_code']);
+        if (!$affiliate) {
+            global $wpdb;
+            $like = $wpdb->esc_like($reference_data['affiliate_code']) . '%';
+            $affiliate = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}flexpress_affiliates WHERE affiliate_code LIKE %s AND status = 'active' ORDER BY CHAR_LENGTH(affiliate_code) ASC LIMIT 1",
+                $like
+            ));
+        }
+        if ($affiliate) {
+            $affiliate_id = intval($affiliate->id);
+        }
+    }
+
+    // Last fallback: same-request tracking cookie, useful for local AJAX test paths.
     if (!$affiliate_id) {
         $tracker = FlexPress_Affiliate_Tracker::get_instance();
         $tracking_data = $tracker->get_tracking_data_from_cookie();

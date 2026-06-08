@@ -218,14 +218,14 @@ class FlexPress_Affiliate_Manager {
         }
         
         // Validate affiliate ID format
-        if (!preg_match('/^[a-zA-Z0-9]{3,20}$/', $data['desired_affiliate_id'])) {
-            wp_send_json_error(['message' => __('Affiliate ID must be 3-20 characters and contain only letters and numbers.', 'flexpress')]);
+        if (!preg_match('/^[a-zA-Z0-9-]{3,20}$/', $data['desired_affiliate_id'])) {
+            wp_send_json_error(['message' => __('Affiliate ID must be 3-20 characters and contain only letters, numbers, and hyphens.', 'flexpress')]);
         }
         
         // Check if affiliate ID is already taken
         global $wpdb;
         $existing = $wpdb->get_var($wpdb->prepare(
-            "SELECT id FROM {$wpdb->prefix}flexpress_affiliates WHERE affiliate_id = %s",
+            "SELECT id FROM {$wpdb->prefix}flexpress_affiliates WHERE affiliate_code = %s",
             $data['desired_affiliate_id']
         ));
         
@@ -259,51 +259,24 @@ class FlexPress_Affiliate_Manager {
             wp_send_json_error(['message' => __('An application with this email already exists.', 'flexpress')]);
         }
         
-        // Use desired affiliate ID as the affiliate code
-        $affiliate_code = $data['desired_affiliate_id'];
-        
-        // Get default settings
-        $settings = get_option('flexpress_affiliate_settings', array());
-        
-        // Insert application
-        global $wpdb;
-        $result = $wpdb->insert(
-            $wpdb->prefix . 'flexpress_affiliates',
-            array(
-                'affiliate_id' => $affiliate_code,
-                'affiliate_code' => $affiliate_code,
-                'display_name' => $data['affiliate_name'],
-                'email' => $data['affiliate_email'],
-                'website' => $data['affiliate_website'],
-                'payout_method' => $data['payout_method'],
-                'payout_details' => $data['payout_details'],
-                'tax_info' => $data['tax_info'],
-                'commission_initial' => $settings['commission_rate'] ?? 25.00,
-                'commission_rebill' => $settings['rebill_commission_rate'] ?? 10.00,
-                'commission_unlock' => $settings['unlock_commission_rate'] ?? 15.00,
-                'payout_threshold' => $settings['minimum_payout'] ?? 100.00,
-                'status' => 'pending',
-                'application_data' => json_encode($data),
-                'created_at' => current_time('mysql')
-            ),
-            array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%f', '%f', '%f', '%f', '%s', '%s', '%s')
-        );
-        
+        $result = flexpress_register_affiliate(array(
+            'display_name' => $data['affiliate_name'],
+            'email' => $data['affiliate_email'],
+            'affiliate_code' => $data['desired_affiliate_id'],
+            'website' => $data['affiliate_website'],
+            'payout_method' => $data['payout_method'],
+            'payout_details' => $data['payout_details'],
+            'tax_info' => $data['tax_info'],
+            'marketing_experience' => $data['marketing_experience'],
+        ));
+
+        if (is_wp_error($result)) {
+            wp_send_json_error(['message' => $result->get_error_message()]);
+        }
+
         if ($result) {
-            $affiliate_id = $wpdb->insert_id;
-            
-            // Create referral URL using new format
-            $referral_url = $this->create_referral_url($affiliate_code);
-            $wpdb->update(
-                $wpdb->prefix . 'flexpress_affiliates',
-                array('referral_url' => $referral_url),
-                array('id' => $affiliate_id),
-                array('%s'),
-                array('%d')
-            );
-            
             // Send notification email to admin
-            $this->send_application_notification($data, $affiliate_id);
+            $this->send_application_notification($data, intval($result['id']));
             
             wp_send_json_success(['message' => __('Application submitted successfully! We will review it and get back to you.', 'flexpress')]);
         } else {
@@ -332,12 +305,21 @@ class FlexPress_Affiliate_Manager {
             wp_send_json_error(['message' => __('Affiliate not found.', 'flexpress')]);
         }
         
+        $linked_user_id = $this->ensure_affiliate_user($affiliate);
+        if (is_wp_error($linked_user_id)) {
+            wp_send_json_error(['message' => $linked_user_id->get_error_message()]);
+        }
+
         global $wpdb;
         $result = $wpdb->update(
             $wpdb->prefix . 'flexpress_affiliates',
-            array('status' => 'active'),
+            array(
+                'status' => 'active',
+                'user_id' => intval($linked_user_id),
+                'referral_url' => $this->create_referral_url($affiliate->affiliate_code),
+            ),
             array('id' => $affiliate_id),
-            array('%s'),
+            array('%s', '%d', '%s'),
             array('%d')
         );
         
@@ -515,6 +497,68 @@ class FlexPress_Affiliate_Manager {
         $message .= sprintf(__("Best regards,\n%s Team", 'flexpress'), $site_name);
         
         wp_mail($affiliate->email, $subject, $message);
+    }
+
+    /**
+     * Link or create a WordPress user for an approved affiliate.
+     *
+     * @param object $affiliate Affiliate row.
+     * @return int|WP_Error User ID or error.
+     */
+    private function ensure_affiliate_user($affiliate) {
+        $user = null;
+
+        if (!empty($affiliate->user_id)) {
+            $user = get_user_by('id', intval($affiliate->user_id));
+        }
+
+        if (!$user) {
+            $user = get_user_by('email', $affiliate->email);
+        }
+
+        if (!$user) {
+            $username_base = sanitize_user(current(explode('@', $affiliate->email)), true);
+            if (!$username_base) {
+                $username_base = sanitize_user($affiliate->affiliate_code, true);
+            }
+
+            $username = $username_base;
+            $suffix = 1;
+            while (username_exists($username)) {
+                $username = $username_base . $suffix;
+                $suffix++;
+            }
+
+            $password = wp_generate_password(20, true);
+            $user_id = wp_create_user($username, $password, $affiliate->email);
+            if (is_wp_error($user_id)) {
+                return $user_id;
+            }
+
+            wp_update_user(array(
+                'ID' => intval($user_id),
+                'display_name' => $affiliate->display_name,
+            ));
+            $user = get_user_by('id', intval($user_id));
+
+            wp_mail(
+                $affiliate->email,
+                sprintf(__('Your %s affiliate account has been created', 'flexpress'), get_bloginfo('name')),
+                sprintf(
+                    __("Your affiliate account is ready.\n\nUsername: %s\nSet your password here: %s\n\nDashboard: %s", 'flexpress'),
+                    $username,
+                    wp_lostpassword_url(),
+                    home_url('/affiliate-dashboard')
+                )
+            );
+        }
+
+        if (!$user) {
+            return new WP_Error('affiliate_user_failed', __('Unable to link or create affiliate user.', 'flexpress'));
+        }
+
+        $user->add_role('affiliate_user');
+        return intval($user->ID);
     }
     
     /**

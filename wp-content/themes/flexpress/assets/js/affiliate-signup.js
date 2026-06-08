@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
                 body: new URLSearchParams({
-                    action: 'check_affiliate_code_availability',
+                    action: 'flexpress_check_affiliate_code_availability',
                     code: code,
                     nonce: affiliateNonce || ''
                 })
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const data = await response.json();
             
-            if (data.success) {
+            if (data.success && data.data && data.data.available) {
                 return { valid: true, message: 'Code is available!' };
             } else {
                 return { valid: false, message: data.data.message || 'Code is not available' };
@@ -173,8 +173,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
                 body: new URLSearchParams({
-                    action: 'generate_affiliate_code_suggestion',
-                    name: displayName,
+                    action: 'flexpress_generate_affiliate_code_suggestion',
+                    display_name: displayName,
                     nonce: affiliateNonce || ''
                 })
             });
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (data.success && affiliateCodeInput) {
-                affiliateCodeInput.value = data.data.code;
+                affiliateCodeInput.value = data.data.suggested_code;
                 // Trigger validation
                 affiliateCodeInput.dispatchEvent(new Event('input'));
             } else {

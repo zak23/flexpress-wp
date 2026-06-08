@@ -300,7 +300,7 @@ function flexpress_flowguard_generate_enhanced_reference($user_id, $plan_id, $ad
     }
 
     // Get user's affiliate tracking data
-    $affiliate_code = get_user_meta($user_id, 'affiliate_referred_by', true);
+    $affiliate_code = function_exists('flexpress_get_user_affiliate_code') ? flexpress_get_user_affiliate_code($user_id) : get_user_meta($user_id, 'affiliate_referred_code', true);
     $promo_code = get_user_meta($user_id, 'applied_promo_code', true);
     $signup_source = get_user_meta($user_id, 'signup_source', true);
     $registration_date = get_user_meta($user_id, 'registration_date', true);
@@ -410,13 +410,15 @@ function flexpress_flowguard_generate_enhanced_reference($user_id, $plan_id, $ad
  */
 function flexpress_flowguard_generate_enhanced_ppv_reference($user_id, $episode_id)
 {
+    global $wpdb;
+
     $user = get_userdata($user_id);
     if (!$user) {
         return 'ppv_' . $episode_id . '_' . $user_id . '_' . time();
     }
 
     // Get user's affiliate tracking data
-    $affiliate_code = get_user_meta($user_id, 'affiliate_referred_by', true);
+    $affiliate_code = function_exists('flexpress_get_user_affiliate_code') ? flexpress_get_user_affiliate_code($user_id) : get_user_meta($user_id, 'affiliate_referred_code', true);
     $promo_code = get_user_meta($user_id, 'applied_promo_code', true);
     $signup_source = get_user_meta($user_id, 'signup_source', true);
     $registration_date = get_user_meta($user_id, 'registration_date', true);

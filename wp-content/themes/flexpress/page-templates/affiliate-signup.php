@@ -23,24 +23,28 @@ $registration_message = '';
 $registration_success = false;
 
 if (isset($_POST['submit_affiliate_application']) && wp_verify_nonce($_POST['affiliate_nonce'], 'affiliate_signup')) {
-    $affiliate_data = array(
-        'user_id' => $current_user_id,
-        'display_name' => sanitize_text_field($_POST['display_name'] ?? ''),
-        'email' => sanitize_email($_POST['email'] ?? ''),
-        'affiliate_code' => sanitize_text_field($_POST['affiliate_code'] ?? ''),
-        'referral_url' => esc_url_raw($_POST['referral_url'] ?? ''),
-        'notes' => sanitize_textarea_field($_POST['notes'] ?? '')
-    );
-    
-    $result = flexpress_register_affiliate($affiliate_data);
-    
-    if (is_wp_error($result)) {
-        $registration_message = $result->get_error_message();
+    if (empty($_POST['agree_terms'])) {
+        $registration_message = __('You must agree to the affiliate terms and conditions.', 'flexpress');
     } else {
-        $registration_success = true;
-        $registration_message = ($result['status'] === 'active') 
-            ? 'Your affiliate application has been approved! You can start promoting immediately.'
-            : 'Your affiliate application has been submitted and is pending review. You will receive an email once approved.';
+        $affiliate_data = array(
+            'user_id' => $current_user_id,
+            'display_name' => sanitize_text_field($_POST['display_name'] ?? ''),
+            'email' => sanitize_email($_POST['email'] ?? ''),
+            'affiliate_code' => sanitize_text_field($_POST['affiliate_code'] ?? ''),
+            'referral_url' => esc_url_raw($_POST['referral_url'] ?? ''),
+            'notes' => sanitize_textarea_field($_POST['notes'] ?? '')
+        );
+
+        $result = flexpress_register_affiliate($affiliate_data);
+
+        if (is_wp_error($result)) {
+            $registration_message = $result->get_error_message();
+        } else {
+            $registration_success = true;
+            $registration_message = ($result['status'] === 'active')
+                ? 'Your affiliate application has been approved! You can start promoting immediately.'
+                : 'Your affiliate application has been submitted and is pending review. You will receive an email once approved.';
+        }
     }
 }
 

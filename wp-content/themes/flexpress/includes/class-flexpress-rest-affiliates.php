@@ -169,7 +169,7 @@ class FlexPress_REST_Affiliates {
         if (!$ok) {
             return new WP_Error('unauthorized', 'Invalid token', ['status' => 401]);
         }
-        if (empty($payload['sub']) || empty($payload['role']) || $payload['role'] !== 'affiliate_user') {
+        if (empty($payload['sub']) || empty($payload['role']) || !in_array($payload['role'], array('affiliate_user', 'affiliate_admin'), true)) {
             return new WP_Error('forbidden', 'Insufficient scope', ['status' => 403]);
         }
         return true;
@@ -193,7 +193,7 @@ class FlexPress_REST_Affiliates {
         }
         $payload = [
             'sub' => $user->ID,
-            'role' => in_array('manage_options', (array)$user->caps, true) ? 'affiliate_admin' : 'affiliate_user',
+            'role' => user_can($user, 'manage_options') ? 'affiliate_admin' : 'affiliate_user',
         ];
         $token = FlexPress_JWT::issue($payload, 900);
         return [
@@ -217,7 +217,7 @@ class FlexPress_REST_Affiliates {
         }
         $payload = [
             'sub' => $user->ID,
-            'role' => in_array('manage_options', (array)$user->caps, true) ? 'affiliate_admin' : (in_array('affiliate_user', (array)$user->roles, true) ? 'affiliate_user' : 'subscriber'),
+            'role' => user_can($user, 'manage_options') ? 'affiliate_admin' : (in_array('affiliate_user', (array)$user->roles, true) ? 'affiliate_user' : 'subscriber'),
         ];
         $token = FlexPress_JWT::issue($payload, 900);
         return [ 'token' => $token ];
@@ -313,6 +313,14 @@ class FlexPress_REST_Affiliates {
         if (floatval($affiliate->approved_commission) < floatval($affiliate->payout_threshold)) {
             return new WP_Error('bad_request', 'Threshold not met', ['status' => 400]);
         }
+        $open_payout = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM {$wpdb->prefix}flexpress_affiliate_payouts WHERE affiliate_id = %d AND status IN ('pending', 'processing') LIMIT 1",
+            intval($affiliate->id)
+        ));
+        if ($open_payout) {
+            return new WP_Error('bad_request', 'A payout request is already pending', ['status' => 400]);
+        }
+
         $payout_id = flexpress_process_affiliate_payout(intval($affiliate->id), [
             'period_start' => date('Y-m-01'),
             'period_end' => date('Y-m-t'),
@@ -361,6 +369,21 @@ class FlexPress_REST_Affiliates {
         }
 
         $table = $wpdb->prefix . 'flexpress_affiliates';
+        if (($data['status'] ?? '') === 'active') {
+            $affiliate = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $affiliate_id));
+            if (!$affiliate) {
+                return new WP_Error('not_found', 'Affiliate not found', ['status' => 404]);
+            }
+            $user_id = self::ensure_affiliate_user($affiliate);
+            if (is_wp_error($user_id)) {
+                return $user_id;
+            }
+            $data['user_id'] = intval($user_id);
+            $format[] = '%d';
+            $data['referral_url'] = flexpress_create_affiliate_referral_url($affiliate->affiliate_code);
+            $format[] = '%s';
+        }
+
         $updated = $wpdb->update($table, $data, ['id' => $affiliate_id], $format, ['%d']);
         if ($updated === false) {
             return new WP_Error('server_error', 'Failed to update affiliate', ['status' => 500]);
@@ -457,7 +480,11 @@ class FlexPress_REST_Affiliates {
                 $wpdb->update($wpdb->prefix . 'flexpress_affiliate_payouts', ['status' => 'failed'], ['id' => $id], ['%s'], ['%d']);
                 break;
             case 'complete':
-                $wpdb->update($wpdb->prefix . 'flexpress_affiliate_payouts', ['status' => 'completed', 'processed_at' => current_time('mysql')], ['id' => $id], ['%s','%s'], ['%d']);
+                $reference_id = sanitize_text_field($req->get_param('reference_id') ?? '');
+                $notes = sanitize_textarea_field($req->get_param('notes') ?? '');
+                if (!flexpress_complete_affiliate_payout($id, $reference_id, $notes)) {
+                    return new WP_Error('server_error', 'Unable to complete payout', ['status' => 500]);
+                }
                 break;
             default:
                 return new WP_Error('bad_request', 'Unknown action', ['status' => 400]);
@@ -477,17 +504,18 @@ class FlexPress_REST_Affiliates {
             $query .= $wpdb->prepare(" AND a.payout_method = %s", $method);
         }
         $rows = $wpdb->get_results($query);
-        $csv = "Affiliate,Email,Method,Amount,PeriodStart,PeriodEnd,Reference\n";
+        $csv = "Affiliate,Email,Method,Amount,PeriodStart,PeriodEnd,Reference,PayoutDetails\n";
         foreach ($rows as $r) {
-            $csv .= sprintf("%s,%s,%s,%.2f,%s,%s,%s\n",
+            $csv .= self::csv_row(array(
                 $r->display_name,
                 $r->email,
                 $r->payout_method,
-                floatval($r->payout_amount),
+                number_format(floatval($r->payout_amount), 2, '.', ''),
                 $r->period_start,
                 $r->period_end,
-                $r->reference_id
-            );
+                $r->reference_id,
+                flexpress_decrypt_payout_details($r->payout_details),
+            ));
         }
         return [
             'method' => $method ?: 'all',
@@ -503,20 +531,60 @@ class FlexPress_REST_Affiliates {
         }
         
         // Validate format
-        if (!preg_match('/^[a-zA-Z0-9]{3,20}$/', $affiliate_id)) {
+        if (!preg_match('/^[a-zA-Z0-9-]{3,20}$/', $affiliate_id)) {
             return ['available' => false, 'reason' => 'Invalid format'];
         }
         
         global $wpdb;
         $exists = $wpdb->get_var($wpdb->prepare(
-            "SELECT id FROM {$wpdb->prefix}flexpress_affiliates WHERE affiliate_id = %s",
+            "SELECT id FROM {$wpdb->prefix}flexpress_affiliates WHERE affiliate_code = %s",
             $affiliate_id
         ));
         
         return ['available' => !$exists];
     }
+
+    private static function csv_row($fields) {
+        $escaped = array_map(function ($field) {
+            $field = (string) $field;
+            return '"' . str_replace('"', '""', $field) . '"';
+        }, $fields);
+        return implode(',', $escaped) . "\n";
+    }
+
+    private static function ensure_affiliate_user($affiliate) {
+        $user = null;
+        if (!empty($affiliate->user_id)) {
+            $user = get_user_by('id', intval($affiliate->user_id));
+        }
+        if (!$user) {
+            $user = get_user_by('email', $affiliate->email);
+        }
+        if (!$user) {
+            $username_base = sanitize_user(current(explode('@', $affiliate->email)), true);
+            if (!$username_base) {
+                $username_base = sanitize_user($affiliate->affiliate_code, true);
+            }
+            $username = $username_base;
+            $suffix = 1;
+            while (username_exists($username)) {
+                $username = $username_base . $suffix;
+                $suffix++;
+            }
+            $user_id = wp_create_user($username, wp_generate_password(20, true), $affiliate->email);
+            if (is_wp_error($user_id)) {
+                return $user_id;
+            }
+            wp_update_user(array('ID' => intval($user_id), 'display_name' => $affiliate->display_name));
+            $user = get_user_by('id', intval($user_id));
+        }
+        if (!$user) {
+            return new WP_Error('affiliate_user_failed', 'Unable to link or create affiliate user', ['status' => 500]);
+        }
+        $user->add_role('affiliate_user');
+        return intval($user->ID);
+    }
 }
 
 FlexPress_REST_Affiliates::init();
-
 

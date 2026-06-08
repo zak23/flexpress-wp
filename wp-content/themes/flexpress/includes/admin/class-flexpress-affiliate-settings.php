@@ -110,6 +110,14 @@ class FlexPress_Affiliate_Settings
      */
     public static function create_affiliate_tables()
     {
+        if (function_exists('flexpress_affiliate_create_tables')) {
+            flexpress_affiliate_create_tables();
+            self::create_promo_codes_table();
+            self::create_promo_usage_table();
+            self::update_existing_tables();
+            return;
+        }
+
         global $wpdb;
 
         $charset_collate = $wpdb->get_charset_collate();
@@ -2269,11 +2277,31 @@ class FlexPress_Affiliate_Settings
             $update_data['notes'] = $notes;
         }
 
+        $formats = ['%s'];
+        if ($notes) {
+            $formats[] = '%s';
+        }
+
+        if ($new_status === 'active' && function_exists('flexpress_link_or_create_affiliate_user')) {
+            $affiliate = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $affiliate_id));
+            if (!$affiliate) {
+                wp_send_json_error(['message' => 'Affiliate not found']);
+            }
+            $linked_user_id = flexpress_link_or_create_affiliate_user($affiliate);
+            if (is_wp_error($linked_user_id)) {
+                wp_send_json_error(['message' => $linked_user_id->get_error_message()]);
+            }
+            $update_data['user_id'] = intval($linked_user_id);
+            $update_data['referral_url'] = flexpress_create_affiliate_referral_url($affiliate->affiliate_code);
+            $formats[] = '%d';
+            $formats[] = '%s';
+        }
+
         $result = $wpdb->update(
             $table,
             $update_data,
             ['id' => $affiliate_id],
-            ['%s', '%s'],
+            $formats,
             ['%d']
         );
 
@@ -2355,7 +2383,9 @@ class FlexPress_Affiliate_Settings
 
         $affiliate_id = intval($_POST['affiliate_id']);
         $field = sanitize_text_field($_POST['field']);
-        $value = sanitize_text_field($_POST['value']);
+        $value = $field === 'payout_details'
+            ? flexpress_encrypt_payout_details(sanitize_textarea_field($_POST['value']))
+            : sanitize_text_field($_POST['value']);
 
         global $wpdb;
         $table = $wpdb->prefix . 'flexpress_affiliates';

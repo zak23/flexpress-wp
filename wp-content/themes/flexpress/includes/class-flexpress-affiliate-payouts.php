@@ -110,7 +110,7 @@ class FlexPress_Affiliate_Payouts {
                 'total_commissions' => floatval($payout->total_commissions),
                 'payout_amount' => floatval($payout->payout_amount),
                 'payout_method' => $payout->payout_method,
-                'payout_details' => $payout->payout_details,
+                'payout_details' => flexpress_decrypt_payout_details($payout->payout_details),
                 'status' => $payout->status,
                 'reference_id' => $payout->reference_id,
                 'notes' => $payout->notes,
@@ -297,28 +297,11 @@ class FlexPress_Affiliate_Payouts {
         if ($status === 'completed') {
             $update_data['processed_at'] = current_time('mysql');
             
-            // Mark related transactions as paid
-            $wpdb->update(
-                $transactions_table,
-                array('status' => 'paid', 'paid_at' => current_time('mysql')),
-                array(
-                    'affiliate_id' => $payout->affiliate_id,
-                    'status' => 'approved',
-                    'created_at' => array($payout->period_start . ' 00:00:00', $payout->period_end . ' 23:59:59')
-                ),
-                array('%s', '%s'),
-                array('%d', '%s', '%s')
-            );
-            
-            // Update affiliate's paid commission total
-            $wpdb->query($wpdb->prepare(
-                "UPDATE $affiliates_table 
-                 SET paid_commission = paid_commission + %f,
-                     approved_commission = approved_commission - %f
-                 WHERE id = %d",
-                $payout->payout_amount,
-                $payout->payout_amount,
-                $payout->affiliate_id
+            if (!flexpress_complete_affiliate_payout($payout_id, $reference_id, $notes)) {
+                wp_send_json_error(['message' => __('Failed to complete payout.', 'flexpress')]);
+            }
+            wp_send_json_success(array(
+                'message' => __('Payout status updated successfully.', 'flexpress')
             ));
         }
         
@@ -401,7 +384,7 @@ class FlexPress_Affiliate_Payouts {
             'total_commissions' => floatval($payout->total_commissions),
             'payout_amount' => floatval($payout->payout_amount),
             'payout_method' => $payout->payout_method,
-            'payout_details' => $payout->payout_details,
+            'payout_details' => flexpress_decrypt_payout_details($payout->payout_details),
             'status' => $payout->status,
             'reference_id' => $payout->reference_id,
             'notes' => $payout->notes,
@@ -530,7 +513,7 @@ class FlexPress_Affiliate_Payouts {
         $period_dates = $this->get_payout_period_dates($payout_schedule);
         
         // Get eligible affiliates
-        $affiliates = $wpdb->get_results(
+        $affiliates = $wpdb->get_results($wpdb->prepare(
             "SELECT a.*, 
                     COALESCE(SUM(t.commission_amount), 0) as pending_amount
              FROM $affiliates_table a
@@ -542,7 +525,7 @@ class FlexPress_Affiliate_Payouts {
              GROUP BY a.id
              HAVING pending_amount >= a.payout_threshold",
             $period_dates['start'], $period_dates['end']
-        );
+        ));
         
         foreach ($affiliates as $affiliate) {
             // Check if payout already exists for this period

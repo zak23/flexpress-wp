@@ -448,6 +448,13 @@ class FlexPress_CF7_Discord_Integration {
                         'inline' => true
                     ];
                 }
+                if (isset($posted_data['applicant_location'])) {
+                    $fields[] = [
+                        'name' => __('Based/Located', 'flexpress'),
+                        'value' => $sanitize_field_value($posted_data['applicant_location']),
+                        'inline' => true
+                    ];
+                }
                 if (isset($posted_data['instagram']) && !empty($posted_data['instagram'])) {
                     $fields[] = [
                         'name' => __('Instagram', 'flexpress'),

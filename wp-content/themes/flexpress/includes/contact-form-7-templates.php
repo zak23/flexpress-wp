@@ -186,6 +186,12 @@ function flexpress_create_casting_form()
     </div>
 </div>
 
+<div class="mb-3">
+    <label for="applicant_location" class="form-label">' . __('Where are you based/located?', 'flexpress') . ' <span class="text-danger">*</span></label>
+    [text* applicant_location id:applicant_location class:form-control placeholder "' . __('City, state/region, country', 'flexpress') . '"]
+    <div class="invalid-feedback">' . __('Please tell us where you are based.', 'flexpress') . '</div>
+</div>
+
 <div class="row">
     <div class="col-md-6 mb-3">
         <label for="instagram" class="form-label">' . __('Instagram', 'flexpress') . '</label>
@@ -236,6 +242,7 @@ function flexpress_create_casting_form()
 <p><strong>' . __('Email:', 'flexpress') . '</strong> [email]</p>
 <p><strong>' . __('Gender Identity:', 'flexpress') . '</strong> [gender_identity]</p>
 <p><strong>' . __('Preferred Stage Age:', 'flexpress') . '</strong> [stage_age]</p>
+<p><strong>' . __('Based/Located:', 'flexpress') . '</strong> [applicant_location]</p>
 
 <p><strong>' . __('Social Media:', 'flexpress') . '</strong></p>
 <p><strong>' . __('Instagram:', 'flexpress') . '</strong> [instagram]</p>
@@ -298,6 +305,21 @@ function flexpress_create_casting_form()
 
     // Update existing form or create new one
     if ($existing_form) {
+        // Keep existing mail settings intact, but add the new location mail tag
+        // to older generated casting forms when it is missing.
+        $existing_mail = get_post_meta($existing_form->ID, '_mail', true);
+        if (is_array($existing_mail) && isset($existing_mail['body']) && strpos($existing_mail['body'], '[applicant_location]') === false) {
+            $location_line = '<p><strong>' . __('Based/Located:', 'flexpress') . '</strong> [applicant_location]</p>';
+
+            if (strpos($existing_mail['body'], '[stage_age]') !== false) {
+                $existing_mail['body'] = preg_replace('/(<p><strong>.*?\[stage_age\]<\/p>)/s', '$1' . "\n" . $location_line, $existing_mail['body'], 1);
+            } else {
+                $existing_mail['body'] .= "\n" . $location_line;
+            }
+
+            update_post_meta($existing_form->ID, '_mail', $existing_mail);
+        }
+
         // Never overwrite _mail/_mail_2 on existing casting form so manual edits
         // in CF7 admin (e.g. custom recipient addresses) are preserved.
         unset($form_data['meta_input']['_mail']);
@@ -706,7 +728,68 @@ function flexpress_create_content_removal_form()
 add_action('wpcf7_init', 'flexpress_create_cf7_forms');
 
 /**
- * Validate casting form to require at least one social media link or URL
+ * Check whether a casting work URL is likely to be a real public URL.
+ *
+ * @param string $url Submitted URL.
+ * @return bool
+ */
+function flexpress_is_valid_casting_work_url($url)
+{
+    $url = trim((string) $url);
+
+    if ($url === '' || !filter_var($url, FILTER_VALIDATE_URL)) {
+        return false;
+    }
+
+    $parts = wp_parse_url($url);
+    $scheme = strtolower($parts['scheme'] ?? '');
+    $host = strtolower($parts['host'] ?? '');
+
+    if (!in_array($scheme, array('http', 'https'), true) || $host === '') {
+        return false;
+    }
+
+    $host = preg_replace('/^www\./', '', $host);
+
+    $blocked_hosts = array(
+        'example.com',
+        'example.net',
+        'example.org',
+        'fake.com',
+        'test.com',
+        'localhost',
+    );
+
+    if (in_array($host, $blocked_hosts, true)) {
+        return false;
+    }
+
+    if (
+        preg_match('/(^|\.)example$/', $host) ||
+        preg_match('/(^|\.)invalid$/', $host) ||
+        preg_match('/(^|\.)localhost$/', $host) ||
+        preg_match('/(^|\.)test$/', $host)
+    ) {
+        return false;
+    }
+
+    if (filter_var($host, FILTER_VALIDATE_IP)) {
+        return false;
+    }
+
+    if (!preg_match('/^[a-z0-9.-]+\.[a-z]{2,}$/', $host)) {
+        return false;
+    }
+
+    if (function_exists('checkdnsrr') && !checkdnsrr($host, 'A') && !checkdnsrr($host, 'AAAA') && !checkdnsrr($host, 'CNAME')) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Validate casting form to require at least one social media link or URL and reject fake work URLs.
  * 
  * @param WPCF7_Validation $result Validation result
  * @param array $tags Form tags
@@ -758,6 +841,15 @@ function flexpress_validate_casting_form($result, $tags)
 
         if ($error_tag) {
             $result->invalidate($error_tag, __('Please provide at least one: Instagram handle, Twitter handle, or a link to your work.', 'flexpress'));
+        }
+    }
+
+    if ($has_link && !flexpress_is_valid_casting_work_url($posted_data['link'])) {
+        foreach ($tags as $tag) {
+            if ($tag->name === 'link') {
+                $result->invalidate($tag, __('Please enter a real public URL to your work. Placeholder or fake URLs are not accepted.', 'flexpress'));
+                break;
+            }
         }
     }
 

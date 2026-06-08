@@ -716,9 +716,16 @@ function flexpress_enqueue_scripts_and_styles()
         wp_script_add_data('flexpress-model-social', 'defer', true);
     }
 
+    // Enqueue affiliate styles on affiliate signup, terms, and dashboard pages
+    if (is_page_template('page-templates/affiliate-signup.php')
+        || is_page_template('page-templates/affiliate-terms.php')
+        || is_page_template('page-templates/affiliate-dashboard.php')) {
+        $affiliate_style_deps = $combined_file ? array('flexpress-combined') : array('flexpress-main');
+        wp_enqueue_style('flexpress-affiliate-styles', get_template_directory_uri() . '/assets/css/affiliate-styles.css', $affiliate_style_deps, wp_get_theme()->get('Version'));
+    }
+
     // Enqueue affiliate signup script on affiliate signup page
     if (is_page_template('page-templates/affiliate-signup.php')) {
-        wp_enqueue_style('flexpress-affiliate-styles', get_template_directory_uri() . '/assets/css/affiliate-styles.css', array('flexpress-main'), wp_get_theme()->get('Version'));
         wp_enqueue_script('flexpress-affiliate-signup', get_template_directory_uri() . '/assets/js/affiliate-signup.js', array('jquery'), wp_get_theme()->get('Version'), true);
         wp_script_add_data('flexpress-affiliate-signup', 'defer', true);
 
@@ -730,8 +737,6 @@ function flexpress_enqueue_scripts_and_styles()
 
     // Enqueue affiliate dashboard script on affiliate dashboard page
     if (is_page_template('page-templates/affiliate-dashboard.php')) {
-        $affiliate_deps = $combined_file ? array('flexpress-combined') : array('flexpress-main');
-        wp_enqueue_style('flexpress-affiliate-styles', get_template_directory_uri() . '/assets/css/affiliate-styles.css', $affiliate_deps, wp_get_theme()->get('Version'));
         wp_enqueue_script('chart-js', get_template_directory_uri() . '/assets/vendor/js/chart.min.js', array(), '3.9.1', true);
         wp_script_add_data('chart-js', 'defer', true);
         wp_enqueue_script('flexpress-affiliate-dashboard', get_template_directory_uri() . '/assets/js/affiliate-dashboard.js', array('jquery', 'chart-js'), wp_get_theme()->get('Version'), true);
@@ -7251,6 +7256,249 @@ function flexpress_generate_anti_slavery_content()
 }
 
 /**
+ * Generate dynamic affiliate program terms and conditions content.
+ *
+ * @return string Complete affiliate terms content with dynamic variables.
+ */
+function flexpress_generate_affiliate_terms_content()
+{
+    $site_name = get_bloginfo('name');
+    $site_url = get_bloginfo('url');
+    $site_domain = parse_url(home_url(), PHP_URL_HOST);
+
+    $contact_email = flexpress_get_contact_email('contact');
+    $support_email = flexpress_get_contact_email('support');
+
+    $parent_company = flexpress_get_parent_company();
+    if (empty($parent_company)) {
+        $parent_company = $site_name;
+    }
+    if (empty($contact_email)) {
+        $contact_email = 'affiliates@' . $site_domain;
+    }
+    if (empty($support_email)) {
+        $support_email = 'support@' . $site_domain;
+    }
+
+    $affiliate_settings = get_option('flexpress_affiliate_settings', array());
+    $signup_rate = floatval($affiliate_settings['commission_rate'] ?? 25);
+    $rebill_rate = floatval($affiliate_settings['rebill_commission_rate'] ?? 10);
+    $unlock_rate = floatval($affiliate_settings['unlock_commission_rate'] ?? 15);
+    $minimum_payout = floatval($affiliate_settings['minimum_payout'] ?? 50);
+
+    $current_date = date_i18n(get_option('date_format'));
+    $privacy_url = esc_url(home_url('/privacy/'));
+    $signup_url = esc_url(home_url('/affiliate-signup/'));
+
+    $content = "<p><strong>" . esc_html__('Last Updated:', 'flexpress') . "</strong> {$current_date}</p>
+
+<p>" . sprintf(
+        esc_html__('These Affiliate Program Terms and Conditions (\"Terms\") govern your participation in the %1$s Affiliate Program (\"Program\") operated by %2$s (\"we\", \"us\", or \"our\"). By applying to or participating in the Program, you (\"Affiliate\", \"you\", or \"your\") agree to be bound by these Terms, our Privacy Policy, and all applicable laws.', 'flexpress'),
+        esc_html($site_name),
+        esc_html($parent_company)
+    ) . "</p>
+
+<h2>" . esc_html__('1. Program Overview', 'flexpress') . "</h2>
+<p>" . sprintf(
+        esc_html__('The %s Affiliate Program allows approved partners to earn commissions by referring new customers to %s through unique tracking links and promotional codes. We reserve the right to modify, suspend, or discontinue the Program at any time.', 'flexpress'),
+        esc_html($site_name),
+        esc_html($site_url)
+    ) . "</p>
+
+<h2>" . esc_html__('2. Eligibility', 'flexpress') . "</h2>
+<p>" . esc_html__('To participate in the Program, you must:', 'flexpress') . "</p>
+<ul>
+<li>" . esc_html__('Be at least 18 years of age', 'flexpress') . "</li>
+<li>" . esc_html__('Have the legal authority to enter into a binding agreement', 'flexpress') . "</li>
+<li>" . esc_html__('Operate a legitimate website, blog, email list, or social media presence', 'flexpress') . "</li>
+<li>" . esc_html__('Provide accurate and complete information during registration', 'flexpress') . "</li>
+<li>" . esc_html__('Comply with all applicable laws, regulations, and platform policies', 'flexpress') . "</li>
+<li>" . esc_html__('Not be located in a jurisdiction where affiliate marketing of adult content is prohibited', 'flexpress') . "</li>
+</ul>
+
+<h2>" . esc_html__('3. Application and Approval', 'flexpress') . "</h2>
+<p>" . sprintf(
+        __('Applications are submitted via our <a href="%s">affiliate signup page</a>. We review all applications and may approve or reject any applicant at our sole discretion. Approval does not guarantee continued participation. We may require additional verification before activating your account.', 'flexpress'),
+        esc_url($signup_url)
+    ) . "</p>
+
+<h2>" . esc_html__('4. Commission Structure', 'flexpress') . "</h2>
+<p>" . esc_html__('Commissions are earned on qualifying, confirmed transactions attributed to your affiliate tracking link or code:', 'flexpress') . "</p>
+<ul>
+<li>" . sprintf(esc_html__('Initial membership signups: %s%%', 'flexpress'), esc_html($signup_rate)) . "</li>
+<li>" . sprintf(esc_html__('Recurring subscription rebills: %s%%', 'flexpress'), esc_html($rebill_rate)) . "</li>
+<li>" . sprintf(esc_html__('Individual content unlock purchases: %s%%', 'flexpress'), esc_html($unlock_rate)) . "</li>
+</ul>
+<p>" . esc_html__('Commission rates may vary by affiliate, promotional campaign, or product type. Your dashboard displays your applicable rates. We reserve the right to change commission rates with reasonable notice.', 'flexpress') . "</p>
+
+<h2>" . esc_html__('5. Tracking and Attribution', 'flexpress') . "</h2>
+<ul>
+<li>" . esc_html__('Referrals are tracked via cookies and unique affiliate codes', 'flexpress') . "</li>
+<li>" . esc_html__('A referral is credited when a visitor uses your link or code and completes a qualifying purchase', 'flexpress') . "</li>
+<li>" . esc_html__('Last-click attribution applies unless otherwise specified', 'flexpress') . "</li>
+<li>" . esc_html__('We are not responsible for tracking failures caused by cookie blockers, browser settings, or technical issues beyond our control', 'flexpress') . "</li>
+<li>" . esc_html__('Self-referrals, fraudulent transactions, and test purchases do not qualify for commissions', 'flexpress') . "</li>
+</ul>
+
+<h2>" . esc_html__('6. Payment Terms', 'flexpress') . "</h2>
+<ul>
+<li>" . sprintf(esc_html__('Minimum payout threshold: $%s USD', 'flexpress'), esc_html(number_format($minimum_payout, 2))) . "</li>
+<li>" . esc_html__('Payouts are processed monthly for balances meeting the minimum threshold', 'flexpress') . "</li>
+<li>" . esc_html__('Commissions are subject to a 30-day hold period to account for refunds and chargebacks', 'flexpress') . "</li>
+<li>" . esc_html__('Refunded, charged-back, or fraudulent transactions will result in commission reversal', 'flexpress') . "</li>
+<li>" . esc_html__('Payment methods include PayPal, cryptocurrency, bank transfer, and other methods as made available in your dashboard', 'flexpress') . "</li>
+<li>" . esc_html__('You are responsible for providing accurate payment details and any applicable transfer fees', 'flexpress') . "</li>
+</ul>
+
+<h2>" . esc_html__('7. Promotional Guidelines', 'flexpress') . "</h2>
+<p>" . esc_html__('When promoting our services, you agree to:', 'flexpress') . "</p>
+<ul>
+<li>" . esc_html__('Use only approved marketing materials or create custom materials that accurately represent our brand', 'flexpress') . "</li>
+<li>" . esc_html__('Clearly disclose your affiliate relationship in accordance with FTC guidelines and local advertising laws', 'flexpress') . "</li>
+<li>" . esc_html__('Not make false, misleading, or exaggerated claims about our products or services', 'flexpress') . "</li>
+<li>" . esc_html__('Not imply endorsement, partnership, or employment by us unless explicitly authorized in writing', 'flexpress') . "</li>
+<li>" . esc_html__('Maintain professional standards in all promotional communications', 'flexpress') . "</li>
+<li>" . esc_html__('Ensure all promotional content complies with age-restriction requirements for adult content', 'flexpress') . "</li>
+</ul>
+
+<h2>" . esc_html__('8. Prohibited Activities', 'flexpress') . "</h2>
+<p>" . esc_html__('The following activities are strictly prohibited and may result in immediate termination:', 'flexpress') . "</p>
+<ul>
+<li>" . esc_html__('Spam, unsolicited bulk email, or any form of illegal marketing', 'flexpress') . "</li>
+<li>" . esc_html__('Cookie stuffing, click fraud, or use of automated tools to generate fake referrals', 'flexpress') . "</li>
+<li>" . esc_html__('Bidding on our branded keywords in paid search without prior written approval', 'flexpress') . "</li>
+<li>" . esc_html__('Self-referrals or creating accounts to earn commissions on your own purchases', 'flexpress') . "</li>
+<li>" . esc_html__('Infringing on our intellectual property or misrepresenting our brand', 'flexpress') . "</li>
+<li>" . esc_html__('Promoting our services on websites that host illegal content or malware', 'flexpress') . "</li>
+<li>" . esc_html__('Offering unauthorized discounts, coupons, or incentives not approved by us', 'flexpress') . "</li>
+<li>" . esc_html__('Any activity that violates applicable laws or harms our reputation', 'flexpress') . "</li>
+</ul>
+
+<h2>" . esc_html__('9. Intellectual Property', 'flexpress') . "</h2>
+<p>" . sprintf(
+        esc_html__('We grant you a limited, non-exclusive, revocable license to use our logos, banners, and promotional materials solely for Program participation. All intellectual property remains the property of %s. You may not modify our branding without written consent.', 'flexpress'),
+        esc_html($parent_company)
+    ) . "</p>
+
+<h2>" . esc_html__('10. Term and Termination', 'flexpress') . "</h2>
+<p>" . esc_html__('Either party may terminate participation at any time. We may suspend or terminate your account immediately for violation of these Terms, suspected fraud, or at our sole discretion. Upon termination:', 'flexpress') . "</p>
+<ul>
+<li>" . esc_html__('You must immediately cease all promotional activities', 'flexpress') . "</li>
+<li>" . esc_html__('You must remove all affiliate links, banners, and promotional materials', 'flexpress') . "</li>
+<li>" . esc_html__('Pending commissions may be forfeited if termination is due to Terms violations', 'flexpress') . "</li>
+<li>" . esc_html__('Earned commissions above the payout threshold that are not subject to dispute will be paid per our standard schedule', 'flexpress') . "</li>
+</ul>
+
+<h2>" . esc_html__('11. Tax Obligations', 'flexpress') . "</h2>
+<p>" . esc_html__('You are solely responsible for reporting and paying all taxes on commissions earned through the Program. We may require tax documentation (such as a W-9 or W-8BEN) before processing payouts above applicable thresholds.', 'flexpress') . "</p>
+
+<h2>" . esc_html__('12. Privacy', 'flexpress') . "</h2>
+<p>" . sprintf(
+        __('Your participation in the Program is also governed by our <a href="%s">Privacy Policy</a>. We collect and process data necessary to track referrals, process payouts, and communicate with affiliates.', 'flexpress'),
+        esc_url($privacy_url)
+    ) . "</p>
+
+<h2>" . esc_html__('13. Limitation of Liability', 'flexpress') . "</h2>
+<p>" . sprintf(
+        esc_html__('To the maximum extent permitted by law, %s shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your participation in the Program. Our total liability shall not exceed the commissions paid to you in the twelve months preceding the claim.', 'flexpress'),
+        esc_html($parent_company)
+    ) . "</p>
+
+<h2>" . esc_html__('14. Indemnification', 'flexpress') . "</h2>
+<p>" . esc_html__('You agree to indemnify and hold us harmless from any claims, damages, or expenses arising from your promotional activities, breach of these Terms, or violation of applicable laws.', 'flexpress') . "</p>
+
+<h2>" . esc_html__('15. Modifications', 'flexpress') . "</h2>
+<p>" . esc_html__('We reserve the right to modify these Terms at any time. Material changes will be posted on this page with an updated date. Continued participation after changes constitutes acceptance. We encourage you to review these Terms periodically.', 'flexpress') . "</p>
+
+<h2>" . esc_html__('16. Contact', 'flexpress') . "</h2>
+<p>" . esc_html__('For questions about the Affiliate Program or these Terms, contact us:', 'flexpress') . "</p>
+<ul>
+<li>" . sprintf(__('Affiliate inquiries: %s', 'flexpress'), '<a href="mailto:' . esc_attr($contact_email) . '">' . esc_html($contact_email) . '</a>') . "</li>
+<li>" . sprintf(__('General support: %s', 'flexpress'), '<a href="mailto:' . esc_attr($support_email) . '">' . esc_html($support_email) . '</a>') . "</li>
+</ul>
+
+<p><strong>" . esc_html__('By applying to or participating in our Affiliate Program, you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions.', 'flexpress') . "</strong></p>";
+
+    return $content;
+}
+
+/**
+ * Get affiliate terms HTML for display (admin override, page content, or generated default).
+ *
+ * @return string Affiliate terms HTML.
+ */
+function flexpress_get_affiliate_terms_html()
+{
+    $settings = get_option('flexpress_affiliate_settings', array());
+    $custom_terms = $settings['affiliate_terms'] ?? '';
+
+    if (!empty($custom_terms)) {
+        return wp_kses_post($custom_terms);
+    }
+
+    $page_content = get_post_field('post_content', get_the_ID());
+    if (!empty(trim(wp_strip_all_tags($page_content)))) {
+        return apply_filters('the_content', $page_content);
+    }
+
+    return flexpress_generate_affiliate_terms_content();
+}
+
+/**
+ * Create affiliate pages if they do not already exist.
+ */
+function flexpress_create_affiliate_pages()
+{
+    $affiliate_pages = array(
+        'affiliate-signup' => array(
+            'title' => 'Affiliate Signup',
+            'content' => __('Join our affiliate program and earn commissions by promoting our platform.', 'flexpress'),
+            'template' => 'page-templates/affiliate-signup.php',
+        ),
+        'affiliate-terms' => array(
+            'title' => 'Affiliate Terms',
+            'content' => flexpress_generate_affiliate_terms_content(),
+            'template' => 'page-templates/affiliate-terms.php',
+        ),
+        'affiliate-dashboard' => array(
+            'title' => 'Affiliate Dashboard',
+            'content' => __('View your affiliate performance, commissions, and promotional links.', 'flexpress'),
+            'template' => 'page-templates/affiliate-dashboard.php',
+        ),
+    );
+
+    foreach ($affiliate_pages as $slug => $page_data) {
+        $existing_page = get_page_by_path($slug);
+        if ($existing_page) {
+            continue;
+        }
+
+        $page_id = wp_insert_post(array(
+            'post_title' => $page_data['title'],
+            'post_content' => $page_data['content'],
+            'post_name' => $slug,
+            'post_status' => 'publish',
+            'post_type' => 'page',
+            'comment_status' => 'closed',
+            'ping_status' => 'closed',
+        ));
+
+        if ($page_id && !is_wp_error($page_id) && !empty($page_data['template'])) {
+            update_post_meta($page_id, '_wp_page_template', $page_data['template']);
+        }
+    }
+}
+
+/**
+ * Ensure affiliate pages exist on init.
+ */
+function flexpress_maybe_create_affiliate_pages()
+{
+    flexpress_create_affiliate_pages();
+}
+add_action('init', 'flexpress_maybe_create_affiliate_pages', 6);
+
+/**
  * Generate dynamic customer terms and conditions content with site-specific variables
  *
  * @return string Complete customer terms content with dynamic variables
@@ -9261,6 +9509,21 @@ function flexpress_create_default_pages()
             'title' => 'Talent Application',
             'content' => '[flexpress_talent_application_form]',
             'template' => 'page-templates/talent-application.php'
+        ),
+        'affiliate-signup' => array(
+            'title' => 'Affiliate Signup',
+            'content' => 'Join our affiliate program and earn commissions by promoting our platform.',
+            'template' => 'page-templates/affiliate-signup.php'
+        ),
+        'affiliate-terms' => array(
+            'title' => 'Affiliate Terms',
+            'content' => 'dynamic_affiliate_terms',
+            'template' => 'page-templates/affiliate-terms.php'
+        ),
+        'affiliate-dashboard' => array(
+            'title' => 'Affiliate Dashboard',
+            'content' => 'View your affiliate performance, commissions, and promotional links.',
+            'template' => 'page-templates/affiliate-dashboard.php'
         )
     );
 
@@ -9268,9 +9531,14 @@ function flexpress_create_default_pages()
         // Check if page already exists
         $existing_page = get_page_by_path($slug);
         if (!$existing_page) {
+            $content = $page_data['content'];
+            if ($content === 'dynamic_affiliate_terms') {
+                $content = flexpress_generate_affiliate_terms_content();
+            }
+
             $page_id = wp_insert_post(array(
                 'post_title' => $page_data['title'],
-                'post_content' => $page_data['content'],
+                'post_content' => $content,
                 'post_name' => $slug,
                 'post_status' => 'publish',
                 'post_type' => 'page',

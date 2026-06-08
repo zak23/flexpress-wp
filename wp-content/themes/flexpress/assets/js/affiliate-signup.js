@@ -6,6 +6,13 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
+    const ajaxUrl = (typeof affiliateSignup !== 'undefined' && affiliateSignup.ajaxurl)
+        ? affiliateSignup.ajaxurl
+        : (typeof ajaxurl !== 'undefined' ? ajaxurl : '');
+    const affiliateNonce = (typeof affiliateSignup !== 'undefined' && affiliateSignup.nonce)
+        ? affiliateSignup.nonce
+        : (typeof window.affiliateNonce !== 'undefined' ? window.affiliateNonce : '');
+
     const affiliateForm = document.getElementById('affiliate-signup-form');
     const affiliateCodeInput = document.getElementById('affiliate_code');
     const displayNameInput = document.getElementById('display_name');
@@ -82,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Check availability via AJAX
         try {
-            const response = await fetch(ajaxurl, {
+            const response = await fetch(ajaxUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -90,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: new URLSearchParams({
                     action: 'flexpress_check_affiliate_code_availability',
                     code: code,
-                    nonce: affiliateNonce || ''
+                    nonce: affiliateNonce
                 })
             });
             
@@ -167,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         try {
-            const response = await fetch(ajaxurl, {
+            const response = await fetch(ajaxUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -175,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: new URLSearchParams({
                     action: 'flexpress_generate_affiliate_code_suggestion',
                     display_name: displayName,
-                    nonce: affiliateNonce || ''
+                    nonce: affiliateNonce
                 })
             });
             
@@ -261,16 +268,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Form submission
     if (affiliateForm) {
         affiliateForm.addEventListener('submit', function(e) {
-            // Perform final validation
-            const isFormValid = Object.values(validationState).every(Boolean);
-            
+            affiliateForm.classList.add('was-validated');
+
+            const isFormValid = affiliateForm.checkValidity()
+                && Object.values(validationState).every(Boolean);
+
             if (!isFormValid) {
                 e.preventDefault();
-                alert('Please fix all validation errors before submitting');
+                e.stopPropagation();
                 return false;
             }
-            
-            // Show loading state
+
             if (submitBtn) {
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';

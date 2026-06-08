@@ -1,8 +1,7 @@
 /**
  * FlexPress Affiliate System Styles
- * 
- * Styling for affiliate signup page and dashboard with dark theme integration
- * and responsive design for optimal user experience.
+ *
+ * Styling for affiliate signup page and dashboard using theme CSS variables.
  */
 
 /* ===========================
@@ -11,157 +10,289 @@
 
 .affiliate-signup-page,
 .affiliate-dashboard-page {
-    background-color: #000000;
-    color: #ffffff;
-    min-height: 100vh;
-    padding: 2rem 0;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  min-height: 100vh;
+}
+
+.affiliate-signup-page h1,
+.affiliate-signup-page h2,
+.affiliate-signup-page h3,
+.affiliate-signup-page h4,
+.affiliate-signup-page h5,
+.affiliate-signup-page h6,
+.affiliate-dashboard-page h1,
+.affiliate-dashboard-page h2,
+.affiliate-dashboard-page h3,
+.affiliate-dashboard-page h4,
+.affiliate-dashboard-page h5,
+.affiliate-dashboard-page h6 {
+  color: var(--color-text);
+}
+
+.affiliate-signup-page .lead,
+.affiliate-dashboard-page .lead {
+  color: var(--color-text-secondary);
 }
 
 /* ===========================
    Affiliate Signup Form
    =========================== */
 
-.affiliate-signup-form {
-    background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
-    border: 1px solid #333333;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    overflow: hidden;
-}
-
-.affiliate-signup-form .card-header {
-    background: linear-gradient(135deg, #ff6b35, #e55a2b);
-    border-bottom: none;
-    padding: 1.5rem;
-}
-
-.affiliate-signup-form .card-header h1 {
-    margin: 0;
-    font-weight: 700;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+.affiliate-signup-form,
+.affiliate-signup-form.bg-dark {
+  background-color: var(--color-surface) !important;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
 }
 
 .affiliate-signup-form .card-body {
-    padding: 2rem;
-    background: #111111;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+.affiliate-signup-form .card-footer {
+  background-color: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  padding: 1rem 1.5rem;
+}
+
+.affiliate-signup-form .card-footer a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.affiliate-signup-form .card-footer a:hover {
+  color: var(--color-accent-hover);
+  text-decoration: underline;
 }
 
 /* Commission Rate Display */
 .commission-rates {
-    background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-    border: 1px solid #ff6b35;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    text-align: center;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-accent);
+  border-radius: 8px;
+  padding: 1.5rem;
 }
 
-.commission-rates h4 {
-    color: #ff6b35;
-    margin-bottom: 1rem;
-    font-weight: 600;
+.commission-rates h2,
+.commission-rates h4,
+.commission-rates h5 {
+  color: var(--color-text);
+  margin-bottom: 1rem;
+  font-weight: 600;
 }
 
-.commission-rate-item {
-    margin-bottom: 0.5rem;
+.commission-benefits {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.commission-benefits li {
+  color: var(--color-text-secondary);
+  padding: 0.35rem 0;
+  padding-left: 1.25rem;
+  position: relative;
+}
+
+.commission-benefits li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.85rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-accent);
 }
 
 .commission-rate-item strong {
-    color: #ff6b35;
-    font-size: 1.2em;
+  color: var(--color-accent);
+}
+
+.affiliate-code-display {
+  color: var(--color-accent);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  font-size: 1em;
+  font-weight: 600;
 }
 
 /* Form Controls */
+.affiliate-signup-form .form-label {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.affiliate-signup-form .form-text {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
 .affiliate-signup-form .form-control {
-    background-color: #1a1a1a;
-    border: 2px solid #333333;
-    color: #ffffff;
-    border-radius: 6px;
-    padding: 0.75rem 1rem;
-    transition: all 0.3s ease;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  transition: var(--transition-fast);
 }
 
 .affiliate-signup-form .form-control:focus {
-    background-color: #222222;
-    border-color: #ff6b35;
-    box-shadow: 0 0 0 0.2rem rgba(var(--color-accent-rgb), 0.25);
-    color: #ffffff;
+  background-color: var(--color-background);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 0.2rem var(--color-accent-light);
+  color: var(--color-text);
 }
 
 .affiliate-signup-form .form-control::placeholder {
-    color: #888888;
+  color: var(--color-text-secondary);
+}
+
+.affiliate-signup-form .form-check-label {
+  color: var(--color-text-secondary);
+}
+
+.affiliate-signup-form .form-check-label a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.affiliate-signup-form .form-check-label a:hover {
+  color: var(--color-accent-hover);
+  text-decoration: underline;
 }
 
 /* Validation States */
 .affiliate-signup-form .form-control.is-valid {
-    border-color: #28a745;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='m2.3 6.73.94-.94 2.94-2.94 1.06 1.06L3.3 7.8z'/%3e%3c/svg%3e");
+  border-color: #28a745;
 }
 
 .affiliate-signup-form .form-control.is-invalid {
-    border-color: #dc3545;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 4.6.7.7 1.4-1.4'/%3e%3c/svg%3e");
+  border-color: #dc3545;
 }
 
-.valid-feedback {
-    color: #28a745;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
+.affiliate-signup-form .valid-feedback {
+  color: #28a745;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
 }
 
-.invalid-feedback {
-    color: #dc3545;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
+.affiliate-signup-form .invalid-feedback {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
 }
 
 /* Affiliate Code Generator */
 .affiliate-code-generator {
-    display: flex;
-    gap: 0.5rem;
-    align-items: end;
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
 }
 
 .affiliate-code-generator .form-control {
-    flex: 1;
+  flex: 1;
 }
 
 #generate-code-btn {
-    background: linear-gradient(135deg, #ff6b35, #e55a2b);
-    border: none;
-    color: white;
-    padding: 0.75rem 1rem;
-    border-radius: 6px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    white-space: nowrap;
+  white-space: nowrap;
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
 }
 
-#generate-code-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.3);
-}
-
-/* Submit Button */
+/* Buttons */
 .affiliate-signup-form .btn-primary {
-    background: linear-gradient(135deg, #ff6b35, #e55a2b);
-    border: none;
-    padding: 1rem 2rem;
-    font-weight: 600;
-    border-radius: 6px;
-    transition: all 0.3s ease;
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-text);
+  border-radius: 8px;
+  font-weight: 600;
+  transition: var(--transition-fast);
 }
 
 .affiliate-signup-form .btn-primary:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(var(--color-accent-rgb), 0.4);
+  background-color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  color: var(--color-accent-text);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .affiliate-signup-form .btn-primary:disabled {
-    background: #666666;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
+  background-color: var(--color-text-secondary);
+  border-color: var(--color-text-secondary);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.affiliate-signup-form .btn-outline-primary {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.affiliate-signup-form .btn-outline-primary:hover {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+/* Alerts */
+.affiliate-signup-page .alert,
+.affiliate-dashboard-page .alert {
+  border: none;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.affiliate-signup-page .alert-success,
+.affiliate-dashboard-page .alert-success {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+  border-left: 4px solid #28a745;
+}
+
+.affiliate-signup-page .alert-danger,
+.affiliate-dashboard-page .alert-danger {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  border-left: 4px solid #dc3545;
+}
+
+.affiliate-signup-page .alert-info,
+.affiliate-dashboard-page .alert-info {
+  background-color: var(--color-accent-light);
+  color: var(--color-text);
+  border-left: 4px solid var(--color-accent);
+}
+
+.affiliate-signup-page .alert-warning,
+.affiliate-dashboard-page .alert-warning {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+  border-left: 4px solid #ffc107;
+}
+
+.affiliate-signup-page .badge.bg-success {
+  background-color: #28a745 !important;
+}
+
+.affiliate-signup-page .badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #000 !important;
 }
 
 /* ===========================
@@ -169,352 +300,258 @@
    =========================== */
 
 .affiliate-dashboard-page .container {
-    max-width: 1200px;
+  max-width: 1200px;
 }
 
-/* Dashboard Header */
 .dashboard-header {
-    background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-    border: 1px solid #333333;
-    border-radius: 12px;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    text-align: center;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  text-align: center;
 }
 
 .dashboard-header h1 {
-    color: #ff6b35;
-    margin-bottom: 0.5rem;
-    font-weight: 700;
+  color: var(--color-accent);
+  margin-bottom: 0.5rem;
+  font-weight: 700;
 }
 
 .affiliate-status-badge {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-size: 0.875rem;
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.875rem;
 }
 
 .affiliate-status-badge.active {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    color: white;
+  background-color: #28a745;
+  color: #fff;
 }
 
 .affiliate-status-badge.pending {
-    background: linear-gradient(135deg, #ffc107, #fd7e14);
-    color: #000;
+  background-color: #ffc107;
+  color: #000;
 }
 
 /* Stats Cards */
 .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .stat-card {
-    background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
-    border: 1px solid #333333;
-    border-radius: 12px;
-    padding: 1.5rem;
-    text-align: center;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: var(--transition-normal);
+  position: relative;
+  overflow: hidden;
 }
 
 .stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #ff6b35, #ff8555);
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--color-accent);
 }
 
 .stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(var(--color-accent-rgb), 0.2);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-accent);
 }
 
 .stat-icon {
-    font-size: 2rem;
-    color: #ff6b35;
-    margin-bottom: 0.5rem;
-    display: block;
+  font-size: 2rem;
+  color: var(--color-accent);
+  margin-bottom: 0.5rem;
+  display: block;
 }
 
 .stat-value {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #ffffff;
-    margin-bottom: 0.25rem;
-    display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+  display: block;
 }
 
 .stat-label {
-    color: #aaaaaa;
-    font-size: 0.875rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 600;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
 }
 
 /* Performance Chart */
 .performance-chart-container {
-    background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
-    border: 1px solid #333333;
-    border-radius: 12px;
-    padding: 2rem;
-    margin-bottom: 2rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
 }
 
 .performance-chart-container h3 {
-    color: #ff6b35;
-    margin-bottom: 1.5rem;
-    font-weight: 600;
+  color: var(--color-accent);
+  margin-bottom: 1.5rem;
+  font-weight: 600;
 }
 
 .chart-wrapper {
-    position: relative;
-    height: 300px;
-    width: 100%;
+  position: relative;
+  height: 300px;
+  width: 100%;
 }
 
 /* Link Generator */
 .link-generator {
-    background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
-    border: 1px solid #333333;
-    border-radius: 12px;
-    padding: 2rem;
-    margin-bottom: 2rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
 }
 
 .link-generator h3 {
-    color: #ff6b35;
-    margin-bottom: 1.5rem;
-    font-weight: 600;
+  color: var(--color-accent);
+  margin-bottom: 1.5rem;
+  font-weight: 600;
 }
 
 .link-generator .form-control {
-    background-color: #222222;
-    border: 1px solid #444444;
-    color: #ffffff;
-    border-radius: 6px;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: 8px;
 }
 
 .link-generator .form-control:focus {
-    background-color: #2a2a2a;
-    border-color: #ff6b35;
-    box-shadow: 0 0 0 0.2rem rgba(var(--color-accent-rgb), 0.25);
+  background-color: var(--color-background);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 0.2rem var(--color-accent-light);
 }
 
-/* Generated Link Display */
 #generated-link {
-    display: none;
+  display: none;
 }
 
 #generated-link .card {
-    margin-top: 1rem;
-    border: 1px solid #ff6b35;
+  margin-top: 1rem;
+  border: 1px solid var(--color-accent);
+  background-color: var(--color-surface);
 }
 
 #generated-link .form-control {
-    background-color: #111111;
-    border: none;
-    color: #ffffff;
-    font-family: 'Courier New', monospace;
-    font-size: 0.875rem;
+  background-color: var(--color-background);
+  border: none;
+  color: var(--color-text);
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
 }
 
 /* Commission History Table */
 .commission-history {
-    background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
-    border: 1px solid #333333;
-    border-radius: 12px;
-    padding: 2rem;
-    margin-bottom: 2rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
 }
 
 .commission-history h3 {
-    color: #ff6b35;
-    margin-bottom: 1.5rem;
-    font-weight: 600;
+  color: var(--color-accent);
+  margin-bottom: 1.5rem;
+  font-weight: 600;
 }
 
 .commission-table {
-    width: 100%;
-    color: #ffffff;
-    background-color: transparent;
+  width: 100%;
+  color: var(--color-text);
+  background-color: transparent;
 }
 
 .commission-table th {
-    border-top: none;
-    border-bottom: 2px solid #333333;
-    color: #ff6b35;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-size: 0.875rem;
-    padding: 1rem 0.75rem;
+  border-top: none;
+  border-bottom: 2px solid var(--color-border);
+  color: var(--color-accent);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.875rem;
+  padding: 1rem 0.75rem;
 }
 
 .commission-table td {
-    border-bottom: 1px solid #333333;
-    padding: 0.75rem;
-    vertical-align: middle;
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.75rem;
+  vertical-align: middle;
 }
 
 .commission-table tr:hover {
-    background-color: rgba(var(--color-accent-rgb), 0.1);
+  background-color: var(--color-accent-light);
 }
 
-/* Commission Type Badges */
-.badge {
-    font-size: 0.75rem;
-    padding: 0.375rem 0.75rem;
-    border-radius: 6px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.badge.bg-primary {
+  background-color: var(--color-accent) !important;
 }
 
-.badge.bg-primary { background-color: #ff6b35 !important; }
-.badge.bg-success { background-color: #28a745 !important; }
-.badge.bg-info { background-color: #17a2b8 !important; }
-.badge.bg-warning { background-color: #ffc107 !important; color: #000 !important; }
-.badge.bg-danger { background-color: #dc3545 !important; }
+.badge.bg-success {
+  background-color: #28a745 !important;
+}
 
-/* Action Buttons */
+.badge.bg-info {
+  background-color: #17a2b8 !important;
+}
+
+.badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #000 !important;
+}
+
+.badge.bg-danger {
+  background-color: #dc3545 !important;
+}
+
 .btn-outline-light {
-    border-color: #666666;
-    color: #ffffff;
-    transition: all 0.3s ease;
+  border-color: var(--color-border);
+  color: var(--color-text);
+  transition: var(--transition-fast);
 }
 
 .btn-outline-light:hover {
-    background-color: #ff6b35;
-    border-color: #ff6b35;
-    color: #ffffff;
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-text);
 }
 
-/* Refresh Button */
 #refresh-commissions {
-    background: linear-gradient(135deg, #333333, #444444);
-    border: 1px solid #555555;
-    color: #ffffff;
-    border-radius: 6px;
-    padding: 0.5rem 1rem;
-    transition: all 0.3s ease;
+  background-color: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  transition: var(--transition-fast);
 }
 
 #refresh-commissions:hover {
-    background: linear-gradient(135deg, #ff6b35, #e55a2b);
-    border-color: #ff6b35;
-    transform: translateY(-1px);
-}
-
-/* ===========================
-   Notifications
-   =========================== */
-
-.alert {
-    border: none;
-    border-radius: 8px;
-    padding: 1rem 1.5rem;
-    margin-bottom: 1rem;
-    font-weight: 500;
-}
-
-.alert-success {
-    background-color: rgba(40, 167, 69, 0.2);
-    color: #28a745;
-    border-left: 4px solid #28a745;
-}
-
-.alert-danger {
-    background-color: rgba(220, 53, 69, 0.2);
-    color: #dc3545;
-    border-left: 4px solid #dc3545;
-}
-
-.alert-info {
-    background-color: rgba(var(--color-accent-rgb), 0.2);
-    color: #ff6b35;
-    border-left: 4px solid #ff6b35;
-}
-
-/* ===========================
-   Responsive Design
-   =========================== */
-
-@media (max-width: 768px) {
-    .affiliate-signup-page,
-    .affiliate-dashboard-page {
-        padding: 1rem 0;
-    }
-    
-    .affiliate-signup-form .card-body,
-    .dashboard-header,
-    .performance-chart-container,
-    .link-generator,
-    .commission-history {
-        padding: 1.5rem;
-    }
-    
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-    }
-    
-    .stat-card {
-        padding: 1rem;
-    }
-    
-    .stat-value {
-        font-size: 1.5rem;
-    }
-    
-    .affiliate-code-generator {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    #generate-code-btn {
-        width: 100%;
-    }
-    
-    .commission-table {
-        font-size: 0.875rem;
-    }
-    
-    .commission-table th,
-    .commission-table td {
-        padding: 0.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .chart-wrapper {
-        height: 250px;
-    }
-    
-    .commission-history {
-        overflow-x: auto;
-    }
-    
-    .commission-table {
-        min-width: 500px;
-    }
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-text);
+  transform: translateY(-1px);
 }
 
 /* ===========================
@@ -522,52 +559,178 @@
    =========================== */
 
 .loading {
-    opacity: 0.6;
-    pointer-events: none;
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .spinner {
-    display: inline-block;
-    width: 1rem;
-    height: 1rem;
-    border: 2px solid #ffffff;
-    border-radius: 50%;
-    border-top-color: transparent;
-    animation: spin 1s ease-in-out infinite;
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--color-text);
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s ease-in-out infinite;
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ===========================
-   Dark Theme Enhancements
+   Affiliate Terms Page
    =========================== */
 
-.dark-theme .affiliate-signup-page,
-.dark-theme .affiliate-dashboard-page {
-    background-color: #000000;
+.affiliate-terms-page .affiliate-terms-content h2 {
+  color: var(--color-text);
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
 }
 
-.dark-theme .card {
-    background-color: #111111;
-    border-color: #333333;
+.affiliate-terms-page .affiliate-terms-content h2:first-child {
+  margin-top: 0;
 }
 
-.dark-theme .form-control {
-    background-color: #1a1a1a;
-    border-color: #333333;
-    color: #ffffff;
+.affiliate-terms-page .affiliate-terms-content p,
+.affiliate-terms-page .affiliate-terms-content li {
+  color: var(--color-text-secondary);
+  line-height: 1.7;
 }
 
-.dark-theme .table {
-    color: #ffffff;
+.affiliate-terms-page .affiliate-terms-content a {
+  color: var(--color-accent);
+  text-decoration: underline;
 }
 
-.dark-theme .table th {
-    border-color: #333333;
+.affiliate-terms-page .affiliate-terms-content a:hover {
+  color: var(--color-accent-hover);
 }
 
-.dark-theme .table td {
-    border-color: #333333;
-} 
+.affiliate-terms-page .affiliate-terms-content ul {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.affiliate-terms-page .affiliate-terms-content ul li {
+  margin-bottom: 0.5rem;
+}
+
+.affiliate-terms-sidebar .card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.affiliate-terms-sidebar .card-body h2 {
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.75rem;
+}
+
+.affiliate-terms-links li {
+  margin-bottom: 0.5rem;
+}
+
+.affiliate-terms-links a {
+  color: var(--color-accent);
+  text-decoration: none;
+  display: block;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-border);
+  transition: var(--transition-fast);
+}
+
+.affiliate-terms-links a:hover {
+  color: var(--color-accent-hover);
+}
+
+.affiliate-terms-note strong {
+  color: var(--color-text);
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.affiliate-terms-sidebar .btn-primary {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.affiliate-terms-sidebar .btn-primary:hover {
+  background-color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  color: var(--color-accent-text);
+}
+
+/* ===========================
+   Responsive Design
+   =========================== */
+
+@media (max-width: 768px) {
+  .affiliate-signup-page,
+  .affiliate-dashboard-page {
+    padding: 0;
+  }
+
+  .affiliate-signup-form .card-body,
+  .dashboard-header,
+  .performance-chart-container,
+  .link-generator,
+  .commission-history {
+    padding: 1.5rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .affiliate-code-generator {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  #generate-code-btn {
+    width: 100%;
+  }
+
+  .commission-table {
+    font-size: 0.875rem;
+  }
+
+  .commission-table th,
+  .commission-table td {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-wrapper {
+    height: 250px;
+  }
+
+  .commission-history {
+    overflow-x: auto;
+  }
+
+  .commission-table {
+    min-width: 500px;
+  }
+}

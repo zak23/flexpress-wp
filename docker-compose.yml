@@ -6,7 +6,9 @@ services:
     container_name: flexpress_wordpress
     restart: unless-stopped
     ports:
-      - "8085:80"
+      # Caddy is the only public entry point. Do not expose the WordPress origin
+      # directly or visitors could bypass Cloudflare location headers.
+      - "127.0.0.1:8085:80"
     environment:
       WORDPRESS_DB_HOST: db:3306
       WORDPRESS_DB_USER: ${MYSQL_USER}

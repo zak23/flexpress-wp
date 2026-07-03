@@ -65,7 +65,8 @@ function flexpress_add_performance_headers()
             header('Expires: ' . $expires);
         } else {
             // For HTML and other dynamic responses, ensure private/no-store for logged-in users
-            if (is_user_logged_in()) {
+            $has_age_cookie = isset($_COOKIE['flexpress_age_verified']);
+            if (is_user_logged_in() || $has_age_cookie) {
                 // Prevent intermediary caches and browsers from serving stale logged-in pages
                 header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0');
                 header('Pragma: no-cache');

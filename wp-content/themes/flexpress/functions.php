@@ -27,6 +27,8 @@ add_action('init', 'flexpress_increase_upload_limits');
 
 // Include required files
 require_once FLEXPRESS_PATH . '/includes/flexpress-permissions.php';
+require_once FLEXPRESS_PATH . '/includes/geolocation.php';
+require_once FLEXPRESS_PATH . '/includes/age-gate.php';
 require_once FLEXPRESS_PATH . '/flexpress-redis-cache.php';
 require_once FLEXPRESS_PATH . '/includes/post-types.php';
 require_once FLEXPRESS_PATH . '/includes/bunnycdn.php';

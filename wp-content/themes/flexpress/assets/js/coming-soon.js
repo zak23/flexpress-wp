@@ -119,6 +119,11 @@
     const closeBtn = document.querySelector(".newsletter-modal-close");
     const form = document.querySelector(".newsletter-form");
 
+    // Logged-in users do not receive newsletter modal markup.
+    if (!modal || !closeBtn || !form) {
+      return;
+    }
+
     // Open modal when clicking "Get Notified" button
     $(".coming-soon-buttons .btn-primary").on("click", function (e) {
       const buttonText = $(this).text().toLowerCase();

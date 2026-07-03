@@ -162,6 +162,7 @@ wp_localize_script('flexpress-coming-soon', 'flexpressComingSoon', array(
         </div>
     </div>
 
+    <?php if (!is_user_logged_in()) : ?>
     <!-- Newsletter Modal -->
     <div id="newsletter-modal" class="newsletter-modal" style="display: none;">
         <div class="newsletter-modal-content">
@@ -179,6 +180,7 @@ wp_localize_script('flexpress-coming-soon', 'flexpressComingSoon', array(
             </div>
         </div>
     </div>
+    <?php endif; ?>
 
     <?php wp_footer(); ?>
 </body>

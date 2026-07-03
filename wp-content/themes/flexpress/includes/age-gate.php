@@ -219,6 +219,21 @@ function flexpress_age_gate_return_url( $requested ) {
 }
 
 /**
+ * Determine whether a geolocation decision is subject to this gate.
+ *
+ * Only confirmed Australian requests are gated. NON_AU and UNKNOWN requests
+ * remain accessible while the temporary development policy is in effect.
+ *
+ * @param mixed $geolocation Geolocation decision.
+ * @return bool
+ */
+function flexpress_age_gate_applies_to_geolocation( $geolocation ) {
+	return is_array( $geolocation )
+		&& isset( $geolocation['classification'] )
+		&& FLEXPRESS_GEO_AU === $geolocation['classification'];
+}
+
+/**
  * Render and process the neutral age-verification page.
  *
  * @return void
@@ -226,6 +241,32 @@ function flexpress_age_gate_return_url( $requested ) {
 function flexpress_render_age_verification_page() {
 	$error      = '';
 	$return_url = flexpress_age_gate_return_url( isset( $_REQUEST['return_to'] ) ? $_REQUEST['return_to'] : home_url( '/' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Used only as a validated redirect target.
+	$yoursafe_errors = array(
+		'not_configured'       => __( 'Yoursafe ID is not configured yet.', 'flexpress' ),
+		'state_invalid'        => __( 'The Yoursafe verification session expired. Please try again.', 'flexpress' ),
+		'cancelled'            => __( 'Yoursafe verification was cancelled.', 'flexpress' ),
+		'code_missing'         => __( 'Yoursafe did not return a valid authorization code.', 'flexpress' ),
+		'token_exchange_failed'=> __( 'Yoursafe could not complete verification. Please try again.', 'flexpress' ),
+		'token_invalid'        => __( 'Yoursafe returned an invalid verification response.', 'flexpress' ),
+		'userinfo_failed'      => __( 'Yoursafe could not provide the age result. Please try again.', 'flexpress' ),
+		'userinfo_invalid'     => __( 'Yoursafe returned an invalid age result.', 'flexpress' ),
+		'jwks_failed'          => __( 'Yoursafe signing keys could not be loaded. Please try again.', 'flexpress' ),
+		'jwks_invalid'         => __( 'Yoursafe returned invalid signing keys.', 'flexpress' ),
+		'id_token_format'      => __( 'Yoursafe returned a malformed identity token.', 'flexpress' ),
+		'id_token_algorithm'   => __( 'Yoursafe returned an unsupported identity token.', 'flexpress' ),
+		'id_token_signature'   => __( 'The Yoursafe identity token could not be authenticated.', 'flexpress' ),
+		'id_token_claims'      => __( 'The Yoursafe identity token did not match this verification session.', 'flexpress' ),
+		'not_over_18'          => __( 'Yoursafe could not confirm that you are over 18.', 'flexpress' ),
+		'account_inactive'     => __( 'Your Yoursafe account is not active.', 'flexpress' ),
+		'verification_date_missing' => __( 'Yoursafe did not provide an identity-verification date.', 'flexpress' ),
+		'verification_date_invalid' => __( 'Yoursafe returned an invalid identity-verification date.', 'flexpress' ),
+		'verification_expired' => __( 'Your Yoursafe identity verification must be renewed.', 'flexpress' ),
+		'alias_invalid'        => __( 'Yoursafe did not provide a valid account reference.', 'flexpress' ),
+	);
+	$yoursafe_error = isset( $_GET['yoursafe_error'] ) ? sanitize_key( wp_unslash( $_GET['yoursafe_error'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display-only error code.
+	if ( isset( $yoursafe_errors[ $yoursafe_error ] ) ) {
+		$error = $yoursafe_errors[ $yoursafe_error ];
+	}
 
 	if ( 'POST' === ( isset( $_SERVER['REQUEST_METHOD'] ) ? $_SERVER['REQUEST_METHOD'] : '' ) ) {
 		if ( ! isset( $_POST['flexpress_age_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['flexpress_age_nonce'] ) ), 'flexpress_verify_age' ) ) {
@@ -258,7 +299,7 @@ function flexpress_render_age_verification_page() {
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title><?php esc_html_e( 'Age verification', 'flexpress' ); ?></title>
 		<style>
-			body{margin:0;background:#111;color:#fff;font:16px/1.5 system-ui,sans-serif;text-align:center}main{max-width:30rem;margin:7vh auto;padding:2rem}.age-logo{margin:0 auto 2rem}.age-logo img{display:inline-block;max-width:min(300px,80vw);max-height:110px;width:auto;height:auto}form{display:grid;gap:1rem}input,button,.login-button{box-sizing:border-box;width:100%;padding:.8rem;font:inherit;text-align:center;border-radius:.25rem}button,.login-button{cursor:pointer;font-weight:700;border:0;text-decoration:none}button{background:<?php echo esc_html( $accent_color ); ?>;color:<?php echo esc_html( $accent_text ); ?>}.login-option{display:grid;gap:.75rem;margin:1rem 0}.login-separator{color:#aaa}.login-button{display:block;background:#fff;color:#111}.login-button:hover,.login-button:focus{background:#e7e7e7;color:#111}.error{padding:1rem;background:#641c1c;border-radius:.25rem}.note{color:#bbb;font-size:.9rem}.rules-note{margin-top:2rem;padding-top:1.25rem;border-top:1px solid #333;color:#999;font-size:.75rem;line-height:1.5}a{color:#fff}
+			body{margin:0;background:#111;color:#fff;font:16px/1.5 system-ui,sans-serif;text-align:center}main{max-width:30rem;margin:7vh auto;padding:2rem}.age-logo{margin:0 auto 2rem}.age-logo img{display:inline-block;max-width:min(300px,80vw);max-height:110px;width:auto;height:auto}form{display:grid;gap:1rem}input,button,.login-button,.yoursafe-button{box-sizing:border-box;width:100%;padding:.8rem;font:inherit;text-align:center;border-radius:.25rem}button,.login-button,.yoursafe-button{cursor:pointer;font-weight:700;border:0;text-decoration:none}button{background:<?php echo esc_html( $accent_color ); ?>;color:<?php echo esc_html( $accent_text ); ?>}.yoursafe-option{display:grid;gap:.75rem;margin:1rem 0}.yoursafe-button{display:block;background:#1976d2;color:#fff}.yoursafe-button:hover,.yoursafe-button:focus{background:#1565c0}.login-option{display:grid;gap:.75rem;margin:1rem 0}.login-separator{color:#aaa}.login-button{display:block;background:#fff;color:#111}.login-button:hover,.login-button:focus{background:#e7e7e7;color:#111}.error{padding:1rem;background:#641c1c;border-radius:.25rem}.note{color:#bbb;font-size:.9rem}.rules-note{margin-top:2rem;padding-top:1.25rem;border-top:1px solid #333;color:#999;font-size:.75rem;line-height:1.5}a{color:#fff}
 		</style>
 	</head>
 	<body>
@@ -292,6 +333,12 @@ function flexpress_render_age_verification_page() {
 				<small id="dob-format" class="note"><?php esc_html_e( 'Use DD/MM/YYYY, for example 31/12/1990.', 'flexpress' ); ?></small>
 				<button type="submit"><?php esc_html_e( 'Continue', 'flexpress' ); ?></button>
 			</form>
+			<?php if ( function_exists( 'flexpress_yoursafe_is_enabled' ) && flexpress_yoursafe_is_enabled() ) : ?>
+				<div class="yoursafe-option">
+					<span class="login-separator"><?php esc_html_e( '-or verify securely-', 'flexpress' ); ?></span>
+					<a class="yoursafe-button" href="<?php echo esc_url( flexpress_yoursafe_start_url( $return_url ) ); ?>"><?php esc_html_e( 'Verify with Yoursafe ID', 'flexpress' ); ?></a>
+				</div>
+			<?php endif; ?>
 			<div class="login-option">
 				<span class="login-separator"><?php esc_html_e( '-or-', 'flexpress' ); ?></span>
 				<a class="login-button" href="<?php echo esc_url( home_url( '/login/' ) ); ?>"><?php esc_html_e( 'Login', 'flexpress' ); ?></a>
@@ -325,7 +372,7 @@ function flexpress_enforce_temporary_age_gate() {
 	}
 
 	$geo = flexpress_get_request_geolocation();
-	if ( FLEXPRESS_GEO_AU !== $geo['classification'] ) {
+	if ( ! flexpress_age_gate_applies_to_geolocation( $geo ) ) {
 		return;
 	}
 

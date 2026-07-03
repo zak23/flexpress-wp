@@ -148,6 +148,16 @@ class FlexPress_Settings
             array($this, 'render_turnstile_settings_page')
         );
 
+        // Add Yoursafe ID age-verification submenu.
+        add_submenu_page(
+            $this->page_slug,
+            __('Yoursafe ID Age Verification', 'flexpress'),
+            __('Yoursafe ID', 'flexpress'),
+            flexpress_get_founder_capability(),
+            'flexpress-yoursafe-id-settings',
+            array($this, 'render_yoursafe_id_settings_page')
+        );
+
         // Add Plunk Email Marketing submenu
         add_submenu_page(
             $this->page_slug,
@@ -1441,6 +1451,19 @@ class FlexPress_Settings
             $turnstile_settings->render_turnstile_settings_page();
         } else {
             echo '<div class="wrap"><h1>Turnstile Settings</h1><p>Turnstile settings class not found.</p></div>';
+        }
+    }
+
+    /**
+     * Render Yoursafe ID settings.
+     */
+    public function render_yoursafe_id_settings_page()
+    {
+        if (class_exists('FlexPress_Yoursafe_ID_Settings')) {
+            $settings = new FlexPress_Yoursafe_ID_Settings();
+            $settings->render_settings_page();
+        } else {
+            echo '<div class="wrap"><h1>Yoursafe ID</h1><p>Yoursafe ID settings class not found.</p></div>';
         }
     }
 

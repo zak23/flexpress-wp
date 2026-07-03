@@ -29,6 +29,7 @@ add_action('init', 'flexpress_increase_upload_limits');
 require_once FLEXPRESS_PATH . '/includes/flexpress-permissions.php';
 require_once FLEXPRESS_PATH . '/includes/geolocation.php';
 require_once FLEXPRESS_PATH . '/includes/age-gate.php';
+require_once FLEXPRESS_PATH . '/includes/class-flexpress-yoursafe-id.php';
 require_once FLEXPRESS_PATH . '/flexpress-redis-cache.php';
 require_once FLEXPRESS_PATH . '/includes/post-types.php';
 require_once FLEXPRESS_PATH . '/includes/bunnycdn.php';
@@ -165,6 +166,7 @@ require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-trial-links-setti
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-affiliate-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-contact-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-turnstile-settings.php';
+require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-yoursafe-id-settings.php';
 require_once FLEXPRESS_PATH . '/includes/turnstile-integration.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-plunk-settings.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-plunk-api.php';

@@ -36,7 +36,12 @@ class FlexPress_Google_SMTP
 
         // Debug logging
         error_log('FlexPress Google SMTP: configure_smtp called');
-        error_log('FlexPress Google SMTP: Options = ' . print_r($options, true));
+        error_log(
+            'FlexPress Google SMTP: Settings loaded (enabled=' .
+            ( empty( $options['enable_google_smtp'] ) ? 'no' : 'yes' ) .
+            ', username=' . ( empty( $options['smtp_username'] ) ? 'missing' : 'set' ) .
+            ', password=' . ( empty( $options['smtp_password'] ) ? 'missing' : 'set' ) . ')'
+        );
 
         // Check if Google SMTP is enabled
         if (!isset($options['enable_google_smtp']) || !$options['enable_google_smtp']) {

@@ -38,6 +38,27 @@ function flexpress_yoursafe_is_enabled() {
 }
 
 /**
+ * Record a safe diagnostic for the most recent provider failure.
+ *
+ * Never pass credentials, authorization codes, or tokens to this function.
+ *
+ * @param string $stage Provider flow stage.
+ * @param int    $status HTTP status, when available.
+ * @param string $provider_error OAuth error identifier, when available.
+ * @return void
+ */
+function flexpress_yoursafe_record_failure( $stage, $status = 0, $provider_error = '' ) {
+	$diagnostic = array(
+		'time'           => gmdate( DATE_ATOM ),
+		'stage'          => sanitize_key( $stage ),
+		'http_status'    => absint( $status ),
+		'provider_error' => sanitize_key( $provider_error ),
+	);
+	update_option( 'flexpress_yoursafe_id_last_error', $diagnostic, false );
+	error_log( '[FlexPress][Yoursafe ID] ' . wp_json_encode( $diagnostic ) );
+}
+
+/**
  * Exact callback URL to register at Yoursafe.
  *
  * @return string
@@ -53,7 +74,13 @@ function flexpress_yoursafe_callback_url() {
  * @return string
  */
 function flexpress_yoursafe_start_url( $return_url ) {
-	return add_query_arg( 'return_to', $return_url, home_url( '/age-verification/yoursafe/start/' ) );
+	return add_query_arg(
+		array(
+			'return_to' => $return_url,
+			'request'   => wp_generate_uuid4(),
+		),
+		home_url( '/age-verification/yoursafe/start/' )
+	);
 }
 
 /**
@@ -64,15 +91,14 @@ function flexpress_yoursafe_start_url( $return_url ) {
  * @return void
  */
 function flexpress_yoursafe_set_state_cookie( $value, $expires ) {
-	$domain = defined( 'COOKIE_DOMAIN' ) && is_string( COOKIE_DOMAIN ) ? COOKIE_DOMAIN : '';
 	setcookie(
 		FLEXPRESS_YOURSAFE_STATE_COOKIE,
 		$value,
 		array(
 			'expires'  => $expires,
 			'path'     => '/',
-			'domain'   => $domain,
-			'secure'   => is_ssl(),
+			'domain'   => '',
+			'secure'   => 'https' === wp_parse_url( home_url( '/' ), PHP_URL_SCHEME ),
 			'httponly' => true,
 			'samesite' => 'Lax',
 		)
@@ -150,6 +176,7 @@ function flexpress_yoursafe_start() {
 	);
 
 	nocache_headers();
+	header( 'Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0', true );
 	wp_redirect( $url, 302, 'FlexPress Yoursafe ID' ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- URL is built from a fixed trusted endpoint.
 	exit;
 }
@@ -370,10 +397,12 @@ function flexpress_yoursafe_validate_claims( $claims ) {
 		return new WP_Error( 'verification_date_invalid' );
 	}
 
-	$settings = flexpress_yoursafe_settings();
-	$days     = min( 365, max( 1, absint( isset( $settings['verification_valid_days'] ) ? $settings['verification_valid_days'] : 365 ) ) );
-	if ( $verified_at > $now->modify( '+5 minutes' ) || $verified_at < $now->modify( '-' . $days . ' days' ) ) {
-		return new WP_Error( 'verification_expired' );
+	// idverifieddate marks Yoursafe's one-time identity verification and may be
+	// years old; the eighteenplus claim is recomputed at every login, so only a
+	// future-dated value is rejected. verification_valid_days governs how long
+	// the local proof (cookie/user meta) lasts, not the age of this claim.
+	if ( $verified_at > $now->modify( '+5 minutes' ) ) {
+		return new WP_Error( 'verification_date_invalid' );
 	}
 
 	if ( empty( $claims['aliastoken'] ) || ! preg_match( '/^[a-z0-9-]+\.yoursafe\.id\.?$/i', (string) $claims['aliastoken'] ) ) {
@@ -394,7 +423,20 @@ function flexpress_yoursafe_callback() {
 	$data   = preg_match( '/^[A-Za-z0-9_-]{40,100}$/', $state ) ? get_transient( 'flexpress_yoursafe_' . $state ) : false;
 	$return_url = is_array( $data ) && isset( $data['return_url'] ) ? $data['return_url'] : home_url( '/' );
 
-	if ( ! $state || ! hash_equals( $state, $cookie ) || ! is_array( $data ) ) {
+	if ( ! $state ) {
+		flexpress_yoursafe_record_failure( 'state_missing' );
+		flexpress_yoursafe_fail( 'state_invalid', $return_url );
+	}
+	if ( ! $cookie ) {
+		flexpress_yoursafe_record_failure( 'state_cookie_missing' );
+		flexpress_yoursafe_fail( 'state_invalid', $return_url );
+	}
+	if ( ! hash_equals( $state, $cookie ) ) {
+		flexpress_yoursafe_record_failure( 'state_cookie_mismatch' );
+		flexpress_yoursafe_fail( 'state_invalid', $return_url );
+	}
+	if ( ! is_array( $data ) ) {
+		flexpress_yoursafe_record_failure( 'state_session_missing' );
 		flexpress_yoursafe_fail( 'state_invalid', $return_url );
 	}
 
@@ -411,33 +453,83 @@ function flexpress_yoursafe_callback() {
 	}
 
 	$settings = flexpress_yoursafe_settings();
-	$response = wp_remote_request(
+	$token_body = http_build_query(
+		array(
+			'grant_type'    => 'authorization_code',
+			'client_id'     => $settings['client_id'],
+			'client_secret' => $settings['client_secret'],
+			'scope'         => isset( $settings['scope'] ) ? $settings['scope'] : 'openid default',
+			'code'          => $code,
+			'redirect_uri'  => flexpress_yoursafe_callback_url(),
+			'code_verifier' => $data['code_verifier'],
+		),
+		'',
+		'&',
+		PHP_QUERY_RFC3986
+	);
+	// Yoursafe docs show PUT, but the live endpoint returns a bare Apache 403
+	// for PUT; only the standard OAuth POST is accepted.
+	$response = wp_remote_post(
 		FLEXPRESS_YOURSAFE_TOKEN_ENDPOINT,
 		array(
-			'method'      => 'PUT',
 			'timeout'     => 15,
 			'redirection' => 0,
 			'headers'     => array(
 				'Accept'       => 'application/json',
 				'Content-Type' => 'application/x-www-form-urlencoded',
 			),
-			'body'        => array(
+			'body'        => $token_body,
+		)
+	);
+
+	if ( is_wp_error( $response ) ) {
+		flexpress_yoursafe_record_failure( 'token_exchange_transport' );
+		flexpress_yoursafe_fail( 'token_exchange_failed', $return_url );
+	}
+
+	$status = wp_remote_retrieve_response_code( $response );
+	if ( in_array( $status, array( 401, 403 ), true ) ) {
+		$basic_body = http_build_query(
+			array(
 				'grant_type'    => 'authorization_code',
-				'client_id'     => $settings['client_id'],
-				'client_secret' => $settings['client_secret'],
+				'scope'         => isset( $settings['scope'] ) ? $settings['scope'] : 'openid default',
 				'code'          => $code,
 				'redirect_uri'  => flexpress_yoursafe_callback_url(),
 				'code_verifier' => $data['code_verifier'],
 			),
-		)
-	);
-
-	if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			'',
+			'&',
+			PHP_QUERY_RFC3986
+		);
+		$response = wp_remote_post(
+			FLEXPRESS_YOURSAFE_TOKEN_ENDPOINT,
+			array(
+				'timeout'     => 15,
+				'redirection' => 0,
+				'headers'     => array(
+					'Accept'        => 'application/json',
+					'Content-Type'  => 'application/x-www-form-urlencoded',
+					'Authorization' => 'Basic ' . base64_encode( $settings['client_id'] . ':' . $settings['client_secret'] ),
+				),
+				'body'        => $basic_body,
+			)
+		);
+		if ( is_wp_error( $response ) ) {
+			flexpress_yoursafe_record_failure( 'token_exchange_basic_transport' );
+			flexpress_yoursafe_fail( 'token_exchange_failed', $return_url );
+		}
+		$status = wp_remote_retrieve_response_code( $response );
+	}
+	if ( 200 !== $status ) {
+		$error_body     = json_decode( wp_remote_retrieve_body( $response ), true );
+		$provider_error = is_array( $error_body ) && isset( $error_body['error'] ) ? (string) $error_body['error'] : '';
+		flexpress_yoursafe_record_failure( 'token_exchange_basic', $status, $provider_error );
 		flexpress_yoursafe_fail( 'token_exchange_failed', $return_url );
 	}
 
 	$tokens = json_decode( wp_remote_retrieve_body( $response ), true );
 	if ( ! is_array( $tokens ) || empty( $tokens['id_token'] ) ) {
+		flexpress_yoursafe_record_failure( 'token_response', $status, 'missing_id_token' );
 		flexpress_yoursafe_fail( 'token_invalid', $return_url );
 	}
 

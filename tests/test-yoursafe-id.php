@@ -34,10 +34,20 @@ if ( true !== flexpress_yoursafe_validate_claims( $valid_claims ) ) {
 	exit( 1 );
 }
 
+// An old identity-verification date is valid: Yoursafe verifies identity once
+// and recomputes eighteenplus at every login.
+$old_verification = $valid_claims;
+$old_verification['idverifieddate'] = gmdate( DATE_ATOM, time() - 5 * 365 * DAY_IN_SECONDS );
+if ( true !== flexpress_yoursafe_validate_claims( $old_verification ) ) {
+	fwrite( STDERR, "Yoursafe claims with an old idverifieddate were rejected.\n" );
+	exit( 1 );
+}
+
 $invalid_cases = array(
 	array( 'eighteenplus', false, 'not_over_18' ),
 	array( 'accountstatus', 'inactive', 'account_inactive' ),
-	array( 'idverifieddate', gmdate( DATE_ATOM, time() - 366 * DAY_IN_SECONDS ), 'verification_expired' ),
+	array( 'idverifieddate', gmdate( DATE_ATOM, time() + HOUR_IN_SECONDS ), 'verification_date_invalid' ),
+	array( 'idverifieddate', '', 'verification_date_missing' ),
 	array( 'aliastoken', 'attacker.example.com', 'alias_invalid' ),
 );
 

@@ -105,10 +105,27 @@ class FlexPress_Yoursafe_ID_Settings {
 	}
 
 	public function render_settings_page() {
+		$last_error = get_option( 'flexpress_yoursafe_id_last_error', array() );
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Yoursafe ID Age Verification', 'flexpress' ); ?></h1>
 			<p><?php esc_html_e( 'Yoursafe ID authenticates existing Yoursafe YOU account holders and returns an 18+ claim. It does not verify ordinary FlowGuard card purchasers automatically.', 'flexpress' ); ?></p>
+			<?php if ( is_array( $last_error ) && ! empty( $last_error['time'] ) ) : ?>
+				<div class="notice notice-warning inline"><p>
+					<strong><?php esc_html_e( 'Last Yoursafe failure:', 'flexpress' ); ?></strong>
+					<?php
+					echo esc_html(
+						sprintf(
+							'%s — stage: %s; HTTP: %d; provider error: %s',
+							(string) $last_error['time'],
+							isset( $last_error['stage'] ) ? (string) $last_error['stage'] : 'unknown',
+							isset( $last_error['http_status'] ) ? (int) $last_error['http_status'] : 0,
+							! empty( $last_error['provider_error'] ) ? (string) $last_error['provider_error'] : 'not supplied'
+						)
+					);
+					?>
+				</p></div>
+			<?php endif; ?>
 			<form method="post" action="options.php">
 				<?php
 				settings_fields( 'flexpress_yoursafe_id_settings' );

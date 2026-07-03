@@ -20,8 +20,12 @@ configured and does not replace the temporary DOB form automatically.
 3. FlexPress exchanges the one-time code server-side and fetches claims from
    Yoursafe's authenticated userinfo endpoint.
 4. Access is granted only when the account is active, `eighteenplus` is the
-   boolean `true`, the identity verification is recent, and the Alias Token has
-   a valid `*.yoursafe.id` form.
+   boolean `true`, the `idverifieddate` claim is present and not in the future,
+   and the Alias Token has a valid `*.yoursafe.id` form. The age of
+   `idverifieddate` itself is not limited: Yoursafe verifies identity once
+   (possibly years ago) and recomputes `eighteenplus` at every login. The
+   "Account Proof Lifetime" setting controls how long the local FlexPress
+   proof (cookie and user metadata) remains valid instead.
 5. FlexPress sets the signed 90-day device cookie. If the visitor is already
    logged in, the provider, Alias Token, verification time and expiry are also
    saved as WordPress user metadata.

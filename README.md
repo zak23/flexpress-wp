@@ -17,6 +17,34 @@ A modern WordPress website running in Docker containers with MySQL database and 
 
 ## 🔧 Recent Fixes
 
+### Yoursafe ID age-verification integration status (July 2026)
+
+**Working end-to-end as of 3 July 2026.** The full flow — redirect to Yoursafe, login/consent, callback with state validation, PKCE token exchange, ID token verification and claims validation — has been confirmed against production. The registered production configuration is:
+
+- Platform URL: `https://zakspov.com`
+- Redirect URL: `https://zakspov.com/age-verification/yoursafe/callback/`
+- Scope: `openid default`
+- Authorization flow: OAuth 2.0 authorization code with state, nonce and PKCE
+- Token endpoint: `POST https://accounts.yoursafe.com/oauth2/token`
+
+**Resolved (July 2026):** the earlier `token_exchange_basic` HTTP `403` with no OAuth error body was caused by using the `PUT` method shown in Yoursafe's integration examples. The live token endpoint rejects `PUT` at the web-server level (bare Apache 403 Forbidden page, hence "provider error: not supplied"); it only accepts the standard OAuth 2.0 `POST`. FlexPress now sends the token exchange as `POST`.
+
+**Resolved (July 2026):** after the token fix, verification failed with "Your Yoursafe identity verification must be renewed" (`verification_expired`) because claims validation rejected any `idverifieddate` older than the Account Proof Lifetime setting (max 365 days). Yoursafe verifies identity once — often years ago — and recomputes the `eighteenplus` claim at every login, so the age of `idverifieddate` is no longer limited; only a future-dated value is rejected. The Account Proof Lifetime setting still controls how long the local FlexPress proof (cookie and user metadata) lasts.
+
+FlexPress first sends the client credentials in the form body (`client_secret_post`). On HTTP `401` or `403`, it retries once using HTTP Basic authentication (`client_secret_basic`). Both methods are advertised in Yoursafe's discovery metadata. The admin page at **FlexPress → Yoursafe ID** records only safe diagnostics: UTC time, flow stage, HTTP status and provider error identifier. It never logs the Client Secret, authorization code or tokens. The "Last Yoursafe failure" notice only updates on transport/token failures, so a stale entry may remain visible after later claim-validation errors or successful verifications.
+
+If failures reoccur, troubleshooting sequence:
+
+1. Deploy the latest theme code and begin a completely new verification attempt.
+2. Check **FlexPress → Yoursafe ID → Last Yoursafe failure**.
+3. If `token_exchange_basic` returns `403`, regenerate and re-enter the Client Secret.
+4. Confirm the Yoursafe client is active and that its redirect URL matches exactly, including HTTPS, hostname, path and trailing slash.
+5. If both authentication methods remain rejected, provide Yoursafe support with the UTC failure time, endpoint, HTTP status and Client ID. Never send the Client Secret, authorization code or tokens.
+
+Earlier `state_cookie_missing` failures were addressed by using a host-only Secure cookie, unique start URLs and private/no-store headers. The cookie is intentionally deleted immediately after successful callback state validation, so its disappearance in browser developer tools is expected.
+
+See [docs/YOURSAFE_ID_AGE_VERIFICATION.md](docs/YOURSAFE_ID_AGE_VERIFICATION.md) for the integration design and privacy constraints.
+
 ### Model Hero Image Optimization (November 2025)
 
 - Model profile hero banner now uses a 12:5 aspect ratio (1920x800) with center crop for better composition.

@@ -43,7 +43,7 @@ If failures reoccur, troubleshooting sequence:
 
 Earlier `state_cookie_missing` failures were addressed by using a host-only Secure cookie, unique start URLs and private/no-store headers. The cookie is intentionally deleted immediately after successful callback state validation, so its disappearance in browser developer tools is expected.
 
-See [docs/YOURSAFE_ID_AGE_VERIFICATION.md](docs/YOURSAFE_ID_AGE_VERIFICATION.md) for the integration design and privacy constraints.
+See [docs/YOURSAFE_ID_AGE_VERIFICATION.md](docs/YOURSAFE_ID_AGE_VERIFICATION.md) for the integration design and privacy constraints, and [docs/YOURSAFE_INTEGRATIONS.md](docs/YOURSAFE_INTEGRATIONS.md) for a reference of Yoursafe's full product surface (identity, payments, mass payouts) and how each relates to FlexPress.
 
 ### Model Hero Image Optimization (November 2025)
 

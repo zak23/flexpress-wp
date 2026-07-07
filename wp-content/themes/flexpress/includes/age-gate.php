@@ -1,10 +1,7 @@
 <?php
 
 /**
- * Temporary Australian date-of-birth age gate.
- *
- * Date-of-birth self-declaration is a development placeholder and is not a
- * compliant age-assurance mechanism. The submitted date is never persisted.
+ * Australian age-verification gate.
  *
  * @package FlexPress
  */
@@ -44,48 +41,6 @@ function flexpress_age_base64url_decode( $value ) {
 	}
 
 	return base64_decode( strtr( $value, '-_', '+/' ), true );
-}
-
-/**
- * Determine whether a DOB is at least 18 on a supplied date.
- *
- * @param string $date_of_birth Date in YYYY-MM-DD format.
- * @param string $today         Date in YYYY-MM-DD format.
- * @return bool
- */
-function flexpress_is_at_least_18( $date_of_birth, $today ) {
-	$timezone = new DateTimeZone( 'UTC' );
-	$birth    = DateTimeImmutable::createFromFormat( '!Y-m-d', $date_of_birth, $timezone );
-	$now      = DateTimeImmutable::createFromFormat( '!Y-m-d', $today, $timezone );
-
-	if (
-		false === $birth ||
-		false === $now ||
-		$date_of_birth !== $birth->format( 'Y-m-d' ) ||
-		$today !== $now->format( 'Y-m-d' )
-	) {
-		return false;
-	}
-
-	if ( $birth > $now || $birth < $now->modify( '-120 years' ) ) {
-		return false;
-	}
-
-	return $birth <= $now->modify( '-18 years' );
-}
-
-/**
- * Convert an Australian display date to the canonical DOB format.
- *
- * @param mixed $date_of_birth Date in DD/MM/YYYY format.
- * @return string Empty string when malformed, otherwise YYYY-MM-DD.
- */
-function flexpress_normalize_australian_dob( $date_of_birth ) {
-	if ( ! is_string( $date_of_birth ) || ! preg_match( '/^(\d{2})\/(\d{2})\/(\d{4})$/', trim( $date_of_birth ), $matches ) ) {
-		return '';
-	}
-
-	return $matches[3] . '-' . $matches[2] . '-' . $matches[1];
 }
 
 /**
@@ -268,29 +223,9 @@ function flexpress_render_age_verification_page() {
 		$error = $yoursafe_errors[ $yoursafe_error ];
 	}
 
-	if ( 'POST' === ( isset( $_SERVER['REQUEST_METHOD'] ) ? $_SERVER['REQUEST_METHOD'] : '' ) ) {
-		if ( ! isset( $_POST['flexpress_age_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['flexpress_age_nonce'] ) ), 'flexpress_verify_age' ) ) {
-			$error = __( 'Your session expired. Please try again.', 'flexpress' );
-		} else {
-			$date_input    = isset( $_POST['date_of_birth'] ) ? sanitize_text_field( wp_unslash( $_POST['date_of_birth'] ) ) : '';
-			$date_of_birth = flexpress_normalize_australian_dob( $date_input );
-			if ( flexpress_is_at_least_18( $date_of_birth, current_time( 'Y-m-d' ) ) ) {
-				nocache_headers();
-				flexpress_set_age_verified_cookie();
-				wp_safe_redirect( $return_url, 303 );
-				exit;
-			}
-			$error = __( 'You must be at least 18 years old to access this site.', 'flexpress' );
-		}
-	}
-
 	nocache_headers();
 	status_header( 200 );
 	header( 'X-Robots-Tag: noindex, nofollow', true );
-	$general_settings = get_option( 'flexpress_general_settings', array() );
-	$accent_color     = sanitize_hex_color( isset( $general_settings['accent_color'] ) ? $general_settings['accent_color'] : '' );
-	$accent_color     = $accent_color ? $accent_color : '#ff5093';
-	$accent_text      = function_exists( 'flexpress_get_contrast_text_color' ) ? flexpress_get_contrast_text_color( $accent_color ) : '#ffffff';
 	?>
 	<!doctype html>
 	<html <?php language_attributes(); ?>>
@@ -299,7 +234,7 @@ function flexpress_render_age_verification_page() {
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title><?php esc_html_e( 'Age verification', 'flexpress' ); ?></title>
 		<style>
-			body{margin:0;background:#111;color:#fff;font:16px/1.5 system-ui,sans-serif;text-align:center}main{max-width:30rem;margin:7vh auto;padding:2rem}.age-logo{margin:0 auto 2rem}.age-logo img{display:inline-block;max-width:min(300px,80vw);max-height:110px;width:auto;height:auto}form{display:grid;gap:1rem}input,button,.login-button,.yoursafe-button{box-sizing:border-box;width:100%;padding:.8rem;font:inherit;text-align:center;border-radius:.25rem}button,.login-button,.yoursafe-button{cursor:pointer;font-weight:700;border:0;text-decoration:none}button{background:<?php echo esc_html( $accent_color ); ?>;color:<?php echo esc_html( $accent_text ); ?>}.yoursafe-option{display:grid;gap:.75rem;margin:1rem 0}.yoursafe-button{display:block;background:#1976d2;color:#fff}.yoursafe-button:hover,.yoursafe-button:focus{background:#1565c0}.login-option{display:grid;gap:.75rem;margin:1rem 0}.login-separator{color:#aaa}.login-button{display:block;background:#fff;color:#111}.login-button:hover,.login-button:focus{background:#e7e7e7;color:#111}.error{padding:1rem;background:#641c1c;border-radius:.25rem}.note{color:#bbb;font-size:.9rem}.rules-note{margin-top:2rem;padding-top:1.25rem;border-top:1px solid #333;color:#999;font-size:.75rem;line-height:1.5}a{color:#fff}
+			body{margin:0;background:#111;color:#fff;font:16px/1.5 system-ui,sans-serif;text-align:center}main{max-width:30rem;margin:7vh auto;padding:2rem}.age-logo{margin:0 auto 2rem}.age-logo img{display:inline-block;max-width:min(300px,80vw);max-height:110px;width:auto;height:auto}.login-button,.yoursafe-button{box-sizing:border-box;width:100%;padding:.8rem;font:inherit;text-align:center;border-radius:.25rem;cursor:pointer;font-weight:700;border:0;text-decoration:none}.yoursafe-option{display:grid;gap:.75rem;margin:1rem 0}.yoursafe-button{display:block;background:#1976d2;color:#fff}.yoursafe-button:hover,.yoursafe-button:focus{background:#1565c0}.login-option{display:grid;gap:.75rem;margin:1rem 0}.login-separator{color:#aaa}.login-button{display:block;background:#fff;color:#111}.login-button:hover,.login-button:focus{background:#e7e7e7;color:#111}.error{padding:1rem;background:#641c1c;border-radius:.25rem}.note{color:#bbb;font-size:.9rem}.rules-note{margin-top:2rem;padding-top:1.25rem;border-top:1px solid #333;color:#999;font-size:.75rem;line-height:1.5}a{color:#fff}
 		</style>
 	</head>
 	<body>
@@ -325,29 +260,21 @@ function flexpress_render_age_verification_page() {
 			<?php if ( $error ) : ?>
 				<p class="error" role="alert"><?php echo esc_html( $error ); ?></p>
 			<?php endif; ?>
-			<form method="post" action="<?php echo esc_url( home_url( '/age-verification/' ) ); ?>">
-				<?php wp_nonce_field( 'flexpress_verify_age', 'flexpress_age_nonce' ); ?>
-				<input type="hidden" name="return_to" value="<?php echo esc_attr( $return_url ); ?>">
-				<label for="date_of_birth"><?php esc_html_e( 'Date of birth', 'flexpress' ); ?></label>
-				<input id="date_of_birth" name="date_of_birth" type="text" inputmode="numeric" autocomplete="bday" placeholder="DD/MM/YYYY" pattern="\d{2}/\d{2}/\d{4}" maxlength="10" aria-describedby="dob-format" required>
-				<small id="dob-format" class="note"><?php esc_html_e( 'Use DD/MM/YYYY, for example 31/12/1990.', 'flexpress' ); ?></small>
-				<button type="submit"><?php esc_html_e( 'Continue', 'flexpress' ); ?></button>
-			</form>
 			<?php if ( function_exists( 'flexpress_yoursafe_is_enabled' ) && flexpress_yoursafe_is_enabled() ) : ?>
 				<div class="yoursafe-option">
-					<span class="login-separator"><?php esc_html_e( '-or verify securely-', 'flexpress' ); ?></span>
 					<a class="yoursafe-button" href="<?php echo esc_url( flexpress_yoursafe_start_url( $return_url ) ); ?>"><?php esc_html_e( 'Verify with Yoursafe ID', 'flexpress' ); ?></a>
 				</div>
+			<?php else : ?>
+				<p class="error" role="alert"><?php esc_html_e( 'Age verification is temporarily unavailable.', 'flexpress' ); ?></p>
 			<?php endif; ?>
 			<div class="login-option">
 				<span class="login-separator"><?php esc_html_e( '-or-', 'flexpress' ); ?></span>
 				<a class="login-button" href="<?php echo esc_url( home_url( '/login/' ) ); ?>"><?php esc_html_e( 'Login', 'flexpress' ); ?></a>
 			</div>
-			<p class="note"><?php esc_html_e( 'Your date of birth is checked for this request only and is not stored.', 'flexpress' ); ?></p>
 			<p class="note"><a href="<?php echo esc_url( home_url( '/privacy/' ) ); ?>"><?php esc_html_e( 'Privacy policy', 'flexpress' ); ?></a></p>
 			<div class="rules-note">
 				<p><?php esc_html_e( 'Why are you seeing this? New Australian online-safety rules require services carrying adult material to take steps to prevent people under 18 from accessing it. The result is that adults visiting from Australia now have to get through an age check before viewing lawful adult content.', 'flexpress' ); ?></p>
-				<p><?php esc_html_e( 'We know this adds friction and creates understandable privacy concerns. This date-of-birth screen is a temporary measure while we develop a more robust, privacy-conscious verification process. Your entered date is used only to make this immediate age decision; we do not save the date itself.', 'flexpress' ); ?></p>
+				<p><?php esc_html_e( 'We know this adds friction and creates understandable privacy concerns. Yoursafe ID confirms that you are over 18 without sharing or storing your date of birth with this site.', 'flexpress' ); ?></p>
 			</div>
 		</main>
 	</body>
@@ -357,7 +284,7 @@ function flexpress_render_age_verification_page() {
 }
 
 /**
- * Route Australian visitors through the temporary age gate.
+ * Route Australian visitors through the age gate.
  *
  * @return void
  */

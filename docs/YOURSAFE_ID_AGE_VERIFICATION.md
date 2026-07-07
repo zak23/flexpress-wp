@@ -1,8 +1,8 @@
 # Yoursafe ID age verification
 
-FlexPress supports Yoursafe ID as an optional age-verification provider for
-existing Yoursafe YOU account holders. It is disabled until credentials are
-configured and does not replace the temporary DOB form automatically.
+FlexPress uses Yoursafe ID to age-verify existing Yoursafe YOU account holders.
+It is disabled until credentials are configured; while disabled, new visitors
+cannot pass the age gate unless they log in with an already verified account.
 
 ## Setup
 

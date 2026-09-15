@@ -204,9 +204,22 @@ function flexpress_create_casting_form()
 </div>
 
 <div class="mb-3">
-    <label for="link" class="form-label">' . __('Link to Your Work', 'flexpress') . '</label>
-    [url link id:link class:form-control placeholder "' . __('https://onlyfans.com/username, linktr.ee/username, or model profile URL', 'flexpress') . '"]
-    <small class="form-text text-muted">' . __('Please provide at least one: Instagram handle, Twitter handle, or a link to your work (OnlyFans, Linktree, model profile, etc.).', 'flexpress') . '</small>
+    <label for="link" class="form-label">' . __('Primary Portfolio / Sample Link', 'flexpress') . '</label>
+    [url link id:link class:form-control placeholder "' . __('https://linktr.ee/username, modelmayhem.com/profile, or portfolio URL', 'flexpress') . '"]
+    <small class="form-text text-muted">' . __('Please provide at least one social or portfolio reference below.', 'flexpress') . '</small>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label for="onlyfans_trial_link" class="form-label">' . __('OnlyFans Free Trial Link', 'flexpress') . '</label>
+        [url onlyfans_trial_link id:onlyfans_trial_link class:form-control placeholder "' . __('https://onlyfans.com/…', 'flexpress') . '"]
+        <small class="form-text text-muted">' . __('Optional public Free Trial link for your OnlyFans.', 'flexpress') . '</small>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label for="fansly" class="form-label">' . __('Fansly Profile', 'flexpress') . '</label>
+        [url fansly id:fansly class:form-control placeholder "' . __('https://fansly.com/username', 'flexpress') . '"]
+        <small class="form-text text-muted">' . __('Optional public Fansly profile URL.', 'flexpress') . '</small>
+    </div>
 </div>
 
 <div class="mb-3">
@@ -230,6 +243,11 @@ function flexpress_create_casting_form()
     </div>
 </div>
 
+<div class="alert alert-secondary mb-3" role="note">
+    <i class="bi bi-clipboard-check me-2"></i>
+    ' . __('Complete applications receive priority. Please include as much relevant information and as many portfolio or social links as you can so our casting team can properly assess your application.', 'flexpress') . '
+</div>
+
 <div class="mb-3">
     [submit class:btn class:btn-primary "' . __('Submit Application', 'flexpress') . '"]
 </div>';
@@ -247,7 +265,9 @@ function flexpress_create_casting_form()
 <p><strong>' . __('Social Media:', 'flexpress') . '</strong></p>
 <p><strong>' . __('Instagram:', 'flexpress') . '</strong> [instagram]</p>
 <p><strong>' . __('Twitter:', 'flexpress') . '</strong> [twitter]</p>
-<p><strong>' . __('Link to Work:', 'flexpress') . '</strong> [link]</p>
+<p><strong>' . __('Primary Portfolio / Sample Link:', 'flexpress') . '</strong> [link]</p>
+<p><strong>' . __('OnlyFans Free Trial Link:', 'flexpress') . '</strong> [onlyfans_trial_link]</p>
+<p><strong>' . __('Fansly Profile:', 'flexpress') . '</strong> [fansly]</p>
 
 <p><strong>' . __('About You:', 'flexpress') . '</strong></p>
 <p>[about_you]</p>
@@ -305,16 +325,28 @@ function flexpress_create_casting_form()
 
     // Update existing form or create new one
     if ($existing_form) {
-        // Keep existing mail settings intact, but add the new location mail tag
-        // to older generated casting forms when it is missing.
+        // Keep existing mail settings intact, but add any later FlexPress
+        // casting fields to older generated forms without replacing recipients.
         $existing_mail = get_post_meta($existing_form->ID, '_mail', true);
-        if (is_array($existing_mail) && isset($existing_mail['body']) && strpos($existing_mail['body'], '[applicant_location]') === false) {
-            $location_line = '<p><strong>' . __('Based/Located:', 'flexpress') . '</strong> [applicant_location]</p>';
+        if (is_array($existing_mail) && isset($existing_mail['body'])) {
+            // Upgrade the short-lived Free OnlyFans Profile field name without
+            // leaving duplicate mail lines for sites that already generated it.
+            $existing_mail['body'] = str_replace(
+                array('[free_onlyfans]', __('Free OnlyFans Profile:', 'flexpress')),
+                array('[onlyfans_trial_link]', __('OnlyFans Free Trial Link:', 'flexpress')),
+                $existing_mail['body']
+            );
 
-            if (strpos($existing_mail['body'], '[stage_age]') !== false) {
-                $existing_mail['body'] = preg_replace('/(<p><strong>.*?\[stage_age\]<\/p>)/s', '$1' . "\n" . $location_line, $existing_mail['body'], 1);
-            } else {
-                $existing_mail['body'] .= "\n" . $location_line;
+            $mail_field_lines = array(
+                'applicant_location' => '<p><strong>' . __('Based/Located:', 'flexpress') . '</strong> [applicant_location]</p>',
+                'onlyfans_trial_link' => '<p><strong>' . __('OnlyFans Free Trial Link:', 'flexpress') . '</strong> [onlyfans_trial_link]</p>',
+                'fansly' => '<p><strong>' . __('Fansly Profile:', 'flexpress') . '</strong> [fansly]</p>',
+            );
+
+            foreach ($mail_field_lines as $mail_tag => $mail_line) {
+                if (strpos($existing_mail['body'], '[' . $mail_tag . ']') === false) {
+                    $existing_mail['body'] .= "\n" . $mail_line;
+                }
             }
 
             update_post_meta($existing_form->ID, '_mail', $existing_mail);
@@ -819,19 +851,30 @@ function flexpress_validate_casting_form($result, $tags)
     // Get posted data
     $posted_data = $submission->get_posted_data();
 
-    // Check if at least one social media link or URL is provided
+    // Check if at least one social media link or portfolio URL is provided.
     $has_instagram = !empty($posted_data['instagram'] ?? '');
     $has_twitter = !empty($posted_data['twitter'] ?? '');
-    $has_link = !empty($posted_data['link'] ?? '');
+    $portfolio_url_fields = array('link', 'onlyfans_trial_link', 'fansly');
+    $has_portfolio_url = false;
+    foreach ($portfolio_url_fields as $field_name) {
+        if (!empty($posted_data[$field_name] ?? '')) {
+            $has_portfolio_url = true;
+            break;
+        }
+    }
 
     // If none of the above are provided, show validation error
-    if (!$has_instagram && !$has_twitter && !$has_link) {
-        // Find the link tag to attach the error (or instagram/twitter as fallback)
+    if (!$has_instagram && !$has_twitter && !$has_portfolio_url) {
+        // Find a portfolio tag to attach the error (or a social field as fallback).
         $error_tag = null;
         foreach ($tags as $tag) {
             if ($tag->name === 'link') {
                 $error_tag = $tag;
                 break;
+            } elseif ($tag->name === 'onlyfans_trial_link' && !$error_tag) {
+                $error_tag = $tag;
+            } elseif ($tag->name === 'fansly' && !$error_tag) {
+                $error_tag = $tag;
             } elseif ($tag->name === 'instagram' && !$error_tag) {
                 $error_tag = $tag;
             } elseif ($tag->name === 'twitter' && !$error_tag) {
@@ -840,14 +883,18 @@ function flexpress_validate_casting_form($result, $tags)
         }
 
         if ($error_tag) {
-            $result->invalidate($error_tag, __('Please provide at least one: Instagram handle, Twitter handle, or a link to your work.', 'flexpress'));
+            $result->invalidate($error_tag, __('Please provide at least one: Instagram handle, Twitter handle, portfolio/sample link, OnlyFans Free Trial link, or Fansly profile.', 'flexpress'));
         }
     }
 
-    if ($has_link && !flexpress_is_valid_casting_work_url($posted_data['link'])) {
+    foreach ($portfolio_url_fields as $field_name) {
+        if (empty($posted_data[$field_name] ?? '') || flexpress_is_valid_casting_work_url($posted_data[$field_name])) {
+            continue;
+        }
+
         foreach ($tags as $tag) {
-            if ($tag->name === 'link') {
-                $result->invalidate($tag, __('Please enter a real public URL to your work. Placeholder or fake URLs are not accepted.', 'flexpress'));
+            if ($tag->name === $field_name) {
+                $result->invalidate($tag, __('Please enter a real public portfolio/profile URL. Placeholder or fake URLs are not accepted.', 'flexpress'));
                 break;
             }
         }

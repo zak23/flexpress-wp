@@ -211,8 +211,11 @@ get_header();
         <div class="row justify-content-center">
             <div class="col-lg-10">
                 <div class="card-header text-center py-4">
-                    <h2 class="h2 mb-3 text-white">Ready to Get Started?</h2>
-                    <div class="lead text-white-50">Fill out our casting application form below and we'll be in touch with you shortly to discuss the next steps. We look forward to potentially working with you!</div>
+                    <h2 class="h2 mb-3 text-white"><?php esc_html_e('Make Your Application Count', 'flexpress'); ?></h2>
+                    <div class="lead text-white-50">
+                        <p class="mb-3"><?php esc_html_e('We are looking for authentic performers with natural presence that stands out on camera. We welcome people of all shapes, sizes, backgrounds, and ethnicities. Above all, we value people who are real, confident, and excited to create great content.', 'flexpress'); ?></p>
+                        <p class="mb-0"><?php esc_html_e('We receive many casting applications, so give us a clear sense of who you are. If you are ready to work with an experienced team and build your exposure, complete the application below.', 'flexpress'); ?></p>
+                    </div>
                 </div>
                 <div class="card shadow-lg">
 

@@ -4,6 +4,8 @@
 
 FlexPress now includes comprehensive Discord notifications for all Contact Form 7 form submissions. This integration provides real-time notifications to your Discord server whenever forms are submitted, helping you stay on top of customer inquiries, casting applications, and support requests.
 
+> Casting-specific configuration, portfolio fields, Grok triage, silent spam alerts, and email behavior are documented in [Casting Applications: Portfolio, AI Screening, and Notifications](CASTING_APPLICATION_SCREENING.md).
+
 ## Features
 
 ### 🎯 **Form-Specific Notifications**
@@ -43,6 +45,7 @@ FlexPress now includes comprehensive Discord notifications for all Contact Form 
 2. **Set webhook URLs:**
    - **Default Webhook** - Used for all notifications if specific webhooks aren't set
    - **Contact Forms Webhook** - Dedicated channel for contact form submissions
+   - **Casting Applications Webhook** - Dedicated channel for casting applications; falls back to Contact Forms, then Default, when empty
    - **Financial Webhook** - For payment notifications (existing)
 
 3. **Enable notifications:**
@@ -84,9 +87,13 @@ New casting form submission received from Your Site Name
 
 **Name:** Jane Smith
 **Email:** jane@example.com
-**Age:** 25
-**Phone:** +1 (555) 123-4567
-**Message:** I'm interested in joining your cast...
+**Preferred Stage Age:** 26-30
+**Based/Located:** Brisbane, QLD, Australia
+**Primary Portfolio / Sample Link:** https://example.com/portfolio
+**OnlyFans Free Trial Link:** https://onlyfans.com/example
+**Fansly Profile:** https://fansly.com/example
+**AI Screening:** Likely genuine
+**AI Assessment:** Coherent application with useful portfolio references.
 **Submitted:** 2024-01-15 14:30:25
 ```
 
@@ -108,7 +115,7 @@ New support form submission received from Your Site Name
 ## Technical Details
 
 ### Integration Points
-- **Contact Form 7 Hooks:** `wpcf7_mail_sent` and `wpcf7_mail_failed`
+- **Contact Form 7 Hooks:** `wpcf7_before_send_mail`, `wpcf7_skip_mail`, `wpcf7_mail_sent`, and `wpcf7_mail_failed`
 - **FlexPress Discord System:** Uses existing `FlexPress_Discord_Notifications` class
 - **Form Detection:** Automatically detects form type based on FlexPress form IDs
 

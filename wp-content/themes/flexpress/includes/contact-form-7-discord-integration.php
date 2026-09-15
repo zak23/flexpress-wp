@@ -561,8 +561,22 @@ class FlexPress_CF7_Discord_Integration {
                 }
                 if (isset($posted_data['link']) && !empty($posted_data['link'])) {
                     $fields[] = [
-                        'name' => __('Link to Work', 'flexpress'),
+                        'name' => __('Primary Portfolio / Sample Link', 'flexpress'),
                         'value' => $sanitize_field_value($posted_data['link']),
+                        'inline' => true
+                    ];
+                }
+                if (isset($posted_data['onlyfans_trial_link']) && !empty($posted_data['onlyfans_trial_link'])) {
+                    $fields[] = [
+                        'name' => __('OnlyFans Free Trial Link', 'flexpress'),
+                        'value' => $sanitize_field_value($posted_data['onlyfans_trial_link']),
+                        'inline' => true
+                    ];
+                }
+                if (isset($posted_data['fansly']) && !empty($posted_data['fansly'])) {
+                    $fields[] = [
+                        'name' => __('Fansly Profile', 'flexpress'),
+                        'value' => $sanitize_field_value($posted_data['fansly']),
                         'inline' => true
                     ];
                 }

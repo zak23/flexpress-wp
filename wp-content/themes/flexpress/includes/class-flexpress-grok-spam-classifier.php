@@ -170,7 +170,7 @@ Important safeguards:
 - One stage-age band (about 5-8 years) is normal and must not be a spam signal.
 - A 10-14 year stage-age gap is not sufficient alone; only treat it as a supporting concern with other evidence.
 - Newcomers, private applicants, amateur experience, messy fields, generic social handles, and no adult-industry portfolio can be genuine.
-- A named portfolio, Model Mayhem, LinkedIn, Google Drive portfolio, escort directory, OnlyFans profile, Instagram handle, or coherent biography is supportive evidence even if it cannot be verified live.
+- A named portfolio, Model Mayhem, LinkedIn, Google Drive portfolio, escort directory, OnlyFans free-trial link, Fansly profile, Instagram handle, or coherent biography is supportive evidence even if it cannot be verified live.
 - A bare site homepage, a social-media homepage, pasted prose in a URL field, or a private Telegram URL is unusable evidence, not automatic spam.
 - Overseas location, travel/visa discussion, gender identity, or being female are casting/logistics information, never spam signals.
 - Never invent profile activity, link contents, staff comments, prior applications, or duplicate submissions.

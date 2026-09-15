@@ -852,9 +852,10 @@ FlexPress includes comprehensive Contact Form 7 templates with Discord notificat
 #### 2. Casting Application Form
 
 - **Template**: `flexpress_create_casting_form()`
-- **Fields**: Name, Email, Gender Identity, Stage Age, Social Media, About You
-- **Features**: Age verification notice, comprehensive applicant details
-- **Discord Channel**: Contact Forms webhook (orange embed)
+- **Fields**: Name, Email, Gender Identity, Stage Age, Location, social links, Primary Portfolio / Sample Link, OnlyFans Free Trial Link, Fansly Profile, About You
+- **Features**: Age verification notice, public-URL validation, Grok potential-spam triage, comprehensive applicant details
+- **Discord Channel**: Casting Applications webhook with Contact Forms and Default fallbacks (orange embed)
+- **Reference**: [`docs/CASTING_APPLICATION_SCREENING.md`](docs/CASTING_APPLICATION_SCREENING.md) documents the AI, email, Discord, and portfolio workflow.
 
 #### 3. Support Request Form
 
@@ -884,12 +885,13 @@ FlexPress includes comprehensive Contact Form 7 templates with Discord notificat
 
 1. Go to `FlexPress → Discord Settings`
 2. Set **Contact Forms Webhook** URL for form notifications
-3. Enable notification types:
+3. Optionally set **Casting Applications Webhook** for a dedicated casting channel
+4. Enable notification types:
    - ✅ **Contact Forms** - General inquiries
    - ✅ **Casting Applications** - Talent applications
    - ✅ **Support Requests** - Customer support
    - ✅ **Content Removal** - Legal requests
-4. Test the connection
+5. Test the connection
 
 #### 3. Display Forms
 

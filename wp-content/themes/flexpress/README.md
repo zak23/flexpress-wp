@@ -4,10 +4,14 @@
 
 FlexPress is designed specifically for content websites (primarily adult content) but can be adapted for any premium content platform. It includes comprehensive built-in integrations and management tools, eliminating the need for multiple plugins.
 
+**Theme version:** 1.0.35 (`style.css`)  
 **Theme portability:** All FlexPress code lives in this theme folder. Nothing is deployed to `wp-content/plugins/flexpress/`. Redis object cache is loaded from `flexpress-redis-cache.php` (required in `functions.php`). Deploy by copying or extracting only the theme folder.
 
-**Live Site:** zakspov.com (production site)  
-**Test Site:** zakspov.com (development data only)
+**Live Site:** zakspov.com (production site)
+
+### Returning developers (September 2026)
+
+Project-level orientation (ports, age gate, docs index) lives in the **root** [README.md](../../../README.md). Coding patterns live in root [`.cursorrules`](../../../.cursorrules). Compliance deep-dives: `docs/YOURSAFE_ID_AGE_VERIFICATION.md`, `docs/CLOUDFLARE_GEOLOCATION.md`, `docs/AFFILIATE_SYSTEM.md`, `docs/REDIS_OBJECT_CACHE.md` at the repo root.
 
 ---
 
@@ -276,6 +280,15 @@ Frontend template: `wp-content/themes/flexpress/single-model.php` renders these 
 ---
 
 ## 🔧 Technical Integrations
+
+### Yoursafe ID + Australian Age Gate (parked September 2026)
+
+- **Status**: AU/Yoursafe server gate offline by default via `flexpress_is_age_gate_enabled()`. Resume with `define( 'FLEXPRESS_AGE_GATE_ENABLED', true );` in `wp-config.php`. Soft “I am 18” modal and newsletter modal remain live.
+- **Geolocation**: `includes/geolocation.php` reads Cloudflare `CF-IPCountry` → `AU` / `NON_AU` / `UNKNOWN` (aggregates only). Still loads while parked; does not redirect.
+- **Server gate**: When enabled, `includes/age-gate.php` redirects **AU** visitors without a valid signed cookie (and not logged in) to `/age-verification/`.
+- **Yoursafe ID**: OIDC authorization-code + PKCE. Admin: **FlexPress → Yoursafe ID** (settings + parked notice remain available).
+- **Client modal**: `assets/js/age-verification.js` + footer markup always load (independent of the parked AU gate).
+- **Docs**: repo `docs/YOURSAFE_ID_AGE_VERIFICATION.md`, `docs/CLOUDFLARE_GEOLOCATION.md`, `docs/YOURSAFE_INTEGRATIONS.md`.
 
 ### Flowguard Payment System
 
@@ -849,13 +862,18 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 ### Settings Panels
 
 - **General**: Logo, colors, basic configuration
-- **Video**: BunnyCDN Stream integration
-- **Membership**: User management and access control
-- **Flowguard**: Modern payment processing configuration
-- **Earnings**: Revenue tracking and financial reporting dashboard
-- **Pricing**: Episode pricing and discount management
-- **Affiliate**: Complete affiliate and promo-code management system
-- **Contact & Social**: Business information and social media
+- **Awards / Featured On / Featured Banner / Collections / Coming Soon**: Homepage & site-mode sections
+- **Yoursafe ID**: Age-verification OIDC credentials and Account Proof Lifetime
+- **Join CTA / Casting**: Editable homepage sections
+- **Bunny Stream**: Video hosting (admin label for BunnyCDN Stream)
+- **Flowguard**: Payment processing configuration + Flowguard References
+- **Pricing / Trial Links / Manage Members / Tools**: Membership commerce
+- **Affiliate System**: Tracking, commissions, payouts (module toggle)
+- **Earnings / Stats Dashboard**: Revenue and metrics
+- **Plunk / Discord / Turnstile**: Marketing and bot protection
+- **Google SMTP / SMTP2Go / Amazon SES**: Outbound email routing
+- **Contact & Social / Email Blacklist / Permissions**: Site identity, chargeback blocks, founder caps
+- **Pages & Menus / Auto-Setup**: Bootstrap tooling
 
 ### Management Tools
 
@@ -885,8 +903,8 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 - **Commission Processing**: Automatic commission calculation from Flowguard payment events
 - **Payout Management**: Request, approve, and process affiliate payouts with CSV export
 - **Tracking System**: 30-day cookie tracking with ?aff and ?promo parameter support
-- **Admin Dashboard**: React-based SPA for comprehensive affiliate management (View/Edit affiliate modals with commission, payout, and status fields)
-- **Affiliate Dashboard**: Secure JWT-protected dashboard for affiliates
+- **Admin Dashboard**: PHP admin UI under FlexPress → Affiliate System (modals for commission, payout, and status)
+- **Affiliate Dashboard**: JWT-protected PHP page template (`page-templates/affiliate-dashboard.php`) for affiliates
 - **Promo Code Integration**: Link promo codes to affiliates with attribution precedence
 - **Security Features**: Encrypted payout details, security headers, and Redis caching rules
 - **REST API**: Complete REST API for affiliate and admin operations
@@ -912,7 +930,7 @@ The gallery preview creates a seamless conversion path with smart user-state rou
 - **Flowguard Webhooks**: Automatic commission processing on payment events via REST API
 - **Cookie Tracking**: 30-day attribution window with secure cookie management
 - **User Management**: WordPress user system integration with custom roles
-- **Admin Interface**: React-based SPA for comprehensive affiliate management
+- **Admin Interface**: PHP settings UI for comprehensive affiliate management
 - **JWT Authentication**: Secure token-based authentication for affiliate dashboard
 - **REST API**: Complete API for affiliate and admin operations
 - **Security Headers**: Cache-control, Vary headers, and CORS protection

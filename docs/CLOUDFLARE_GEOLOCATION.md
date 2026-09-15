@@ -1,7 +1,30 @@
 # Cloudflare geolocation and origin protection
 
 FlexPress reads Cloudflare's `CF-IPCountry` header and classifies each request as
-`AU`, `NON_AU`, or `UNKNOWN`. This does not currently restrict content.
+`AU`, `NON_AU`, or `UNKNOWN` in `includes/geolocation.php`. Classification is
+aggregate-only (daily counters in `flexpress_geo_YYYYMMDD_*` options); no IP
+addresses or request identifiers are stored.
+
+## How classification is used
+
+The geolocation module itself only classifies. The temporary Australian age gate
+in `includes/age-gate.php` consumes that classification **when enabled**.
+
+**Parked (September 2026):** `flexpress_is_age_gate_enabled()` defaults to
+false, so AU visitors are not redirected. Resume with
+`define( 'FLEXPRESS_AGE_GATE_ENABLED', true );` in `wp-config.php`.
+
+When the gate is live:
+
+- **AU** — unverified visitors are redirected to `/age-verification/` (Yoursafe ID
+  or login). Signed cookie `flexpress_age_verified` (90 days) bypasses the gate.
+- **NON_AU** / **UNKNOWN** — pass through under the current temporary policy.
+- Exempt paths include age-verification, privacy/terms, support/contact, 2257,
+  anti-slavery, and login. Logged-in users bypass the gate.
+
+See [YOURSAFE_ID_AGE_VERIFICATION.md](YOURSAFE_ID_AGE_VERIFICATION.md) for the
+OIDC proof flow. Keep origin access behind Cloudflare so the country header
+cannot be forged by hitting WordPress directly.
 
 ## Cloudflare configuration
 
@@ -45,5 +68,7 @@ php tests/test-geolocation.php
 - IPv4 and IPv6 clients should both work through Cloudflare.
 - Connecting directly to the origin on ports 80, 443, or 8085 must fail,
   including when a forged `CF-IPCountry` header is supplied.
+- Australian visitors without a valid age cookie (and not logged in) must land on
+  `/age-verification/`.
 - The `flexpress_geo_YYYYMMDD_*` options contain aggregate counts only; they do
   not contain IP addresses or request identifiers.

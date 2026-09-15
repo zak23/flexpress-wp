@@ -30,9 +30,16 @@ function flexpress_yoursafe_settings() {
 /**
  * Whether the provider is ready to use.
  *
+ * Requires the age gate master switch plus admin credentials. The gate is
+ * parked by default — see flexpress_is_age_gate_enabled().
+ *
  * @return bool
  */
 function flexpress_yoursafe_is_enabled() {
+	if ( function_exists( 'flexpress_is_age_gate_enabled' ) && ! flexpress_is_age_gate_enabled() ) {
+		return false;
+	}
+
 	$settings = flexpress_yoursafe_settings();
 	return ! empty( $settings['enabled'] ) && ! empty( $settings['client_id'] ) && ! empty( $settings['client_secret'] );
 }
@@ -566,9 +573,16 @@ function flexpress_yoursafe_callback() {
 /**
  * Handle virtual Yoursafe ID routes before the general age gate.
  *
+ * Parked with the age gate master switch — start/callback are inert until
+ * FLEXPRESS_AGE_GATE_ENABLED is true.
+ *
  * @return void
  */
 function flexpress_yoursafe_route_request() {
+	if ( function_exists( 'flexpress_is_age_gate_enabled' ) && ! flexpress_is_age_gate_enabled() ) {
+		return;
+	}
+
 	$path = wp_parse_url( isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '/', PHP_URL_PATH );
 	$path = '/' . trim( (string) $path, '/' ) . '/';
 

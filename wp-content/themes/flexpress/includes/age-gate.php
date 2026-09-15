@@ -15,6 +15,29 @@ define( 'FLEXPRESS_AGE_COOKIE_VERSION', 1 );
 define( 'FLEXPRESS_AGE_COOKIE_LIFETIME', 90 * DAY_IN_SECONDS );
 
 /**
+ * Whether the Australian age gate + related UX is live.
+ *
+ * Parked by default (September 2026). Code remains loaded for later work.
+ * Re-enable by defining in wp-config.php:
+ *
+ *   define( 'FLEXPRESS_AGE_GATE_ENABLED', true );
+ *
+ * @return bool
+ */
+function flexpress_is_age_gate_enabled() {
+	if ( defined( 'FLEXPRESS_AGE_GATE_ENABLED' ) ) {
+		return (bool) FLEXPRESS_AGE_GATE_ENABLED;
+	}
+
+	/**
+	 * Filter to re-enable the parked age gate without a wp-config constant.
+	 *
+	 * @param bool $enabled Default false while the feature is parked.
+	 */
+	return (bool) apply_filters( 'flexpress_age_gate_enabled', false );
+}
+
+/**
  * Encode binary-safe data for a cookie.
  *
  * @param string $value Value to encode.
@@ -286,9 +309,15 @@ function flexpress_render_age_verification_page() {
 /**
  * Route Australian visitors through the age gate.
  *
+ * No-ops while parked (`flexpress_is_age_gate_enabled()` is false).
+ *
  * @return void
  */
 function flexpress_enforce_temporary_age_gate() {
+	if ( ! flexpress_is_age_gate_enabled() ) {
+		return;
+	}
+
 	$path = wp_parse_url( isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '/', PHP_URL_PATH );
 	if ( '/age-verification/' === '/' . trim( (string) $path, '/' ) . '/' ) {
 		flexpress_render_age_verification_page();

@@ -16,11 +16,19 @@ if (!defined('ABSPATH')) {
  * Contact Form 7 Discord Integration Class
  */
 class FlexPress_CF7_Discord_Integration {
+
+    /** @var array<int, array> Casting reviews retained only for the current request. */
+    private $casting_reviews = array();
     
     /**
      * Constructor
      */
     public function __construct() {
+        // Screen casting before CF7 creates its email, allowing strong spam to
+        // be skipped while preserving CF7's normal success response.
+        add_action('wpcf7_before_send_mail', array($this, 'screen_casting_before_mail'), 10, 3);
+        add_filter('wpcf7_skip_mail', array($this, 'skip_mail_for_spam_troll'), 10, 2);
+
         // Hook into Contact Form 7 mail sent event
         add_action('wpcf7_mail_sent', array($this, 'handle_form_submission'), 10, 1);
         
@@ -48,8 +56,47 @@ class FlexPress_CF7_Discord_Integration {
         // Determine form type based on FlexPress form IDs
         $form_type = $this->get_form_type($form_id);
         
+        $ai_review = $form_type === 'casting' ? $this->get_cached_casting_review($form_id, $posted_data) : null;
+
         // Send Discord notification
-        $this->send_discord_notification($form_type, $form_title, $posted_data);
+        $this->send_discord_notification($form_type, $form_title, $posted_data, $ai_review);
+    }
+
+    /**
+     * Review the configured casting form before CF7 mail is generated.
+     * A suspicious application still receives mail with a visible subject tag;
+     * only the highest-confidence spam/troll classification is suppressed.
+     */
+    public function screen_casting_before_mail($contact_form, &$abort, $submission) {
+        $form_id = $contact_form->id();
+        if ($this->get_form_type($form_id) !== 'casting' || !$submission) {
+            return;
+        }
+
+        $review = $this->get_casting_ai_review($submission->get_posted_data());
+        $this->casting_reviews[$form_id] = $review;
+
+        if (($review['classification'] ?? '') !== 'suspicious') {
+            return;
+        }
+
+        $mail = $contact_form->prop('mail');
+        if (!is_array($mail) || empty($mail['subject'])) {
+            return;
+        }
+
+        $mail['subject'] = '[Potential spam] ' . $mail['subject'];
+        $contact_form->set_properties(array('mail' => $mail));
+    }
+
+    /** Skip both the staff email and CF7 autoresponder for a strong troll/spam match. */
+    public function skip_mail_for_spam_troll($skip_mail, $contact_form) {
+        $review = $this->casting_reviews[$contact_form->id()] ?? null;
+        if (is_array($review) && ($review['classification'] ?? '') === 'spam_troll') {
+            return true;
+        }
+
+        return $skip_mail;
     }
     
     /**
@@ -108,7 +155,7 @@ class FlexPress_CF7_Discord_Integration {
      * @param string $form_title Form title
      * @param array $posted_data Form submission data
      */
-    private function send_discord_notification($form_type, $form_title, $posted_data) {
+    private function send_discord_notification($form_type, $form_title, $posted_data, $ai_review = null) {
         $discord_settings = get_option('flexpress_discord_settings', []);
         
         // Check if Discord notifications are enabled for this form type
@@ -117,13 +164,31 @@ class FlexPress_CF7_Discord_Integration {
         }
         
         // Create Discord embed based on form type
-        $embed = $this->create_form_embed($form_type, $form_title, $posted_data);
+        $embed = $this->create_form_embed($form_type, $form_title, $posted_data, $ai_review);
         
         // Send notification
         $discord = new FlexPress_Discord_Notifications();
         $content = $this->get_notification_content($form_type);
         
-        $discord->send_notification($embed, $content, 'contact');
+        $suppress_notifications = $form_type === 'casting' && !empty($ai_review['potential_spam']);
+        $discord->send_notification($embed, $content, $form_type === 'casting' ? 'casting' : 'contact', $suppress_notifications);
+    }
+
+    /** Return a standard unreviewed state if the optional classifier is unavailable. */
+    private function get_casting_ai_review($posted_data) {
+        if (!class_exists('FlexPress_Grok_Spam_Classifier')) {
+            return array('status' => 'unreviewed', 'classification' => 'unreviewed', 'potential_spam' => false, 'reason' => __('AI screening is unavailable.', 'flexpress'));
+        }
+        return (new FlexPress_Grok_Spam_Classifier())->classify_casting_submission($posted_data);
+    }
+
+    /** Use the pre-mail review when available and avoid a second Grok request. */
+    private function get_cached_casting_review($form_id, $posted_data) {
+        if (isset($this->casting_reviews[$form_id])) {
+            return $this->casting_reviews[$form_id];
+        }
+
+        return $this->get_casting_ai_review($posted_data);
     }
     
     /**
@@ -179,13 +244,13 @@ class FlexPress_CF7_Discord_Integration {
      * @param array $posted_data Form data
      * @return array Discord embed
      */
-    private function create_form_embed($form_type, $form_title, $posted_data) {
+    private function create_form_embed($form_type, $form_title, $posted_data, $ai_review = null) {
         $discord = new FlexPress_Discord_Notifications();
         
         // Get form-specific data
         $title = $this->get_form_title($form_type);
         $color = $this->get_form_color($form_type);
-        $fields = $this->get_form_fields($form_type, $posted_data, $form_title);
+        $fields = $this->get_form_fields($form_type, $posted_data, $form_title, $ai_review);
         
         $description = sprintf(
             __('New %s form submission received from %s', 'flexpress'),
@@ -305,7 +370,7 @@ class FlexPress_CF7_Discord_Integration {
      * @param string $form_title Form title
      * @return array Discord embed fields
      */
-    private function get_form_fields($form_type, $posted_data, $form_title = '') {
+    private function get_form_fields($form_type, $posted_data, $form_title = '', $ai_review = null) {
         $fields = [];
         
         // Helper function to sanitize field values
@@ -405,6 +470,31 @@ class FlexPress_CF7_Discord_Integration {
             'value' => current_time('Y-m-d H:i:s'),
             'inline' => true
         ];
+
+        if ($form_type === 'casting' && is_array($ai_review)) {
+            $classification = $ai_review['classification'] ?? 'unreviewed';
+            $potential_spam = !empty($ai_review['potential_spam']);
+            $screening_label = __('AI unavailable / unreviewed', 'flexpress');
+
+            if ($potential_spam && $classification === 'suspicious') {
+                $screening_label = __('Potential spam — suspicious', 'flexpress');
+            } elseif ($potential_spam && $classification === 'spam_troll') {
+                $screening_label = __('Potential spam — spam/troll', 'flexpress');
+            } elseif ($classification === 'legit') {
+                $screening_label = __('Likely genuine', 'flexpress');
+            }
+
+            $fields[] = [
+                'name' => __('AI Screening', 'flexpress'),
+                'value' => $screening_label,
+                'inline' => true
+            ];
+            $fields[] = [
+                'name' => __('AI Assessment', 'flexpress'),
+                'value' => $sanitize_field_value($ai_review['reason'] ?? __('No assessment available.', 'flexpress')),
+                'inline' => false
+            ];
+        }
         
         // Form-specific fields
         switch ($form_type) {

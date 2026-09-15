@@ -63,6 +63,14 @@ class FlexPress_Discord_Settings {
             'flexpress_discord_settings',
             'discord_config_section'
         );
+
+        add_settings_field(
+            'webhook_url_casting',
+            'Casting Applications Webhook',
+            array($this, 'render_webhook_url_casting_field'),
+            'flexpress_discord_settings',
+            'discord_config_section'
+        );
         
         add_settings_field(
             'test_connection',
@@ -209,13 +217,15 @@ class FlexPress_Discord_Settings {
      * @return array Sanitized data
      */
     public function sanitize_settings($input) {
-        $sanitized = array();
+        $current = get_option('flexpress_discord_settings', array());
+        $sanitized = is_array($current) ? $current : array();
         
         // Sanitize webhook URLs
         $webhook_fields = [
             'webhook_url',
             'webhook_url_financial',
-            'webhook_url_contact'
+            'webhook_url_contact',
+            'webhook_url_casting'
         ];
         
         foreach ($webhook_fields as $field) {
@@ -350,6 +360,20 @@ class FlexPress_Discord_Settings {
                class="regular-text" 
                placeholder="https://discord.com/api/webhooks/..." />
         <p class="description">Webhook URL for contact form notifications (talent applications, general inquiries). Leave empty to use default webhook.</p>
+        <?php
+    }
+
+    /** Render the dedicated Contact Form 7 casting destination. */
+    public function render_webhook_url_casting_field() {
+        $options = get_option('flexpress_discord_settings', array());
+        $webhook_url = $options['webhook_url_casting'] ?? '';
+        ?>
+        <input type="url"
+               name="flexpress_discord_settings[webhook_url_casting]"
+               value="<?php echo esc_attr($webhook_url); ?>"
+               class="regular-text"
+               placeholder="https://discord.com/api/webhooks/..." />
+        <p class="description">Webhook URL for Contact Form 7 casting applications. Leave empty to use the Contact Forms webhook, then the default webhook.</p>
         <?php
     }
     

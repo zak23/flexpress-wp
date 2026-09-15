@@ -40,13 +40,16 @@ wp-content/themes/flexpress/
 ├── assets/              # Theme assets (CSS, JS, images)
 ├── includes/           # Core functionality and integrations
 │   ├── admin/         # Admin-specific functionality
-│   ├── verotel/       # Payment processing integration
+│   ├── age-gate.php   # AU server-side age gate
+│   ├── geolocation.php # Cloudflare CF-IPCountry classifier
+│   ├── class-flexpress-yoursafe-id.php
 │   └── affiliate-helpers.php  # Affiliate system core
-├── page-templates/    # Custom page templates
+├── page-templates/    # Custom page templates (incl. affiliate-*.php)
 ├── template-parts/    # Reusable template parts
 └── functions.php      # Theme setup and core functions
 ```
 
+Theme version is declared in `style.css` (currently 1.0.35). Root repo README and `.cursorrules` are the orientation/source-of-truth for ports, age gate, and agent rules.
 ### Database Design
 
 - Use WordPress naming conventions (wp\_ prefix)
@@ -228,6 +231,7 @@ wp-content/themes/flexpress/
 - GDPR/CCPA data privacy compliance
 - FTC affiliate disclosure requirements
 - Adult content regulations and age verification
+- Australian age gate: currently **parked** (`flexpress_is_age_gate_enabled()`); when live: Cloudflare geo → `age-gate.php` (AU only) → Yoursafe ID OIDC; see root `docs/YOURSAFE_ID_AGE_VERIFICATION.md`
 - International tax reporting obligations
 
 ### Security Compliance
@@ -236,3 +240,4 @@ wp-content/themes/flexpress/
 - Vulnerability scanning and monitoring
 - Secure credential management
 - Data encryption for sensitive information
+- Never log Yoursafe Client Secret, auth codes, or tokens

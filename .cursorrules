@@ -1,6 +1,6 @@
 Always use IP instead of localhost
 Never use port 3000 (reserved for MCP tools)
-WordPress on port 8085; phpMyAdmin on 8086
+WordPress on port 8085 (Docker binds `127.0.0.1:8085` so origin is not public); phpMyAdmin on 8086
 All theme work inside `wp-content/themes/flexpress/`
 No FlexPress code in `wp-content/plugins/` — everything is in the theme for portability. Redis object cache is optional; loaded from `flexpress-redis-cache.php` when `WP_REDIS_ENABLED` is true (off by default).
 Update `README.md` in project root and theme for any feature changes
@@ -9,6 +9,21 @@ Use Puppeteer tests against the test site; prefer IPs for navigation and screens
 PHP indent: 4 spaces; JS: 2 spaces; CSS: 2 spaces
 Do not alter `.wakatime-project` once created
 Bundled webfonts must use `font-display: swap`
+
+## Australian Age Gate + Yoursafe ID (parked September 2026)
+
+- **Parked by default.** `flexpress_is_age_gate_enabled()` returns false unless `define( 'FLEXPRESS_AGE_GATE_ENABLED', true );` in wp-config (or filter `flexpress_age_gate_enabled`).
+- While parked: no AU redirects, no Yoursafe start/callback routes. Soft “I am 18” modal + newsletter modal stay live. Code + **FlexPress → Yoursafe ID** admin remain for later work.
+- Geolocation (`includes/geolocation.php`): classify Cloudflare `CF-IPCountry` as `AU` / `NON_AU` / `UNKNOWN` only; store aggregate counters, never IPs. (Still loads; does not gate while parked.)
+- Age gate (`includes/age-gate.php`): when enabled, on `template_redirect` priority 0, redirect **AU** visitors without valid signed cookie / login to `/age-verification/`. NON_AU and UNKNOWN currently pass (temporary policy).
+- Helpers: `flexpress_is_age_gate_enabled()`, `flexpress_get_request_geolocation()`, `flexpress_age_gate_applies_to_geolocation()`, `flexpress_is_age_verified()`, `flexpress_yoursafe_is_enabled()`, `flexpress_yoursafe_start_url()`.
+- Yoursafe ID (`includes/class-flexpress-yoursafe-id.php`): OIDC auth-code + PKCE; token exchange must be HTTP `POST` (not PUT); try `client_secret_post` then `client_secret_basic` on 401/403. `flexpress_yoursafe_is_enabled()` also requires the gate master switch.
+- Local proof: HMAC cookie `flexpress_age_verified` (90 days). Account Proof Lifetime in **FlexPress → Yoursafe ID** controls local cookie/user-meta expiry; do not reject historical `idverifieddate` solely for age.
+- Never log Client Secret, authorization codes, or tokens. Admin diagnostics: UTC time, stage, HTTP status, provider error id only.
+- Exempt paths: age-verification, privacy/terms, support/contact, content-removal, 2257, anti-slavery, login, admin/AJAX/REST/cron.
+- Legacy `assets/js/age-verification.js` localStorage modal remains live independently of the parked AU gate.
+- Origin must stay behind Cloudflare/Caddy; WordPress is loopback-bound so forged `CF-IPCountry` via direct origin access fails.
+- Docs: `docs/YOURSAFE_ID_AGE_VERIFICATION.md`, `docs/CLOUDFLARE_GEOLOCATION.md`, `docs/YOURSAFE_INTEGRATIONS.md`.
 
 ## Model Hero Image Optimization (November 2025)
 
@@ -87,21 +102,35 @@ Bundled webfonts must use `font-display: swap`
 ## FlexPress Admin Menu Organization Pattern
 
 - **Menu Structure**: Organized submenu structure under FlexPress main menu
-  - General: Core site settings (logo, colors, site info)
-  - Awards: Awards & Recognition section settings
-  - Featured On: Media outlets and publications settings
-  - Coming Soon: Maintenance mode settings
-  - Pages & Menus: Page and menu management tools
-  - Auto-Setup: Setup and configuration tools
-  - Integrations: Discord, Turnstile, Plunk, SMTP, etc.
-- **Settings Classes**: Each major feature has its own settings class
-  - `FlexPress_Awards_Settings`: Awards & Recognition functionality
-  - `FlexPress_Featured_On_Settings`: Featured On section management
-  - `FlexPress_Coming_Soon_Settings`: Coming Soon mode configuration
-- **Data Persistence**: All settings use `flexpress_general_settings` option for backward compatibility
-- **Menu Registration**: Add submenu items in `class-flexpress-settings.php` using `add_submenu_page()`
+  - General, Awards, Featured On, Featured Banner, Collections, Coming Soon
+  - Pages & Menus, Auto-Setup (feature-capped)
+  - Discord, Turnstile, Yoursafe ID, Plunk, Google SMTP, SMTP2Go, Flowguard
+  - Join CTA, Earnings, Tools, Casting
+  - Also registered by peer classes: Permissions, Pricing Plans, Trial Links, Affiliate System, Contact & Social, Amazon SES, Bunny Stream, Email Blacklist, Manage Members, Flowguard References, Stats Dashboard
+- **Settings Classes**: Each major feature has its own settings class under `includes/admin/`
+  - Examples: `FlexPress_Awards_Settings`, `FlexPress_Featured_On_Settings`, `FlexPress_Coming_Soon_Settings`, `FlexPress_Yoursafe_ID_Settings`, `FlexPress_Collections_Settings`
+- **Data Persistence**: Many homepage sections share `flexpress_general_settings` (merge sanitizer). Collections use `flexpress_collections_settings`. Yoursafe ID uses its own option keys via its settings class.
+- **Menu Registration**: Add submenu items in `class-flexpress-settings.php` using `add_submenu_page()`, or register from the feature's own admin class
+- **Capabilities**: Use `flexpress_get_founder_capability()` or `flexpress_get_feature_capability( $slug )` — never raw `manage_options` for new FlexPress menus
 - **Render Methods**: Each settings class has its own `render_*_settings_page()` method
 - **Documentation**: Update README.md with new menu locations when reorganizing settings
+
+## Affiliate System Implementation Pattern
+
+- Gate all affiliate UI/commission/webhook attribution with `flexpress_is_affiliate_system_enabled()`
+- Tracking: `?aff=` (preferred) and optional `?promo=`; 30-day cookie `flexpress_affiliate_tracking`
+- Attribution: promo→affiliate mapping wins over cookie on payment
+- Frontend: PHP templates `page-templates/affiliate-*.php` + theme JS (not a React SPA)
+- Admin: `FlexPress → Affiliate System` via `class-flexpress-affiliate-settings.php` (ignore `-broken`/`-backup`/`-clean` copies)
+- REST under `/wp-json/flexpress/v1` with JWT for affiliate portal; payout details encrypted at rest
+- Docs: `docs/AFFILIATE_SYSTEM.md`; update README when changing tracking or commission rules
+
+## Email Blacklist Pattern
+
+- Admin: **FlexPress → Email Blacklist** (`class-flexpress-email-blacklist.php` / settings class)
+- Block re-registration after refund/chargeback; enforce at registration pipeline
+- Treat as founder/feature-capped sensitive tooling
+- Documentation: Update README when changing blacklist triggers or UX
 
 ## Coming Soon Mode Implementation Pattern
 

@@ -44,10 +44,15 @@ class FlexPress_Discord_Notifications
         // Support both legacy single webhook and new multi-webhook system
         $default_webhook = $discord_settings['webhook_url'] ?? '';
 
+        $contact_webhook = !empty($discord_settings['webhook_url_contact']) ? $discord_settings['webhook_url_contact'] : $default_webhook;
+        $casting_webhook = !empty($discord_settings['webhook_url_casting']) ? $discord_settings['webhook_url_casting'] : $contact_webhook;
+
         $this->webhook_urls = [
             'default' => $default_webhook,
             'financial' => $discord_settings['webhook_url_financial'] ?? $default_webhook,
-            'contact' => $discord_settings['webhook_url_contact'] ?? $default_webhook
+            'contact' => $contact_webhook,
+            // Casting falls back to the contact route, then to the default route.
+            'casting' => $casting_webhook
         ];
 
         $this->site_name = get_bloginfo('name');
@@ -61,7 +66,7 @@ class FlexPress_Discord_Notifications
      * @param string $channel_type Channel type (subscriptions, payments, talent, general, default)
      * @return bool Success status
      */
-    public function send_notification($embed, $content = '', $channel_type = 'default')
+    public function send_notification($embed, $content = '', $channel_type = 'default', $suppress_notifications = false)
     {
         $webhook_url = $this->webhook_urls[$channel_type] ?? $this->webhook_urls['default'];
 
@@ -77,6 +82,12 @@ class FlexPress_Discord_Notifications
             'content' => $content,
             'embeds' => [$embed]
         ];
+
+        // Discord's SUPPRESS_NOTIFICATIONS flag keeps reviewable spam visible
+        // in the channel without creating a push alert.
+        if ($suppress_notifications) {
+            $payload['flags'] = 4096;
+        }
 
         $response = wp_remote_post($webhook_url, [
             'headers' => [

@@ -7,13 +7,81 @@ define('DISALLOW_FILE_MODS', false);
 define('DISALLOW_FILE_EDIT', true);
 ```
 
-These are already set in `.env` for this project. Access wp-admin at your host IP on port 8085 (not localhost), e.g. `http://YOUR-IP:8085/wp-admin/`.
+These are already set in `.env` for this project. Access wp-admin at your host IP on port 8085 (not localhost), e.g. `http://YOUR-IP:8085/wp-admin/`. Local Docker binds WordPress to `127.0.0.1:8085` so it is not publicly reachable without Caddy/Cloudflare in front.
 
 If in-dashboard theme update fails with "files could not be copied", run `./prepare-theme-for-update.sh`, retry the update, then run `./fix-permissions-docker.sh`. See [PERMISSIONS_FIX.md](PERMISSIONS_FIX.md) for details.
 
 # FlexPress WordPress Project
 
-A modern WordPress website running in Docker containers with MySQL database and phpMyAdmin for database management.
+A modern WordPress membership site running in Docker (WordPress + MySQL + phpMyAdmin + optional Redis). All product code lives in the theme: `wp-content/themes/flexpress/` (theme version **1.0.35**).
+
+## 🧭 Orientation (September 2026)
+
+Use this section if you are returning to the project. Deep changelogs remain below under Recent Fixes / Recent Updates.
+
+### Where everything lives
+
+| Area | Path |
+| ---- | ---- |
+| Theme (all FlexPress code) | `wp-content/themes/flexpress/` |
+| Admin settings classes | `wp-content/themes/flexpress/includes/admin/` |
+| Integrations / payments / age gate | `wp-content/themes/flexpress/includes/` |
+| Page templates | `wp-content/themes/flexpress/page-templates/` |
+| Agent / coding rules | `.cursorrules` (root) + theme `.cursorrules` |
+| Focused reference docs | `docs/` |
+
+### Stack & local ports
+
+- **WordPress**: `127.0.0.1:8085` (loopback-only in `docker-compose.yml`; use host IP for MCP/Puppeteer when Caddy exposes it)
+- **phpMyAdmin**: host port `8086`
+- **Never use port 3000** (reserved for MCP tools)
+- Prefer **IP over localhost** for browser automation
+- Redis object cache is **optional**; enable with `define('WP_REDIS_ENABLED', true)` in `wp-config.php`
+
+### Compliance & age verification (parked September 2026)
+
+**Currently offline for the AU/Yoursafe server gate.** Soft “I am 18” modal and newsletter modal still run. Code and **FlexPress → Yoursafe ID** remain for later work.
+
+To resume the AU gate locally, add to `wp-config.php`:
+
+```php
+define( 'FLEXPRESS_AGE_GATE_ENABLED', true );
+```
+
+When re-enabled:
+
+1. Cloudflare supplies `CF-IPCountry` → `includes/geolocation.php` classifies `AU` / `NON_AU` / `UNKNOWN`.
+2. `includes/age-gate.php` redirects **AU-only** unverified visitors to `/age-verification/`.
+3. Yoursafe ID OIDC flow proves 18+ and sets signed cookie `flexpress_age_verified`.
+4. Details: [docs/YOURSAFE_ID_AGE_VERIFICATION.md](docs/YOURSAFE_ID_AGE_VERIFICATION.md), [docs/CLOUDFLARE_GEOLOCATION.md](docs/CLOUDFLARE_GEOLOCATION.md).
+
+### Feature map (high level)
+
+- **Payments**: FlowGuard (Yoursafe merchant API) — shop ID + signature key only; no WP sandbox toggle
+- **Video / images**: Bunny Stream + Bunny Image Optimizer via `flexpress_get_bunnycdn_optimized_image_url()`
+- **Membership / PPV / founders**: founder capability gates admin; founders bypass content locks
+- **Affiliates**: toggleable module; `?aff` / `?promo` cookies; PHP page templates + admin UI (not a separate React app)
+- **Collections**: tag-based; disabled by default; enable at **FlexPress → Collections**
+- **News / PR**: native `post` type + `page-templates/news.php`
+- **Newsletter**: Plunk lifecycle + HMAC confirm/unsubscribe endpoints
+- **Email**: SMTP2Go → Google SMTP → Amazon SES routing; Email Blacklist for chargeback blocks
+
+### Docs index
+
+| Doc | Topic |
+| --- | ----- |
+| [docs/YOURSAFE_ID_AGE_VERIFICATION.md](docs/YOURSAFE_ID_AGE_VERIFICATION.md) | Yoursafe ID age proof |
+| [docs/YOURSAFE_INTEGRATIONS.md](docs/YOURSAFE_INTEGRATIONS.md) | Yoursafe identity / payments / payouts map |
+| [docs/CLOUDFLARE_GEOLOCATION.md](docs/CLOUDFLARE_GEOLOCATION.md) | CF country headers + origin binding |
+| [docs/REDIS_OBJECT_CACHE.md](docs/REDIS_OBJECT_CACHE.md) | Optional Redis object cache |
+| [docs/AFFILIATE_SYSTEM.md](docs/AFFILIATE_SYSTEM.md) | Affiliate tracking, REST, payouts |
+| [docs/PLUNK_INTEGRATION_DOCUMENTATION.md](docs/PLUNK_INTEGRATION_DOCUMENTATION.md) | Plunk events / traits |
+| [docs/DOCKER_DEPLOYMENT_GUIDE.md](docs/DOCKER_DEPLOYMENT_GUIDE.md) | Multi-site Docker deploy |
+| Theme [README.md](wp-content/themes/flexpress/README.md) | Theme feature reference |
+
+### Collections (summary)
+
+Tag-based collections are **off by default**. Enable at **FlexPress → Collections**. When disabled, `/collections` redirects to `/episodes/` and all collection badges/links stay hidden. Helpers: `flexpress_collections_enabled()`, `flexpress_is_collection_tag()`, `flexpress_get_collection_metadata()`. Full detail lives in the theme README under Tag Collection System.
 
 ## 🔧 Recent Fixes
 
@@ -339,6 +407,14 @@ See [docs/YOURSAFE_ID_AGE_VERIFICATION.md](docs/YOURSAFE_ID_AGE_VERIFICATION.md)
   - Now builds footer array dynamically, adding `icon_url` only when `get_site_icon_url()` returns a valid URL
 - **Impact**: All Discord notifications (subscriptions, rebills, cancellations, expirations, PPV purchases, refunds, chargebacks, talent applications) now work correctly regardless of WordPress site icon configuration
 
+### Discord Settings Save Fatal Error (Fixed - September 2026)
+
+- **Symptom**: Saving `FlexPress → Discord` could show WordPress's “There has been a critical error on this website” page.
+- **Cause**: `flexpress_sanitize_discord_settings()` merged the submitted values with an uninitialised existing-settings value. On PHP 8.3, `array_merge()` rejects `null`.
+- **Fix**: The sanitizer now reads the existing `flexpress_discord_settings` option with an empty-array fallback and normalizes any non-array value before merging.
+- **Impact**: First-time Discord configuration and saves after a missing or malformed legacy option no longer cause a fatal error.
+- **Webhook security**: A Discord webhook URL is a secret. If it is shared in a ticket, chat, commit, or screenshot, delete or rotate it in Discord immediately, then save the replacement URL in FlexPress.
+
 ### JavaScript MutationObserver Error (Fixed)
 
 - **TypeError Fix**: Resolved `Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'` error in `model-social.js`
@@ -507,12 +583,14 @@ flexpress/
 
 ## 🐳 Docker Services
 
-| Service    | Container            | Port            | Description                                          |
-| ---------- | -------------------- | --------------- | ---------------------------------------------------- |
-| WordPress  | flexpress_wordpress  | 8085            | Main WordPress application                           |
-| MySQL      | flexpress_mysql      | 3306 (internal) | Database server                                      |
-| phpMyAdmin | flexpress_phpmyadmin | 8086            | Database administration                              |
-| Redis      | flexpress_redis      | 6379 (internal) | Optional object cache (enable with WP_REDIS_ENABLED) |
+| Service    | Container            | Port                         | Description                                          |
+| ---------- | -------------------- | ---------------------------- | ---------------------------------------------------- |
+| WordPress  | flexpress_wordpress  | `127.0.0.1:8085` → 80        | Loopback-only origin; Caddy/Cloudflare is public edge |
+| MySQL      | flexpress_mysql      | 3306 (internal)              | Database server                                      |
+| phpMyAdmin | flexpress_phpmyadmin | 8086                         | Database administration                              |
+| Redis      | flexpress_redis      | 6379 (internal)              | Optional object cache (enable with WP_REDIS_ENABLED) |
+
+WordPress is bound to loopback so visitors cannot hit the origin and bypass Cloudflare `CF-IPCountry` headers used by the AU age gate.
 
 ### 🚀 Technology Stack
 

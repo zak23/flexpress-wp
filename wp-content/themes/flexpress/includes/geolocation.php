@@ -3,7 +3,8 @@
 /**
  * Trusted request geolocation supplied by Cloudflare.
  *
- * This module classifies requests only. It deliberately does not gate content.
+ * This module classifies requests only (AU / NON_AU / UNKNOWN) and stores
+ * aggregate counters. Content gating for AU visitors lives in age-gate.php.
  *
  * @package FlexPress
  */

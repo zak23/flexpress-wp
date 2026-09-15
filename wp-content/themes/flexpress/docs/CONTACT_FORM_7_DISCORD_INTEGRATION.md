@@ -145,10 +145,19 @@ The system automatically detects form types by comparing Contact Form 7 form IDs
    - Verify channel type mapping
    - Test with different form types
 
+4. **Critical error when saving Discord settings**
+   - Update to the version containing the September 2026 Discord settings save fix.
+   - The fix initializes missing `flexpress_discord_settings` values before they are merged, preventing a PHP 8.3 `array_merge()` fatal error.
+   - Reopen `FlexPress → Discord`, save the settings, then use **Test Connection**.
+
 ### Debug Information
 - **WordPress Debug Log:** Check `wp-content/debug.log` for Discord errors
 - **Contact Form 7 Logs:** Check CF7 submission logs
 - **Discord Webhook Logs:** Check Discord server audit logs
+
+### Webhook Security
+
+Treat each Discord webhook URL as a secret: anyone with it can post to that channel. Do not include it in support requests, screenshots, commits, or public documentation. If it is exposed, delete or rotate the webhook in Discord and replace the saved URL in FlexPress.
 
 ## Advanced Configuration
 

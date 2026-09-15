@@ -316,6 +316,14 @@ class FlexPress_Settings
         );
 
         add_settings_field(
+            'webhook_url_casting',
+            'Casting Applications Webhook',
+            array($this, 'render_discord_webhook_url_casting_field'),
+            'flexpress_discord_settings',
+            'discord_config_section'
+        );
+
+        add_settings_field(
             'test_connection',
             'Test Connection',
             array($this, 'render_discord_test_connection_field'),
@@ -1262,6 +1270,23 @@ class FlexPress_Settings
             class="regular-text"
             placeholder="https://discord.com/api/webhooks/..." />
         <p class="description">Webhook URL for contact form notifications (talent applications, general inquiries). Leave empty to use default webhook.</p>
+    <?php
+    }
+
+    /**
+     * Render the dedicated Discord destination for CF7 casting applications.
+     */
+    public function render_discord_webhook_url_casting_field()
+    {
+        $options = get_option('flexpress_discord_settings', array());
+        $webhook_url = $options['webhook_url_casting'] ?? '';
+    ?>
+        <input type="url"
+            name="flexpress_discord_settings[webhook_url_casting]"
+            value="<?php echo esc_attr($webhook_url); ?>"
+            class="regular-text"
+            placeholder="https://discord.com/api/webhooks/..." />
+        <p class="description">Webhook URL for Contact Form 7 casting applications. Leave empty to use the Contact Forms webhook, then the default webhook.</p>
     <?php
     }
 

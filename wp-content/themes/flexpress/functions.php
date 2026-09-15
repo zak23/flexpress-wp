@@ -47,6 +47,7 @@ require_once FLEXPRESS_PATH . '/includes/flowguard-database.php';
 
 // Discord Notifications
 require_once FLEXPRESS_PATH . '/includes/discord-notifications.php';
+require_once FLEXPRESS_PATH . '/includes/class-flexpress-grok-spam-classifier.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-jwt.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-rest-affiliates.php';
 
@@ -166,6 +167,7 @@ require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-trial-links-setti
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-affiliate-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-contact-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-turnstile-settings.php';
+require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-ai-settings.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-yoursafe-id-settings.php';
 require_once FLEXPRESS_PATH . '/includes/turnstile-integration.php';
 require_once FLEXPRESS_PATH . '/includes/admin/class-flexpress-plunk-settings.php';
@@ -9108,13 +9110,22 @@ function flexpress_ajax_reset_setup_status()
  */
 function flexpress_sanitize_discord_settings($input)
 {
+    // This option does not exist until Discord settings are saved for the first
+    // time. WordPress returns null in that case, which cannot be passed to
+    // array_merge() on PHP 8+.
+    $current = get_option('flexpress_discord_settings', array());
+    if (!is_array($current)) {
+        $current = array();
+    }
+
     $sanitized = array();
 
     // Sanitize webhook URLs
     $webhook_fields = [
         'webhook_url',
         'webhook_url_financial',
-        'webhook_url_contact'
+        'webhook_url_contact',
+        'webhook_url_casting'
     ];
 
     foreach ($webhook_fields as $field) {
@@ -9451,6 +9462,7 @@ function flexpress_set_default_theme_options()
             'webhook_url' => '',
             'webhook_url_financial' => '',
             'webhook_url_contact' => '',
+            'webhook_url_casting' => '',
             'notify_subscriptions' => true,
             'notify_rebills' => true,
             'notify_cancellations' => true,

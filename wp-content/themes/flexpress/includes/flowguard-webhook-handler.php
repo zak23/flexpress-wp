@@ -15,6 +15,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/flowguard-postback-processing.php';
+
 /**
  * Authenticate a Flowguard postback before inspecting or applying its event.
  *
@@ -89,106 +91,12 @@ function flexpress_flowguard_webhook_handler()
         exit;
     }
 
-    // Log webhook for debugging
-    error_log('Flowguard Webhook: ' . print_r($payload, true));
-
-    // Process webhook based on type
-    $postback_type = $payload['postbackType'] ?? '';
-    $order_type = $payload['orderType'] ?? '';
-    $subscription_type = $payload['subscriptionType'] ?? '';
-    $subscription_phase = $payload['subscriptionPhase'] ?? '';
-
-    // Get user ID early for comprehensive logging
-    $user_id = flexpress_flowguard_get_user_from_reference($payload['referenceId'] ?? '');
-
-    // Comprehensive postback data logging for testing
-    if ($user_id) {
-        $log_data = [
-            'user_id' => $user_id,
-            'postback_type' => $postback_type,
-            'order_type' => $order_type,
-            'subscription_type' => $subscription_type,
-            'subscription_phase' => $subscription_phase,
-            'sale_id' => $payload['saleId'] ?? '',
-            'transaction_id' => $payload['transactionId'] ?? '',
-            'next_charge_on' => $payload['nextChargeOn'] ?? '',
-            'price_amount' => $payload['priceAmount'] ?? '',
-            'price_currency' => $payload['priceCurrency'] ?? '',
-            'reference_id' => $payload['referenceId'] ?? '',
-            'shop_id' => $payload['shopId'] ?? '',
-            'full_payload' => $payload
-        ];
-        error_log('Flowguard Postback Analysis [User ' . $user_id . ']: ' . wp_json_encode($log_data, JSON_PRETTY_PRINT));
-
-        // Store full postback log for user
-        $existing_logs = get_user_meta($user_id, 'flowguard_postback_logs', true) ?: [];
-        $existing_logs[] = [
-            'timestamp' => current_time('mysql'),
-            'postback_type' => $postback_type,
-            'order_type' => $order_type,
-            'subscription_type' => $subscription_type,
-            'subscription_phase' => $subscription_phase,
-            'sale_id' => $payload['saleId'] ?? '',
-            'transaction_id' => $payload['transactionId'] ?? '',
-            'next_charge_on' => $payload['nextChargeOn'] ?? '',
-            'payload' => $payload
-        ];
-        // Keep only last 50 postbacks per user
-        $existing_logs = array_slice($existing_logs, -50);
-        update_user_meta($user_id, 'flowguard_postback_logs', $existing_logs);
-    }
-
-    switch ($postback_type) {
-        case 'approved':
-            if ($order_type === 'subscription') {
-                flexpress_flowguard_handle_subscription_approved($payload);
-            } elseif ($order_type === 'purchase') {
-                flexpress_flowguard_handle_purchase_approved($payload);
-            }
-            break;
-
-        case 'rebill':
-            flexpress_flowguard_handle_subscription_rebill($payload);
-            break;
-
-        case 'cancel':
-            flexpress_flowguard_handle_subscription_cancel($payload);
-            break;
-
-        case 'expiry':
-            flexpress_flowguard_handle_subscription_expiry($payload);
-            break;
-
-        case 'chargeback':
-        case 'credit':
-            flexpress_flowguard_handle_refund($payload);
-            break;
-
-        case 'uncancel':
-            flexpress_flowguard_handle_subscription_uncancel($payload);
-            break;
-
-        case 'extend':
-            flexpress_flowguard_handle_subscription_extend($payload);
-            break;
-
-        default:
-            error_log('Flowguard Webhook: Unknown postback type: ' . $postback_type);
-            break;
-    }
-
-    // Process affiliate commissions if system is enabled
-    flexpress_process_affiliate_commission_from_webhook($payload);
-
-    // Auto-approve pending affiliate commissions older than 14 days
-    if (!wp_next_scheduled('flexpress_affiliate_auto_approve')) {
+    $result = flexpress_flowguard_process_postback($payload);
+    status_header($result['status']);
+    if ($result['status'] === 200 && !wp_next_scheduled('flexpress_affiliate_auto_approve')) {
         wp_schedule_event(time() + HOUR_IN_SECONDS, 'daily', 'flexpress_affiliate_auto_approve');
     }
-
-    // Store webhook for analysis
-    flexpress_flowguard_store_webhook($payload);
-
-    echo 'OK';
+    echo $result['status'] === 200 ? 'OK' : 'ERROR - ' . $result['result'];
     exit;
 }
 
@@ -202,6 +110,9 @@ function flexpress_flowguard_handle_subscription_approved($payload)
     $user_id = flexpress_flowguard_get_user_from_reference($payload['referenceId'] ?? '');
     if (!$user_id) {
         error_log('Flowguard Webhook: User not found for reference: ' . ($payload['referenceId'] ?? ''));
+        return;
+    }
+    if (get_user_meta($user_id, 'membership_status', true) === 'banned') {
         return;
     }
     // Persist all payload fields to user meta for audit/debugging
@@ -504,6 +415,10 @@ function flexpress_flowguard_handle_subscription_rebill($payload)
         error_log('Flowguard Webhook: User not found for rebill reference: ' . ($payload['referenceId'] ?? ''));
         return;
     }
+    if (get_user_meta($user_id, 'membership_status', true) === 'banned') {
+        return;
+    }
+    $was_cancelled = get_user_meta($user_id, 'membership_status', true) === 'cancelled';
     // Persist all payload fields to user meta for audit/debugging
     flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
 
@@ -512,7 +427,10 @@ function flexpress_flowguard_handle_subscription_rebill($payload)
     if (($payload['subscriptionType'] ?? '') === 'recurring' && empty($payload['expiresOn'])) {
         delete_user_meta($user_id, 'membership_expires');
     }
-    flexpress_update_membership_status($user_id, 'active');
+    flexpress_update_membership_status($user_id, $was_cancelled ? 'cancelled' : 'active');
+    if ($was_cancelled && !empty($payload['nextChargeOn'])) {
+        update_user_meta($user_id, 'membership_expires', $payload['nextChargeOn']);
+    }
     if (function_exists('flexpress_invalidate_user_cache')) {
         flexpress_invalidate_user_cache($user_id);
     }
@@ -1074,6 +992,9 @@ function flexpress_flowguard_handle_subscription_uncancel($payload)
         error_log('Flowguard Webhook: User not found for uncancel reference: ' . ($payload['referenceId'] ?? ''));
         return;
     }
+    if (get_user_meta($user_id, 'membership_status', true) === 'banned') {
+        return;
+    }
     // Persist all payload fields to user meta for audit/debugging
     flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
 
@@ -1206,16 +1127,16 @@ function flexpress_flowguard_handle_subscription_extend($payload)
  * 
  * @param array $payload Webhook payload
  */
-function flexpress_flowguard_store_webhook($payload)
+function flexpress_flowguard_store_webhook($payload, $event_key = null)
 {
     global $wpdb;
 
     $table_name = $wpdb->prefix . 'flexpress_flowguard_webhooks';
 
-    $wpdb->insert(
+    $stored = $wpdb->insert(
         $table_name,
         [
-            'webhook_id' => $payload['transactionId'] ?? uniqid(),
+            'webhook_id' => $event_key ?: ($payload['transactionId'] ?? uniqid()),
             'event_type' => $payload['postbackType'] ?? 'unknown',
             'transaction_id' => $payload['transactionId'] ?? '',
             'user_id' => flexpress_flowguard_get_user_from_reference($payload['referenceId'] ?? ''),
@@ -1237,6 +1158,8 @@ function flexpress_flowguard_store_webhook($payload)
     if ($wpdb->last_error) {
         error_log('Flowguard: Failed to store webhook - ' . $wpdb->last_error);
     }
+    return $stored !== false;
+
 }
 
 /**

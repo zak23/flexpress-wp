@@ -1,3 +1,10 @@
+## Webhook replay and ordering fixes — 7 November 2026
+
+- Verified callbacks are serialized per customer with a MySQL advisory lock. Membership metadata, transaction records, and completed-event receipts commit together; processing failures return HTTP 503 for provider retry. These tables must use InnoDB.
+- Repeated monetary events are skipped by event type and transaction ID. Consecutive identical lifecycle notices are skipped while genuine cancel/uncancel/cancel sequences remain supported.
+- Callbacks cannot lift a ban, revive a refunded or superseded sale, or move a rebill deadline backwards. A valid rebill preserves cancellation, and a new purchased subscription can replace the old one.
+- The regression suite uses synthetic callbacks and an in-memory database, including receipt-write failure and retry. It does not charge customers or contact Flowguard. Provider emails and other external notification side effects cannot be rolled back with database writes.
+
 ## Membership state fixes — 7 November 2026
 
 - PPV postbacks use separate `flowguard_ppv_*` metadata and cannot replace subscription billing IDs, prices, or dates.

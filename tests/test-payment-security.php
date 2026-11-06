@@ -23,21 +23,42 @@ class RedirectResponse extends Exception { public $url; public function __constr
 class JsonResponse extends Exception { public $success; public $data; public $status; public function __construct($success,$data,$status) {$this->success=$success;$this->data=$data;$this->status=$status;} }
 class FlexPress_Flowguard_API {
     public function __construct(...$args) {}
+    public function cancel_subscription(...$args) {return ['success'=>true];}
     public function start_purchase($data) {global $calls;$calls[]=$data;return ['success'=>true,'session_id'=>'session-'.count($calls)];}
 }
 class PaymentTestDB {
-    public $last_error=''; public $prefix='wp_'; public $rows=[]; public $insert_id=0;
+    public $last_error=''; public $prefix='wp_'; public $rows=[]; public $insert_id=0; public $busy=false; public $fail_receipt=false; private $snapshot;
     public function prepare($sql,...$args) {return [$sql,$args];}
     public function get_row($query,$format) {
         [$sql,$args]=$query;
         foreach (array_reverse($this->rows) as $row) {
+            if (isset($row['__table']) && !str_ends_with($row['__table'],'flexpress_flowguard_transactions')) continue;
             if (str_contains($sql,'WHERE transaction_id =') && ($row['transaction_id']??'')===$args[0]) return $row;
             if (str_contains($sql,'WHERE user_id =') && (int)($row['user_id']??0)===$args[0] && ($row['reference_id']??'')===$args[1]) return $row;
         }
         return null;
     }
-    public function insert($table,$data,$format=[]) {$this->rows[]=$data;$this->insert_id++;return 1;}
-    public function get_var(...$args) {return null;}
+    public function insert($table,$data,$format=[]) {
+        if ($this->fail_receipt && str_ends_with($table,'flexpress_flowguard_webhooks')) return false;
+        $data['__table']=$table;$this->rows[]=$data;$this->insert_id++;return 1;
+    }
+    public function get_var($query) {
+        if (!is_array($query)) return null;
+        [$sql,$args]=$query;
+        if (str_contains($sql,'GET_LOCK(')) return $this->busy ? 0 : 1;
+        if (str_contains($sql,'RELEASE_LOCK(')) return 1;
+        if (str_contains($sql,'flexpress_flowguard_webhooks WHERE event_type')) {
+            foreach($this->rows as $row) if (($row['event_type']??'')===$args[0] && ($row['transaction_id']??'')===$args[1] && ($row['user_id']??0)===$args[2] && ($row['processed']??0)===1) return 1;
+        }
+        return null;
+    }
+    public function query($sql) {
+        global $meta;
+        if($sql==='START TRANSACTION') $this->snapshot=[$this->rows,$meta];
+        if($sql==='ROLLBACK' && $this->snapshot) {[$this->rows,$meta]=$this->snapshot;$this->snapshot=null;}
+        if($sql==='COMMIT') $this->snapshot=null;
+        return 1;
+    }
 }
 $wpdb = new PaymentTestDB();
 function add_action(...$a) {}
@@ -77,6 +98,10 @@ function flexpress_flowguard_get_session_by_reference($ref) {global $sessions;fo
 function flexpress_discord_notify_purchase_approved(...$a) {}
 function flexpress_discord_notify_subscription_approved(...$a) {}
 function flexpress_discord_notify_subscription_extend(...$a) {}
+function flexpress_discord_notify_subscription_cancel(...$a) {}
+function flexpress_discord_notify_subscription_expiry(...$a) {}
+function flexpress_discord_notify_subscription_rebill(...$a) {}
+function flexpress_discord_notify_refund(...$a) {}
 function get_users($args) {global $meta;return array_keys(array_filter($meta,fn($m)=>in_array($m['membership_status']??'', ['active','cancelled'],true)));}
 function flexpress_add_email_to_blacklist(...$a) {}
 function wp_json_encode($v,...$a) {return json_encode($v,...$a);}
@@ -234,6 +259,45 @@ $meta=[41=>['membership_status'=>'expired','trial_expires_at'=>'2020-01-01','mem
 $subscription=array_merge($payload,['orderType'=>'subscription','subscriptionType'=>'recurring','referenceId'=>'user_41_plan_monthly','nextChargeOn'=>'2099-01-01']);
 flexpress_flowguard_handle_subscription_approved($subscription);
 check(flexpress_get_membership_status(41)==='active' && !isset($meta[41]['trial_expires_at']),'Paid subscription retained expired trial deadline');
+
+// Durable event receipts, state guards, failure rollback, and legitimate transitions.
+$meta=[];$wpdb->rows=[];
+$sub=array_merge($payload,['orderType'=>'subscription','subscriptionType'=>'recurring','referenceId'=>'user_41_plan_monthly','transactionId'=>'sub-approval','saleId'=>'sub-sale','nextChargeOn'=>'2099-01-01']);
+check(flexpress_flowguard_process_postback($sub)['result']==='processed','New subscription not processed');
+$before=$meta;$count=count($wpdb->rows);
+check(flexpress_flowguard_process_postback($sub)['result']==='duplicate','Duplicate approval not detected');
+check($meta===$before && count($wpdb->rows)===$count,'Duplicate changed data or wrote another receipt');
+$meta[41]['membership_status']='banned';
+$new_tx=array_merge($sub,['transactionId'=>'unseen-approval']);
+check(flexpress_flowguard_process_postback($new_tx)['result']==='ignored' && $meta[41]['membership_status']==='banned','Callback lifted a ban');
+$meta[41]['membership_status']='active';
+$cancel=array_merge($sub,['postbackType'=>'cancel','expiresOn'=>'2099-01-01']);unset($cancel['transactionId']);
+check(flexpress_flowguard_process_postback($cancel)['result']==='processed' && $meta[41]['membership_status']==='cancelled','Cancellation failed');
+check(flexpress_flowguard_process_postback($cancel)['result']==='duplicate','Repeated cancellation not skipped');
+$delayed=array_merge($sub,['transactionId'=>'late-approval']);
+check(flexpress_flowguard_process_postback($delayed)['result']==='ignored' && $meta[41]['membership_status']==='cancelled','Delayed approval undid cancellation');
+$uncancel=array_merge($cancel,['postbackType'=>'uncancel']);
+check(flexpress_flowguard_process_postback($uncancel)['result']==='processed' && $meta[41]['membership_status']==='active','Legitimate uncancel blocked');
+check(flexpress_flowguard_process_postback($cancel)['result']==='processed' && $meta[41]['membership_status']==='cancelled','Second genuine cancellation blocked');
+$rebill=array_merge($sub,['postbackType'=>'rebill','transactionId'=>'new-rebill','nextChargeOn'=>'2099-02-01']);
+check(flexpress_flowguard_process_postback($rebill)['result']==='processed' && $meta[41]['membership_status']==='cancelled','Rebill reversed cancellation');
+$old_rebill=array_merge($rebill,['transactionId'=>'late-rebill','nextChargeOn'=>'2099-01-01']);
+check(flexpress_flowguard_process_postback($old_rebill)['result']==='ignored' && $meta[41]['next_rebill_date']==='2099-02-01','Old rebill moved access deadline backwards');
+$new_sale=array_merge($sub,['transactionId'=>'new-sale-approval','saleId'=>'new-sub-sale','nextChargeOn'=>'2099-03-01']);
+check(flexpress_flowguard_process_postback($new_sale)['result']==='processed' && $meta[41]['flowguard_sale_id']==='new-sub-sale','New paid subscription blocked');
+$old_expiry=array_merge($cancel,['postbackType'=>'expiry']);unset($old_expiry['nextChargeOn']);
+check(flexpress_flowguard_process_postback($old_expiry)['result']==='ignored' && $meta[41]['membership_status']==='active','Old sale expired current membership');
+$old_approval=array_merge($sub,['transactionId'=>'old-sale-replayed']);
+check(flexpress_flowguard_process_postback($old_approval)['result']==='ignored' && $meta[41]['flowguard_sale_id']==='new-sub-sale','Superseded sale replaced current subscription');
+$wpdb->busy=true;
+check(flexpress_flowguard_process_postback($sub)['status']===503,'Lock contention acknowledged instead of retried');$wpdb->busy=false;
+$wpdb->fail_receipt=true;$before=$meta;$count=count($wpdb->rows);
+$failed=array_merge($payload,['transactionId'=>'retryable-purchase']);
+check(flexpress_flowguard_process_postback($failed)['status']===503,'Receipt write failure acknowledged');
+check($meta===$before && count($wpdb->rows)===$count,'Failed receipt did not roll back account changes');
+$wpdb->fail_receipt=false;
+check(flexpress_flowguard_process_postback($failed)['result']==='processed','Provider retry could not recover after rollback');
+check(flexpress_flowguard_process_postback(array_merge($sub,['postbackType'=>'unknown']))['status']===422,'Unknown event accepted');
 
 foreach(['canonical','legacy'] as $endpoint) foreach(['invalid','get','valid','subscription'] as $mode){
     $cmd=escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' transport '.escapeshellarg($mode).' '.escapeshellarg($endpoint);

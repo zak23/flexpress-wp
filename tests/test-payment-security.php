@@ -76,6 +76,8 @@ function flexpress_flowguard_get_session($id) {global $sessions;return $sessions
 function flexpress_flowguard_get_session_by_reference($ref) {global $sessions;foreach($sessions??[] as $s){if($s['reference_id']===$ref)return $s;}return false;}
 function flexpress_discord_notify_purchase_approved(...$a) {}
 function flexpress_discord_notify_subscription_approved(...$a) {}
+function flexpress_discord_notify_subscription_extend(...$a) {}
+function get_users($args) {global $meta;return array_keys(array_filter($meta,fn($m)=>in_array($m['membership_status']??'', ['active','cancelled'],true)));}
 function flexpress_add_email_to_blacklist(...$a) {}
 function wp_json_encode($v,...$a) {return json_encode($v,...$a);}
 function check_ajax_referer($action,$key) {if (($_POST[$key]??'')!=='valid-test-nonce') throw new JsonResponse(false,'nonce',403);}
@@ -102,6 +104,7 @@ function load_project_function($path,$name) {
 }
 require $theme.'/includes/flowguard-integration.php';
 require $theme.'/includes/flowguard-webhook-handler.php';
+require $theme.'/includes/subscription-expiry-checker.php';
 foreach(['flexpress_handle_flowguard_payment_return','flexpress_handle_ppv_payment_return','flexpress_handle_ppv_webhook','flexpress_create_ppv_purchase','flexpress_create_flowguard_ppv_purchase_ajax','flexpress_check_episode_access','flexpress_check_extras_access','flexpress_get_membership_status'] as $fn) load_project_function($theme.'/functions.php',$fn);
 
 function signed_postback($payload,$alg='HS256',$key='test-only-secret') {
@@ -201,6 +204,36 @@ $logged_in=true;
 $html=render_payment_success(['transaction_id'=>'invented','user_id'=>1]);check(str_contains($html,'Payment confirmation pending')&&!str_contains($html,'Transaction Details'),'Pending payment displayed success details');
 $html=render_payment_success(['transaction_id'=>'tx-episode']);check(str_contains($html,'Payment confirmed')&&str_contains($html,'Transaction Details'),'Verified payment did not render receipt');
 $current_id=42;$html=render_payment_success(['transaction_id'=>'tx-episode']);check(str_contains($html,'Payment confirmation pending')&&!str_contains($html,'tx-episode'),'Other customer transaction rendered');$current_id=41;
+
+// Membership deadlines, purchase isolation, and recurring retry notices.
+$meta=[41=>['membership_status'=>'cancelled','membership_expires'=>'2020-01-01']];
+$fields[101]['access_type']='membership_only';
+check(!flexpress_check_episode_access(101,41)['has_access'], 'Expired cancelled membership retained access');
+$meta=[41=>['membership_status'=>'cancelled','membership_expires'=>gmdate('Y-m-d H:i:s',time()+DAY_IN_SECONDS)]];
+check(flexpress_check_episode_access(101,41)['has_access'], 'Paid-through cancelled member lost access');
+$meta=[41=>['membership_status'=>'active','flowguard_sale_id'=>'subscription','next_rebill_date'=>gmdate('Y-m-d H:i:s',time()-3600)]];
+check(flexpress_get_membership_status(41)==='active','Rebill grace period lost');
+$meta[41]['next_rebill_date']='2020-01-01';
+check(flexpress_get_membership_status(41)==='expired','Overdue subscription retained access');
+$meta=[41=>['membership_status'=>'banned','trial_expires_at'=>'2020-01-01']];
+check(flexpress_get_membership_status(41)==='banned','Expired trial removed account ban');
+$meta=[41=>['membership_status'=>'cancelled','membership_expires'=>'2020-01-01'],42=>['membership_status'=>'active','membership_expires'=>'2020-01-01']];
+check(flexpress_check_subscription_expiry()===2,'Scheduled expiry skipped cancelled/one-time memberships');
+$meta=[41=>['membership_status'=>'active','flowguard_sale_id'=>'subscription','flowguard_subscriber_id'=>'subscription','subscription_amount'=>'40.00','next_rebill_date'=>'2099-01-01']];
+flexpress_flowguard_handle_purchase_approved($payload);
+check($meta[41]['flowguard_sale_id']==='subscription' && $meta[41]['flowguard_subscriber_id']==='subscription','PPV overwrote subscription ID');
+check($meta[41]['subscription_amount']==='40.00','PPV overwrote membership price');
+check($meta[41]['flowguard_ppv_sale_id']==='sale-extras','PPV sale audit missing');
+$extend=['referenceId'=>'user_41_plan_monthly','subscriptionType'=>'recurring','orderType'=>'subscription','postbackType'=>'extend','nextChargeOn'=>'2099-02-01','expiresOn'=>'2099-02-01'];
+flexpress_flowguard_handle_subscription_extend($extend);
+check($meta[41]['next_rebill_date']==='2099-01-01' && !isset($meta[41]['membership_expires']),'Recurring retry changed paid access deadline');
+$extend['subscriptionType']='one-time';
+flexpress_flowguard_handle_subscription_extend($extend);
+check($meta[41]['membership_expires']==='2099-02-01','One-time extension broken');
+$meta=[41=>['membership_status'=>'expired','trial_expires_at'=>'2020-01-01','membership_expires'=>'2020-01-01']];
+$subscription=array_merge($payload,['orderType'=>'subscription','subscriptionType'=>'recurring','referenceId'=>'user_41_plan_monthly','nextChargeOn'=>'2099-01-01']);
+flexpress_flowguard_handle_subscription_approved($subscription);
+check(flexpress_get_membership_status(41)==='active' && !isset($meta[41]['trial_expires_at']),'Paid subscription retained expired trial deadline');
 
 foreach(['canonical','legacy'] as $endpoint) foreach(['invalid','get','valid','subscription'] as $mode){
     $cmd=escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' transport '.escapeshellarg($mode).' '.escapeshellarg($endpoint);

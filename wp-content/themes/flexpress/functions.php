@@ -9222,38 +9222,41 @@ add_action('after_switch_theme', 'flexpress_theme_activation');
  */
 function flexpress_get_membership_status($user_id = null)
 {
-    if (!$user_id) {
-        $user_id = get_current_user_id();
-    }
-
+    $user_id = $user_id ?: get_current_user_id();
     if (!$user_id) {
         return 'none';
     }
+    $status = get_user_meta($user_id, 'membership_status', true) ?: 'none';
+    // Expiry must never turn a ban into a renewable expired membership.
+    if (!in_array($status, ['active', 'cancelled'], true)) {
+        return $status;
+    }
 
-    // Get current membership status first
-    $membership_status = get_user_meta($user_id, 'membership_status', true);
-
-    // Check trial expiration first (with 1-day grace period)
-    $trial_expires_at = get_user_meta($user_id, 'trial_expires_at', true);
-    if (!empty($trial_expires_at)) {
-        $expires_timestamp = strtotime($trial_expires_at);
-        // Add 1 day grace period (86400 seconds = 1 day)
-        $expires_with_grace = $expires_timestamp + (1 * DAY_IN_SECONDS);
-        if ($expires_with_grace < current_time('timestamp')) {
-            // Trial expired (past grace period) - auto-update status only if not already expired
-            if ($membership_status !== 'expired') {
-                flexpress_update_membership_status($user_id, 'expired');
-            }
-            return 'expired';
+    $now = current_time('timestamp');
+    $deadlines = [];
+    $trial_end = get_user_meta($user_id, 'trial_expires_at', true);
+    if ($trial_end !== '') {
+        $date = strtotime($trial_end);
+        $deadlines[] = $date === false ? 0 : $date + DAY_IN_SECONDS;
+    }
+    $paid_end = get_user_meta($user_id, 'membership_expires', true);
+    if ($paid_end !== '') {
+        $date = strtotime($paid_end);
+        $deadlines[] = $date === false ? 0 : $date;
+    } else {
+        $rebill = get_user_meta($user_id, 'next_rebill_date', true);
+        $has_subscription = get_user_meta($user_id, 'flowguard_sale_id', true)
+            || get_user_meta($user_id, 'flowguard_subscriber_id', true);
+        if ($rebill !== '' && $has_subscription) {
+            $date = strtotime($rebill);
+            $deadlines[] = $date === false ? 0 : $date + ($status === 'active' ? DAY_IN_SECONDS : 0);
         }
     }
-
-    // Return 'none' if no status is set
-    if (empty($membership_status)) {
-        return 'none';
+    if ($deadlines && min($deadlines) <= $now) {
+        flexpress_update_membership_status($user_id, 'expired');
+        return 'expired';
     }
-
-    return $membership_status;
+    return $status;
 }
 
 /**

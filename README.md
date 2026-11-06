@@ -1,3 +1,10 @@
+## Membership state fixes — 7 November 2026
+
+- PPV postbacks use separate `flowguard_ppv_*` metadata and cannot replace subscription billing IDs, prices, or dates.
+- Content access and scheduled expiry share one decision for active and cancelled memberships. Explicit expiry dates are enforced; active rebills retain the existing one-day grace period. Bans remain bans when trial dates expire.
+- Recurring `extend` notices retain the paid rebill deadline; one-time extensions still update expiry. Confirmed paid subscriptions clear obsolete free-trial and cancellation deadlines.
+- Regression coverage: `php tests/test-payment-security.php` uses synthetic data only.
+
 ## Payment security fixes — 7 November 2026
 
 - Browser returns and `/payment-success/` require an existing signed-in session. URL user IDs never establish login, activate membership, or unlock content. A customer whose session has expired must sign in again.

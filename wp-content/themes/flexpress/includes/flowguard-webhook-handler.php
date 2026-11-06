@@ -208,6 +208,10 @@ function flexpress_flowguard_handle_subscription_approved($payload)
     flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
 
     // Update user membership status
+    delete_user_meta($user_id, 'trial_expires_at');
+    if (($payload['subscriptionType'] ?? '') === 'recurring' && empty($payload['expiresOn'])) {
+        delete_user_meta($user_id, 'membership_expires');
+    }
     flexpress_update_membership_status($user_id, 'active');
     // Update Plunk membership traits and track event
     if (function_exists('flexpress_plunk_service')) {
@@ -504,6 +508,10 @@ function flexpress_flowguard_handle_subscription_rebill($payload)
     flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
 
     // Update membership status
+    delete_user_meta($user_id, 'trial_expires_at');
+    if (($payload['subscriptionType'] ?? '') === 'recurring' && empty($payload['expiresOn'])) {
+        delete_user_meta($user_id, 'membership_expires');
+    }
     flexpress_update_membership_status($user_id, 'active');
     if (function_exists('flexpress_invalidate_user_cache')) {
         flexpress_invalidate_user_cache($user_id);
@@ -1070,6 +1078,10 @@ function flexpress_flowguard_handle_subscription_uncancel($payload)
     flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
 
     // Update membership status
+    delete_user_meta($user_id, 'trial_expires_at');
+    if (($payload['subscriptionType'] ?? '') === 'recurring' && empty($payload['expiresOn'])) {
+        delete_user_meta($user_id, 'membership_expires');
+    }
     flexpress_update_membership_status($user_id, 'active');
 
     // Update next charge date if provided (nextChargeOn is when Flowguard will initiate the next rebill)
@@ -1377,6 +1389,18 @@ function flexpress_flowguard_persist_payload_user_meta($user_id, $payload)
         return;
     }
 
+    // Purchases must never replace the identifiers used to manage membership billing.
+    if (($payload['orderType'] ?? '') === 'purchase') {
+        foreach (['saleId' => 'sale_id', 'transactionId' => 'transaction_id', 'priceAmount' => 'price', 'priceCurrency' => 'currency'] as $field => $key) {
+            if (isset($payload[$field])) {
+                update_user_meta($user_id, 'flowguard_ppv_' . $key, $payload[$field]);
+            }
+        }
+        update_user_meta($user_id, 'flowguard_ppv_last_payload', wp_json_encode($payload));
+        update_user_meta($user_id, 'flowguard_ppv_last_at', current_time('mysql'));
+        return;
+    }
+
     // Core identifiers
     // saleId is the subscription ID (Flowguard Subscriber ID) - stays same until cancelled/expired
     if (isset($payload['saleId'])) {
@@ -1435,13 +1459,17 @@ function flexpress_flowguard_persist_payload_user_meta($user_id, $payload)
     // nextChargeOn is when Flowguard will initiate the next rebill - update Next Rebill Date
     if (!empty($payload['nextChargeOn'])) {
         update_user_meta($user_id, 'flowguard_next_charge_on', $payload['nextChargeOn']);
-        update_user_meta($user_id, 'next_rebill_date', $payload['nextChargeOn']); // keep existing
+        if (!(($payload['postbackType'] ?? '') === 'extend' && ($payload['subscriptionType'] ?? '') === 'recurring')) {
+            update_user_meta($user_id, 'next_rebill_date', $payload['nextChargeOn']);
+        }
     }
 
     // expiresOn - expiration date for one-time subscriptions
     // Set expiresOn if provided, or calculate if missing for one-time subscriptions
     $subscription_type = $payload['subscriptionType'] ?? '';
-    if (!empty($payload['expiresOn'])) {
+    if (($payload['postbackType'] ?? '') === 'extend' && $subscription_type === 'recurring') {
+        // Recurring extend is a collection retry, not a paid access extension.
+    } elseif (!empty($payload['expiresOn'])) {
         // Use provided expiresOn
         update_user_meta($user_id, 'flowguard_expires_on', $payload['expiresOn']);
         update_user_meta($user_id, 'membership_expires', $payload['expiresOn']); // keep existing

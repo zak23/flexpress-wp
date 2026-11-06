@@ -157,6 +157,10 @@
       e.preventDefault();
 
       const $button = $(e.currentTarget);
+      if ($button.data("extras-id")) {
+        this.handleGalleryPurchaseClick(e);
+        return;
+      }
       const episodeId = $button.data("episode-id");
       const basePrice = parseFloat($button.data("original-price")); // Use original price for validation
       const finalPrice = parseFloat($button.data("price")); // This is the discounted price

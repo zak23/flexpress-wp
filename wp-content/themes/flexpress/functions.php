@@ -656,7 +656,7 @@ function flexpress_enqueue_scripts_and_styles()
         is_page_template('page-templates/join-flowguard.php') ||
         is_page_template('page-templates/register-flowguard.php')
     ) {
-        wp_enqueue_script('flexpress-flowguard', get_template_directory_uri() . '/assets/js/flowguard.js', array('jquery'), wp_get_theme()->get('Version') . '.' . time(), true);
+        wp_enqueue_script('flexpress-flowguard', get_template_directory_uri() . '/assets/js/flowguard.js', array('jquery'), filemtime(get_template_directory() . '/assets/js/flowguard.js'), true);
         wp_script_add_data('flexpress-flowguard', 'defer', true);
 
         // Get Flowguard settings
@@ -671,7 +671,7 @@ function flexpress_enqueue_scripts_and_styles()
 
     // Flowguard script for payment processing
     if (is_page_template('page-templates/membership.php') || is_page_template('page-templates/dashboard.php')) {
-        wp_enqueue_script('flexpress-flowguard', get_template_directory_uri() . '/assets/js/flowguard.js', array('jquery'), wp_get_theme()->get('Version'), true);
+        wp_enqueue_script('flexpress-flowguard', get_template_directory_uri() . '/assets/js/flowguard.js', array('jquery'), filemtime(get_template_directory() . '/assets/js/flowguard.js'), true);
         wp_script_add_data('flexpress-flowguard', 'defer', true);
 
         wp_localize_script('flexpress-flowguard', 'flexpress_flowguard', array(
@@ -3752,73 +3752,8 @@ add_action('wp_ajax_flowguard_payment_return', 'flexpress_handle_flowguard_payme
 
 function flexpress_handle_flowguard_payment_return()
 {
-    // Log all parameters for debugging
-    error_log('FlexPress: Flowguard payment return handler called with parameters: ' . json_encode($_GET));
-
-    // Get parameters from URL
-    $user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
-    $plan = isset($_GET['plan']) ? sanitize_text_field($_GET['plan']) : '';
-
-    // Validate user ID
-    if (!$user_id || !get_userdata($user_id)) {
-        error_log('FlexPress: Invalid user ID in payment return: ' . $user_id);
-        wp_redirect(home_url('/join?error=invalid_user'));
-        exit;
-    }
-
-    error_log('FlexPress: Processing payment return for user ID: ' . $user_id . ', plan: ' . $plan);
-
-    // Log the user in
-    wp_set_current_user($user_id);
-    wp_set_auth_cookie($user_id);
-
-    // Update membership status to active (assuming successful payment)
-    update_user_meta($user_id, 'membership_status', 'active');
-    update_user_meta($user_id, 'subscription_plan', $plan);
-    update_user_meta($user_id, 'subscription_type', 'recurring');
-    update_user_meta($user_id, 'subscription_start_date', current_time('mysql'));
-    update_user_meta($user_id, 'payment_pending', false);
-
-    // Placeholder Flowguard data will be updated by webhook when payment is processed
-    if (!get_user_meta($user_id, 'flowguard_transaction_id', true)) {
-        update_user_meta($user_id, 'flowguard_transaction_id', 'tx_' . $user_id . '_' . time());
-    }
-
-    // Calculate next rebill date based on plan
-    $pricing_plans = flexpress_get_pricing_plans(true);
-    if (isset($pricing_plans[$plan])) {
-        $plan_data = $pricing_plans[$plan];
-        $duration = intval($plan_data['duration']);
-        $duration_unit = $plan_data['duration_unit'];
-
-        $next_rebill = '';
-        switch ($duration_unit) {
-            case 'days':
-                $next_rebill = date('Y-m-d H:i:s', strtotime('+' . $duration . ' days'));
-                break;
-            case 'months':
-                $next_rebill = date('Y-m-d H:i:s', strtotime('+' . $duration . ' months'));
-                break;
-            case 'years':
-                $next_rebill = date('Y-m-d H:i:s', strtotime('+' . $duration . ' years'));
-                break;
-        }
-
-        if ($next_rebill) {
-            update_user_meta($user_id, 'next_rebill_date', $next_rebill);
-        }
-    }
-
-    // Log successful payment return
-    error_log(sprintf(
-        'FlexPress: User %d returned from successful Flowguard payment for plan %s',
-        $user_id,
-        $plan
-    ));
-
-    // Redirect to my-account with success message
-    wp_redirect(home_url('/my-account?payment=success&plan=' . urlencode($plan)));
-    exit;
+    // A browser redirect is not proof of payment or account ownership.
+    flexpress_flowguard_redirect_payment_return();
 }
 
 function flexpress_process_registration_and_payment()
@@ -4316,159 +4251,28 @@ add_action('wp_ajax_nopriv_flexpress_create_ppv_purchase', 'flexpress_create_ppv
 
 function flexpress_create_ppv_purchase()
 {
-    // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'flexpress_nonce')) {
-        wp_send_json_error(array('message' => __('Security check failed', 'flexpress')));
-        return;
-    }
-
-    // Check if user is logged in - REQUIRED for PPV purchases
+    check_ajax_referer('flexpress_nonce', 'nonce');
     if (!is_user_logged_in()) {
-        wp_send_json_error(array('message' => __('You must be logged in to purchase episodes', 'flexpress')));
+        wp_send_json_error(['message' => __('You must be logged in to purchase content.', 'flexpress')], 401);
         return;
     }
 
-    // Get and validate parameters
-    $episode_id = isset($_POST['episode_id']) ? intval($_POST['episode_id']) : 0;
-    $extras_id = isset($_POST['extras_id']) ? intval($_POST['extras_id']) : 0;
-    $final_price = isset($_POST['final_price']) ? floatval($_POST['final_price']) : 0;
-    $base_price = isset($_POST['base_price']) ? floatval($_POST['base_price']) : 0;
-    $member_discount = isset($_POST['member_discount']) ? floatval($_POST['member_discount']) : 0;
+    $episode_id = absint($_POST['episode_id'] ?? 0);
+    $extras_id = absint($_POST['extras_id'] ?? 0);
+    if ((!$episode_id && !$extras_id) || ($episode_id && $extras_id)) {
+        wp_send_json_error(['message' => __('Invalid content.', 'flexpress')], 400);
+        return;
+    }
 
-    // Determine content type and ID
+    // Ignore submitted prices and discounts; the shared helper calculates the quote.
     $content_id = $episode_id ?: $extras_id;
     $content_type = $episode_id ? 'episode' : 'extras';
-
-    // Debug logging
-    error_log('FlexPress PPV Debug: Content ID=' . $content_id . ', Content Type=' . $content_type . ', Final Price=' . $final_price . ', Base Price=' . $base_price . ', Member Discount=' . $member_discount);
-
-    if (!$content_id || !$final_price) {
-        wp_send_json_error(array('message' => __('Invalid content or price data', 'flexpress')));
+    $result = flexpress_flowguard_create_ppv_purchase(get_current_user_id(), $content_id, null, $content_type);
+    if (empty($result['success'])) {
+        wp_send_json_error(['message' => $result['error'] ?? __('Unable to create payment.', 'flexpress')], 400);
         return;
     }
-
-    // Verify content exists and has a price
-    $content = get_post($content_id);
-    if (!$content || !in_array($content->post_type, ['episode', 'extras'])) {
-        wp_send_json_error(array('message' => __('Content not found', 'flexpress')));
-        return;
-    }
-
-    // Get price field based on content type
-    $price_field = $content_type === 'episode' ? 'episode_price' : 'extras_price';
-    $content_price = get_field($price_field, $content_id);
-    if (!$content_price) {
-        wp_send_json_error(array('message' => __('Content not available for purchase', 'flexpress')));
-        return;
-    }
-
-    // Debug logging for price validation
-    error_log('FlexPress PPV Price Validation: Content Price=' . $content_price . ', Base Price=' . $base_price . ', Match=' . (floatval($content_price) === $base_price ? 'YES' : 'NO'));
-
-    // Validate that the base price matches the content price (before any discounts)
-    if (floatval($content_price) !== $base_price) {
-        error_log('FlexPress PPV Price Mismatch: Content Price=' . $content_price . ', Base Price=' . $base_price);
-        wp_send_json_error(array('message' => __('Price mismatch. Please refresh and try again.', 'flexpress')));
-        return;
-    }
-
-    // Check if user already owns this content
-    $user_id = get_current_user_id();
-    if ($user_id) {
-        $meta_key = $content_type === 'episode' ? 'purchased_episode_' . $content_id : 'purchased_extras_' . $content_id;
-        $already_purchased = get_user_meta($user_id, $meta_key, true);
-        if ($already_purchased) {
-            wp_send_json_error(array('message' => __('You already own this content', 'flexpress')));
-            return;
-        }
-
-        // Validate member discount eligibility (active or cancelled members only)
-        if ($member_discount > 0) {
-            $membership_status = get_user_meta($user_id, 'membership_status', true);
-            $is_active_member = in_array($membership_status, ['active', 'cancelled']);
-
-            if (!$is_active_member) {
-                // Recalculate final price without discount for non-active members
-                $final_price = $base_price;
-                error_log('FlexPress PPV: User ' . $user_id . ' not eligible for member discount. Status: ' . $membership_status);
-            }
-        }
-    }
-
-    // Create unique transaction reference
-    $transaction_ref = 'ppv_' . $content_type . '_' . $content_id . '_' . ($user_id ?: 'guest') . '_' . time();
-
-    // Initialize Flowguard for one-time payment
-    try {
-        $flowguard_api = flexpress_get_flowguard_api();
-
-        // Prepare payment arguments for one-time purchase
-        $payment_args = array(
-            'successURL' => home_url('/wp-admin/admin-ajax.php?action=flexpress_ppv_payment_return&content_id=' . $content_id . '&content_type=' . $content_type . '&user_id=' . $user_id . '&ref=' . $transaction_ref),
-            'declineURL' => get_permalink($content_id) . '?payment=cancelled',
-            'ipnUrl' => home_url('/wp-admin/admin-ajax.php?action=flexpress_ppv_webhook'),
-            'referenceID' => $transaction_ref, // Unique reference for this purchase
-            'custom1' => $content_id, // Content ID
-            'custom2' => $user_id, // User ID  
-            'custom3' => $transaction_ref, // Transaction reference
-            'productDescription' => ucfirst($content_type) . ': ' . get_the_title($content_id)
-        );
-
-        // Add user email if logged in
-        if ($user_id) {
-            $user = get_userdata($user_id);
-            if ($user && $user->user_email) {
-                $payment_args['email'] = $user->user_email;
-            }
-        }
-
-        // Log payment creation for debugging
-        error_log('FlexPress PPV: Creating payment for ' . $content_type . ' ' . $content_id . ', user ' . $user_id . ', price $' . $final_price);
-
-        // Create Flowguard PPV purchase with final price
-        $result = flexpress_flowguard_create_ppv_purchase($user_id, $content_id, $final_price, $content_type);
-
-        if (!$result['success']) {
-            error_log('FlexPress PPV: Failed to create Flowguard purchase: ' . $result['error']);
-            throw new Exception('Failed to create Flowguard purchase: ' . $result['error']);
-        }
-
-        $payment_url = $result['payment_url'];
-
-        if (!$payment_url) {
-            wp_send_json_error(array('message' => __('Unable to create payment. Please try again.', 'flexpress')));
-            return;
-        }
-
-        // Store transaction reference for validation
-        if ($user_id) {
-            update_user_meta($user_id, 'pending_ppv_' . $transaction_ref, array(
-                'content_id' => $content_id,
-                'content_type' => $content_type,
-                'price' => $final_price,
-                'created' => current_time('mysql')
-            ));
-        } else {
-            // Store in session for guest users
-            if (!session_id()) {
-                session_start();
-            }
-            $_SESSION['pending_ppv_' . $transaction_ref] = array(
-                'episode_id' => $episode_id,
-                'price' => $final_price,
-                'created' => current_time('mysql')
-            );
-        }
-
-        wp_send_json_success(array(
-            'payment_url' => $payment_url,
-            'episode_title' => get_the_title($episode_id),
-            'final_price' => $final_price
-        ));
-    } catch (Exception $e) {
-        error_log('FlexPress PPV Error: ' . $e->getMessage());
-        wp_send_json_error(array('message' => __('Payment system error. Please try again.', 'flexpress')));
-    }
+    wp_send_json_success($result);
 }
 
 /**
@@ -4479,85 +4283,8 @@ add_action('wp_ajax_flexpress_ppv_payment_return', 'flexpress_handle_ppv_payment
 
 function flexpress_handle_ppv_payment_return()
 {
-    // Get parameters from URL
-    $episode_id = isset($_GET['episode_id']) ? intval($_GET['episode_id']) : 0;
-    $user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
-    $transaction_ref = isset($_GET['ref']) ? sanitize_text_field($_GET['ref']) : '';
-
-    error_log('FlexPress PPV: Payment return for episode ' . $episode_id . ', user ' . $user_id . ', ref ' . $transaction_ref);
-
-    // Validate parameters
-    if (!$episode_id || !$transaction_ref) {
-        wp_redirect(home_url('/episodes?error=invalid_return'));
-        exit;
-    }
-
-    // Validate episode exists
-    $episode = get_post($episode_id);
-    if (!$episode || $episode->post_type !== 'episode') {
-        wp_redirect(home_url('/episodes?error=episode_not_found'));
-        exit;
-    }
-
-    // Grant access to episode
-    if ($user_id && get_userdata($user_id)) {
-        // Mark episode as purchased
-        update_user_meta($user_id, 'purchased_episode_' . $episode_id, current_time('mysql'));
-
-        // Add to purchased episodes list
-        $purchased_episodes = get_user_meta($user_id, 'purchased_episodes', true);
-        if (!is_array($purchased_episodes)) {
-            $purchased_episodes = array();
-        }
-        if (!in_array($episode_id, $purchased_episodes)) {
-            $purchased_episodes[] = $episode_id;
-            update_user_meta($user_id, 'purchased_episodes', $purchased_episodes);
-        }
-
-        // Log PPV purchase activity
-        if (class_exists('FlexPress_Activity_Logger')) {
-            $episode_price = get_field('episode_price', $episode_id);
-            $access_type = get_field('access_type', $episode_id);
-            $member_discount = get_field('member_discount', $episode_id);
-
-            // Check if user got member discount
-            $membership_status = get_user_meta($user_id, 'membership_status', true);
-            $is_active_member = in_array($membership_status, ['active', 'cancelled']);
-            $discount_applied = ($access_type === 'mixed' && $is_active_member && $member_discount > 0);
-            $final_price = $discount_applied ? ($episode_price * (1 - ($member_discount / 100))) : $episode_price;
-
-            FlexPress_Activity_Logger::log_ppv_purchase(
-                $user_id,
-                $episode_id,
-                array(
-                    'access_type' => $access_type,
-                    'original_price' => $episode_price,
-                    'final_price' => $final_price,
-                    'member_discount' => $member_discount,
-                    'discount_applied' => $discount_applied,
-                    'membership_status' => $membership_status,
-                    'transaction_ref' => $transaction_ref,
-                    'currency' => 'USD'
-                ),
-                'return'
-            );
-        }
-
-        // Clean up pending transaction
-        delete_user_meta($user_id, 'pending_ppv_' . $transaction_ref);
-
-        // Log the user in if not already logged in
-        if (!is_user_logged_in()) {
-            wp_set_current_user($user_id);
-            wp_set_auth_cookie($user_id);
-        }
-
-        error_log('FlexPress PPV: Granted access to episode ' . $episode_id . ' for user ' . $user_id);
-    }
-
-    // Redirect to episode with success message
-    wp_redirect(get_permalink($episode_id) . '?ppv=unlocked');
-    exit;
+    // A browser redirect is not proof of payment or account ownership.
+    flexpress_flowguard_redirect_payment_return();
 }
 
 /**
@@ -4568,93 +4295,8 @@ add_action('wp_ajax_flexpress_ppv_webhook', 'flexpress_handle_ppv_webhook');
 
 function flexpress_handle_ppv_webhook()
 {
-    // Log webhook data
-    error_log('FlexPress PPV Webhook: ' . json_encode($_REQUEST));
-
-    // Get webhook data
-    $webhook_data = array_merge($_GET, $_POST);
-    unset($webhook_data['action']);
-
-    // Extract custom data
-    $episode_id = isset($webhook_data['custom1']) ? intval($webhook_data['custom1']) : 0;
-    $user_id = isset($webhook_data['custom2']) ? intval($webhook_data['custom2']) : 0;
-    $transaction_ref = isset($webhook_data['custom3']) ? sanitize_text_field($webhook_data['custom3']) : '';
-
-    if (!$episode_id || !$transaction_ref) {
-        error_log('FlexPress PPV Webhook: Missing required data');
-        wp_send_json_error('Missing required data');
-        return;
-    }
-
-    // Process based on event type
-    $event_type = isset($webhook_data['event']) ? sanitize_text_field($webhook_data['event']) : 'purchase';
-
-    switch ($event_type) {
-        case 'initial':
-        case 'purchase':
-        default:
-            // Grant access to episode
-            if ($user_id && get_userdata($user_id)) {
-                update_user_meta($user_id, 'purchased_episode_' . $episode_id, current_time('mysql'));
-
-                // Add to purchased episodes list
-                $purchased_episodes = get_user_meta($user_id, 'purchased_episodes', true);
-                if (!is_array($purchased_episodes)) {
-                    $purchased_episodes = array();
-                }
-                if (!in_array($episode_id, $purchased_episodes)) {
-                    $purchased_episodes[] = $episode_id;
-                    update_user_meta($user_id, 'purchased_episodes', $purchased_episodes);
-                }
-
-                // Store transaction details
-                update_user_meta($user_id, 'ppv_transaction_' . $episode_id, array(
-                    'transaction_id' => isset($webhook_data['transactionID']) ? $webhook_data['transactionID'] : '',
-                    'amount' => isset($webhook_data['priceAmount']) ? $webhook_data['priceAmount'] : '',
-                    'currency' => isset($webhook_data['priceCurrency']) ? $webhook_data['priceCurrency'] : 'USD',
-                    'date' => current_time('mysql'),
-                    'reference' => $transaction_ref
-                ));
-
-                // Log PPV purchase activity via webhook
-                if (class_exists('FlexPress_Activity_Logger')) {
-                    $episode_price = get_field('episode_price', $episode_id);
-                    $access_type = get_field('access_type', $episode_id);
-                    $member_discount = get_field('member_discount', $episode_id);
-
-                    // Check if user got member discount
-                    $membership_status = get_user_meta($user_id, 'membership_status', true);
-                    $is_active_member = in_array($membership_status, ['active', 'cancelled']);
-                    $discount_applied = ($access_type === 'mixed' && $is_active_member && $member_discount > 0);
-
-                    $amount = isset($webhook_data['priceAmount']) ? floatval($webhook_data['priceAmount']) : $episode_price;
-                    $currency = isset($webhook_data['priceCurrency']) ? $webhook_data['priceCurrency'] : 'USD';
-
-                    FlexPress_Activity_Logger::log_ppv_purchase(
-                        $user_id,
-                        $episode_id,
-                        array(
-                            'access_type' => $access_type,
-                            'original_price' => $episode_price,
-                            'paid_amount' => $amount,
-                            'currency' => $currency,
-                            'member_discount' => $member_discount,
-                            'discount_applied' => $discount_applied,
-                            'membership_status' => $membership_status,
-                            'transaction_id' => isset($webhook_data['transactionID']) ? $webhook_data['transactionID'] : '',
-                            'transaction_ref' => $transaction_ref,
-                            'webhook_data' => $webhook_data
-                        ),
-                        'webhook'
-                    );
-                }
-
-                error_log('FlexPress PPV Webhook: Processed purchase for episode ' . $episode_id . ', user ' . $user_id);
-            }
-            break;
-    }
-
-    wp_send_json_success('OK');
+    // Keep the legacy URL working, but require the same signed JWT as all postbacks.
+    flexpress_flowguard_webhook_handler();
 }
 
 /**

@@ -8,70 +8,37 @@
  * @since 1.0.0
  */
 
-// Check if user is logged in
+// Browser query parameters never authenticate a customer or confirm a payment.
+nocache_headers();
 if (!is_user_logged_in()) {
-    // Check if user_id is provided in URL parameters (from payment flow)
-    $user_id_from_url = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
-    
-    if ($user_id_from_url && get_userdata($user_id_from_url)) {
-        // Auto-login the user if valid user_id is provided
-        wp_set_current_user($user_id_from_url);
-        wp_set_auth_cookie($user_id_from_url);
-    } else {
-        // No valid user_id, redirect to login with return URL
-        $current_url = home_url($_SERVER['REQUEST_URI']);
-        wp_redirect(home_url('/login?redirect_to=' . urlencode($current_url)));
-        exit;
-    }
+    flexpress_flowguard_redirect_payment_return();
 }
 
-get_header();
-
-$transaction_id = isset($_GET['transaction_id']) ? sanitize_text_field($_GET['transaction_id']) : '';
-$sale_id = isset($_GET['sale_id']) ? sanitize_text_field($_GET['sale_id']) : '';
-$episode_id = isset($_GET['episode_id']) ? intval($_GET['episode_id']) : 0;
-$ref = isset($_GET['ref']) ? sanitize_text_field($_GET['ref']) : '';
-
-// Get current user (now guaranteed to be logged in)
 $current_user = wp_get_current_user();
 $user_id = $current_user->ID;
-
-// Check if this is a PPV purchase
-$is_ppv_purchase = $episode_id > 0;
-$episode = null;
-if ($is_ppv_purchase) {
-    $episode = get_post($episode_id);
-}
-
-// Smart transaction retrieval - try URL first, then get latest for user
-$transaction = null;
-if (empty($transaction_id)) {
-    // If no transaction_id in URL, get the most recent transaction for this user
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'flexpress_flowguard_transactions';
-    $latest_transaction = $wpdb->get_row(
-        $wpdb->prepare(
-            "SELECT * FROM {$table_name} WHERE user_id = %d ORDER BY created_at DESC LIMIT 1",
-            $user_id
-        ),
-        ARRAY_A
-    );
-    
-    if ($latest_transaction) {
-        $transaction_id = $latest_transaction['transaction_id'];
-        $transaction = $latest_transaction;
+$transaction_id = isset($_GET['transaction_id']) && is_string($_GET['transaction_id']) ? sanitize_text_field(wp_unslash($_GET['transaction_id'])) : '';
+$ref = isset($_GET['ref']) && is_string($_GET['ref']) ? sanitize_text_field(wp_unslash($_GET['ref'])) : '';
+$session_id = isset($_GET['session_id']) && is_string($_GET['session_id']) ? sanitize_text_field(wp_unslash($_GET['session_id'])) : '';
+if ($ref === '' && $session_id !== '') {
+    $session = flexpress_flowguard_get_session($session_id);
+    if ($session && (int) $session['user_id'] === (int) $user_id) {
+        $ref = $session['reference_id'] ?? '';
     }
-} else {
-    // Get transaction details using the provided transaction_id
-    $transaction = flexpress_flowguard_get_transaction($transaction_id);
 }
-
-// Get user's membership status
+$transaction = flexpress_flowguard_get_return_transaction($user_id, $transaction_id, $ref);
+$payment_confirmed = $transaction && $transaction['status'] === 'approved';
+$transaction_id = $payment_confirmed ? $transaction['transaction_id'] : '';
+$sale_id = $payment_confirmed ? ($transaction['sale_id'] ?? '') : '';
+$reference_data = $payment_confirmed ? flexpress_flowguard_parse_enhanced_reference($transaction['reference_id'] ?? '') : [];
+$episode_id = $reference_data['episode_id'] ?? 0;
+$is_ppv_purchase = !empty($reference_data['is_ppv']);
+$episode = $episode_id ? get_post($episode_id) : null;
 $membership_status = get_user_meta($user_id, 'membership_status', true);
-$subscription_amount = get_user_meta($user_id, 'subscription_amount', true);
-$subscription_currency = get_user_meta($user_id, 'subscription_currency', true);
+$subscription_amount = $payment_confirmed ? $transaction['amount'] : '';
+$subscription_currency = $payment_confirmed ? $transaction['currency'] : '';
 $next_rebill_date = get_user_meta($user_id, 'next_rebill_date', true);
 $membership_expires = get_user_meta($user_id, 'membership_expires', true);
+get_header();
 ?>
 
 <main id="primary" class="site-main payment-success-page">
@@ -84,14 +51,19 @@ $membership_expires = get_user_meta($user_id, 'membership_expires', true);
                         <div class="success-icon">
                             <i class="fas fa-check-circle"></i>
                         </div>
-                        <h1 class="success-title">Payment Successful!</h1>
-                        <?php if ($is_ppv_purchase && $episode): ?>
-                            <p class="success-subtitle">Episode unlocked! You now have access to "<?php echo esc_html($episode->post_title); ?>".</p>
+                        <h1 class="success-title"><?php echo $payment_confirmed ? esc_html__('Payment confirmed', 'flexpress') : esc_html__('Payment confirmation pending', 'flexpress'); ?></h1>
+                        <?php if (!$payment_confirmed): ?>
+                            <p class="success-subtitle">We are waiting for confirmation from the payment provider. Access updates after confirmation. Refresh this page shortly or check your account.</p>
+                            <button type="button" class="btn btn-primary" onclick="window.location.reload()">Check again</button>
+                            <a class="btn btn-outline-primary" href="<?php echo esc_url(home_url('/my-account/')); ?>">My account</a>
+                        <?php elseif ($is_ppv_purchase && $episode): ?>
+                            <p class="success-subtitle">Purchase confirmed for "<?php echo esc_html($episode->post_title); ?>".</p>
                         <?php else: ?>
                             <p class="success-subtitle">Thank you for your purchase. Your account has been updated.</p>
                         <?php endif; ?>
                     </div>
                     
+                    <?php if ($payment_confirmed): ?>
                     <!-- Transaction Details -->
                     <div class="transaction-details">
                         <div class="card">
@@ -189,11 +161,11 @@ $membership_expires = get_user_meta($user_id, 'membership_expires', true);
                                         <div class="step-item">
                                             <div class="step-number">1</div>
                                             <div class="step-content">
-                                                <h6>Watch Your Episode</h6>
-                                                <p>You now have full access to "<?php echo esc_html($episode->post_title); ?>".</p>
+                                                <h6>View Your Purchase</h6>
+                                                <p>Your purchase of "<?php echo esc_html($episode->post_title); ?>" is confirmed.</p>
                                                 <a href="<?php echo get_permalink($episode_id); ?>?ppv=unlocked&transaction_id=<?php echo esc_attr($transaction_id); ?>" class="btn btn-primary btn-sm">
                                                     <i class="fas fa-play me-1"></i>
-                                                    Watch Episode
+                                                    View Content
                                                 </a>
                                             </div>
                                         </div>
@@ -259,6 +231,7 @@ $membership_expires = get_user_meta($user_id, 'membership_expires', true);
                         </div>
                     </div>
                     
+                    <?php endif; ?>
                     <!-- Support Information -->
                     <div class="support-info mt-4 text-center">
                         <p class="text-muted">
@@ -426,6 +399,7 @@ $membership_expires = get_user_meta($user_id, 'membership_expires', true);
 
 <script>
 function downloadReceipt() {
+    if (!<?php echo wp_json_encode((bool) $payment_confirmed); ?>) return;
     // Create receipt data
     const receiptData = {
         transactionId: '<?php echo esc_js($transaction_id); ?>',
@@ -485,8 +459,9 @@ function downloadReceipt() {
     window.URL.revokeObjectURL(url);
 }
 
-// Auto-redirect to dashboard after 30 seconds
+// Only offer dashboard navigation after a confirmed payment.
 setTimeout(function() {
+    if (!<?php echo wp_json_encode((bool) $payment_confirmed); ?>) return;
     if (confirm('Would you like to go to your dashboard now?')) {
         window.location.href = '<?php echo home_url('/dashboard'); ?>';
     }

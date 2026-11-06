@@ -136,51 +136,131 @@ function flexpress_flowguard_create_subscription($user_id, $plan_id)
 }
 
 /**
+ * Redirect browser returns without authenticating users or changing entitlements.
+ *
+ * @return void
+ */
+function flexpress_flowguard_redirect_payment_return()
+{
+    nocache_headers();
+    $args = [];
+    foreach (['transaction_id', 'ref', 'session_id'] as $key) {
+        if (isset($_GET[$key]) && is_string($_GET[$key])) {
+            $args[$key] = sanitize_text_field(wp_unslash($_GET[$key]));
+        }
+    }
+    $target = add_query_arg($args, home_url('/payment-success/'));
+    if (!is_user_logged_in()) {
+        $target = add_query_arg('redirect_to', $target, home_url('/login/'));
+    }
+    wp_safe_redirect($target);
+    exit;
+}
+
+/**
+ * Resolve a receipt only from a transaction owned by the signed-in customer.
+ *
+ * @param int    $user_id Customer ID.
+ * @param string $transaction_id Provider transaction ID.
+ * @param string $reference_id Merchant reference.
+ * @return array|null Stored transaction or null while confirmation is pending.
+ */
+function flexpress_flowguard_get_return_transaction($user_id, $transaction_id = '', $reference_id = '')
+{
+    if (!$user_id) {
+        return null;
+    }
+    $transaction = null;
+    if ($transaction_id !== '') {
+        $transaction = flexpress_flowguard_get_transaction($transaction_id);
+    } elseif ($reference_id !== '') {
+        global $wpdb;
+        $transaction = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}flexpress_flowguard_transactions WHERE user_id = %d AND reference_id = %s ORDER BY id DESC LIMIT 1",
+            $user_id,
+            $reference_id
+        ), ARRAY_A);
+    }
+    if (!is_array($transaction) || (int) $transaction['user_id'] !== (int) $user_id) {
+        return null;
+    }
+    return $transaction;
+}
+
+/**
+ * Calculate an authoritative PPV quote for published, purchasable content.
+ *
+ * @param int $user_id Customer ID.
+ * @param int $content_id Episode or Extras ID.
+ * @return array Success, price and content type, or an error.
+ */
+function flexpress_flowguard_get_ppv_quote($user_id, $content_id)
+{
+    $content = get_post($content_id);
+    if (!$content || $content->post_status !== 'publish' || !in_array($content->post_type, ['episode', 'extras'], true)) {
+        return ['success' => false, 'error' => 'Content is not available for purchase.'];
+    }
+    if (!$user_id || !get_userdata($user_id) || flexpress_get_membership_status($user_id) === 'banned') {
+        return ['success' => false, 'error' => 'Your account cannot purchase this content.'];
+    }
+    $access = $content->post_type === 'episode'
+        ? flexpress_check_episode_access($content_id, $user_id, true)
+        : flexpress_check_extras_access($content_id, $user_id);
+    if (empty($access['show_purchase_button']) || !empty($access['has_access']) || !empty($access['is_unreleased'])) {
+        return ['success' => false, 'error' => 'This content is already accessible or is not available for individual purchase.'];
+    }
+    $base_price = get_field($content->post_type === 'episode' ? 'episode_price' : 'extras_price', $content_id);
+    if (!is_numeric($base_price) || !is_finite((float) $base_price) || (float) $base_price <= 0) {
+        return ['success' => false, 'error' => 'Content does not have a valid purchase price.'];
+    }
+    $discount = 0;
+    if ($access['access_type'] === 'mixed' && !empty($access['is_member'])) {
+        $discount = max(0, min(100, (float) get_field('member_discount', $content_id)));
+    }
+    return [
+        'success' => true,
+        'content_type' => $content->post_type,
+        'base_price' => (float) $base_price,
+        'final_price' => max(2.95, round((float) $base_price * (1 - $discount / 100), 2))
+    ];
+}
+
+/**
  * Create Flowguard PPV purchase
  * 
  * @param int $user_id User ID
- * @param int $episode_id Episode ID
+ * @param int $episode_id Episode or Extras ID (legacy parameter name).
+ * @param float|null $final_price Ignored legacy caller price; calculated on the server.
+ * @param string|null $content_type Expected content type, if supplied.
  * @return array Response data
  */
-function flexpress_flowguard_create_ppv_purchase($user_id, $episode_id, $final_price = null)
+function flexpress_flowguard_create_ppv_purchase($user_id, $episode_id, $final_price = null, $content_type = null)
 {
-    $episode = get_post($episode_id);
-    if (!$episode || $episode->post_type !== 'episode') {
-        return ['success' => false, 'error' => 'Invalid episode'];
+    // $final_price is retained for compatibility but is never trusted.
+    $quote = flexpress_flowguard_get_ppv_quote($user_id, $episode_id);
+    if (!$quote['success']) {
+        return $quote;
     }
-
-    // Get PPV price from episode (using episode_price ACF field)
-    $ppv_price = get_field('episode_price', $episode_id);
-    if (!$ppv_price || $ppv_price <= 0) {
-        return ['success' => false, 'error' => 'Episode not available for PPV'];
+    if ($content_type !== null && $content_type !== $quote['content_type']) {
+        return ['success' => false, 'error' => 'Content type mismatch.'];
     }
-
+    $content_type = $quote['content_type'];
+    $ppv_price = $quote['base_price'];
+    $price_to_charge = $quote['final_price'];
     $user = get_userdata($user_id);
-    if (!$user) {
-        return ['success' => false, 'error' => 'Invalid user'];
-    }
-
     $api = flexpress_get_flowguard_api();
     if (!$api) {
         return ['success' => false, 'error' => 'Flowguard API not configured'];
     }
 
-    // Use final price if provided (includes member discounts), otherwise use base PPV price
-    $price_to_charge = $final_price !== null ? $final_price : $ppv_price;
-
-    // Ensure minimum price for Flowguard ($2.95)
-    if ($price_to_charge < 2.95) {
-        $price_to_charge = 2.95;
-    }
-
     // Generate enhanced reference for PPV purchase
-    $transaction_ref = flexpress_flowguard_generate_enhanced_ppv_reference($user_id, $episode_id);
+    $transaction_ref = flexpress_flowguard_generate_enhanced_ppv_reference($user_id, $episode_id, $content_type);
 
     $purchase_data = [
         'priceAmount' => number_format($price_to_charge, 2, '.', ''),
         'priceCurrency' => 'USD',
-        'successUrl' => home_url('/payment-success?episode_id=' . $episode_id . '&ref=' . $transaction_ref),
-        'declineUrl' => home_url('/payment-declined?episode_id=' . $episode_id . '&ref=' . $transaction_ref),
+        'successUrl' => add_query_arg('ref', $transaction_ref, home_url('/payment-success/')),
+        'declineUrl' => add_query_arg('ref', $transaction_ref, home_url('/payment-declined/')),
         'postbackUrl' => home_url('/wp-admin/admin-ajax.php?action=flowguard_webhook'),
         'email' => $user->user_email,
         'referenceId' => $transaction_ref
@@ -228,6 +308,7 @@ function flexpress_flowguard_create_ppv_purchase($user_id, $episode_id, $final_p
 
         return [
             'success' => true,
+            'final_price' => $price_to_charge,
             'session_id' => $result['session_id'],
             'payment_url' => home_url('/payment?session_id=' . $result['session_id'])
         ];
@@ -408,7 +489,7 @@ function flexpress_flowguard_generate_enhanced_reference($user_id, $plan_id, $ad
  * @param int $episode_id Episode ID
  * @return string Enhanced PPV reference ID
  */
-function flexpress_flowguard_generate_enhanced_ppv_reference($user_id, $episode_id)
+function flexpress_flowguard_generate_enhanced_ppv_reference($user_id, $episode_id, $content_type = 'episode')
 {
     global $wpdb;
 
@@ -429,8 +510,8 @@ function flexpress_flowguard_generate_enhanced_ppv_reference($user_id, $episode_
     // PPV identifier (always first)
     $components[] = 'ppv';
 
-    // Episode ID
-    $components[] = 'ep' . $episode_id;
+    // Preserve the content type in the signed payment reference.
+    $components[] = ($content_type === 'extras' ? 'ex' : 'ep') . $episode_id;
 
     // User ID
     $components[] = 'uid' . $user_id;
@@ -517,18 +598,16 @@ function flexpress_flowguard_parse_enhanced_reference($reference_id)
         'signup_source' => '',
         'registration_timestamp' => '',
         'is_enhanced' => false,
-        'is_ppv' => false
+        'is_ppv' => false,
+        'content_type' => 'episode'
     );
 
     // Handle enhanced PPV references (ppv_ep123_uid456_affABC_promoXYZ_srcgoogle_ts12345678)
-    if (preg_match('/^ppv_ep(\d+)_uid(\d+)/', $reference_id)) {
+    if (preg_match('/^ppv_(ep|ex)(\d+)_uid(\d+)(?:_|$)/', $reference_id, $content_match)) {
+        $data['content_type'] = $content_match[1] === 'ex' ? 'extras' : 'episode';
+        $data['episode_id'] = intval($content_match[2]);
         $data['is_ppv'] = true;
         $data['is_enhanced'] = true;
-
-        // Extract episode ID
-        if (preg_match('/ep(\d+)/', $reference_id, $matches)) {
-            $data['episode_id'] = intval($matches[1]);
-        }
 
         // Extract user ID
         if (preg_match('/uid(\d+)/', $reference_id, $matches)) {

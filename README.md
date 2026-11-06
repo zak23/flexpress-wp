@@ -1,3 +1,16 @@
+## Payment security fixes — 7 November 2026
+
+- Browser returns and `/payment-success/` require an existing signed-in session. URL user IDs never establish login, activate membership, or unlock content. A customer whose session has expired must sign in again.
+- The legacy `flexpress_ppv_webhook` endpoint delegates to the canonical Flowguard handler. Both require POST, a valid HS256 signature, and the configured merchant shop ID; unsigned/form postbacks return HTTP 403 and GET requests return HTTP 405.
+- PPV amounts are calculated on the server from published content, access rules, stored member discounts, and current membership status. Submitted prices and discount percentages are ignored. The existing USD 2.95 provider minimum is preserved.
+- Extras purchase buttons, references (`ppv_ex…`), signed fulfillment, and refund cleanup now support Extras alongside episodes. Existing episode references remain supported.
+- Success pages show confirmation pending until a stored approved transaction belongs to the signed-in customer. The receipt uses that transaction's amount/currency and cannot expose another customer's transaction. Embedded checkout passes its session ID for correlation when a transaction ID is not available yet.
+- Regression check from the project root: `php tests/test-payment-security.php` and `node tests/test-payment-buttons.cjs`. These use synthetic accounts, in-memory data, a fake provider, and isolated handler processes; it does not contact Flowguard or change WordPress data.
+
+Deployment order: install the shared integration helper and webhook handler before the callers/templates, then publish the scripts. This checkout is bind-mounted into the live `flexpress_wordpress` container, so theme edits take effect on zakspov.com. Keep rollback copies outside the web root. Existing auth sessions are not revoked by these changes; reviewing prior compromise is a separate operational task.
+
+Verification note: the origin sends `private, no-store` for payment success, and the public proxy preserves that for requests carrying a WordPress login cookie. The public proxy currently overrides anonymous success redirects with `public, max-age=31536000`; correcting the active Caddy cache policy remains separate infrastructure work.
+
 ## Plugin installation in Docker
 
 When running in Docker, WordPress config is injected via `WORDPRESS_CONFIG_EXTRA` in `.env`. To enable the Plugins → Add New screen and in-dashboard updates, ensure:

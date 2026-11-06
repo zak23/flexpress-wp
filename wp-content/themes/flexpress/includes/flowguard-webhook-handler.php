@@ -16,6 +16,51 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Authenticate a Flowguard postback before inspecting or applying its event.
+ *
+ * @param string $raw_body Compact HS256 JWT sent by Flowguard.
+ * @param array  $settings Merchant settings.
+ * @return array|false Verified payload, or false for any invalid signature/merchant.
+ */
+function flexpress_flowguard_verify_postback($raw_body, $settings)
+{
+    if (!is_string($raw_body) || empty($settings['signature_key']) || empty($settings['shop_id'])) {
+        return false;
+    }
+    $parts = explode('.', trim($raw_body));
+    if (count($parts) !== 3) {
+        return false;
+    }
+    $decoded = [];
+    foreach ($parts as $part) {
+        if ($part === '' || !preg_match('/^[A-Za-z0-9_-]+$/D', $part)) {
+            return false;
+        }
+        $value = base64_decode(strtr($part, '-_', '+/'), true);
+        if ($value === false) {
+            return false;
+        }
+        $decoded[] = $value;
+    }
+    $expected = hash_hmac('sha256', $parts[0] . '.' . $parts[1], $settings['signature_key'], true);
+    if (!hash_equals($expected, $decoded[2])) {
+        return false;
+    }
+    $header = json_decode($decoded[0], true);
+    $payload = json_decode($decoded[1], true);
+    if (!is_array($header) || ($header['alg'] ?? '') !== 'HS256' || !is_array($payload)) {
+        return false;
+    }
+    if (!isset($payload['shopId']) || !is_scalar($payload['shopId']) || (string) $payload['shopId'] !== (string) $settings['shop_id']) {
+        return false;
+    }
+    if (!isset($payload['postbackType']) || !is_string($payload['postbackType'])) {
+        return false;
+    }
+    return $payload;
+}
+
+/**
  * Flowguard webhook handler
  * 
  * Processes incoming webhooks from Flowguard API
@@ -27,44 +72,20 @@ function flexpress_flowguard_webhook_handler()
         header('Content-Type: text/plain');
     }
 
-    // Get webhook data
-    $raw_body = file_get_contents('php://input');
-    if (empty($raw_body)) {
-        error_log('Flowguard Webhook: No data received');
-        echo 'ERROR - No webhook data';
+    nocache_headers();
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        status_header(405);
+        header('Allow: POST');
+        echo 'ERROR - POST required';
         exit;
     }
-
-    // Parse JWT token
-    $jwt_parts = explode('.', $raw_body);
-    if (count($jwt_parts) !== 3) {
-        error_log('Flowguard Webhook: Invalid JWT format');
-        echo 'ERROR - Invalid JWT format';
-        exit;
-    }
-
-    // Decode payload
-    $payload = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], $jwt_parts[1])), true);
-    if (!$payload) {
-        error_log('Flowguard Webhook: Invalid JWT payload');
-        echo 'ERROR - Invalid JWT payload';
-        exit;
-    }
-
-    // Validate webhook signature
-    $flowguard_settings = get_option('flexpress_flowguard_settings', []);
-    if (empty($flowguard_settings['signature_key'])) {
-        error_log('Flowguard Webhook: No signature key configured');
-        echo 'ERROR - No signature key configured';
-        exit;
-    }
-
-    $expected_signature = hash_hmac('sha256', $jwt_parts[0] . '.' . $jwt_parts[1], $flowguard_settings['signature_key'], true);
-    $actual_signature = base64_decode(str_replace(['-', '_'], ['+', '/'], $jwt_parts[2]));
-
-    if (!hash_equals($expected_signature, $actual_signature)) {
-        error_log('Flowguard Webhook: Invalid signature');
-        echo 'ERROR - Invalid signature';
+    $payload = flexpress_flowguard_verify_postback(
+        file_get_contents('php://input'),
+        get_option('flexpress_flowguard_settings', [])
+    );
+    if ($payload === false) {
+        status_header(403);
+        echo 'ERROR - Invalid postback';
         exit;
     }
 
@@ -341,29 +362,16 @@ function flexpress_flowguard_handle_purchase_approved($payload)
         error_log('Flowguard Webhook: User not found for purchase reference: ' . ($payload['referenceId'] ?? ''));
         return;
     }
-    // Persist all payload fields to user meta for audit/debugging
-    flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
-
-    // Handle order type, subscription type and phase (for PPV purchases)
-    if (!empty($payload['orderType'])) {
-        update_user_meta($user_id, 'flowguard_order_type', $payload['orderType']);
-    }
-    if (!empty($payload['subscriptionType'])) {
-        update_user_meta($user_id, 'flowguard_subscription_type', $payload['subscriptionType']);
-    }
-    if (!empty($payload['subscriptionPhase'])) {
-        update_user_meta($user_id, 'flowguard_subscription_phase', $payload['subscriptionPhase']);
-    }
-
-    // Parse enhanced reference data for PPV purchase
     $reference_id = $payload['referenceId'] ?? '';
     $reference_data = flexpress_flowguard_parse_enhanced_reference($reference_id);
     $episode_id = $reference_data['episode_id'] ?? 0;
-
-    if (!$episode_id) {
-        error_log('Flowguard Webhook: No episode ID found in reference: ' . ($payload['referenceId'] ?? ''));
+    $content_type = $reference_data['content_type'] ?? 'episode';
+    $content = $episode_id ? get_post($episode_id) : null;
+    if (!$content || !in_array($content_type, ['episode', 'extras'], true) || $content->post_type !== $content_type) {
+        error_log('Flowguard Webhook: Invalid content in purchase reference');
         return;
     }
+    flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
 
     // Resolve full promo code from session when available
     $resolved_promo_code = '';
@@ -391,7 +399,7 @@ function flexpress_flowguard_handle_purchase_approved($payload)
         'affiliate_code' => $reference_data['affiliate_code'] ?? '',
         'promo_code' => $resolved_promo_code,
         'signup_source' => $reference_data['signup_source'] ?? '',
-        'plan_id' => 'ppv_episode_' . $episode_id
+        'plan_id' => 'ppv_' . $content_type . '_' . $episode_id
     ]);
 
     // Record promo usage in centralized tables if available (PPV)
@@ -419,7 +427,7 @@ function flexpress_flowguard_handle_purchase_approved($payload)
                             'promo_code' => strtolower($resolved_promo_code),
                             'user_id' => intval($user_id),
                             'order_id' => (string)($payload['transactionId'] ?? ''),
-                            'plan_id' => 'ppv_episode_' . intval($episode_id),
+                            'plan_id' => 'ppv_' . $content_type . '_' . intval($episode_id),
                             'original_amount' => floatval($payload['priceAmount']),
                             'discount_amount' => 0.00,
                             'final_amount' => floatval($payload['priceAmount']),
@@ -437,7 +445,8 @@ function flexpress_flowguard_handle_purchase_approved($payload)
     // If it's a PPV purchase, grant access to the episode
     if ($episode_id > 0) {
         error_log('Flowguard Webhook: Granting access to episode ' . $episode_id . ' for user ' . $user_id);
-        $ppv_purchases = get_user_meta($user_id, 'ppv_purchases', true) ?: [];
+        $ppv_purchases = get_user_meta($user_id, 'ppv_purchases', true);
+        $ppv_purchases = is_array($ppv_purchases) ? $ppv_purchases : [];
         error_log('Flowguard Webhook: Current PPV purchases: ' . print_r($ppv_purchases, true));
 
         if (!in_array($episode_id, $ppv_purchases)) {
@@ -452,7 +461,7 @@ function flexpress_flowguard_handle_purchase_approved($payload)
                 $plunk = flexpress_plunk_service();
                 $plunk->track_user_event($user_id, 'post_unlocked', array(
                     'post_id' => $episode_id,
-                    'type' => 'episode',
+                    'type' => $content_type,
                     'timestamp' => date('c')
                 ));
                 // Mark unlocker trait
@@ -820,14 +829,16 @@ function flexpress_handle_refund_access_revocation($user_id, $payload)
     if ($reference_data['is_ppv'] && !empty($reference_data['episode_id'])) {
         $episode_id = $reference_data['episode_id'];
 
-        // Remove episode access
-        delete_user_meta($user_id, 'purchased_episode_' . $episode_id);
+        // Revoke the matching content type, including Extras.
+        $content_type = $reference_data['content_type'] ?? 'episode';
+        delete_user_meta($user_id, 'purchased_' . $content_type . '_' . $episode_id);
 
         // Remove from purchased episodes list
-        $purchased_episodes = get_user_meta($user_id, 'purchased_episodes', true);
+        $purchased_list_key = $content_type === 'extras' ? 'purchased_extras' : 'purchased_episodes';
+        $purchased_episodes = get_user_meta($user_id, $purchased_list_key, true);
         if (is_array($purchased_episodes)) {
             $purchased_episodes = array_diff($purchased_episodes, [$episode_id]);
-            update_user_meta($user_id, 'purchased_episodes', $purchased_episodes);
+            update_user_meta($user_id, $purchased_list_key, $purchased_episodes);
             if (function_exists('flexpress_invalidate_user_cache')) {
                 flexpress_invalidate_user_cache($user_id);
             }

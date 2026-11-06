@@ -171,15 +171,12 @@ class FlexPressFlowguard {
         // Redirect to success page
         setTimeout(() => {
             const successUrl = new URL(window.location.origin + '/payment-success');
+            if (this.sessionId) successUrl.searchParams.set('session_id', this.sessionId);
             if (event.transactionId) {
                 successUrl.searchParams.set('transaction_id', event.transactionId);
             }
             if (event.saleId) {
                 successUrl.searchParams.set('sale_id', event.saleId);
-            }
-            // Add user_id if available from FlexPressData
-            if (typeof FlexPressData !== 'undefined' && FlexPressData.userId) {
-                successUrl.searchParams.set('user_id', FlexPressData.userId);
             }
             window.location.href = successUrl.toString();
         }, 2000);

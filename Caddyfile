@@ -1,130 +1,86 @@
 # Caddyfile for FlexPress WordPress Site
-# This configuration adds proper caching headers for WordPress detection
+# Dynamic responses are private; only successful public assets may be cached.
 
 zakspov.com {
-    reverse_proxy 192.168.1.238:8085 {
-        header_up Host {host}
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
+	reverse_proxy 192.168.1.238:8085 {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
 
-        # Increase timeouts for cold starts
-        transport http {
-            dial_timeout 30s
-            response_header_timeout 60s
-            expect_continue_timeout 10s
-            keepalive 90s
-            keepalive_idle_conns 10
-        }
-    }
+		# Override origin caching for dynamic pages, redirects, errors, and API responses.
+		header_down Cache-Control "private, no-store, max-age=0"
+		header_down Expires "0"
+		header_down Pragma "no-cache"
+		header_down -Age
+		header_down -X-Cache-Enabled
+		header_down -X-Cache-Status
 
-    # Add caching headers that WordPress expects to see
-    header {
-        # Cache-Control header for static assets
-        Cache-Control "public, max-age=31536000" {
-            path *.css
-            path *.js
-            path *.png
-            path *.jpg
-            path *.jpeg
-            path *.gif
-            path *.webp
-            path *.svg
-            path *.woff
-            path *.woff2
-            path *.ttf
-            path *.eot
-        }
+		# Response matching is inside reverse_proxy for compatibility with Caddy 2.6.
+		@staticResponse {
+			status 200 206
+			header Content-Type text/css*
+			header Content-Type text/javascript*
+			header Content-Type application/javascript*
+			header Content-Type image/*
+			header Content-Type font/*
+			header Content-Type application/font-*
+			header Content-Type application/vnd.ms-fontobject*
+			header !Set-Cookie
+		}
+		handle_response @staticResponse {
+			header @publicAsset {
+				Cache-Control "public, max-age=86400"
+				-Expires
+				-Pragma
+			}
+			copy_response
+		}
 
-        # Expires header for static assets (1 year from now)
-        # Note: Caddy doesn't support dynamic date calculation, so we use a fixed future date
-        # This is set to expire in 1 year from configuration time
-        Expires "Thu, 31 Dec 2026 23:59:59 GMT" {
-            path *.css
-            path *.js
-            path *.png
-            path *.jpg
-            path *.jpeg
-            path *.gif
-            path *.webp
-            path *.svg
-            path *.woff
-            path *.woff2
-            path *.ttf
-            path *.eot
-        }
+		# Increase timeouts for cold starts
+		transport http {
+			dial_timeout 30s
+			response_header_timeout 60s
+			expect_continue_timeout 10s
+			keepalive 90s
+			keepalive_idle_conns 10
+		}
+	}
 
-        # NOTE: Do not cache HTML globally; admin/logged-in responses are explicitly bypassed below
+	# Both the request and actual response must identify a public static asset.
+	# A missing .css URL that returns WordPress HTML must never acquire a long TTL.
+	@publicAsset {
+		method GET HEAD
+		path /wp-content/* /wp-includes/*
+		path_regexp assetExtension \.(css|js|png|jpg|jpeg|gif|webp|svg|ico|woff|woff2|ttf|eot)$
+		not header_regexp AssetLogin Cookie (wordpress_logged_in_|wordpress_sec_)
+		not header Authorization *
+	}
+	# Enable gzip compression for all compressible content types
+	# Caddy automatically compresses: text/html, text/css, text/javascript,
+	# application/javascript, application/json, text/xml, application/xml, image/svg+xml
+	encode gzip
 
-        # Add ETag header for better caching
-        ETag {http.response.header.content-length}
+	# Security headers
+	header {
+		# Security headers
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		X-XSS-Protection "1; mode=block"
+		Referrer-Policy "strict-origin-when-cross-origin"
 
-        # Add Last-Modified header
-        Last-Modified {http.response.header.date}
+		# Remove server signature
+		-Server
+	}
 
-        # Add Age header (calculated by Caddy)
-        Age {http.response.header.age}
-
-        # Custom headers that WordPress caching plugins often use
-        X-Cache-Enabled "true"
-        X-Cache-Status "HIT"
-
-        # Remove server signature for security
-        -Server
-    }
-
-    # No-cache for admin, REST, login, and AJAX endpoints
-    @noCacheAdmin {
-        path /wp-admin/*
-        path /wp-login.php
-        path /wp-cron.php
-        path /wp-json/*
-        path /xmlrpc.php
-        path /wp-admin/admin-ajax.php
-    }
-    header @noCacheAdmin {
-        Cache-Control "private, no-store, max-age=0"
-        Pragma "no-cache"
-        Vary "Cookie"
-        X-Cache-Status "BYPASS"
-        -Server
-    }
-
-    # No-cache for any request with a logged-in cookie
-    @loggedin header_regexp LoggedIn Cookie (wordpress_logged_in_|wordpress_sec_)
-    header @loggedin {
-        Cache-Control "private, no-store, max-age=0"
-        Pragma "no-cache"
-        Vary "Cookie"
-        X-Cache-Status "BYPASS"
-        -Server
-    }
-
-    # Enable gzip compression for all compressible content types
-    # Caddy automatically compresses: text/html, text/css, text/javascript, 
-    # application/javascript, application/json, text/xml, application/xml, image/svg+xml
-    encode gzip
-
-    # Security headers
-    header {
-        # Security headers
-        X-Content-Type-Options "nosniff"
-        X-Frame-Options "SAMEORIGIN"
-        X-XSS-Protection "1; mode=block"
-        Referrer-Policy "strict-origin-when-cross-origin"
-
-        # Remove server signature
-        -Server
-    }
-
-    # Logging
-    log {
-        output file /var/log/caddy/flexpress.log
-        format json
-    }
+	# Logging
+	log {
+		output file /var/log/caddy/flexpress.log
+		format json
+	}
 }
 
 # Redirect www to non-www
 www.zakspov.com {
-    redir https://zakspov.com{uri} permanent
+	redir https://zakspov.com{uri} permanent
 }

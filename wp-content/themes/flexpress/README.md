@@ -1,3 +1,10 @@
+## Proxy cache fixes — 7 November 2026
+
+- At Caddy, dynamic pages, redirects, API responses, errors, and requests with WordPress login cookies receive `private, no-store, max-age=0`. This replaces the accidental one-year public cache policy on HTML.
+- Public GET/HEAD assets under `wp-content` and `wp-includes` receive a one-day cache lifetime only when their actual response is successful, has an asset MIME type, and sets no cookie. Authorization-bearing requests remain private. Genuine ETag/Last-Modified values are preserved; fabricated cache HIT/Age headers are removed.
+- `Caddyfile` uses response matching supported by the installed Caddy 2.6.1. Regression test: `python3 tests/test-proxy-cache.py --bind PRIVATE_IP --config Caddyfile` on a host with Caddy installed. It starts an isolated proxy and synthetic upstream on temporary ports; it does not reload production or contact WordPress.
+- Production imports `/etc/caddy/sites-enabled/zakspov.txt` on `caddy4`. Back up that file outside `sites-enabled`, install this Caddyfile there, validate the complete `/etc/caddy/Caddyfile`, then reload Caddy. New headers cannot retroactively remove responses already cached in visitors' browsers.
+
 ## Webhook replay and ordering fixes — 7 November 2026
 
 - Verified callbacks are serialized per customer with a MySQL advisory lock. Membership metadata, transaction records, and completed-event receipts commit together; processing failures return HTTP 503 for provider retry. These tables must use InnoDB.
@@ -22,8 +29,6 @@
 - Regression check from the project root: `php tests/test-payment-security.php` and `node tests/test-payment-buttons.cjs`. These use synthetic accounts, in-memory data, a fake provider, and isolated handler processes; it does not contact Flowguard or change WordPress data.
 
 Deployment order: install the shared integration helper and webhook handler before the callers/templates, then publish the scripts. This checkout is bind-mounted into the live `flexpress_wordpress` container, so theme edits take effect on zakspov.com. Keep rollback copies outside the web root. Existing auth sessions are not revoked by these changes; reviewing prior compromise is a separate operational task.
-
-Verification note: the origin sends `private, no-store` for payment success, and the public proxy preserves that for requests carrying a WordPress login cookie. The public proxy currently overrides anonymous success redirects with `public, max-age=31536000`; correcting the active Caddy cache policy remains separate infrastructure work.
 
 # FlexPress WordPress Theme
 

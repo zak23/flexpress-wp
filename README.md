@@ -3563,3 +3563,7 @@ Example access:
 $amount = get_user_meta($user_id, 'flowguard_price_amount', true);
 $phase  = get_user_meta($user_id, 'flowguard_subscription_phase', true);
 ```
+
+## Provider receipt redirect — 7 November 2026
+
+Membership checkout success URLs now carry the same reference as the provider payment request. Flowguard can redirect directly without invoking the SDK callback; the receipt still requires a signed-in owner and a confirmed server-side transaction. A provider-issued test card exposed the missing reference after a successful signed subscription callback.

@@ -68,7 +68,7 @@ function flexpress_flowguard_create_subscription($user_id, $plan_id)
     $subscription_data = [
         'priceAmount' => number_format($plan['price'], 2, '.', ''),
         'priceCurrency' => flexpress_flowguard_convert_currency_symbol_to_code($plan['currency']),
-        'successUrl' => home_url('/payment-success'),
+        'successUrl' => add_query_arg('ref', $enhanced_reference, home_url('/payment-success/')),
         'declineUrl' => home_url('/payment-declined?plan=' . urlencode($plan_id)),
         'postbackUrl' => home_url('/wp-admin/admin-ajax.php?action=flowguard_webhook'),
         'email' => $user->user_email,

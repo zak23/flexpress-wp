@@ -3307,3 +3307,7 @@ The Remember Card feature allows users to securely save their payment card infor
 
 - Chrome 60+, Firefox 55+, Safari 12+, Edge 79+
 - Requires modern JavaScript and Local Storage API support
+
+## Provider receipt redirect — 7 November 2026
+
+Membership checkout success URLs now carry the same reference as the provider payment request. Flowguard can redirect directly without invoking the SDK callback; the receipt still requires a signed-in owner and a confirmed server-side transaction. A provider-issued test card exposed the missing reference after a successful signed subscription callback.

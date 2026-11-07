@@ -24,6 +24,7 @@ class JsonResponse extends Exception { public $success; public $data; public $st
 class FlexPress_Flowguard_API {
     public function __construct(...$args) {}
     public function cancel_subscription(...$args) {$GLOBALS['cancellations'][]=$args[0];return ['success'=>true];}
+    public function start_subscription($data) {global $calls;$calls[]=$data;return ['success'=>true,'session_id'=>'session-'.count($calls)];}
     public function start_purchase($data) {global $calls;$calls[]=$data;return ['success'=>true,'session_id'=>'session-'.count($calls)];}
 }
 class PaymentTestDB {
@@ -130,13 +131,27 @@ function status_header($status) {global $response_status;$response_status=$statu
 function check($condition,$message) {global $checks;$checks++;if(!$condition)throw new RuntimeException($message);}
 function load_project_function($path,$name) {
     $source=file_get_contents($path);
-    if(!preg_match('/^function '.preg_quote($name,'/').'\([^\n]*\)\s*\n\{.*?^\}/ms',$source,$match)) throw new RuntimeException('Missing function '.$name);
+    if(!preg_match('/^function '.preg_quote($name,'/').'\([^\n]*\)\s*\{.*?^\}/ms',$source,$match)) throw new RuntimeException('Missing function '.$name);
     eval($match[0]);
 }
 require $theme.'/includes/flowguard-integration.php';
 require $theme.'/includes/flowguard-webhook-handler.php';
 require $theme.'/includes/subscription-expiry-checker.php';
 foreach(['flexpress_handle_flowguard_payment_return','flexpress_handle_ppv_payment_return','flexpress_handle_ppv_webhook','flexpress_create_ppv_purchase','flexpress_create_flowguard_ppv_purchase_ajax','flexpress_check_episode_access','flexpress_check_extras_access','flexpress_get_membership_status'] as $fn) load_project_function($theme.'/functions.php',$fn);
+
+function flexpress_get_flowguard_shop_id_for_plan($plan) {return '123';}
+function flexpress_convert_currency_symbol_to_code($currency) {return 'USD';}
+function flexpress_get_pricing_plan($id) {return ['plan_type'=>'recurring','price'=>29.95,'currency'=>'USD','duration'=>30,'duration_unit'=>'days'];}
+foreach(['flexpress_create_flowguard_subscription_data','flexpress_create_flowguard_purchase_data'] as $fn) {
+    load_project_function($theme.'/includes/pricing-helpers.php',$fn);
+    $data=$fn('test-plan',flexpress_get_pricing_plan('test-plan'),41)['data'];
+    parse_str(parse_url($data['successUrl'],PHP_URL_QUERY),$query);
+    check(($query['ref']??'')===$data['referenceId'],'Provider redirect lost receipt reference: '.$fn);
+}
+flexpress_flowguard_create_subscription(41,'test-plan');
+$data=end($calls);parse_str(parse_url($data['successUrl'],PHP_URL_QUERY),$query);
+check(($query['ref']??'')===$data['referenceId'],'Direct subscription redirect lost receipt reference');
+$calls=[];$sessions=[];$meta=[];
 
 function signed_postback($payload,$alg='HS256',$key='test-only-secret') {
     $b64=function($s){return rtrim(strtr(base64_encode($s),'+/','-_'),'=');};

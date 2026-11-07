@@ -1,3 +1,9 @@
+## Portable payment audit — 7 November 2026
+
+Run `wp eval-file wp-content/themes/flexpress/tools/payment-audit.php --skip-plugins --skip-themes` on either site. This read-only CLI tool reports membership totals, missing local payment evidence, PPV IDs in subscription metadata, orphan records, and database engines. It prints account IDs but no names, emails, or credentials. Review findings before changing access; imported/manual/test grants may be legitimate. Do not publish the report.
+
+Zakspov audit: 11 current users; three accounts need historical review (two PPV grants without local purchase records, one active membership without a local payment/trial); 12 membership rows belong to deleted users. No transaction rows reference missing users. Core payment/user metadata tables are InnoDB. No accounts were changed.
+
 ## Proxy cache fixes — 7 November 2026
 
 - At Caddy, dynamic pages, redirects, API responses, errors, and requests with WordPress login cookies receive `private, no-store, max-age=0`. This replaces the accidental one-year public cache policy on HTML.

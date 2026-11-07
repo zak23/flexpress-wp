@@ -974,7 +974,7 @@ function flexpress_create_flowguard_subscription_data($plan_id, $plan, $user_id)
     error_log('FlexPress: Subscription data created: ' . json_encode($subscription_data));
     
     // The provider may navigate directly, bypassing the browser SDK callback.
-    $subscription_data['successUrl'] = add_query_arg('ref', $subscription_data['referenceId'], home_url('/payment-success/'));
+    $subscription_data['successUrl'] = add_query_arg('ref', rawurlencode($subscription_data['referenceId']), home_url('/payment-success/'));
 
     return array('success' => true, 'data' => $subscription_data);
 }
@@ -1005,7 +1005,7 @@ function flexpress_create_flowguard_purchase_data($plan_id, $plan, $user_id) {
     );
     
     // The provider may navigate directly, bypassing the browser SDK callback.
-    $purchase_data['successUrl'] = add_query_arg('ref', $purchase_data['referenceId'], home_url('/payment-success/'));
+    $purchase_data['successUrl'] = add_query_arg('ref', rawurlencode($purchase_data['referenceId']), home_url('/payment-success/'));
 
     return array('success' => true, 'data' => $purchase_data);
 }

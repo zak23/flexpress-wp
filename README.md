@@ -3571,3 +3571,5 @@ Membership checkout success URLs now carry the same reference as the provider pa
 Fixed-duration membership checkout now uses Flowguard one-time subscriptions, preserving expiry callbacks instead of treating access as a PPV purchase. Lifetime plans are explicitly rejected before checkout: this integration does not yet implement lifetime fulfillment. Zakspov has no enabled lifetime plan.
 
 Switching from recurring to fixed-duration membership clears the old rebill schedule. Billing shows the confirmed expiry date instead of implying another charge.
+
+Receipt references are URL-encoded before passing them to WordPress query construction. Microsecond reference components use decimal formatting, avoiding scientific-notation plus signs being decoded as spaces. Regression coverage includes references with literal plus signs and WordPress query encoding behavior.

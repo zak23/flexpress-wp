@@ -72,7 +72,7 @@ function flexpress_flowguard_create_subscription($user_id, $plan_id)
     $subscription_data = [
         'priceAmount' => number_format($plan['price'], 2, '.', ''),
         'priceCurrency' => flexpress_flowguard_convert_currency_symbol_to_code($plan['currency']),
-        'successUrl' => add_query_arg('ref', $enhanced_reference, home_url('/payment-success/')),
+        'successUrl' => add_query_arg('ref', rawurlencode($enhanced_reference), home_url('/payment-success/')),
         'declineUrl' => home_url('/payment-declined?plan=' . urlencode($plan_id)),
         'postbackUrl' => home_url('/wp-admin/admin-ajax.php?action=flowguard_webhook'),
         'email' => $user->user_email,
@@ -263,8 +263,8 @@ function flexpress_flowguard_create_ppv_purchase($user_id, $episode_id, $final_p
     $purchase_data = [
         'priceAmount' => number_format($price_to_charge, 2, '.', ''),
         'priceCurrency' => 'USD',
-        'successUrl' => add_query_arg('ref', $transaction_ref, home_url('/payment-success/')),
-        'declineUrl' => add_query_arg('ref', $transaction_ref, home_url('/payment-declined/')),
+        'successUrl' => add_query_arg('ref', rawurlencode($transaction_ref), home_url('/payment-success/')),
+        'declineUrl' => add_query_arg('ref', rawurlencode($transaction_ref), home_url('/payment-declined/')),
         'postbackUrl' => home_url('/wp-admin/admin-ajax.php?action=flowguard_webhook'),
         'email' => $user->user_email,
         'referenceId' => $transaction_ref
@@ -449,7 +449,7 @@ function flexpress_flowguard_generate_enhanced_reference($user_id, $plan_id, $ad
     }
 
     // Add microtime for additional uniqueness
-    $microtime = substr(microtime(true) * 1000000, -6); // Last 6 digits of microtime
+    $microtime = substr(sprintf('%.0f', microtime(true) * 1000000), -6); // Last 6 digits of microtime
     $components[] = 'mic' . $microtime;
 
     // Add random component for maximum uniqueness

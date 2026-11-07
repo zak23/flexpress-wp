@@ -82,7 +82,7 @@ function absint($v) {return abs((int)$v);}
 function home_url($v='') {return 'https://example.invalid'.$v;}
 function add_query_arg($args,$value=null,$url=null) {
     if (!is_array($args)) {$args=[$args=>$value];} else {$url=$value;}
-    return $url . ($args ? (str_contains($url,'?')?'&':'?').http_build_query($args) : '');
+    return $url . ($args ? (str_contains($url,'?')?'&':'?').urldecode(http_build_query($args)) : '');
 }
 function get_post($id) {global $posts;return $posts[$id]??null;}
 function get_field($key,$id) {global $fields;return $fields[$id][$key]??null;}
@@ -144,11 +144,11 @@ function flexpress_convert_currency_symbol_to_code($currency) {return 'USD';}
 function flexpress_get_pricing_plan($id) {return ['plan_type'=>'recurring','price'=>29.95,'currency'=>'USD','duration'=>30,'duration_unit'=>'days'];}
 foreach(['flexpress_create_flowguard_subscription_data','flexpress_create_flowguard_purchase_data'] as $fn) {
     load_project_function($theme.'/includes/pricing-helpers.php',$fn);
-    $data=$fn('test-plan',flexpress_get_pricing_plan('test-plan'),41)['data'];
+    $data=$fn('test+plan',flexpress_get_pricing_plan('test-plan'),41)['data'];
     parse_str(parse_url($data['successUrl'],PHP_URL_QUERY),$query);
     check(($query['ref']??'')===$data['referenceId'],'Provider redirect lost receipt reference: '.$fn);
 }
-flexpress_flowguard_create_subscription(41,'test-plan');
+flexpress_flowguard_create_subscription(41,'test+plan');
 $data=end($calls);parse_str(parse_url($data['successUrl'],PHP_URL_QUERY),$query);
 check(($query['ref']??'')===$data['referenceId'],'Direct subscription redirect lost receipt reference');
 $calls=[];$sessions=[];$meta=[];

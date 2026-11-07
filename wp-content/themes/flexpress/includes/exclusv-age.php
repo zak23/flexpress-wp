@@ -136,7 +136,9 @@ add_filter('rest_pre_dispatch', function ($result, $server, $request) {
 
 add_filter('wp_headers', function ($headers) {
     $headers['Cache-Control'] = 'private, no-store, max-age=0';
-    $headers['Referrer-Policy'] = 'no-referrer';
+    // CDN hotlink checks need the site origin, never a page path or query string.
+    // Neutral age routes exit before WordPress sends these content headers.
+    $headers['Referrer-Policy'] = 'origin';
     return $headers;
 }, PHP_INT_MAX);
 

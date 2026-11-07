@@ -12,7 +12,7 @@ import zipfile
 PREFIX = 'wp-content/themes/flexpress/'
 CSS_SOURCES = ['variables.css', 'main.css', 'gallery.css', 'age-verification.css', 'casting-section.css', 'join-now-cta.css']
 REQUIRED = ['style.css', 'functions.php', 'index.php', 'includes/flowguard-postback-processing.php', 'includes/flowguard-effects.php', 'includes/flowguard-webhook-handler.php', 'includes/flowguard-integration.php', 'tools/payment-audit.php', 'assets/vendor/css/bootstrap.min.css', 'assets/vendor/css/font-awesome.min.css']
-REQUIRED += ['README.md', 'AGENTS.md', 'HOSTING.md', 'UPLOAD-CHECKLIST.md', 'AGE-INTEGRATION.md', 'hosting/Caddyfile.example', 'includes/media-authorization.php']
+REQUIRED += ['README.md', 'AGENTS.md', 'HOSTING.md', 'UPLOAD-CHECKLIST.md', 'AGE-INTEGRATION.md', 'hosting/Caddyfile.example', 'includes/media-authorization.php', 'includes/media-cdn.php']
 
 REQUIRED += ['includes/exclusv-age.php'] + ['includes/exclusv-age/' + name + '.php' for name in ['StorageUnavailable', 'Database', 'RecordCipher', 'Records', 'Transactions', 'Sessions', 'SiteConfig', 'Adapter']]
 

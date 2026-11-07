@@ -1,4 +1,4 @@
-# FlexPress 1.0.43 candidate installation and acceptance
+# FlexPress 1.0.44 candidate installation and acceptance
 
 Use this checklist for a fresh site or an update. The theme ZIP contains reusable code, assets and setup documentation. It does not migrate users, purchases, media, WordPress options, plugins, credentials or hosting configuration.
 
@@ -13,10 +13,10 @@ Use this checklist for a fresh site or an update. The theme ZIP contains reusabl
 
 ## Install and configure
 
-1. Install the reviewed `flexpress-1.0.43.zip` candidate through Appearance → Themes, or the host's deployment mechanism. Retain the prior release for rollback. Activate/check FlexPress, menu assignments, templates, permalinks and content fields. This candidate does not enable age enforcement; read [AGE-INTEGRATION.md](AGE-INTEGRATION.md).
+1. Install the reviewed `flexpress-1.0.44.zip` candidate through Appearance → Themes, or the host's deployment mechanism. Retain the prior release for rollback. Activate/check FlexPress, menu assignments, templates, permalinks and content fields. This candidate does not enable age enforcement; read [AGE-INTEGRATION.md](AGE-INTEGRATION.md).
 2. Follow HOSTING.md separately for DNS, Full (strict), origin restrictions, trusted headers, caching, logs and certificate management. The included Caddy example is not activated by WordPress.
 3. Configure the destination's Flowguard shop, plans and currency. Verify its provider-side callback is `https://YOUR_DOMAIN/wp-admin/admin-ajax.php?action=flowguard_webhook` and browser return URLs use the same intended site. Test/live behaviour is controlled by the provider.
-4. Configure Bunny media zones/signing and optional integrations. Confirm legal/contact content and form recipients belong to this site.
+4. Configure Bunny media zones/signing and optional integrations. This candidate requires separate Stream/static pull-zone keys (`bunnycdn_cdn_token_key`, `bunnycdn_static_token_key`) and the existing gallery key; iframe/API keys are not substitutes. Prove valid signed image delivery and rejection of unsigned/expired/tampered paths and optimizer parameters before installation. Missing keys intentionally return no URL. Confirm legal/contact content and form recipients belong to this site.
 5. Run the read-only payment audit from the WordPress root:
    ```sh
    wp eval-file wp-content/themes/flexpress/tools/payment-audit.php --skip-plugins --skip-themes

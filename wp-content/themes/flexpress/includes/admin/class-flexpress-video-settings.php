@@ -159,6 +159,12 @@ class FlexPress_Video_Settings
             'flexpress_video_section'
         );
 
+        foreach (['bunnycdn_cdn_token_key' => 'Stream CDN pull-zone signing key',
+                  'bunnycdn_static_token_key' => 'Static CDN pull-zone signing key'] as $key => $label) {
+            add_settings_field($key, $label, [$this, 'render_cdn_signing_key_field'],
+                'flexpress_video_settings', 'flexpress_video_section', ['key' => $key]);
+        }
+
         // Video Player Settings
         add_settings_field(
             'flexpress_video_player_theme',
@@ -321,6 +327,18 @@ class FlexPress_Video_Settings
             class="regular-text">
         <p class="description"><?php esc_html_e('Enter your Bunny Stream Token Key. This is used for generating secure video URLs.', 'flexpress'); ?></p>
     <?php
+    }
+
+    public function render_cdn_signing_key_field($args)
+    {
+        $key = $args['key'];
+        $options = get_option('flexpress_video_settings', []);
+        ?>
+        <input type="password" autocomplete="new-password" class="regular-text"
+            name="flexpress_video_settings[<?php echo esc_attr($key); ?>]"
+            value="<?php echo esc_attr($options[$key] ?? ''); ?>">
+        <p class="description"><?php esc_html_e('Use the signing key from this CDN pull zone. This is separate from the Stream API and iframe keys. Image URLs are unavailable without it; configure and verify token enforcement at the provider separately.', 'flexpress'); ?></p>
+        <?php
     }
 
     /**

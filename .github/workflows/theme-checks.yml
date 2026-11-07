@@ -18,6 +18,7 @@ jobs:
           php tests/test-payment-effects.php
           node tests/test-payment-buttons.cjs
           php tests/test-media-authorization.php
+          php tests/test-cdn-images.php
           node tests/test-preview-player.cjs
           python3 tests/test-theme-package.py
       - name: Isolated encrypted age storage and concurrent callbacks

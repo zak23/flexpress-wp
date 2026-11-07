@@ -1,0 +1,24 @@
+{
+    "reference_commit": "48ff1af0879c61b69a42c8db5ead76f849f5ef87",
+    "reference_sha256": "06d1d8e3decb9e6cba0f9424bab206944e5a9d6b51f7185f0bb1a80e4e113304",
+    "key": "synthetic-cdn-key",
+    "expires": 1893456000,
+    "cases": [
+        {
+            "input": "https://media.example.com/video/thumbnail.jpg",
+            "expected": "https://media.example.com/video/thumbnail.jpg?token=HS256-4vUZjXz5KJpTxalumI9xyO9y46MouYQV2KfpKXr3tKc&expires=1893456000"
+        },
+        {
+            "input": "https://media.example.com/gallery/image%20one.jpg",
+            "expected": "https://media.example.com/gallery/image%20one.jpg?token=HS256-T5-Tuk-g0lqGTqpEWIkKc5T7QC7x-7ZLKE0L3Qaa12A&expires=1893456000"
+        },
+        {
+            "input": "https://media.example.com/wp-content/uploads/2026/image.jpg?width=640&format=webp&quality=80",
+            "expected": "https://media.example.com/wp-content/uploads/2026/image.jpg?token=HS256-yqTNE0AVtbWzJTdwpIfUFJeugIyxkZl0ptQq0wQhpWc&format=webp&quality=80&width=640&expires=1893456000"
+        },
+        {
+            "input": "https://media.example.com/wp-content/uploads/image.jpg?crop=650%2C488&aspect_ratio=4%3A3",
+            "expected": "https://media.example.com/wp-content/uploads/image.jpg?token=HS256-4KDkfaqhW_8x0BJPVOQzlDO8nkQGwojix4gHn7prgRE&aspect_ratio=4%3A3&crop=650%2C488&expires=1893456000"
+        }
+    ]
+}

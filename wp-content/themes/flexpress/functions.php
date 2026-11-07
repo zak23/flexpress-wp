@@ -5,7 +5,7 @@
  */
 
 // Define theme constants
-define('FLEXPRESS_VERSION', '1.0.43');
+define('FLEXPRESS_VERSION', '1.0.44');
 define('FLEXPRESS_PATH', get_template_directory());
 define('FLEXPRESS_URL', get_template_directory_uri());
 
@@ -34,6 +34,7 @@ require_once FLEXPRESS_PATH . '/includes/class-flexpress-yoursafe-id.php';
 require_once FLEXPRESS_PATH . '/flexpress-redis-cache.php';
 require_once FLEXPRESS_PATH . '/includes/post-types.php';
 require_once FLEXPRESS_PATH . '/includes/media-authorization.php';
+require_once FLEXPRESS_PATH . '/includes/media-cdn.php';
 require_once FLEXPRESS_PATH . '/includes/bunnycdn.php';
 require_once FLEXPRESS_PATH . '/includes/gallery-system.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-episode-ratings.php';
@@ -4990,10 +4991,8 @@ function flexpress_display_extras_gallery($extras_id = null, $columns = null, $h
     // Always get access info (needed for purchase buttons and CTAs)
     $access_info = flexpress_check_extras_access($extras_id);
 
-    // Use provided has_access or get from access_info
-    if ($has_access === null) {
-        $has_access = $access_info['has_access'];
-    }
+    $has_access = !empty($access_info['has_access']);
+    $gallery = flexpress_sort_gallery_images_by_filename($gallery);
 
     // Get gallery settings
     if ($columns === null) {
@@ -5014,20 +5013,15 @@ function flexpress_display_extras_gallery($extras_id = null, $columns = null, $h
         <div class="gallery-grid" style="grid-template-columns: repeat(<?php echo esc_attr($columns); ?>, 1fr);">
             <?php foreach ($display_images as $index => $image) : ?>
                 <?php
-                // Use BunnyCDN thumbnail URL if available, otherwise fallback to WordPress URLs
-                $thumbnail_url = !empty($image['bunnycdn_thumbnail_url']) ?
-                    FlexPress_Gallery_System::generate_bunnycdn_token_url($image['bunnycdn_thumbnail_url'], 24) : (!empty($image['bunnycdn_url']) ?
-                        FlexPress_Gallery_System::generate_bunnycdn_token_url($image['bunnycdn_url'], 24) :
-                        $image['thumbnail']);
-                $large_url = !empty($image['bunnycdn_url']) ?
-                    FlexPress_Gallery_System::generate_bunnycdn_token_url($image['bunnycdn_url'], 24) :
-                    $image['large'];
+                $thumbnail_url = flexpress_get_authorized_gallery_image_url($extras_id, $index, 'thumbnail');
+                $large_url = flexpress_get_authorized_gallery_image_url($extras_id, $index, 'large');
+                if ($thumbnail_url === '') { continue; }
 
                 // Check if this is the 5th image in preview mode
                 $is_last_preview = $preview_mode && $index === 4;
                 ?>
                 <div class="gallery-item" data-index="<?php echo $index; ?>">
-                    <?php if ($has_access || !$is_last_preview): ?>
+                    <?php if ($large_url !== '' && ($has_access || !$is_last_preview)): ?>
                         <a href="<?php echo esc_url($large_url); ?>"
                             class="gallery-link"
                             data-lightbox="extras-gallery-<?php echo $extras_id; ?>"
@@ -5136,25 +5130,9 @@ function flexpress_get_extras_thumbnail($extras_id = null, $size = 'medium')
     if (flexpress_is_extras_gallery($extras_id)) {
         $gallery = flexpress_get_extras_gallery($extras_id);
         if (!empty($gallery)) {
+            $gallery = flexpress_sort_gallery_images_by_filename($gallery);
             $first_image = $gallery[0];
-            // Prefer BunnyCDN URLs with token; fall back to any legacy WP size keys if present
-            $optimized_url = '';
-            if (!empty($first_image['bunnycdn_thumbnail_url']) && ($size === 'thumbnail' || $size === 'medium')) {
-                $optimized_url = FlexPress_Gallery_System::generate_bunnycdn_token_url($first_image['bunnycdn_thumbnail_url'], 24);
-            } elseif (!empty($first_image['bunnycdn_url'])) {
-                $optimized_url = FlexPress_Gallery_System::generate_bunnycdn_token_url($first_image['bunnycdn_url'], 24);
-            } else {
-                // Legacy fallback if older arrays still contain WP-generated sizes
-                if ($size === 'thumbnail') {
-                    $optimized_url = $first_image['thumbnail'] ?? '';
-                } elseif ($size === 'medium') {
-                    $optimized_url = $first_image['medium'] ?? '';
-                } elseif ($size === 'large') {
-                    $optimized_url = $first_image['large'] ?? '';
-                } else {
-                    $optimized_url = $first_image['full'] ?? '';
-                }
-            }
+            $optimized_url = flexpress_get_authorized_gallery_image_url($extras_id, 0, $size);
 
             if (!empty($optimized_url)) {
                 return array(

@@ -1,6 +1,6 @@
 # Optional Exclusv age gateway adapter
 
-Candidate 1.0.43 implements an opt-in gateway adapter. It is disabled by default and has not been installed on a live site. It protects WordPress HTML, REST and AJAX when configured, but **direct uploads, thumbnails, galleries, CDN origins and edge caches still require enforcement**. Do not activate it as a complete content-protection solution until those paths and production release gates are verified.
+Candidate 1.0.44 implements an opt-in gateway adapter. It is disabled by default and has not been installed on a live site. It protects WordPress HTML, REST and AJAX when configured, but **direct uploads, thumbnails, galleries, CDN origins and edge caches still require enforcement**. Do not activate it as a complete content-protection solution until those paths and production release gates are verified.
 
 ## Installation contract
 
@@ -42,7 +42,7 @@ Keep all HTML, API, redirects and age routes private/no-store at Apache, Caddy a
 - `POST /_age/logout`: exact Origin and session CSRF; local cookie/record removal before attempted remote revocation. An issuer outage cannot retain local access; failed remote revocation may remain until its bounded expiry.
 - `GET /_age/privacy` and `/_age/help`: neutral public guidance and configured operator contact.
 
-Cookies are `__Host-` prefixed, Secure, HttpOnly, host-only, path `/`, SameSite=Lax. The callback uses no-referrer. Entry forms use same-origin referrer policy so native POST Origin checks work, and CSP allows form redirects only to self and the exact issuer. The obsolete self-declaration popup is omitted when gateway enforcement is enabled; localStorage never grants gateway access.
+Cookies are `__Host-` prefixed, Secure, HttpOnly, host-only, path `/`, SameSite=Lax. The callback uses no-referrer. Protected WordPress content uses origin-only referrers so the CDN can apply its site allowlist without receiving page paths or queries. Entry forms use same-origin referrer policy so native POST Origin checks work, and CSP allows form redirects only to self and the exact issuer. The obsolete self-declaration popup is omitted when gateway enforcement is enabled; localStorage never grants gateway access.
 
 Every protected authorization uses current gateway introspection. There is no positive authorization cache or refresh token. Failure denies access. Age access never creates a WordPress login or membership entitlement. Founder paid-access bypass does not bypass age checks.
 
@@ -66,17 +66,24 @@ The same signer now serves episode full/trailer/preview, Extras full/preview, ho
 
 The coming-soon setting explicitly publishes its configured marketing clip; only select a dedicated clip suitable for that page. This setting does not infer membership restrictions from other posts. Verify configuration during acceptance.
 
-These are **embed issuance** controls. They do not prove that Bunny expires playback segments when the iframe token expires. Thumbnails, gallery images, direct uploads, direct HLS/MP4 and CDN origins still require separate signing/authorization, bounded playback/renewal, unsigned-origin denial and cache controls. Treat those as release blockers. Bunny documents embed token authentication and CDN pull-zone protection as separate layers: [Stream security](https://bunny.net/docs/stream/security), [embed signing](https://bunny.net/docs/stream/token-authentication).
+Stream thumbnails/previews and gallery images now use exact-file HS256 CDN signatures, separate from iframe signing. Paths reject foreign hosts, traversal, encoded separators, query injection and non-image files. Optimized images accept only the configured static host or local uploads path and sign the optimizer parameters. Missing keys return no URL, with no unsigned fallback. Links expire within five minutes/current age access. Native post editors can issue bounded links for stored gallery assets without a visitor age session; AJAX and unauthorized editor requests cannot use that branch.
+
+Gallery URLs are selected from stored, sorted content, never arbitrary client URLs. Ordinary visitors may see the first five previews; when additional images are locked, only the first four open at full size. The fifth must have a distinct thumbnail. Full access requires current membership/PPV/release checks; bans deny retained purchases. A caller-supplied display flag cannot grant access.
+
+**New required provider configuration:** in Video Settings set `bunnycdn_cdn_token_key` for the Stream pull zone and `bunnycdn_static_token_key` for the static pull zone; gallery delivery uses the existing `bunnycdn_storage_token_key`. These are CDN signing keys, not the library API or iframe key. Provision each correct host/key and test valid, unsigned, expired and tampered URLs against the actual zone before installing this candidate. The theme does not enable token enforcement or change provider settings. Missing keys intentionally leave the affected images unavailable even with the age adapter off.
+
+These are **URL issuance** controls. They do not prove that Bunny expires playback segments when the iframe token expires. Direct uploads, native attachment fallbacks, direct HLS/MP4 and CDN origins still require delivery enforcement, bounded playback/renewal, unsigned-origin denial and cache controls. Treat those as release blockers. Bunny documents embed token authentication and CDN pull-zone protection as separate layers: [Stream security](https://bunny.net/docs/stream/security), [embed signing](https://bunny.net/docs/stream/token-authentication).
 
 ## Verification evidence
 
 Disposable fixtures only; no live customers, provider charges or outbound notifications:
 
-- Actual WordPress/ACF/theme + MySQL + Node issuer: 171 request assertions, 14 configuration assertions and production rejection of sandbox configuration.
+- Actual WordPress/ACF/theme + MySQL + Node issuer: 281 request assertions, 14 configuration assertions and production rejection of sandbox configuration.
 - Storage: 61 assertions including competing callback/rate workers, ciphertext tampering, key rotation, cleanup and payment-transaction isolation.
 - Shared media authorization and preview endpoint: 82 assertions including age expiry/denial, ordinary customer entitlements, aliases, hidden/password-protected content, malformed configuration and founder behavior; player: six scenarios.
+- CDN image signing: 58 assertions, including four fixed outputs from Bunny’s published reference implementation, exact paths/parameters, key separation, gallery policy and editor scope. The rendered WordPress suite includes gallery URL signatures, paid access and missing-key denial.
 - Browser: native entry → gateway consent → WordPress, with session-management/logout checked separately in the gateway repository's fixture record.
 
-Source tests are `tests/run-age-storage.py`, `tests/test-media-authorization.php` and `tests/test-preview-player.cjs`. The gateway repository owns `tests/wordpress/` and the private runtime builder. Existing payment/admin/package regressions remain required. The full fixture uses a synthetic database, intercepted mail/WordPress HTTP and an internal-only Docker network; no live content or secrets are copied.
+Source tests are `tests/run-age-storage.py`, `tests/test-media-authorization.php`, `tests/test-cdn-images.php` and `tests/test-preview-player.cjs`. The gateway repository owns `tests/wordpress/` and the private runtime builder. Existing payment/admin/package regressions remain required. The full fixture uses a synthetic database, intercepted mail/WordPress HTTP and an internal-only Docker network; no live content or secrets are copied.
 
 Before live activation: finish media/CDN/cache enforcement, exact HTTPS ingress validation, ordinary-customer scenarios, cleanup/monitoring and restore drills, provider/privacy/security acceptance and the applicable production approval. Roll back by restoring the reviewed prior theme/runtime/config and retaining payment data. Disabling the flag removes this protection; it is not a safe fallback for a site required to enforce age access.

@@ -125,3 +125,57 @@ function flexpress_get_coming_soon_video_embed_url()
         return '';
     }
 }
+
+/** Gallery previews are the first five sorted images; only the first four open when more are locked. */
+function flexpress_get_authorized_gallery_image_url($post_id, $index, $size = 'thumbnail', $admin = false)
+{
+    $post = get_post($post_id);
+    if (!$post || !in_array($post->post_type, ['episode', 'extras'], true) || !is_int($index) || $index < 0 ||
+        !in_array($size, ['thumbnail', 'medium', 'large', 'full'], true)) { return ''; }
+    if ($admin) {
+        if (!is_admin() || wp_doing_ajax() || !current_user_can('edit_post', $post_id)) { return ''; }
+    } elseif ($post->post_status !== 'publish' || !empty($post->post_password) ||
+        ($post->post_type === 'episode' && !get_current_user_id() && get_field('hidden_from_public', $post_id))) {
+        return '';
+    }
+    $images = $post->post_type === 'episode' ? flexpress_get_episode_gallery($post_id) : flexpress_get_extras_gallery($post_id);
+    if (!is_array($images) || count(array_filter($images, 'is_array')) !== count($images)) { return ''; }
+    $images = flexpress_sort_gallery_images_by_filename($images);
+    if (!isset($images[$index])) { return ''; }
+    $user_id = get_current_user_id();
+    if ($user_id) { wp_cache_delete($user_id, 'user_meta'); }
+    $banned = $user_id && !flexpress_user_is_founder($user_id) && flexpress_get_membership_status($user_id) === 'banned';
+    if ($banned && !$admin) { return ''; }
+    $access = $post->post_type === 'episode' ? flexpress_check_episode_access($post_id, $user_id) : flexpress_check_extras_access($post_id, $user_id);
+    if (!$admin && empty($access['has_access']) && ($index >= 5 ||
+        (count($images) > 5 && $index === 4 && in_array($size, ['large', 'full'], true)))) { return ''; }
+    $image = $images[$index];
+    $small = in_array($size, ['thumbnail', 'medium'], true);
+    if (!$admin && empty($access['has_access']) && count($images) > 5 && $index === 4 && $small &&
+        (empty($image['bunnycdn_thumbnail_url']) || $image['bunnycdn_thumbnail_url'] === ($image['bunnycdn_url'] ?? ''))) {
+        // Never expose the fifth full image through a missing or aliased thumbnail.
+        return '';
+    }
+    $url = $small && !empty($image['bunnycdn_thumbnail_url']) ? $image['bunnycdn_thumbnail_url'] : ($image['bunnycdn_url'] ?? '');
+    if ($url !== '') { return flexpress_sign_cdn_image($url, 'gallery', [], $admin ? $post_id : 0); }
+    // Native uploads require their separate signed static delivery path as well.
+    return flexpress_get_bunnycdn_optimized_image_url($image[$size] ?? '', [], $admin ? $post_id : 0);
+}
+
+/** Compatibility helper: match the exact stored asset; never sign an arbitrary supplied URL. */
+function flexpress_get_bound_gallery_url($file_path, $post_id)
+{
+    $post = get_post($post_id);
+    if (!$post || !in_array($post->post_type, ['episode', 'extras'], true)) { return ''; }
+    $images = $post->post_type === 'episode' ? flexpress_get_episode_gallery($post_id) : flexpress_get_extras_gallery($post_id);
+    if (!is_array($images) || count(array_filter($images, 'is_array')) !== count($images)) { return ''; }
+    $images = flexpress_sort_gallery_images_by_filename($images);
+    foreach ($images as $index => $image) {
+        foreach (['bunnycdn_url' => 'full', 'bunnycdn_thumbnail_url' => 'thumbnail'] as $key => $size) {
+            if (is_string($file_path) && $file_path !== '' && ($image[$key] ?? null) === $file_path) {
+                return flexpress_get_authorized_gallery_image_url($post_id, $index, $size, is_admin() && !wp_doing_ajax());
+            }
+        }
+    }
+    return '';
+}

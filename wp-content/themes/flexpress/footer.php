@@ -194,6 +194,7 @@
     </div><!-- #page -->
     <?php wp_footer(); ?>
 
+    <?php if (!flexpress_exclusv_age_enabled()) : ?>
     <!-- Age Verification Modal -->
     <div id="age-verification-modal" class="age-verification-modal">
         <div class="age-verification-modal-content">
@@ -240,6 +241,8 @@
             </div>
         </div>
     </div>
+
+    <?php endif; ?>
 
     </body>
 

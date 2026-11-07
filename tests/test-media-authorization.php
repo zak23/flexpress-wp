@@ -5,6 +5,14 @@ define('ABSPATH', __DIR__ . '/');
 define('DAY_IN_SECONDS', 86400);
 $theme = dirname(__DIR__) . '/wp-content/themes/flexpress';
 $checks = 0;
+$age_enabled = false;
+$age_deadline = time() + 30;
+$age_denied = false;
+function flexpress_exclusv_age_enabled() { return $GLOBALS['age_enabled']; }
+function flexpress_exclusv_age_media_deadline() {
+    if ($GLOBALS['age_denied']) { throw new RuntimeException('Synthetic denied assurance'); }
+    return $GLOBALS['age_deadline'];
+}
 $user = 0;
 $founder = false;
 $meta = [];
@@ -112,4 +120,15 @@ $fields['unreleased'] = false;
 $fields['access_type'] = 'free';
 $user = 0;
 check(request()->success, 'Explicit free full preview denied');
+$age_enabled = true;
+$response = request();
+check($response->success && $response->data['expires'] === $age_deadline, 'Preview outlived age access');
+$age_denied = true;
+check(request()->status === 403, 'Missing age access signed a preview');
+$founder = true;
+$user = 1;
+check(request()->status === 403, 'Founder paid bypass also bypassed age access');
+$age_denied = false;
+$age_deadline = time() - 1;
+check(request()->status === 403, 'Expired age proof signed a preview');
 echo "Preview authorization tests passed ($checks assertions). No provider calls or real entitlements used.\n";

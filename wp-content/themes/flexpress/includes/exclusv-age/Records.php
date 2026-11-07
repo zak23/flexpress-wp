@@ -11,7 +11,7 @@ final class Records
 
     private function __construct(private readonly Database $db, private readonly RecordCipher $cipher, string $prefix)
     {
-        if (!preg_match('/^[A-Za-z0-9_]{1,40}$/D', $prefix)) {
+        if (!preg_match('/^[A-Za-z0-9_]{1,40}$/D', $prefix) || strlen($prefix . 'flexpress_age_records_limits') > 64) {
             throw new StorageUnavailable();
         }
         $this->table = $prefix . 'flexpress_age_records';
@@ -47,6 +47,41 @@ final class Records
                 claim char(64) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
                 PRIMARY KEY (kind, handle_hash), KEY expires_at (expires_at)
             ) ENGINE=InnoDB', $this->table
+        ));
+        $this->query($this->db->prepare(
+            'CREATE TABLE IF NOT EXISTS %i (
+                bucket char(64) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
+                used bigint unsigned NOT NULL,
+                expires_at bigint unsigned NOT NULL,
+                KEY expires_at (expires_at)
+            ) ENGINE=InnoDB', $this->table . '_limits'
+        ));
+    }
+
+    /** Atomic fixed-window limit. Bucket is a keyed hash, never a raw visitor IP. */
+    public function allow(string $bucket, int $maximum, int $seconds): bool
+    {
+        if (!preg_match('/^[a-f0-9]{64}$/D', $bucket) || $maximum < 1 || $maximum > 1000 || $seconds < 1 || $seconds > 3600) {
+            throw new StorageUnavailable();
+        }
+        $this->autocommit();
+        $now = time();
+        $this->query($this->db->prepare(
+            'INSERT INTO %i (bucket, used, expires_at) VALUES (%s, LAST_INSERT_ID(1), %d)
+             ON DUPLICATE KEY UPDATE used = LAST_INSERT_ID(IF(expires_at <= %d, 1, LEAST(used + 1, 1001))),
+             expires_at = IF(expires_at <= %d, %d, expires_at)',
+            $this->table . '_limits', $bucket, $now + $seconds, $now, $now, $now + $seconds
+        ));
+        // Connection-local result avoids races with the next visitor's increment.
+        $row = $this->row('SELECT LAST_INSERT_ID() AS used');
+        return $row !== null && (int) $row['used'] <= $maximum;
+    }
+
+    public function purgeLimits(): int
+    {
+        $this->autocommit();
+        return $this->query($this->db->prepare(
+            'DELETE FROM %i WHERE expires_at <= %d ORDER BY expires_at LIMIT 500', $this->table . '_limits', time()
         ));
     }
 

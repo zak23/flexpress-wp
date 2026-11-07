@@ -1,47 +1,78 @@
-# Age integration preparation
+# Optional Exclusv age gateway adapter
 
-This branch contains the storage foundation for an Exclusv gateway integration and a narrower card-preview signing endpoint. **It does not enable age enforcement or connect a site to the gateway.** The existing Yoursafe gate remains separate and parked. Do not deploy this candidate as a complete age-control solution.
+Candidate 1.0.42 implements an opt-in gateway adapter. It is disabled by default and has not been installed on a live site. It protects WordPress HTML, REST and AJAX when configured, but **direct uploads, other media helpers, CDN origins and edge caches still require enforcement**. Do not activate it as a complete content-protection solution until those paths and production release gates are verified.
 
-## Implemented storage
+## Installation contract
 
-`includes/exclusv-age/` requires PHP 8.2+, native Sodium and WordPress 6.2+ (`wpdb` identifier placeholders). These classes are not automatically loaded by the theme yet. The forthcoming adapter must load the approved PHP OIDC client before `Transactions.php`, and load the other classes before constructing them.
+Requires PHP 8.2+, native Sodium, WordPress 6.2+, InnoDB and a single-site installation at a root origin. The legacy Yoursafe server gate must be disabled. Production WordPress rejects sandbox assertions. Loopback HTTP is allowed only for an explicitly configured local sandbox fixture; production requires HTTPS.
 
-- `RecordCipher` encrypts JSON with XChaCha20-Poly1305. Authenticated context includes the table, record kind, hashed browser handle, expiry and key identifier. Copying an encrypted record to another purpose, handle or deadline fails authentication.
-- `Records::connect()` creates a private WordPress database connection. A membership/payment rollback cannot resurrect a consumed verification handoff. Credentials come from private host configuration; never put them in theme settings or source files.
-- `Records::install()` is an explicit, additive deployment migration. It creates `<prefix>flexpress_age_records`; it does not run on visitor requests. Records are keyed by purpose and SHA-256 of a random browser handle. Payloads, including PKCE verifiers and gateway tokens, are encrypted.
-- `Transactions` implements the gateway client's one-use store contract. A single atomic database claim wins across workers, then the row is deleted before returning its verifier. A crash or failed delete after claiming leaves the handoff unusable until cleanup. Expired flows are rejected.
-- `Sessions` creates random opaque session handles, stores a separate CSRF value and rotates/deletes old records. It does not validate an age result, log anyone into WordPress, grant membership or replace online gateway introspection. Only a proof returned by the verified OIDC client may be passed to `create()`.
+Two artifacts are required: the reviewed theme ZIP and the matching `exclusv-age-php-runtime.zip` from the gateway repository. The private runtime includes locked Facile OIDC/JOSE, Guzzle and PSR dependencies under `ExclusvAgeRuntime`, with a distinct Composer loader. Install the runtime **outside every served web root**, readable by PHP. Do not upload that ZIP through WordPress or put it in `wp-content`. Verify archive hashes and the runtime manifest before installation. No Composer or development tools are needed on the destination. A theme ZIP alone does not supply or activate the gateway.
 
-Handoffs last at most ten minutes; sessions last at most one hour and never beyond their supplied proof deadline. The PHP client must also cap that proof to the actual access-token lifetime. No sliding extension is implemented. Retention requires a scheduled call to `Records::purge(time(), 500)` until a batch returns fewer than 500; the adapter/host scheduler is not wired yet. Purging never calls a provider.
+Provision a private PHP configuration file outside the web root, readable only by the PHP operator. Return an array with these keys:
 
-The adapter must keep cookies host-only, Secure, HttpOnly and SameSite=Lax, and keep all authentication responses private/no-store. Clear the browser cookie and destroy the local record before attempting remote logout. A database failure must deny access; it must not fall back to a soft age cookie or WordPress membership.
+| Key | Required value |
+|---|---|
+| `runtime_autoload` | Absolute path to the private runtime's `vendor/autoload.php` |
+| `site_origin` | Exact canonical WordPress home origin, no trailing slash or path |
+| `issuer`, `client_id`, `client_secret` | Approved gateway origin and this site's confidential client registration |
+| `policies`, `countries` | Explicit nonempty allowlists of approved policies and countries |
+| `environment` | `production` for live; `sandbox` only for nonproduction WordPress |
+| `allow_loopback` | `false` for hosted deployments |
+| `support_email` | Destination operator's support address |
+| `trusted_peers` | Exact immediate proxy IPs as seen in PHP `REMOTE_ADDR`, not CIDRs or visitor IPs |
+| `ingress_secret` | Unique 32 random bytes encoded base64url without padding (43 characters) |
+| `storage_keys` | Map of short key versions to unique raw 32-byte encryption keys |
+| `active_storage_key` | Version used for new records |
 
-## Encryption-key operation
+Read secret values from the host's protected secret mechanism inside that private file. Never put them in theme settings, source control, command arguments or the public document root. Configure `FLEXPRESS_EXCLUSV_AGE_CONFIG` to its absolute path in private WordPress configuration. Keep `FLEXPRESS_EXCLUSV_AGE_ENABLED` false during installation.
 
-Provision a unique random 32-byte key per site using the host's secret mechanism outside the web root. `RecordCipher` accepts raw binary keys indexed by short named versions, plus the active version. Keep one previous version during rotation; new records use the active version and old records can be read until their ordinary expiry. Retire the previous key after the maximum record lifetime, cleanup and operational allowance. Removing it early deliberately makes those sessions unusable. Up to three versions are accepted; this is not a provider/signing-key rotation mechanism.
+Register exactly `site_origin + /_age/callback`; a real registration requires the gateway's separate release process. Run `wp flexpress-age install` with the theme loaded to create the two private age tables and schedule hourly bounded cleanup. Inspect the schema and scheduler before enabling `FLEXPRESS_EXCLUSV_AGE_ENABLED`. The CLI registration is available while enforcement is disabled. These commands never enable the gateway or change membership/payment records.
 
-Never copy live keys or customer databases into a development fixture. Protect backups and account for key retention when deciding whether restoring an old database should restore sessions. The production rollout must explicitly invalidate restored browser sessions. Keep debug dumps and query logging disabled for private authentication data.
+## Ingress and cache requirements
 
-## Preview signing change
+Caddy must strip browser-supplied `X-Exclusv-Origin` and set the private value only for this site's verified ingress. Accept Cloudflare country/visitor headers only from verified Cloudflare peers, and overwrite forwarded chains. Restrict the WordPress backend to the exact proxy. Confirm PHP's actual immediate peer and trusted HTTPS handling before choosing `trusted_peers`; do not rewrite `REMOTE_ADDR` to an untrusted visitor address. Unknown country, wrong host, missing secret, untrusted peer or unavailable issuer deny access.
 
-The AJAX card-preview endpoint now requires POST, the existing nonce, a published/password-free episode ID and that episode's exact configured preview video ID. It does not sign arbitrary submitted library IDs. If the preview and full-video fields refer to the same video, normal release/membership/PPV access is also required; banned ordinary customers cannot use retained purchases. Founder paid-access behaviour is preserved.
+Keep all HTML, API, redirects and age routes private/no-store at Apache, Caddy and Cloudflare. Exclude protected uploads/images from the portable public-static cache exception. Apply the reviewed CDN rules separately. A theme upload cannot secure a public media origin or invalidate existing cached copies.
 
-Tokens from this endpoint last five minutes. Each episode card supplies its post ID, and the browser stops when signing is denied or unavailable. There is no unsigned-URL fallback. Deploy the PHP and versioned JavaScript/templates together; stale clients without a post ID fail closed.
+## Request behavior
 
-This only closes this signing endpoint. Thumbnail helpers, player URLs, gallery images, direct uploads and CDN origins are separate paths. Their actual provider enforcement, age checks, expiry/renewal and cache policy must be verified before live enforcement. Do not describe a signed-looking URL as protected without an unsigned/direct-origin denial test.
+- `GET /_age/`: neutral page with no content images; fresh CSRF cookie or active-session controls.
+- `POST /_age/start`: exact Origin plus double-submit CSRF, atomic rate limit, PKCE/state/nonce and pinned issuer redirect.
+- `GET /_age/callback`: one-use encrypted handoff, verified ES256 claims and online eligibility; rotates the local session and returns only to a safe same-site path. Query strings are not preserved in return destinations.
+- `POST /_age/logout`: exact Origin and session CSRF; local cookie/record removal before attempted remote revocation. An issuer outage cannot retain local access; failed remote revocation may remain until its bounded expiry.
+- `GET /_age/privacy` and `/_age/help`: neutral public guidance and configured operator contact.
 
-## Evidence and remaining integration
+Cookies are `__Host-` prefixed, Secure, HttpOnly, host-only, path `/`, SameSite=Lax. The callback uses no-referrer. Entry forms use same-origin referrer policy so native POST Origin checks work, and CSP allows form redirects only to self and the exact issuer. The obsolete self-declaration popup is omitted when gateway enforcement is enabled; localStorage never grants gateway access.
 
-Source-repository commands (not shipped as runtime dependencies):
+Every protected authorization uses current gateway introspection. There is no positive authorization cache or refresh token. Failure denies access. Age access never creates a WordPress login or membership entitlement. Founder paid-access bypass does not bypass age checks.
 
-```sh
-python3 tests/run-age-storage.py
-php tests/test-media-authorization.php
-node tests/test-preview-player.cjs
-```
+Native admin/login and WP-CLI/cron retain their own access controls. Only the exact signed Flowguard/PPV payment AJAX actions and Flowguard REST callback bypass the age guard; their existing signature/method checks remain. Other AJAX and all other REST routes require age access, including alternate REST query routing. Admin-post is protected. Third-party payment callbacks need explicit review, not blanket API exemptions.
 
-The storage runner creates an internal-only Docker network and disposable MySQL data, uses WordPress's actual `wpdb` implementation, runs eight independent competing PHP workers and removes its containers, network and generated test secrets. It never mounts a live WordPress installation or copies a customer database. Override `AGE_TEST_MYSQL_IMAGE` / `AGE_TEST_PHP_IMAGE` only with compatible reviewed test images. This verifies storage, not a complete WordPress request flow.
+## Storage and operations
 
-Verified: 49 storage assertions; 33 preview authorization assertions with actual entitlement helpers and synthetic content; six browser-player response scenarios. Existing payment, admin-login and package regression suites remain required. Official API references: [WordPress prepared queries](https://developer.wordpress.org/reference/classes/wpdb/prepare/) and [PHP authenticated encryption](https://www.php.net/manual/en/function.sodium-crypto-aead-xchacha20poly1305-ietf-encrypt.php).
+`Records` uses a dedicated wpdb connection so payment rollbacks cannot resurrect handoffs. XChaCha20-Poly1305 binds ciphertext to table, purpose, handle hash, expiry and versioned key. PKCE verifiers and access tokens stay encrypted. An atomic claim followed by deletion permits one callback consumer; crash/delete failure leaves the flow unusable. Rate-limit buckets are keyed hashes of trusted visitor IP and purpose, with bounded windows, never raw IPs.
 
-Remaining: isolated full WordPress fixture, private runtime packaging, callback/start/logout routes, trusted ingress/country checks, rate limits, neutral verification page, every HTML/REST/AJAX/media guard, narrow payment/admin exemptions, CDN/cache controls, scheduled cleanup, production configuration and approval. No real site callback or production client is registered by this code.
+Handoffs last at most ten minutes. Local sessions are capped by assurance, gateway session and actual access-token expiry, maximum one hour; they do not slide. Expired records cannot authorize even before cleanup.
+
+Hourly `flexpress_exclusv_age_cleanup` removes at most 500 expired records and 500 rate buckets per run. Monitor the `flexpress_exclusv_age_cleanup_failed` option and table backlog. Run `wp flexpress-age purge` in additional bounded batches where traffic exceeds hourly cleanup capacity. A host cron runner, alerting and operational capacity review are required before production; installing the hook alone is not proof of reliable scheduling.
+
+Rotate storage keys with overlap: new records use the active version; retain previous keys through maximum record lifetime and cleanup. Removing a key early invalidates those sessions. Keep private backups and keys outside web roots. Restoring a backup must deliberately invalidate prior browser sessions. Never restore a customer database casually over new purchases.
+
+## Media behavior and remaining work
+
+The preview signing endpoint requires POST, nonce, a published/password-free episode ID and its exact preview video. Preview/full aliases also require normal paid/release authorization; banned ordinary customers cannot reuse purchases. When gateway enforcement is enabled, signing requires a fresh age check and expiry is the earlier of five minutes and the age-session deadline. The player has no unsigned fallback.
+
+This does not secure all thumbnails, full players, gallery images, direct uploads or CDN origins. Their entitlement checks, signed delivery, renewal, unsigned-origin denial and cache controls remain release blockers.
+
+## Verification evidence
+
+Disposable fixtures only; no live customers, provider charges or outbound notifications:
+
+- Actual WordPress/ACF/theme + MySQL + Node issuer: 95 request assertions, 14 configuration assertions and production rejection of sandbox configuration.
+- Storage: 61 assertions including competing callback/rate workers, ciphertext tampering, key rotation, cleanup and payment-transaction isolation.
+- Preview endpoint: 37 assertions including age expiry/denial and founder behavior; player: six scenarios.
+- Browser: native entry → gateway consent → WordPress, with session-management/logout checked separately in the gateway repository's fixture record.
+
+Source tests are `tests/run-age-storage.py`, `tests/test-media-authorization.php` and `tests/test-preview-player.cjs`. The gateway repository owns `tests/wordpress/` and the private runtime builder. Existing payment/admin/package regressions remain required. The full fixture uses a synthetic database, intercepted mail/WordPress HTTP and an internal-only Docker network; no live content or secrets are copied.
+
+Before live activation: finish media/CDN/cache enforcement, exact HTTPS ingress validation, ordinary-customer scenarios, cleanup/monitoring and restore drills, provider/privacy/security acceptance and the applicable production approval. Roll back by restoring the reviewed prior theme/runtime/config and retaining payment data. Disabling the flag removes this protection; it is not a safe fallback for a site required to enforce age access.

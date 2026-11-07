@@ -48,12 +48,12 @@ function denied(callable $call, string $message): void {
 }
 function hashHandle(string $label): string { return hash('sha256', $label); }
 
-if (($argv[1] ?? '') === 'race') {
+if (in_array($argv[1] ?? '', ['race', 'limit'], true)) {
     $records = store();
     $deadline = microtime(true) + 10;
     while (!is_file('/tmp/age-storage-race-start') && microtime(true) < $deadline) { usleep(1000); }
     if (!is_file('/tmp/age-storage-race-start')) { exit(2); }
-    echo $records->take('transaction', $argv[2], time()) === null ? '0' : '1';
+    echo $argv[1] === 'limit' ? ($records->allow($argv[2], 1, 60) ? '1' : '0') : ($records->take('transaction', $argv[2], time()) === null ? '0' : '1');
     exit;
 }
 
@@ -95,6 +95,30 @@ foreach ($children as [$process, $pipes]) {
     $winners += (int) $output;
 }
 check($winners === 1, 'More or fewer than one callback consumed the transaction');
+
+unlink('/tmp/age-storage-race-start');
+$children = [];
+for ($index = 0; $index < 8; ++$index) {
+    $process = proc_open([PHP_BINARY, __FILE__, 'limit', hashHandle('rate-race')],
+        [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+    fclose($pipes[0]);
+    $children[] = [$process, $pipes];
+}
+touch('/tmp/age-storage-race-start');
+$allowed = 0;
+foreach ($children as [$process, $pipes]) {
+    $output = stream_get_contents($pipes[1]);
+    $error = stream_get_contents($pipes[2]);
+    fclose($pipes[1]); fclose($pipes[2]);
+    check(proc_close($process) === 0 && $error === '' && in_array($output, ['0', '1'], true), 'Rate worker failed');
+    $allowed += (int) $output;
+}
+check($allowed === 1, 'Concurrent rate limit allowed an incorrect number of starts');
+check(!$records->allow(hashHandle('rate-race'), 1, 60), 'Rate limit reset during the window');
+$db->query('UPDATE fixture_flexpress_age_records_limits SET expires_at = 1');
+check($records->allow(hashHandle('rate-race'), 1, 60), 'Expired rate window did not restart');
+$db->query('UPDATE fixture_flexpress_age_records_limits SET expires_at = 1');
+check($records->purgeLimits() === 1, 'Expired rate bucket did not purge');
 
 // Authentication covers the site table, purpose, browser hash, deadline and envelope key ID.
 foreach (['hash', 'kind', 'expiry', 'ciphertext'] as $mutation) {

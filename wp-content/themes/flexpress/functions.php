@@ -5,7 +5,7 @@
  */
 
 // Define theme constants
-define('FLEXPRESS_VERSION', '1.0.41');
+define('FLEXPRESS_VERSION', '1.0.42');
 define('FLEXPRESS_PATH', get_template_directory());
 define('FLEXPRESS_URL', get_template_directory_uri());
 
@@ -29,6 +29,7 @@ add_action('init', 'flexpress_increase_upload_limits');
 require_once FLEXPRESS_PATH . '/includes/flexpress-permissions.php';
 require_once FLEXPRESS_PATH . '/includes/geolocation.php';
 require_once FLEXPRESS_PATH . '/includes/age-gate.php';
+require_once FLEXPRESS_PATH . '/includes/exclusv-age.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-yoursafe-id.php';
 require_once FLEXPRESS_PATH . '/flexpress-redis-cache.php';
 require_once FLEXPRESS_PATH . '/includes/post-types.php';
@@ -524,14 +525,13 @@ function flexpress_enqueue_scripts_and_styles()
     wp_enqueue_script('bootstrap-js', get_template_directory_uri() . '/assets/vendor/js/bootstrap.bundle.min.js', array(), '5.1.3', true);
     wp_script_add_data('bootstrap-js', 'defer', true);
 
-    // Enqueue age verification JavaScript (always loaded) - critical, no defer
-    wp_enqueue_script('flexpress-age-verification', get_template_directory_uri() . '/assets/js/age-verification.js', array(), wp_get_theme()->get('Version') . '.' . time(), true);
-
-    // Localize age verification script with exit URL
-    wp_localize_script('flexpress-age-verification', 'flexpressAgeVerificationData', array(
-        'exit_url' => flexpress_get_age_verification_exit_url(),
-        'timestamp' => time() // Force cache refresh
-    ));
+    // The server-enforced gateway replaces the legacy self-declaration popup.
+    if (!flexpress_exclusv_age_enabled()) {
+        wp_enqueue_script('flexpress-age-verification', get_template_directory_uri() . '/assets/js/age-verification.js', array(), wp_get_theme()->get('Version'), true);
+        wp_localize_script('flexpress-age-verification', 'flexpressAgeVerificationData', array(
+            'exit_url' => flexpress_get_age_verification_exit_url(),
+        ));
+    }
 
     // Enqueue main JavaScript (only on pages that need it)
     if (
@@ -1956,6 +1956,17 @@ function flexpress_generate_bunnycdn_token()
 
     // Generate expiration timestamp
     $expires = time() + 300; // Card previews receive a bounded five-minute URL.
+    if (function_exists('flexpress_exclusv_age_enabled') && flexpress_exclusv_age_enabled()) {
+        try {
+            $expires = min($expires, flexpress_exclusv_age_media_deadline());
+            if ($expires <= time()) {
+                throw new RuntimeException('Age access expired before signing');
+            }
+        } catch (Throwable $error) {
+            wp_send_json_error('Age access required', 403);
+            return;
+        }
+    }
 
     // Generate token
     // BunnyCDN token generation - format: hash('sha256', $token_key . $video_id . $expires)

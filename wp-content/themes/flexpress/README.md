@@ -1,6 +1,7 @@
 ## Theme release 1.0.37 — Dolls Down Under transfer
 
 - `./build-theme-zip.sh` builds `dist/flexpress-1.0.37.zip` and its SHA-256 checksum from committed theme files. It does not bump versions or modify live files. Use `--output /private/path/theme.zip` to choose another location. Requires Git, Python 3.9+ and PHP CLI.
+- Required `index.php` and browser libraries are now tracked (previous broad Git ignore rules hid them). Legacy menu-reset/page-creation/collection-maintenance scripts reject browser requests and are omitted from releases.
 - Packaging excludes test/debug scripts, backup/broken copies, development dependencies, and untracked files. Runtime `assets/vendor` files remain included. Combined CSS is generated inside the archive from tracked source files. Every shipped PHP file is syntax-checked; a release manifest records file hashes and the source commit.
 - GitHub Actions runs payment, notification, button and package regressions, then builds the uploadable artifact on pushes and pull requests.
 - Follow `wp-content/themes/flexpress/UPLOAD-CHECKLIST.md` (or `UPLOAD-CHECKLIST.md` inside the theme) before replacing the destination theme. Hosting cache rules, database/settings migration, provider test-mode confirmation and a real provider checkout remain separate from uploading the ZIP.

@@ -24,7 +24,7 @@ def include_path(name):
         return False
     if name.startswith(('assets/dist/', 'assets/build/')):
         return False
-    if path.name.startswith(('test-', 'debug-')) or path.name in ('create-pages-menus.php', 'wordpress-stubs.php', 'stubs.php', 'composer.json', 'composer.lock', 'phpcs.xml', 'phpstan.neon', 'combined.css'):
+    if path.name.startswith(('test-', 'debug-')) or path.name in ('create-pages-menus.php', 'reset-menus.php', 'collection-editor.php', 'wordpress-stubs.php', 'stubs.php', 'composer.json', 'composer.lock', 'phpcs.xml', 'phpstan.neon', 'combined.css'):
         return False
     if re.search(r'(-backup|-broken|\.(bak|backup|old|orig|sql|log|zip|wpress|env|swp))($|\.)', path.name, re.I):
         return False

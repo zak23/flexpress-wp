@@ -1,4 +1,10 @@
 <?php
+// Legacy maintenance utilities must never execute through a browser request.
+if (!defined('WP_CLI') || !WP_CLI || PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit;
+}
+
 /**
  * Script to manually create the default pages and menus
  */

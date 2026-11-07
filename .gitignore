@@ -271,3 +271,8 @@ check-code.sh
 
 # Reproducible theme release archives and checksums
 /dist/
+
+# Required theme templates and browser libraries are release inputs, not Composer dependencies.
+!wp-content/themes/flexpress/index.php
+!wp-content/themes/flexpress/assets/vendor/
+!wp-content/themes/flexpress/assets/vendor/**

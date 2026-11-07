@@ -13,7 +13,7 @@ spec.loader.exec_module(builder)
 
 class PackageTests(unittest.TestCase):
     def test_excludes_development_and_sensitive_files(self):
-        for path in ['test-payment.php', 'debug-provider.php', 'create-pages-menus.php', '.env', 'vendor/autoload.php', 'includes/admin/settings.php.backup', 'includes/admin/class-settings-backup.php', 'includes/admin/class-settings-broken.php', 'database.sql', 'error.log', '../outside.php']:
+        for path in ['test-payment.php', 'debug-provider.php', 'create-pages-menus.php', 'reset-menus.php', 'collection-editor.php', '.env', 'vendor/autoload.php', 'includes/admin/settings.php.backup', 'includes/admin/class-settings-backup.php', 'includes/admin/class-settings-broken.php', 'database.sql', 'error.log', '../outside.php']:
             with self.subTest(path=path):
                 self.assertFalse(builder.include_path(path))
         for path in ['assets/vendor/css/bootstrap.min.css', 'tools/payment-audit.php', 'includes/flowguard-effects.php']:

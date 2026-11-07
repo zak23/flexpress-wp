@@ -37,7 +37,7 @@ function flexpress_flowguard_create_tables() {
         KEY processed (processed),
         KEY user_id (user_id),
         KEY created_at (created_at)
-    ) $charset_collate;";
+    ) ENGINE=InnoDB $charset_collate;";
     
     // Flowguard transactions table
     $transactions_table = $wpdb->prefix . 'flexpress_flowguard_transactions';
@@ -68,7 +68,7 @@ function flexpress_flowguard_create_tables() {
         KEY promo_code (promo_code),
         KEY signup_source (signup_source),
         KEY created_at (created_at)
-    ) $charset_collate;";
+    ) ENGINE=InnoDB $charset_collate;";
     
     // Flowguard sessions table (for tracking payment sessions)
     $sessions_table = $wpdb->prefix . 'flexpress_flowguard_sessions';
@@ -92,7 +92,7 @@ function flexpress_flowguard_create_tables() {
         KEY status (status),
         KEY session_type (session_type),
         KEY created_at (created_at)
-    ) $charset_collate;";
+    ) ENGINE=InnoDB $charset_collate;";
     
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
     

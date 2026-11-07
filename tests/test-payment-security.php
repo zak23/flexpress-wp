@@ -23,7 +23,7 @@ class RedirectResponse extends Exception { public $url; public function __constr
 class JsonResponse extends Exception { public $success; public $data; public $status; public function __construct($success,$data,$status) {$this->success=$success;$this->data=$data;$this->status=$status;} }
 class FlexPress_Flowguard_API {
     public function __construct(...$args) {}
-    public function cancel_subscription(...$args) {return ['success'=>true];}
+    public function cancel_subscription(...$args) {$GLOBALS['cancellations'][]=$args[0];return ['success'=>true];}
     public function start_purchase($data) {global $calls;$calls[]=$data;return ['success'=>true,'session_id'=>'session-'.count($calls)];}
 }
 class PaymentTestDB {
@@ -63,7 +63,7 @@ class PaymentTestDB {
 $wpdb = new PaymentTestDB();
 function add_action(...$a) {}
 function nocache_headers() {}
-function get_option($key,$default=[]) {return $key==='flexpress_flowguard_settings' ? ['shop_id'=>'123','signature_key'=>'test-only-secret'] : $default;}
+function get_option($key,$default=[]) {if($key==='flexpress_discord_settings')return ['webhook_url'=>'https://example.invalid'];return $key==='flexpress_flowguard_settings' ? ['shop_id'=>'123','signature_key'=>'test-only-secret'] : $default;}
 function get_userdata($id) {return $id>0 ? (object)['ID'=>$id,'user_email'=>'synthetic@example.invalid','display_name'=>'Synthetic'] : false;}
 function wp_get_current_user() {return get_userdata(get_current_user_id());}
 function get_current_user_id() {global $logged_in,$current_id;return $logged_in ? $current_id : 0;}
@@ -96,7 +96,12 @@ function flexpress_flowguard_store_session($session) {global $sessions;$sessions
 function flexpress_flowguard_get_session($id) {global $sessions;return $sessions[$id]??false;}
 function flexpress_flowguard_get_session_by_reference($ref) {global $sessions;foreach($sessions??[] as $s){if($s['reference_id']===$ref)return $s;}return false;}
 function flexpress_discord_notify_purchase_approved(...$a) {}
-function flexpress_discord_notify_subscription_approved(...$a) {}
+function flexpress_discord_notify_subscription_approved(...$a) {
+    flexpress_flowguard_defer_effect('discord', ['embed'=>[], 'content'=>'synthetic', 'channel'=>'financial', 'suppress_notifications'=>false]);
+}
+class FlexPress_Discord_Notifications {
+    public function send_notification(...$args) {$GLOBALS['deliveries'][]=$args;return empty($GLOBALS['delivery_fails']);}
+}
 function flexpress_discord_notify_subscription_extend(...$a) {}
 function flexpress_discord_notify_subscription_cancel(...$a) {}
 function flexpress_discord_notify_subscription_expiry(...$a) {}
@@ -119,6 +124,7 @@ function get_header() {}
 function get_footer() {}
 function wp_next_scheduled(...$a) {return true;}
 function wp_schedule_event(...$a) {}
+function wp_schedule_single_event(...$a) {}
 function flexpress_is_affiliate_system_enabled() {return false;}
 function status_header($status) {global $response_status;$response_status=$status;}
 function check($condition,$message) {global $checks;$checks++;if(!$condition)throw new RuntimeException($message);}
@@ -298,6 +304,33 @@ check($meta===$before && count($wpdb->rows)===$count,'Failed receipt did not rol
 $wpdb->fail_receipt=false;
 check(flexpress_flowguard_process_postback($failed)['result']==='processed','Provider retry could not recover after rollback');
 check(flexpress_flowguard_process_postback(array_merge($sub,['postbackType'=>'unknown']))['status']===422,'Unknown event accepted');
+
+// External work is durable, executes after commit, and preserves bans on cancellation.
+$meta=[];$wpdb->rows=[];$deliveries=[];$cancellations=[];
+$wpdb->fail_receipt=true;
+check(flexpress_flowguard_process_postback($sub)['status']===503,'Failed notification-bearing payment acknowledged');
+check(empty($meta[41]['flowguard_pending_effects']) && !$deliveries,'Rolled-back payment queued or sent a notification');
+$wpdb->fail_receipt=false;
+check(flexpress_flowguard_process_postback($sub)['result']==='processed','Notification-bearing payment failed');
+check(count($meta[41]['flowguard_pending_effects'])===1 && !$deliveries,'Notification sent before post-commit worker');
+check(flexpress_flowguard_process_postback($sub)['result']==='duplicate' && count($meta[41]['flowguard_pending_effects'])===1,'Replay queued another notification');
+$delivery_fails=true;flexpress_flowguard_deliver_effects(41);
+check(count($meta[41]['flowguard_pending_effects'])===1,'Failed notification was discarded');
+$delivery_fails=false;foreach($meta[41]['flowguard_pending_effects'] as &$job)$job['next_attempt']=0;unset($job);
+flexpress_flowguard_deliver_effects(41);
+check(empty($meta[41]['flowguard_pending_effects']) && count($deliveries)===2,'Notification retry failed');
+flexpress_flowguard_deliver_effects(41);
+check(count($deliveries)===2,'Completed notification sent again');
+$refund=array_merge($sub,['postbackType'=>'credit','transactionId'=>'refund-old-sale','saleId'=>'older-sale']);
+check(flexpress_flowguard_process_postback($refund)['result']==='processed','Refund failed');
+check($meta[41]['membership_status']==='banned' && !$cancellations,'Refund cancelled remotely before committing');
+check($meta[41]['flowguard_subscriber_id']==='sub-sale','Old refund replaced current billing subscription');
+flexpress_flowguard_deliver_effects(41);
+check($cancellations===['sub-sale'] && $meta[41]['membership_status']==='banned','Deferred cancellation missed current sale or lifted ban');
+$meta[41]['flowguard_pending_effects']=['old'=>['kind'=>'cancel_subscription','args'=>['user_id'=>41,'sale_id'=>'sub-sale'],'attempts'=>0,'next_attempt'=>0]];
+$meta[41]['membership_status']='active';$meta[41]['flowguard_subscriber_id']='replacement-sale';
+flexpress_flowguard_deliver_effects(41);
+check(count($cancellations)===1,'Old cancellation job cancelled a replacement subscription');
 
 foreach(['canonical','legacy'] as $endpoint) foreach(['invalid','get','valid','subscription'] as $mode){
     $cmd=escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' transport '.escapeshellarg($mode).' '.escapeshellarg($endpoint);

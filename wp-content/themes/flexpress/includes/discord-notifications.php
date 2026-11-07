@@ -89,6 +89,13 @@ class FlexPress_Discord_Notifications
             $payload['flags'] = 4096;
         }
 
+        if (function_exists('flexpress_flowguard_defer_effect') && flexpress_flowguard_defer_effect('discord', [
+            'embed' => $embed, 'content' => $content, 'channel' => $channel_type,
+            'suppress_notifications' => $suppress_notifications
+        ])) {
+            return true;
+        }
+
         $response = wp_remote_post($webhook_url, [
             'headers' => [
                 'Content-Type' => 'application/json',

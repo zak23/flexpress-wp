@@ -4,6 +4,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/flowguard-effects.php';
+
 /**
  * Apply one verified event. Authentication belongs to the HTTP handler.
  *
@@ -61,6 +63,7 @@ function flexpress_flowguard_process_postback($payload)
         return ['status' => 503, 'result' => 'busy'];
     }
     $in_transaction = false;
+    $GLOBALS['flexpress_flowguard_effect_buffer'] = [];
     try {
         if ($wpdb->query('START TRANSACTION') === false) {
             throw new RuntimeException('Could not begin postback transaction');
@@ -152,6 +155,7 @@ function flexpress_flowguard_process_postback($payload)
         $event_key = $monetary
             ? hash('sha256', $event . ':' . $payload['shopId'] . ':' . $payload['transactionId'])
             : hash('sha256', $sale_key . ':' . $event_hash . ':' . $state['revision']);
+        flexpress_flowguard_save_effects($user_id, $event_key);
         if (!flexpress_flowguard_store_webhook($payload, $event_key)) {
             throw new RuntimeException('Postback receipt was not recorded');
         }
@@ -159,11 +163,13 @@ function flexpress_flowguard_process_postback($payload)
             throw new RuntimeException('Could not commit postback transaction');
         }
         $in_transaction = false;
+        flexpress_flowguard_schedule_effects($user_id);
         return ['status' => 200, 'result' => $ignore ? 'ignored' : 'processed'];
     } catch (Throwable $error) {
-        error_log('Flowguard: Postback processing failed; provider should retry.');
+        error_log('Flowguard: Postback processing failed; provider should retry (' . get_class($error) . ' at ' . basename($error->getFile()) . ':' . $error->getLine() . ').');
         return ['status' => 503, 'result' => 'retry'];
     } finally {
+        unset($GLOBALS['flexpress_flowguard_effect_buffer']);
         if ($in_transaction) {
             $wpdb->query('ROLLBACK');
         }

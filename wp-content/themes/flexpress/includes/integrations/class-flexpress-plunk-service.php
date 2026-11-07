@@ -70,6 +70,9 @@ class FlexPress_Plunk_Service
         if (!$this->api->is_configured()) {
             return false;
         }
+        if (function_exists('flexpress_flowguard_defer_effect') && flexpress_flowguard_defer_effect('plunk', ['method' => 'identify_user', 'args' => [$user_id, $traits]])) {
+            return true;
+        }
         $user = get_userdata($user_id);
         if (!$user) {
             return false;
@@ -106,6 +109,9 @@ class FlexPress_Plunk_Service
         if (!$this->api->is_configured()) {
             return false;
         }
+        if (function_exists('flexpress_flowguard_defer_effect') && flexpress_flowguard_defer_effect('plunk', ['method' => 'track_user_event', 'args' => [$user_id, $event, $event_data]])) {
+            return true;
+        }
         $user = get_userdata($user_id);
         if (!$user) {
             return false;
@@ -137,6 +143,9 @@ class FlexPress_Plunk_Service
     {
         if (!$this->api->is_configured()) {
             return false;
+        }
+        if (function_exists('flexpress_flowguard_defer_effect') && flexpress_flowguard_defer_effect('plunk', ['method' => 'set_newsletter_status', 'args' => [$email, $status]])) {
+            return true;
         }
         $email = sanitize_email($email);
         if (empty($email)) {
@@ -172,10 +181,16 @@ class FlexPress_Plunk_Service
      *
      * @param int $user_id
      * @param string $statusLabel Current|Cancelled|Expired|Banned
-     * @return void
+     * @return bool
      */
     public function update_membership_traits($user_id, $statusLabel)
     {
+        if (!$this->api->is_configured()) {
+            return false;
+        }
+        if (function_exists('flexpress_flowguard_defer_effect') && flexpress_flowguard_defer_effect('plunk', ['method' => 'update_membership_traits', 'args' => [$user_id, $statusLabel]])) {
+            return true;
+        }
         $subscription_label = function_exists('flexpress_get_user_subscription_type')
             ? flexpress_get_user_subscription_type($user_id)
             : 'none';
@@ -185,7 +200,7 @@ class FlexPress_Plunk_Service
             'subscription_label' => $subscription_label,
             'membership_expires_at' => $expires_at ? date('c', strtotime($expires_at)) : null
         );
-        $this->identify_user($user_id, $traits);
+        return $this->identify_user($user_id, $traits);
     }
 }
 

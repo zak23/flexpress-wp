@@ -1,3 +1,10 @@
+## Payment side effects — 7 November 2026
+
+- Discord and Plunk work is saved in `flowguard_pending_effects` user metadata within the payment transaction. WP-Cron delivers only committed work, acknowledges each successful operation, and retries failures with backoff. An hourly sweep recovers missed dispatch. Failed notifications cannot roll back a completed payment.
+- Delivery order is preserved within each integration; cancellation jobs can proceed independently of a notification outage. Keep WP-Cron running (or call it from your host scheduler). Delivery is at-least-once: if a remote service accepts a request and the response/progress write is lost, a retry can still duplicate that external action.
+- Refunds retain the current subscription ID and queue provider cancellation after the ban commits. A deferred cancellation cannot lift the ban or cancel a later replacement subscription. New Flowguard tables explicitly use InnoDB; inspect existing tables with the audit tool before transferring the theme.
+- `tests/test-payment-wordpress.php` verifies real database rollback, replay handling, episode/Extras fulfillment, notifications, and refunds in a disposable restored WordPress/MySQL clone. It refuses other database names and requires `FLEXPRESS_ISOLATED_VERIFICATION`. All HTTP and email are intercepted; these checks do not verify a real card payment.
+
 ## Portable payment audit — 7 November 2026
 
 Run `wp eval-file wp-content/themes/flexpress/tools/payment-audit.php --skip-plugins --skip-themes` on either site. This read-only CLI tool reports membership totals, missing local payment evidence, PPV IDs in subscription metadata, orphan records, and database engines. It prints account IDs but no names, emails, or credentials. Review findings before changing access; imported/manual/test grants may be legitimate. Do not publish the report.

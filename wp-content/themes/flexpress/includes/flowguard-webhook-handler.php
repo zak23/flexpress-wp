@@ -662,16 +662,11 @@ function flexpress_flowguard_handle_refund($payload)
         error_log('Flowguard Webhook: User not found for refund reference: ' . ($payload['referenceId'] ?? ''));
         return;
     }
+    // Capture the current subscription before refund metadata can refer to an older sale.
+    $subscription_to_cancel = get_user_meta($user_id, 'flowguard_subscriber_id', true)
+        ?: get_user_meta($user_id, 'flowguard_sale_id', true);
     // Persist all payload fields to user meta for audit/debugging
-    flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
-
-    // Handle subscription type and phase
-    if (!empty($payload['subscriptionType'])) {
-        update_user_meta($user_id, 'flowguard_subscription_type', $payload['subscriptionType']);
-    }
-    if (!empty($payload['subscriptionPhase'])) {
-        update_user_meta($user_id, 'flowguard_subscription_phase', $payload['subscriptionPhase']);
-    }
+    update_user_meta($user_id, 'flowguard_refund_last_payload', $payload);
 
     // Store refund transaction
     flexpress_flowguard_store_transaction([
@@ -687,7 +682,7 @@ function flexpress_flowguard_handle_refund($payload)
     ]);
 
     // Handle access revocation and user banning
-    flexpress_handle_refund_access_revocation($user_id, $payload);
+    flexpress_handle_refund_access_revocation($user_id, $payload, $subscription_to_cancel);
 
     if (function_exists('flexpress_cancel_affiliate_commission_for_refund')) {
         flexpress_cancel_affiliate_commission_for_refund($payload);
@@ -727,7 +722,7 @@ function flexpress_flowguard_handle_refund($payload)
  * @param int $user_id User ID
  * @param array $payload Webhook payload
  */
-function flexpress_handle_refund_access_revocation($user_id, $payload)
+function flexpress_handle_refund_access_revocation($user_id, $payload, $subscription_to_cancel = null)
 {
     $user = get_userdata($user_id);
     if (!$user) {
@@ -735,6 +730,10 @@ function flexpress_handle_refund_access_revocation($user_id, $payload)
         return;
     }
 
+    if ($subscription_to_cancel === null) {
+        $subscription_to_cancel = get_user_meta($user_id, 'flowguard_subscriber_id', true)
+            ?: get_user_meta($user_id, 'flowguard_sale_id', true);
+    }
     $order_type = $payload['orderType'] ?? '';
     $postback_type = $payload['postbackType'] ?? '';
     $reference_id = $payload['referenceId'] ?? '';
@@ -788,48 +787,18 @@ function flexpress_handle_refund_access_revocation($user_id, $payload)
         error_log('FlexPress Refund: No PPV episode found in reference: ' . $reference_id);
     }
 
-    // 3. Cancel active subscription if user has one
-    $current_membership_status = get_user_meta($user_id, 'membership_status', true);
-    if (in_array($current_membership_status, ['active', 'cancelled'])) {
-        // Get Flowguard sale ID (this is what we use to cancel subscriptions)
-        $flowguard_sale_id = get_user_meta($user_id, 'flowguard_sale_id', true);
-
-        if ($flowguard_sale_id) {
-            try {
-                $flowguard_api = flexpress_get_flowguard_api();
-                $cancel_result = $flowguard_api->cancel_subscription($flowguard_sale_id);
-
-                if ($cancel_result['success']) {
-                    error_log('FlexPress Refund: Successfully cancelled subscription for banned user ' . $user_id . ' (Sale ID: ' . $flowguard_sale_id . ')');
-
-                    // Update membership status to cancelled
-                    flexpress_update_membership_status($user_id, 'cancelled');
-
-                    // Log the cancellation
-                    flexpress_flowguard_log_activity(
-                        $user_id,
-                        'flowguard_subscription_cancelled_ban',
-                        'Subscription cancelled due to ban for refund/chargeback',
-                        array(
-                            'sale_id' => $flowguard_sale_id,
-                            'reason' => 'Refund/Chargeback: ' . $postback_type
-                        )
-                    );
-                } else {
-                    error_log('FlexPress Refund: Failed to cancel subscription for banned user ' . $user_id . ': ' . ($cancel_result['message'] ?? 'Unknown error'));
-                }
-            } catch (Exception $e) {
-                error_log('FlexPress Refund: Exception cancelling subscription for banned user ' . $user_id . ': ' . $e->getMessage());
-            }
-        } else {
-            error_log('FlexPress Refund: No Flowguard sale ID found for banned user ' . $user_id);
-        }
-    }
-
     // 4. Ban the user
     flexpress_update_membership_status($user_id, 'banned');
     if (function_exists('flexpress_invalidate_user_cache')) {
         flexpress_invalidate_user_cache($user_id);
+    }
+
+    // Queue cancellation after the ban has committed. Never turn a ban into cancelled status.
+    if ($subscription_to_cancel) {
+        $effect = ['user_id' => (int) $user_id, 'sale_id' => (string) $subscription_to_cancel];
+        if (!flexpress_flowguard_defer_effect('cancel_subscription', $effect)) {
+            flexpress_flowguard_deliver_effect(['kind' => 'cancel_subscription', 'args' => $effect]);
+        }
     }
 
     // 5. Add email to blacklist
@@ -859,7 +828,7 @@ function flexpress_cancel_subscription_for_banned_user($user_id, $reason = 'User
     $membership_status = get_user_meta($user_id, 'membership_status', true);
 
     // Only cancel if user has active or cancelled status
-    if (!in_array($membership_status, ['active', 'cancelled'])) {
+    if (!in_array($membership_status, ['active', 'cancelled', 'banned'])) {
         error_log('FlexPress Ban: User ' . $user_id . ' does not have active subscription to cancel');
         return false;
     }
@@ -883,7 +852,9 @@ function flexpress_cancel_subscription_for_banned_user($user_id, $reason = 'User
             error_log('FlexPress Ban: Successfully cancelled subscription for banned user ' . $user_id . ' (Sale ID: ' . $flowguard_sale_id . ')');
 
             // Update membership status to cancelled
-            flexpress_update_membership_status($user_id, 'cancelled');
+            if ($membership_status !== 'banned') {
+                flexpress_update_membership_status($user_id, 'cancelled');
+            }
 
             // Log the cancellation
             flexpress_flowguard_log_activity(

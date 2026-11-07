@@ -10,6 +10,7 @@ final readonly class SiteConfig
     public string $origin;
     public string $supportEmail;
     public array $peers;
+    public string $peerSource;
     public string $ingressSecret;
     public array $keys;
     public string $activeKey;
@@ -35,10 +36,12 @@ final readonly class SiteConfig
         }
         $this->supportEmail = $values['support_email'] ?? '';
         $this->peers = $values['trusted_peers'] ?? [];
+        $this->peerSource = $values['peer_source'] ?? 'remote_addr';
         $this->ingressSecret = $values['ingress_secret'] ?? '';
         $this->keys = $values['storage_keys'] ?? [];
         $this->activeKey = $values['active_storage_key'] ?? '';
-        if (!filter_var($this->supportEmail, FILTER_VALIDATE_EMAIL) || !$this->peers ||
+        if (!in_array($this->peerSource, ['remote_addr', 'apache_connection'], true) ||
+            !filter_var($this->supportEmail, FILTER_VALIDATE_EMAIL) || !$this->peers ||
             !preg_match('/^[A-Za-z0-9_-]{43}$/D', $this->ingressSecret)) {
             throw new StorageUnavailable();
         }
@@ -57,7 +60,11 @@ final readonly class SiteConfig
         $host = parse_url($this->origin, PHP_URL_HOST);
         $port = parse_url($this->origin, PHP_URL_PORT);
         $authority = $host . ($port === null ? '' : ':' . $port);
-        if (!in_array($server['REMOTE_ADDR'] ?? '', $this->peers, true) ||
+        // mod_remoteip may replace REMOTE_ADDR for payment/registration callers. An
+        // explicitly configured Apache environment value preserves the socket peer.
+        // Never accept its HTTP_ header counterpart or fall back when it is missing.
+        $peerKey = $this->peerSource === 'apache_connection' ? 'EXCLUSV_CONNECTION_ADDR' : 'REMOTE_ADDR';
+        if (!in_array($server[$peerKey] ?? '', $this->peers, true) ||
             !is_string($server['HTTP_X_EXCLUSV_ORIGIN'] ?? null) ||
             !hash_equals($this->ingressSecret, $server['HTTP_X_EXCLUSV_ORIGIN']) ||
             strtolower($server['HTTP_HOST'] ?? '') !== strtolower($authority) ||

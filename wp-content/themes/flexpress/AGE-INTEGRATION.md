@@ -1,6 +1,6 @@
 # Optional Exclusv age gateway adapter
 
-Focused visitor candidate 1.0.45 implements an opt-in gateway adapter. It is disabled by default and has not been installed on a live site. It protects WordPress HTML, REST and AJAX when configured, but **direct uploads, other media helpers, CDN origins and edge caches still require enforcement**. This is a visitor page gate, not a complete media-protection solution. Direct media hardening is separate from this focused rollout.
+Focused visitor candidate 1.0.46 implements an opt-in gateway adapter. It is disabled by default and has not been installed on a live site. It protects WordPress HTML, REST and AJAX when configured, but **direct uploads, other media helpers, CDN origins and edge caches still require enforcement**. This is a visitor page gate, not a complete media-protection solution. Direct media hardening is separate from this focused rollout.
 
 ## Installation contract
 
@@ -20,6 +20,7 @@ Provision a private PHP configuration file outside the web root, readable only b
 | `allow_loopback` | `false` for hosted deployments |
 | `support_email` | Destination operator's support address |
 | `trusted_peers` | Exact immediate proxy IPs as seen in PHP `REMOTE_ADDR`, not CIDRs or visitor IPs |
+| `peer_source` | Optional `remote_addr` (default), or `apache_connection` when mod_remoteip rewrites `REMOTE_ADDR` |
 | `ingress_secret` | Unique 32 random bytes encoded base64url without padding (43 characters) |
 | `storage_keys` | Map of short key versions to unique raw 32-byte encryption keys |
 | `active_storage_key` | Version used for new records |
@@ -31,6 +32,8 @@ Register exactly `site_origin + /_age/callback`; a real registration requires th
 ## Ingress and cache requirements
 
 Caddy must strip browser-supplied `X-Exclusv-Origin` and set the private value only for this site's verified ingress. Accept Cloudflare country/visitor headers only from verified Cloudflare peers, and overwrite forwarded chains. Restrict the WordPress backend to the exact proxy. Confirm PHP's actual immediate peer and trusted HTTPS handling before choosing `trusted_peers`; do not rewrite `REMOTE_ADDR` to an untrusted visitor address. Unknown country, wrong host, missing secret, untrusted peer or unavailable issuer deny access.
+
+If Apache already uses `mod_remoteip`, preserve the visitor address needed by existing site/payment code. In the WordPress VirtualHost, use `SetEnvIfExpr "%{CONN_REMOTE_ADDR} =~ /^(.+)$/" EXCLUSV_CONNECTION_ADDR=$1` and set private `peer_source` to `apache_connection`. The adapter then checks that server-owned environment value against `trusted_peers`; it never accepts `HTTP_EXCLUSV_CONNECTION_ADDR` or falls back to `REMOTE_ADDR` when the value is absent. Do not populate it from a request header. Verify root/index, rewritten pages, REST and callback routes under the destination's actual PHP handler. [Apache connection variable](https://httpd.apache.org/docs/current/expr.html) and [SetEnvIfExpr](https://httpd.apache.org/docs/2.4/mod/mod_setenvif.html) document this distinction.
 
 Keep all HTML, API, redirects and age routes private/no-store at Apache, Caddy and Cloudflare. Exclude protected uploads/images from the portable public-static cache exception. Apply the reviewed CDN rules separately. A theme upload cannot secure a public media origin or invalidate existing cached copies.
 
@@ -68,14 +71,14 @@ This does not secure all thumbnails, full players, gallery images, direct upload
 
 Disposable fixtures only; no live customers, provider charges or outbound notifications:
 
-- Actual WordPress/ACF/theme + MySQL + Node issuer: 95 request assertions, 14 configuration assertions and production rejection of sandbox configuration.
+- Actual WordPress/ACF/theme + MySQL + Node issuer: 152 request assertions, 19 configuration assertions and production rejection of sandbox configuration.
 - Storage: 61 assertions including competing callback/rate workers, ciphertext tampering, key rotation, cleanup and payment-transaction isolation.
 - Preview endpoint: 37 assertions including age expiry/denial and founder behavior; player: six scenarios.
 - Browser: native entry → gateway consent → WordPress, with session-management/logout checked separately in the gateway repository's fixture record.
 
 Source tests are `tests/run-age-storage.py`, `tests/test-media-authorization.php` and `tests/test-preview-player.cjs`. The gateway repository owns `tests/wordpress/` and the private runtime builder. Existing payment/admin/package regressions remain required. The full fixture uses a synthetic database, intercepted mail/WordPress HTTP and an internal-only Docker network; no live content or secrets are copied.
 
-Before live activation: finish media/CDN/cache enforcement, exact HTTPS ingress validation, ordinary-customer scenarios, cleanup/monitoring and restore drills, provider/privacy/security acceptance and the applicable production approval. Roll back by restoring the reviewed prior theme/runtime/config and retaining payment data. Disabling the flag removes this protection; it is not a safe fallback for a site required to enforce age access.
+Before live activation: finish visitor-page cache and exact HTTPS ingress validation, ordinary-customer scenarios, cleanup/monitoring and restore drills, provider/privacy/security acceptance and the applicable production approval. Roll back by restoring the reviewed prior theme/runtime/config and retaining payment data. Disabling the flag removes this protection; it is not a safe fallback for a site required to enforce age access.
 
 ## Yoursafe alternative
 

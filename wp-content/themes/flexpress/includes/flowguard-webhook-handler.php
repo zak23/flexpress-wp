@@ -118,6 +118,12 @@ function flexpress_flowguard_handle_subscription_approved($payload)
     // Persist all payload fields to user meta for audit/debugging
     flexpress_flowguard_persist_payload_user_meta($user_id, $payload);
 
+    // Fixed-duration access replaces any previous recurring billing schedule.
+    if (($payload['subscriptionType'] ?? '') === 'one-time') {
+        delete_user_meta($user_id, 'next_rebill_date');
+        delete_user_meta($user_id, 'flowguard_next_charge_on');
+    }
+
     // Update user membership status
     delete_user_meta($user_id, 'trial_expires_at');
     if (($payload['subscriptionType'] ?? '') === 'recurring' && empty($payload['expiresOn'])) {

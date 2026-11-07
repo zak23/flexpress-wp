@@ -3569,3 +3569,5 @@ $phase  = get_user_meta($user_id, 'flowguard_subscription_phase', true);
 Membership checkout success URLs now carry the same reference as the provider payment request. Flowguard can redirect directly without invoking the SDK callback; the receipt still requires a signed-in owner and a confirmed server-side transaction. A provider-issued test card exposed the missing reference after a successful signed subscription callback.
 
 Fixed-duration membership checkout now uses Flowguard one-time subscriptions, preserving expiry callbacks instead of treating access as a PPV purchase. Lifetime plans are explicitly rejected before checkout: this integration does not yet implement lifetime fulfillment. Zakspov has no enabled lifetime plan.
+
+Switching from recurring to fixed-duration membership clears the old rebill schedule. Billing shows the confirmed expiry date instead of implying another charge.

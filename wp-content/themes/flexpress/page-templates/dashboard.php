@@ -250,6 +250,10 @@ add_filter('body_class', function ($classes) {
                                     : (get_user_meta($user_id, 'subscription_type', true) ?: '');
                                 $subscription_start = get_user_meta($user_id, 'subscription_start_date', true);
                                 $next_rebill = get_user_meta($user_id, 'next_rebill_date', true);
+                                $is_fixed_duration = get_user_meta($user_id, 'flowguard_subscription_type', true) === 'one-time';
+                                if ($is_fixed_duration || $membership_status === 'cancelled') {
+                                    $next_rebill = get_user_meta($user_id, 'membership_expires', true) ?: $next_rebill;
+                                }
                                 $flowguard_subscription_phase = get_user_meta($user_id, 'flowguard_subscription_phase', true);
                                 $flowguard_next_charge_on = get_user_meta($user_id, 'flowguard_next_charge_on', true);
                                 $flowguard_transaction_id = get_user_meta($user_id, 'flowguard_transaction_id', true);
@@ -336,7 +340,7 @@ add_filter('body_class', function ($classes) {
                                                 <p class="mb-0">
                                                     <strong>
                                                         <?php
-                                                        if ($membership_status === 'cancelled') {
+                                                        if ($membership_status === 'cancelled' || $is_fixed_duration) {
                                                             esc_html_e('Expires:', 'flexpress');
                                                         } else {
                                                             esc_html_e('Next Rebill:', 'flexpress');

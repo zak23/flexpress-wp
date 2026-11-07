@@ -289,6 +289,12 @@ $subscription=array_merge($payload,['orderType'=>'subscription','subscriptionTyp
 flexpress_flowguard_handle_subscription_approved($subscription);
 check(flexpress_get_membership_status(41)==='active' && !isset($meta[41]['trial_expires_at']),'Paid subscription retained expired trial deadline');
 
+$fixed=array_merge($subscription,['subscriptionType'=>'one-time','expiresOn'=>'2099-02-01']);
+unset($fixed['nextChargeOn']);
+flexpress_flowguard_handle_subscription_approved($fixed);
+check(!get_user_meta(41,'next_rebill_date',true) && !get_user_meta(41,'flowguard_next_charge_on',true),'Fixed-duration purchase retained previous recurring schedule');
+check(get_user_meta(41,'membership_expires',true)==='2099-02-01','Fixed-duration approval lost expiry');
+
 // Durable event receipts, state guards, failure rollback, and legitimate transitions.
 $meta=[];$wpdb->rows=[];
 $sub=array_merge($payload,['orderType'=>'subscription','subscriptionType'=>'recurring','referenceId'=>'user_41_plan_monthly','transactionId'=>'sub-approval','saleId'=>'sub-sale','nextChargeOn'=>'2099-01-01']);

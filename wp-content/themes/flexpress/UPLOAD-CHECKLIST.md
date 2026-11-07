@@ -1,52 +1,60 @@
-# FlexPress 1.0.39: Zakspov → Dolls Down Under
+# FlexPress 1.0.40 installation and acceptance
 
-Zakspov is the development/proving site. The ZIP contains theme code and assets only. Uploading it does not copy Zakspov users, purchases, media, WordPress options, provider credentials, database records, plugins, or server configuration.
+Use this checklist for a fresh site or an update. The theme ZIP contains reusable code, assets and setup documentation. It does not migrate users, purchases, media, WordPress options, plugins, credentials or hosting configuration.
 
-## Before upload
+## Prepare
 
-1. Back up Dolls Down Under's database and current theme; keep the backup outside its public web directory. Confirm a restore route with the host. The Zakspov database backup was restored into an isolated MySQL instance successfully; that does not verify Dolls Down Under's backups.
-2. Confirm the destination is updating the **flexpress** theme directory. If Dolls Down Under currently uses a differently named theme, treat this as a theme switch: verify menu locations, widgets, templates, customizer settings, and existing payment data separately.
-3. Record the destination's existing FlexPress payment plans, currency, Flowguard shop/signature settings, Bunny CDN/Stream settings, branding, and notification settings. Preserve destination credentials. Theme upload cannot migrate settings from another theme.
-4. Confirm required plugins are installed, particularly Advanced Custom Fields for content fields. This release was exercised with PHP 8.3 and WordPress on the Zakspov clone. Check the destination's compatibility before activating.
-5. Run the read-only audit after installing the files, before accepting payments:
+- Read [README.md](README.md), [AGENTS.md](AGENTS.md) and [HOSTING.md](HOSTING.md). Complete a private destination inventory; verify the exact site and installation being changed.
+- Back up the destination database and current theme outside the web root. Establish how to restore them. A successful restore on another site is not evidence for this site's backup.
+- Confirm whether this updates the existing `flexpress` directory or switches from another theme. For a switch, plan content fields, templates, menus, widgets and payment-data migration separately.
+- Record and preserve destination branding, plans, currency, provider/media settings and form recipient addresses. Never overwrite destination secrets with a development site's values.
+- Verify PHP/WordPress compatibility and required plugins, particularly Advanced Custom Fields. Confirm write/deployment permissions; read-only theme mounts need the host's deployment process.
+- Inspect the archive: matching version declarations, release manifest, runtime vendor assets, generated combined CSS, README, AGENTS.md, HOSTING.md, this checklist and `hosting/Caddyfile.example`. No secrets, backups, live configs or debug scripts should be present.
+
+## Install and configure
+
+1. Install `flexpress-1.0.40.zip` through Appearance → Themes, or the host's deployment mechanism. Retain the prior release for rollback. Activate/check FlexPress, menu assignments, templates, permalinks and content fields.
+2. Follow HOSTING.md separately for DNS, Full (strict), origin restrictions, trusted headers, caching, logs and certificate management. The included Caddy example is not activated by WordPress.
+3. Configure the destination's Flowguard shop, plans and currency. Verify its provider-side callback is `https://YOUR_DOMAIN/wp-admin/admin-ajax.php?action=flowguard_webhook` and browser return URLs use the same intended site. Test/live behaviour is controlled by the provider.
+4. Configure Bunny media zones/signing and optional integrations. Confirm legal/contact content and form recipients belong to this site.
+5. Run the read-only payment audit from the WordPress root:
    ```sh
    wp eval-file wp-content/themes/flexpress/tools/payment-audit.php --skip-plugins --skip-themes
    ```
-   Payment transactions, webhook receipts, user metadata and options must use InnoDB for rollback guarantees. Review flags with payment records; missing local evidence is not proof of unpaid access. Never publish the report or delete flagged access automatically.
-6. Verify Flowguard's destination callback is the destination site's `/wp-admin/admin-ajax.php?action=flowguard_webhook`. Browser success/decline URLs must also use the destination host. Confirm those settings in Flowguard ControlCenter; test/live status is controlled there, not by a theme checkbox.
+   Review flagged historical records with provider/migration evidence. Do not remove access automatically. Verify InnoDB for transactional tables and keep the report private.
+6. Verify cron. `flexpress_flowguard_deliver_effects` and `flexpress_flowguard_effects_sweep` process committed notification/cancellation jobs; `flowguard_pending_effects` user metadata contains outstanding work. Delivery is at-least-once, so investigate persistent failures without blindly duplicating external actions.
 
-## Upload and verify
+## Verify the site
 
-1. Upload `flexpress-1.0.39.zip` through Appearance → Themes and replace the installed FlexPress version. Use the host's deployment route if the theme directory is read-only. Keep the previous ZIP for rollback.
-2. Check homepage, episode, Extras, login, join, member account and payment pages on desktop and mobile. Verify logos, menus, content fields, public previews, locked content and destination links. Founders bypass access checks; use a normal customer test account for access testing.
-3. Confirm WordPress cron runs. The hooks `flexpress_flowguard_deliver_effects` and `flexpress_flowguard_effects_sweep` deliver/retry committed notifications and refund-related cancellations. `flowguard_pending_effects` user metadata holds outstanding jobs; inspect persistent failures locally.
-4. Confirm public HTML, login/account/payment pages and redirects receive `Cache-Control: private, no-store`. The Caddy fix on Zakspov is **not inside this theme ZIP**. Configure the destination host/CDN separately, and clear its old page cache when deploying. Never cache personalized HTML in a page cache or service worker.
-5. Check delivery of a legitimate notification after a confirmed test event. Delivery is at-least-once: a lost remote response or progress write can still produce a repeated external notification. Cancellation work preserves bans and does not cancel a later replacement subscription.
+- Homepage, episode, Extras, models, login, join, account and payment pages work on desktop/mobile. Branding, links, media and forms belong to the destination.
+- Native `/wp-admin/` login works with its redirect destination retained. Test ordinary customer access separately: founders bypass restrictions.
+- Public previews work; locked content remains locked; signed media is delivered correctly. Service worker registration is same-origin and never caches HTML.
+- Public HTTPS goes through Cloudflare; origin and backend bypasses are denied; verified visitor/geolocation headers survive. Test both address families where available.
+- Dynamic HTML/login/account/payment/API responses remain private/no-store. Genuine public assets cache only under the HOSTING.md policy; missing asset paths do not become publicly cached HTML. Repeat edge tests after Development Mode is off and remove affected stale cache entries.
+- Callback GET returns application 405, not a challenge page. This is only reachability evidence; it does not prove payment fulfillment.
+- Logs are private/redacted, backups are outside the web root, certificate operations and rollback access are documented.
+- Test an explicitly authorized notification delivery; synthetic suites must intercept mail and external messages. Review existing form mail settings before changing recipients.
 
-## Payment acceptance matrix — no charges run by this release check
+## Provider payment acceptance
 
-Use only a provider-issued test card explicitly authorized for the destination shop, or a confirmed provider test environment. The Zakspov test card is shop-specific; do not assume it works on Dolls Down Under. Do not use an ordinary card for release testing. Automated regression checks use fake transport, including the restored-database suite.
+Use only a provider-issued test instrument explicitly authorized for this destination shop, or a confirmed provider test environment. Test-card authorization does not transfer between websites. Never use an ordinary card for release testing. If authorization is unknown, prepare non-charging tests and leave provider acceptance pending.
 
-| Flow | Expected result to verify with authorized provider test payments |
+| Flow | Expected result |
 | --- | --- |
-| New subscription | Pending return until verified callback; correct amount/currency; membership activates once. |
-| Renewal | Deadline advances once; replay does not duplicate activity/notifications. |
-| Cancel / uncancel | Access continues to paid-through date; deliberate uncancel works; replayed approval does not reverse cancellation. |
-| Expiry | Normal customer loses member access at the deadline; bans remain bans. |
-| Episode and Extras PPV | Server-calculated price; only the purchased item unlocks; subscription ID/price/date stay intact. |
-| Refund / chargeback | Existing policy bans the account and revokes the refunded item; provider cancellation runs after commit; ban stays in place. |
-| Notification outage | Payment remains committed; failed delivery stays queued and retries. |
-| Signed-out return | Login required; URL user IDs never establish authentication or grant access. |
+| New recurring membership | Wait for verified callback; correct amount/currency; access activates once |
+| Fixed-duration membership | Provider expiry; no stale recurring rebill date; correct receipt |
+| Renewal/replay | Paid-through deadline and activity advance once |
+| Cancel/uncancel | Access through paid-through date; deliberate uncancel works; replay cannot reverse cancellation |
+| Expiry | Ordinary customer loses access at deadline; existing bans remain |
+| Episode/Extras PPV | Only purchased item unlocks; subscription metadata remains intact |
+| Refund/chargeback | Existing ban/access policy holds; deferred cancellation cannot cancel a later subscription |
+| Notification outage | Payment stays committed; queued delivery retries |
+| Signed-out browser return | Login required; URL values never authenticate or grant access |
 
-## What was verified on Zakspov
+Lifetime checkout is unsupported and must reject before payment. Record provider events that could not be exercised; synthetic coverage is not proof of real settlement, rebilling or refunds.
 
-- Provider-issued test card on Zakspov: recurring membership USD 29.95 activated through its signed callback, then cancelled through Billing; signed cancellation preserved access through the paid-through date. Episode and Extras PPV at USD 29.95 each produced confirmed receipts and unlocked only their purchased items without granting membership. Fixed-duration two-day USD 4.95 membership activated with provider expiry and no rebill date; the final return displayed Payment confirmed with the correct receipt. Completed test notification queues drained.
-- Regression coverage includes receipt reference encoding, fixed-duration routing, and clearing stale recurring dates. Isolated payment/signature/price/access regressions and notification adapters use no provider traffic.
-- Actual provider rebill, uncancel, expiry, refund and chargeback events remain unverified; those cases are covered by synthetic regression tests. Test accounts and transactions remain identified locally for audit; the recurring test subscription was cancelled. Lifetime membership checkout is unsupported and rejected before payment.
-- A private database backup restored to a disposable MySQL database; real WordPress transactions, injected receipt-write failure/rollback, replay, PPV and refund flows tested there with all outgoing HTTP/email intercepted.
-- Caddy's actual installed version tested against 17 response scenarios; public dynamic-cache behavior checked separately.
-- ZIP contents are selected from tracked files, omit development/backup files, include runtime vendor assets and generated combined CSS, and carry a file-hash manifest. The builder lints all shipped PHP and verifies ZIP integrity without changing source versions.
+## Rollback and handoff
 
-## Host configuration stays separate
+If an update breaks acceptance, restore the previous theme through the host's deployment route and recheck core pages. Restore database changes only using a deliberate recovery plan that accounts for new purchases made since the backup; do not overwrite live transactions casually. Hosting rollback is separate: restore the saved config/binary/unit while preserving certificate storage, then verify public access and other shared sites.
 
-Zakspov's Docker/Apache changes are host-specific: fixed LAN addresses, proxy trust, read-only mounts and named volumes. Do not transplant them into Dolls Down Under or package them with the theme. Existing uncommitted host files were reviewed separately and retained as-is. In particular, the PHP security config is copied over an earlier generated config in the Dockerfile; the final copied file must contain the intended setting. Read-only theme mounts intentionally prevent in-dashboard file replacement.
+Record release/manifest, destination, configuration paths, backup locations, tests and remaining issues outside the public theme. Do not claim a launch is ready while payments, origin protection or cache policy remain unverified. Keep this checklist generic so it remains useful on the next site.

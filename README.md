@@ -1,3 +1,7 @@
+## Portable setup release 1.0.40
+
+The theme now ships a concise [README](wp-content/themes/flexpress/README.md), [AGENTS.md](wp-content/themes/flexpress/AGENTS.md), [hosting runbook](wp-content/themes/flexpress/HOSTING.md), [parameterized Caddy example](wp-content/themes/flexpress/hosting/Caddyfile.example) and [upload checklist](wp-content/themes/flexpress/UPLOAD-CHECKLIST.md). They are required release contents. Each new site must discover and configure its own domain, origin, Cloudflare zone and provider credentials. The example is documentation, not automatically installed hosting configuration. Build `dist/flexpress-1.0.40.zip` from committed files with `./build-theme-zip.sh`. Previous detailed theme notes are archived in [the legacy README](docs/FLEXPRESS_LEGACY_README.md); previous provider test evidence is in [the 1.0.39 record](docs/RELEASE_VERIFICATION_1.0.39.md).
+
 ## Caddy and Cloudflare hardening — 7 November 2026
 
 Zakspov now restricts origin HTTPS to Cloudflare peers, forwards verified visitor IPs, redirects `/wp-admin` directly to HTTPS, and redacts access-log queries. DNS credentials are in a protected service environment file. See [deployment record](docs/CADDY_DEPLOYMENT.md) for validation, rollback and the outstanding token rotation. The portable theme setup guide is `wp-content/themes/flexpress/HOSTING.md`; server configuration must be installed separately from the theme.
@@ -76,7 +80,7 @@ If in-dashboard theme update fails with "files could not be copied", run `./prep
 
 # FlexPress WordPress Project
 
-A modern WordPress membership site running in Docker (WordPress + MySQL + phpMyAdmin + optional Redis). All product code lives in the theme: `wp-content/themes/flexpress/` (theme version **1.0.35**).
+A modern WordPress membership site running in Docker (WordPress + MySQL + phpMyAdmin + optional Redis). All product code lives in the theme: `wp-content/themes/flexpress/` (theme version **1.0.40**).
 
 ## 🧭 Orientation (September 2026)
 

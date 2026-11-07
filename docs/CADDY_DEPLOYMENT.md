@@ -28,7 +28,8 @@ The existing DNS token was moved, **not rotated**. Its API permissions cannot ma
 
 - Synthetic upstream: 17 cache cases, trusted visitor IP forwarding, forged-header rejection, direct-origin denial, HTTPS admin redirect, query/header log redaction and log permissions.
 - Before/after probes covered 120 configured hostnames. HTTP status codes and redirect destinations stayed unchanged; 27 pre-existing 5xx responses and five TLS/connection failures remained. Two redirect responses acquired a text/plain Content-Type with the new Caddy version. This was not a full application audit of the other sites.
-- Public Zakspov was reachable through Cloudflare; direct HTTPS to Caddy with Zakspov SNI returned 403.
+- Public homepage/login returned 200; native admin routing stayed HTTPS; the webhook rejected GET with 405; genuine CSS was public for one day and missing CSS stayed private. Direct HTTPS to both hostnames returned 403 even with forged Cloudflare headers. A unique public probe reached Apache with the same visitor IP Cloudflare reported. The live Caddy log omitted its probe query and had mode 0600.
+- Cloudflare API confirmed Full (strict) TLS, IP Geolocation on, Development Mode on, Browser Cache TTL 14400, no active legacy Page Rules and no Worker routes. Modern Cache Rules could not be inspected (HTTP 403); their policy still needs account-owner verification.
 - Cloudflare Development Mode was intentionally left unchanged. It bypasses edge caching temporarily; it does not turn off the proxy. Cache HIT testing must be repeated after it ends.
 - DNS inspection also found `fleet.boundarybase.com` and `tarkov.civic.video` DNS-only. Their records were not changed; no host-wide Cloudflare firewall was applied to this shared server.
 

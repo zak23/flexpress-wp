@@ -21,6 +21,9 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--bind', required=True, help='Private interface IP for temporary listeners')
 parser.add_argument('--config', type=Path, default=Path('Caddyfile'))
 parser.add_argument('--caddy', default='caddy')
+parser.add_argument('--domain', default='zakspov.com', help='Hostname configured in the candidate')
+parser.add_argument('--upstream', default='192.168.1.238:8085', help='Upstream configured in the candidate')
+parser.add_argument('--site-id', default='flexpress', help='Prefix of the candidate snippets')
 args = parser.parse_args()
 
 
@@ -68,12 +71,12 @@ with socket.socket() as port_probe:
     port_probe.bind((args.bind, 0))
     proxy_port = port_probe.getsockname()[1]
 source = args.config.read_text().split('# Redirect www to non-www')[0]
-source = source.replace('zakspov.com {', f'http://{args.bind}:{proxy_port} {{', 1)
-source = source.replace('192.168.1.238:8085', f'{args.bind}:{upstream.server_port}')
+source = source.replace(args.domain + ' {', f'http://{args.bind}:{proxy_port} {{', 1)
+source = source.replace(args.upstream, f'{args.bind}:{upstream.server_port}')
 # Substitute controlled peers only in this isolated test; production ranges stay intact.
-ranges = re.search(r'\(flexpress-cloudflare-ranges\) \{\s*remote_ip ([^\n]+)', source).group(1)
+ranges = re.search(r'\(' + re.escape(args.site_id) + r'-cloudflare-ranges\) \{\s*remote_ip ([^\n]+)', source).group(1)
 source = source.replace(ranges, '127.0.0.2/32')
-source, tls_blocks = re.subn(r'\s*tls \{\s*dns cloudflare \{env.CLOUDFLARE_API_TOKEN\}\s*\}', '', source)
+source, tls_blocks = re.subn(r'\s*tls \{\s*dns cloudflare \{env\.[A-Z_][A-Z_0-9]*\}\s*\}', '', source)
 assert tls_blocks == 1, 'Expected the shared DNS challenge block'
 source = '{\n    admin off\n    auto_https off\n}\n' + source
 cases = [
@@ -149,9 +152,10 @@ try:
                 assert local.getheader('Echo-CF-Connecting-IP') is None
                 assert local.getheader('Echo-CF-IPCountry') is None
                 assert request('127.0.0.3', headers=forged).status == 403
+                assert request('127.0.0.3', '/wp-admin', headers=forged).status == 403
                 admin = request('127.0.0.2', '/wp-admin')
                 assert admin.status == 308
-                assert admin.getheader('Location') == 'https://zakspov.com/wp-admin/'
+                assert admin.getheader('Location') == f'https://{args.domain}/wp-admin/'
                 request('127.0.0.2', '/payment-success/?key=private-log-marker&session_id=private-log-marker',
                         {'Referer': 'https://example.com/?key=private-log-marker'})
                 process.terminate()

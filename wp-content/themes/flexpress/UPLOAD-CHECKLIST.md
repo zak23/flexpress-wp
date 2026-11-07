@@ -1,4 +1,4 @@
-# FlexPress 1.0.37: Zakspov → Dolls Down Under
+# FlexPress 1.0.38: Zakspov → Dolls Down Under
 
 Zakspov is the development/proving site. The ZIP contains theme code and assets only. Uploading it does not copy Zakspov users, purchases, media, WordPress options, provider credentials, database records, plugins, or server configuration.
 
@@ -17,7 +17,7 @@ Zakspov is the development/proving site. The ZIP contains theme code and assets 
 
 ## Upload and verify
 
-1. Upload `flexpress-1.0.37.zip` through Appearance → Themes and replace the installed FlexPress version. Use the host's deployment route if the theme directory is read-only. Keep the previous ZIP for rollback.
+1. Upload `flexpress-1.0.38.zip` through Appearance → Themes and replace the installed FlexPress version. Use the host's deployment route if the theme directory is read-only. Keep the previous ZIP for rollback.
 2. Check homepage, episode, Extras, login, join, member account and payment pages on desktop and mobile. Verify logos, menus, content fields, public previews, locked content and destination links. Founders bypass access checks; use a normal customer test account for access testing.
 3. Confirm WordPress cron runs. The hooks `flexpress_flowguard_deliver_effects` and `flexpress_flowguard_effects_sweep` deliver/retry committed notifications and refund-related cancellations. `flowguard_pending_effects` user metadata holds outstanding jobs; inspect persistent failures locally.
 4. Confirm public HTML, login/account/payment pages and redirects receive `Cache-Control: private, no-store`. The Caddy fix on Zakspov is **not inside this theme ZIP**. Configure the destination host/CDN separately, and clear its old page cache when deploying. Never cache personalized HTML in a page cache or service worker.
@@ -25,9 +25,9 @@ Zakspov is the development/proving site. The ZIP contains theme code and assets 
 
 ## Payment acceptance matrix — no charges run by this release check
 
-Until ControlCenter test mode is confirmed, stop before submitting a card or invoking live payment/refund/cancellation operations. The automated checks use fake transport responses, including those run against the restored database.
+Use only a provider-issued test card explicitly authorized for the destination shop, or a confirmed provider test environment. The Zakspov test card is shop-specific; do not assume it works on Dolls Down Under. Do not use an ordinary card for release testing. Automated regression checks use fake transport, including the restored-database suite.
 
-| Flow | Expected result to verify in confirmed provider test mode |
+| Flow | Expected result to verify with authorized provider test payments |
 | --- | --- |
 | New subscription | Pending return until verified callback; correct amount/currency; membership activates once. |
 | Renewal | Deadline advances once; replay does not duplicate activity/notifications. |
@@ -40,7 +40,9 @@ Until ControlCenter test mode is confirmed, stop before submitting a card or inv
 
 ## What was verified on Zakspov
 
-- Isolated payment/signature/price/access regressions and notification adapters, with no provider traffic.
+- Provider-issued test card on Zakspov: recurring membership USD 29.95 activated through its signed callback, then cancelled through Billing; signed cancellation preserved access through the paid-through date. Episode and Extras PPV at USD 29.95 each produced confirmed receipts and unlocked only their purchased items without granting membership. Fixed-duration two-day USD 4.95 membership activated with provider expiry and no rebill date; the final return displayed Payment confirmed with the correct receipt. Completed test notification queues drained.
+- Regression coverage includes receipt reference encoding, fixed-duration routing, and clearing stale recurring dates. Isolated payment/signature/price/access regressions and notification adapters use no provider traffic.
+- Actual provider rebill, uncancel, expiry, refund and chargeback events remain unverified; those cases are covered by synthetic regression tests. Test accounts and transactions remain identified locally for audit; the recurring test subscription was cancelled. Lifetime membership checkout is unsupported and rejected before payment.
 - A private database backup restored to a disposable MySQL database; real WordPress transactions, injected receipt-write failure/rollback, replay, PPV and refund flows tested there with all outgoing HTTP/email intercepted.
 - Caddy's actual installed version tested against 17 response scenarios; public dynamic-cache behavior checked separately.
 - ZIP contents are selected from tracked files, omit development/backup files, include runtime vendor assets and generated combined CSS, and carry a file-hash manifest. The builder lints all shipped PHP and verifies ZIP integrity without changing source versions.

@@ -1025,4 +1025,4 @@ function flexpress_create_flowguard_payment_data($plan_id, $plan, $user_id) {
         return array('success' => false, 'error' => 'Lifetime memberships are not supported by this Flowguard integration.');
     }
     return flexpress_create_flowguard_subscription_data($plan_id, $plan, $user_id);
-} 
+}

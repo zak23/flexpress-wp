@@ -1,3 +1,7 @@
+## Caddy and Cloudflare hardening — 7 November 2026
+
+Zakspov now restricts origin HTTPS to Cloudflare peers, forwards verified visitor IPs, redirects `/wp-admin` directly to HTTPS, and redacts access-log queries. DNS credentials are in a protected service environment file. See [deployment record](docs/CADDY_DEPLOYMENT.md) for validation, rollback and the outstanding token rotation. The portable theme setup guide is `wp-content/themes/flexpress/HOSTING.md`; server configuration must be installed separately from the theme.
+
 ## Admin login redirect fix — 7 November 2026
 
 The frontend admin redirect checks the URL path only. WordPress login requests with `redirect_to=/wp-admin/` now reach the native login form and retain their destination; WordPress still enforces authentication and capabilities.
@@ -29,8 +33,8 @@ Zakspov audit: 11 current users; three accounts need historical review (two PPV 
 
 - At Caddy, dynamic pages, redirects, API responses, errors, and requests with WordPress login cookies receive `private, no-store, max-age=0`. This replaces the accidental one-year public cache policy on HTML.
 - Public GET/HEAD assets under `wp-content` and `wp-includes` receive a one-day cache lifetime only when their actual response is successful, has an asset MIME type, and sets no cookie. Authorization-bearing requests remain private. Genuine ETag/Last-Modified values are preserved; fabricated cache HIT/Age headers are removed.
-- `Caddyfile` uses response matching supported by the installed Caddy 2.6.1. Regression test: `python3 tests/test-proxy-cache.py --bind PRIVATE_IP --config Caddyfile` on a host with Caddy installed. It starts an isolated proxy and synthetic upstream on temporary ports; it does not reload production or contact WordPress.
-- Production imports `/etc/caddy/sites-enabled/zakspov.txt` on `caddy4`. Back up that file outside `sites-enabled`, install this Caddyfile there, validate the complete `/etc/caddy/Caddyfile`, then reload Caddy. New headers cannot retroactively remove responses already cached in visitors' browsers.
+- `Caddyfile` now targets Caddy 2.11+ with the Cloudflare DNS module; caddy4 runs 2.11.9. Regression test: `python3 tests/test-proxy-cache.py --bind PRIVATE_IP --config Caddyfile` on a host with Caddy installed. It starts an isolated proxy and synthetic upstream on temporary ports; it does not reload production or contact WordPress.
+- Production imports `/etc/caddy/sites-enabled/zakspov.txt` on `caddy4`. Back up that file outside `sites-enabled`, install this Caddyfile there, validate the complete `/etc/caddy/Caddyfile`, then reload Caddy (restart for binary, environment or log-output changes). New headers cannot retroactively remove responses already cached in visitors' browsers.
 
 ## Webhook replay and ordering fixes — 7 November 2026
 

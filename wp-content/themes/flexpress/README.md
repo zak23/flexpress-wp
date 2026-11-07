@@ -2,7 +2,7 @@
 
 FlexPress is a portable WordPress membership theme for launching independent content sites. It provides episode and model pages, Extras, paid memberships, per-item purchases, affiliate tools and Bunny media delivery. **Each site keeps its own identity, customer data, provider accounts and hosting configuration.**
 
-Release **1.0.40** adds portable deployment documentation and an agent setup contract. It retains the payment and native admin-login fixes from 1.0.39. The ZIP includes configuration examples; activating the theme does not install or change Caddy or Cloudflare.
+Candidate **1.0.41** binds card-preview signing to published content and removes unsigned-player fallback. It also adds encrypted age-session storage components for an upcoming gateway integration; age enforcement is not enabled. It retains the portable hosting guides and prior payment/admin-login fixes. Activating the theme does not install or change Caddy or Cloudflare.
 
 ## Start here
 
@@ -13,6 +13,7 @@ Release **1.0.40** adds portable deployment documentation and an agent setup con
 | Install, upgrade, migrate and accept a release | [UPLOAD-CHECKLIST.md](UPLOAD-CHECKLIST.md) |
 | Render a site-specific Caddy configuration | [hosting/Caddyfile.example](hosting/Caddyfile.example) |
 | Inspect existing payment data without changing it | [tools/payment-audit.php](tools/payment-audit.php) through WP-CLI only |
+| Age storage, preview signing and remaining integration | [AGE-INTEGRATION.md](AGE-INTEGRATION.md) |
 
 Use these documents from the extracted theme even when the original Git repository is unavailable. References to repository tests or build scripts are optional tooling available in the source repository, not commands guaranteed to exist in an installed ZIP.
 

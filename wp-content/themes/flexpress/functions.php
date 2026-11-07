@@ -5,7 +5,7 @@
  */
 
 // Define theme constants
-define('FLEXPRESS_VERSION', '1.0.40');
+define('FLEXPRESS_VERSION', '1.0.41');
 define('FLEXPRESS_PATH', get_template_directory());
 define('FLEXPRESS_URL', get_template_directory_uri());
 
@@ -1920,16 +1920,27 @@ add_filter('pre_comment_approved', 'flexpress_restrict_model_comments', 10, 2);
  */
 function flexpress_generate_bunnycdn_token()
 {
+    nocache_headers();
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        wp_send_json_error('Method not allowed', 405);
+        return;
+    }
     // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'flexpress-nonce')) {
-        wp_send_json_error('Invalid nonce');
+    if (!is_string($_POST['nonce'] ?? null) || !wp_verify_nonce(wp_unslash($_POST['nonce']), 'flexpress-nonce')) {
+        wp_send_json_error('Invalid nonce', 403);
         return;
     }
 
-    // Get video ID from request
-    $video_id = isset($_POST['video_id']) ? sanitize_text_field($_POST['video_id']) : '';
-    if (empty($video_id)) {
-        wp_send_json_error('Invalid video ID');
+    $post_id = $_POST['post_id'] ?? null;
+    $video_id = $_POST['video_id'] ?? null;
+    if (!is_string($post_id) || !preg_match('/^[1-9][0-9]{0,9}$/D', $post_id) || !is_string($video_id)) {
+        wp_send_json_error('Invalid preview request', 400);
+        return;
+    }
+    $video_id = wp_unslash($video_id);
+    require_once get_template_directory() . '/includes/media-authorization.php';
+    if (!flexpress_authorize_preview_video((int) $post_id, $video_id)) {
+        wp_send_json_error('Preview unavailable', 403);
         return;
     }
 
@@ -1939,12 +1950,12 @@ function flexpress_generate_bunnycdn_token()
     $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
 
     if (empty($token_key) || empty($library_id)) {
-        wp_send_json_error('Missing BunnyCDN configuration');
+        wp_send_json_error('Preview unavailable', 503);
         return;
     }
 
     // Generate expiration timestamp
-    $expires = time() + 3600; // 1 hour expiry
+    $expires = time() + 300; // Card previews receive a bounded five-minute URL.
 
     // Generate token
     // BunnyCDN token generation - format: hash('sha256', $token_key . $video_id . $expires)

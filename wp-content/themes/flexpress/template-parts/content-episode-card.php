@@ -79,7 +79,7 @@ if ($full_video && (empty($duration) || $duration == 0)) {
 }
 ?>
 
-<div class="episode-card" data-preview-video="<?php echo esc_attr($preview_video); ?>" data-video-id="<?php echo esc_attr($video_id); ?>">
+<div class="episode-card" data-post-id="<?php echo esc_attr(get_the_ID()); ?>" data-preview-video="<?php echo esc_attr($preview_video); ?>" data-video-id="<?php echo esc_attr($video_id); ?>">
     <a href="<?php the_permalink(); ?>" class="episode-link">
         <div class="card-img-top">
             <div class="preview-container"></div>

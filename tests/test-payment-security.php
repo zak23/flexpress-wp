@@ -153,6 +153,14 @@ $data=end($calls);parse_str(parse_url($data['successUrl'],PHP_URL_QUERY),$query)
 check(($query['ref']??'')===$data['referenceId'],'Direct subscription redirect lost receipt reference');
 $calls=[];$sessions=[];$meta=[];
 
+load_project_function($theme.'/includes/pricing-helpers.php','flexpress_create_flowguard_payment_data');
+$plan=flexpress_get_pricing_plan('test-plan');$plan['plan_type']='one_time';
+$data=flexpress_create_flowguard_payment_data('test-plan',$plan,41)['data'];
+check($data['subscriptionType']==='one-time' && $data['period']==='P30D','Fixed-duration membership lost subscription semantics');
+$plan['plan_type']='lifetime';
+check(!flexpress_create_flowguard_payment_data('test-plan',$plan,41)['success'],'Unsupported lifetime plan must fail before payment');
+$meta=[];
+
 function signed_postback($payload,$alg='HS256',$key='test-only-secret') {
     $b64=function($s){return rtrim(strtr(base64_encode($s),'+/','-_'),'=');};
     $body=$b64(json_encode(['alg'=>$alg])).'.'.$b64(json_encode($payload));

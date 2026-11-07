@@ -1019,11 +1019,10 @@ function flexpress_create_flowguard_purchase_data($plan_id, $plan, $user_id) {
  * @return array Flowguard payment data
  */
 function flexpress_create_flowguard_payment_data($plan_id, $plan, $user_id) {
-    $plan_type = $plan['plan_type'] ?? 'recurring';
-    
-    if ($plan_type === 'one_time' || $plan_type === 'lifetime') {
-        return flexpress_create_flowguard_purchase_data($plan_id, $plan, $user_id);
-    } else {
-        return flexpress_create_flowguard_subscription_data($plan_id, $plan, $user_id);
+    // Memberships need subscription callbacks, including fixed-duration access.
+    // Purchases are reserved for individual content unlocks.
+    if (($plan['plan_type'] ?? 'recurring') === 'lifetime') {
+        return array('success' => false, 'error' => 'Lifetime memberships are not supported by this Flowguard integration.');
     }
+    return flexpress_create_flowguard_subscription_data($plan_id, $plan, $user_id);
 } 

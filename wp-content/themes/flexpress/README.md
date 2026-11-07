@@ -3311,3 +3311,5 @@ The Remember Card feature allows users to securely save their payment card infor
 ## Provider receipt redirect — 7 November 2026
 
 Membership checkout success URLs now carry the same reference as the provider payment request. Flowguard can redirect directly without invoking the SDK callback; the receipt still requires a signed-in owner and a confirmed server-side transaction. A provider-issued test card exposed the missing reference after a successful signed subscription callback.
+
+Fixed-duration membership checkout now uses Flowguard one-time subscriptions, preserving expiry callbacks instead of treating access as a PPV purchase. Lifetime plans are explicitly rejected before checkout: this integration does not yet implement lifetime fulfillment. Zakspov has no enabled lifetime plan.

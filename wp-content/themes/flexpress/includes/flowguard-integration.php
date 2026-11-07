@@ -50,6 +50,10 @@ function flexpress_flowguard_create_subscription($user_id, $plan_id)
         return ['success' => false, 'error' => 'Invalid plan'];
     }
 
+    if (($plan['plan_type'] ?? 'recurring') === 'lifetime') {
+        return ['success' => false, 'error' => 'Lifetime memberships are not supported by this Flowguard integration.'];
+    }
+
     $user = get_userdata($user_id);
     if (!$user) {
         error_log('FlexPress: Invalid user ID: ' . $user_id);

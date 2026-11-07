@@ -85,11 +85,7 @@ if (empty($session_id) && !empty($plan_id)) {
             }
 
             // Create session using API
-            if ($plan['plan_type'] === 'one_time' || $plan['plan_type'] === 'lifetime') {
-                $result = $api->start_purchase($payment_data);
-            } else {
-                $result = $api->start_subscription($payment_data);
-            }
+            $result = $api->start_subscription($payment_data);
 
             if ($result['success'] && !empty($result['session_id'])) {
                 // Redirect to payment page with session ID

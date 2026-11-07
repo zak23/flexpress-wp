@@ -1,8 +1,12 @@
-## Theme release 1.0.38 — Dolls Down Under transfer
+## Admin login redirect fix — 7 November 2026
+
+The frontend admin redirect checks the URL path only. WordPress login requests with `redirect_to=/wp-admin/` now reach the native login form and retain their destination; WordPress still enforces authentication and capabilities.
+
+## Theme release 1.0.39 — Dolls Down Under transfer
 
 Provider test-card checks on Zakspov passed recurring signup/cancellation, fixed-duration membership, episode PPV and Extras PPV. The final membership redirect displayed a confirmed receipt with the correct expiry. No ordinary card was used. Provider rebill, uncancel, expiry, refund and chargeback events still need provider-side verification; synthetic regression coverage is in place. Lifetime checkout remains unsupported and is rejected before payment.
 
-- `./build-theme-zip.sh` builds `dist/flexpress-1.0.38.zip` and its SHA-256 checksum from committed theme files. It does not bump versions or modify live files. Use `--output /private/path/theme.zip` to choose another location. Requires Git, Python 3.9+ and PHP CLI.
+- `./build-theme-zip.sh` builds `dist/flexpress-1.0.39.zip` and its SHA-256 checksum from committed theme files. It does not bump versions or modify live files. Use `--output /private/path/theme.zip` to choose another location. Requires Git, Python 3.9+ and PHP CLI.
 - Required `index.php` and browser libraries are now tracked (previous broad Git ignore rules hid them). Legacy menu-reset/page-creation/collection-maintenance scripts reject browser requests and are omitted from releases.
 - Packaging excludes test/debug scripts, backup/broken copies, development dependencies, and untracked files. Runtime `assets/vendor` files remain included. Combined CSS is generated inside the archive from tracked source files. Every shipped PHP file is syntax-checked; a release manifest records file hashes and the source commit.
 - GitHub Actions runs payment, notification, button and package regressions, then builds the uploadable artifact on pushes and pull requests.

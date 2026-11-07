@@ -5,7 +5,7 @@
  */
 
 // Define theme constants
-define('FLEXPRESS_VERSION', '1.0.38');
+define('FLEXPRESS_VERSION', '1.0.39');
 define('FLEXPRESS_PATH', get_template_directory());
 define('FLEXPRESS_URL', get_template_directory_uri());
 
@@ -2721,8 +2721,9 @@ function flexpress_redirect_wp_admin_to_login()
         return;
     }
 
-    // Check if we're accessing wp-admin
-    if (strpos($_SERVER['REQUEST_URI'], 'wp-admin') !== false) {
+    // Inspect only the request path: wp-login.php has wp-admin in redirect_to.
+    $request_path = wp_parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+    if (is_string($request_path) && preg_match('~(?:^|/)wp-admin(?:/|$)~', $request_path)) {
         // If user is logged in and has admin capabilities, allow access
         if (is_user_logged_in() && flexpress_current_user_is_founder()) {
             return; // Allow admin access

@@ -1,4 +1,4 @@
-# FlexPress 1.0.38: Zakspov → Dolls Down Under
+# FlexPress 1.0.39: Zakspov → Dolls Down Under
 
 Zakspov is the development/proving site. The ZIP contains theme code and assets only. Uploading it does not copy Zakspov users, purchases, media, WordPress options, provider credentials, database records, plugins, or server configuration.
 
@@ -17,7 +17,7 @@ Zakspov is the development/proving site. The ZIP contains theme code and assets 
 
 ## Upload and verify
 
-1. Upload `flexpress-1.0.38.zip` through Appearance → Themes and replace the installed FlexPress version. Use the host's deployment route if the theme directory is read-only. Keep the previous ZIP for rollback.
+1. Upload `flexpress-1.0.39.zip` through Appearance → Themes and replace the installed FlexPress version. Use the host's deployment route if the theme directory is read-only. Keep the previous ZIP for rollback.
 2. Check homepage, episode, Extras, login, join, member account and payment pages on desktop and mobile. Verify logos, menus, content fields, public previews, locked content and destination links. Founders bypass access checks; use a normal customer test account for access testing.
 3. Confirm WordPress cron runs. The hooks `flexpress_flowguard_deliver_effects` and `flexpress_flowguard_effects_sweep` deliver/retry committed notifications and refund-related cancellations. `flowguard_pending_effects` user metadata holds outstanding jobs; inspect persistent failures locally.
 4. Confirm public HTML, login/account/payment pages and redirects receive `Cache-Control: private, no-store`. The Caddy fix on Zakspov is **not inside this theme ZIP**. Configure the destination host/CDN separately, and clear its old page cache when deploying. Never cache personalized HTML in a page cache or service worker.

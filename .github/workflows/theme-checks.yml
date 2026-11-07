@@ -9,6 +9,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Payment and release regressions
         run: |
+          php tests/test-admin-login.php
           php tests/test-payment-security.php
           php tests/test-payment-effects.php
           node tests/test-payment-buttons.cjs

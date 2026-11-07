@@ -268,3 +268,6 @@ docs/build/
 !.vscode/extensions.json
 !.vscode/php.json
 check-code.sh
+
+# Reproducible theme release archives and checksums
+/dist/

@@ -1,0 +1,23 @@
+name: Theme release checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Payment and release regressions
+        run: |
+          php tests/test-payment-security.php
+          php tests/test-payment-effects.php
+          node tests/test-payment-buttons.cjs
+          python3 tests/test-theme-package.py
+      - name: Build and validate uploadable theme
+        run: bash build-theme-zip.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flexpress-theme
+          path: |
+            dist/*.zip
+            dist/*.sha256

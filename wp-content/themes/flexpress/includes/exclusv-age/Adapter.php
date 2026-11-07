@@ -78,6 +78,35 @@ final class Adapter
         }
     }
 
+    public function publicPrivacy(): void
+    {
+        $url = get_privacy_policy_url();
+        $path = is_string($url) ? parse_url($url, PHP_URL_PATH) : null;
+        // Resolve one configured policy directly, never a visitor-supplied page/query.
+        if (!is_string($path) || $path === '' || $path === '/' ||
+            $url !== $this->config->origin . $path || rtrim(self::path(), '/') !== rtrim($path, '/')) {
+            return;
+        }
+        if (!in_array($_SERVER['REQUEST_METHOD'] ?? '', ['GET', 'HEAD'], true)) {
+            header('Allow: GET, HEAD');
+            $this->page('Method not allowed', '<p>Open the privacy policy with a normal page request.</p>', 405);
+        }
+        $policy = get_post((int) get_option('wp_page_for_privacy_policy'));
+        if (!$policy || $policy->post_type !== 'page' || $policy->post_status !== 'publish' || $policy->post_password !== '') {
+            return;
+        }
+        // Keep the notice readable before verification without theme chrome, embeds,
+        // shortcode execution, forms or media. Content still comes from the site's policy.
+        $allowed = [
+            'p' => [], 'br' => [], 'hr' => [], 'h2' => [], 'h3' => [], 'h4' => [],
+            'strong' => [], 'em' => [], 'b' => [], 'i' => [], 'ul' => [], 'ol' => [],
+            'li' => [], 'blockquote' => [], 'a' => ['href' => true, 'title' => true],
+            'table' => [], 'thead' => [], 'tbody' => [], 'tr' => [], 'th' => [], 'td' => [],
+        ];
+        $content = wp_kses(wpautop(strip_shortcodes($policy->post_content)), $allowed, ['https', 'http', 'mailto']);
+        $this->page('Privacy policy', $content . '<p><a href="/_age/">Back to age access</a></p>');
+    }
+
     public function routes(): void
     {
         $path = self::path();
@@ -87,10 +116,12 @@ final class Adapter
             $this->redirect('/_age/');
         }
         if ($path === '/_age/privacy' && in_array($method, ['GET', 'HEAD'], true)) {
+            $policyUrl = get_privacy_policy_url();
             $this->page('Your privacy', '<p>You can use Yoursafe, when configured, or Didit through the age gateway. '
                 . 'This site receives a verification reference and an age result, not your identity documents, '
                 . 'face images, name or date of birth.</p><p>The verification provider handles any identity capture. '
                 . 'Review the gateway and provider notices before continuing. Your membership login and purchases stay separate.</p>'
+                . ($policyUrl ? '<p><a href="' . esc_url($policyUrl) . '">Read the site privacy policy</a></p>' : '')
                 . '<p><a href="/_age/">Back to age access</a></p>');
         }
         if ($path === '/_age/help' && in_array($method, ['GET', 'HEAD'], true)) {

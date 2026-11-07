@@ -123,6 +123,7 @@ add_action('init', function () {
             flexpress_yoursafe_route_request();
         }
         $app = flexpress_exclusv_age_app();
+        $app->publicPrivacy();
         if ($path === '/_age' || (is_string($path) && strpos($path, '/_age/') === 0)) {
             $app->routes();
         }

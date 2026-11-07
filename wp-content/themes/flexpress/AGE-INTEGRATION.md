@@ -1,6 +1,6 @@
 # Optional Exclusv age gateway adapter
 
-Focused visitor candidate 1.0.46 implements an opt-in gateway adapter. It is disabled by default and has not been installed on a live site. It protects WordPress HTML, REST and AJAX when configured, but **direct uploads, other media helpers, CDN origins and edge caches still require enforcement**. This is a visitor page gate, not a complete media-protection solution. Direct media hardening is separate from this focused rollout.
+Focused visitor candidate 1.0.47 implements an opt-in gateway adapter. It is disabled by default and has not been installed on a live site. It protects WordPress HTML, REST and AJAX when configured, but **direct uploads, other media helpers, CDN origins and edge caches still require enforcement**. This is a visitor page gate, not a complete media-protection solution. Direct media hardening is separate from this focused rollout.
 
 ## Installation contract
 
@@ -43,7 +43,8 @@ Keep all HTML, API, redirects and age routes private/no-store at Apache, Caddy a
 - `POST /_age/start`: exact Origin plus double-submit CSRF, atomic rate limit, PKCE/state/nonce and pinned issuer redirect.
 - `GET /_age/callback`: one-use encrypted handoff, verified ES256 claims and online eligibility; rotates the local session and returns only to a safe same-site path. Query strings are not preserved in return destinations.
 - `POST /_age/logout`: exact Origin and session CSRF; local cookie/record removal before attempted remote revocation. An issuer outage cannot retain local access; failed remote revocation may remain until its bounded expiry.
-- `GET /_age/privacy` and `/_age/help`: neutral public guidance and configured operator contact.
+- `GET /_age/privacy` and `/_age/help`: neutral public guidance and configured operator contact. The privacy screen links to the site policy selected in WordPress Settings → Privacy.
+- The selected, published, password-free privacy page remains readable before verification at its same-origin permalink (GET/HEAD). It renders only that policy in the neutral age layout, with basic formatting and links; no theme chrome, media, embedded content, shortcodes or forms execute. Query parameters cannot select another page; other routes and REST requests retain the age guard. Select a real policy page and verify its text before launch.
 
 Gateway cookies are `__Host-` prefixed, Secure, HttpOnly, host-only, path `/`, SameSite=Lax. The callback uses no-referrer. Entry forms use same-origin referrer policy so native POST Origin checks work, and CSP allows form redirects only to self and the exact issuer. The obsolete self-declaration popup is omitted when gateway enforcement is enabled; localStorage never grants gateway access.
 

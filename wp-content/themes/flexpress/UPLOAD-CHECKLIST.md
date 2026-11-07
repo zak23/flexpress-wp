@@ -1,4 +1,4 @@
-# FlexPress 1.0.46 candidate installation and acceptance
+# FlexPress 1.0.47 candidate installation and acceptance
 
 Use this checklist for a fresh site or an update. The theme ZIP contains reusable code, assets and setup documentation. It does not migrate users, purchases, media, WordPress options, plugins, credentials or hosting configuration.
 
@@ -13,7 +13,7 @@ Use this checklist for a fresh site or an update. The theme ZIP contains reusabl
 
 ## Install and configure
 
-1. Install the reviewed `flexpress-1.0.46.zip` candidate through Appearance → Themes, or the host's deployment mechanism. Retain the prior release for rollback. Activate/check FlexPress, menu assignments, templates, permalinks and content fields. This candidate does not enable age enforcement; read [AGE-INTEGRATION.md](AGE-INTEGRATION.md).
+1. Install the reviewed `flexpress-1.0.47.zip` candidate through Appearance → Themes, or the host's deployment mechanism. Retain the prior release for rollback. Activate/check FlexPress, menu assignments, templates, permalinks and content fields. This candidate does not enable age enforcement; read [AGE-INTEGRATION.md](AGE-INTEGRATION.md).
 2. Follow HOSTING.md separately for DNS, Full (strict), origin restrictions, trusted headers, caching, logs and certificate management. The included Caddy example is not activated by WordPress.
 3. Configure the destination's Flowguard shop, plans and currency. Verify its provider-side callback is `https://YOUR_DOMAIN/wp-admin/admin-ajax.php?action=flowguard_webhook` and browser return URLs use the same intended site. Test/live behaviour is controlled by the provider.
 4. Configure Bunny media zones/signing and optional integrations. Confirm legal/contact content and form recipients belong to this site.

@@ -2,7 +2,7 @@
 
 FlexPress is a portable WordPress membership theme for launching independent content sites. It provides episode and model pages, Extras, paid memberships, per-item purchases, affiliate tools and Bunny media delivery. **Each site keeps its own identity, customer data, provider accounts and hosting configuration.**
 
-Candidate **1.0.42** binds card-preview signing to published content and removes unsigned-player fallback. It also adds an opt-in gateway adapter with encrypted sessions, consent/callback/logout, per-request WordPress guards and trusted ingress. It is disabled by default; private runtime installation and complete media/CDN enforcement remain separate requirements. It retains the portable hosting guides and prior payment/admin-login fixes. Activating the theme does not install or change Caddy or Cloudflare.
+Candidate **1.0.45** binds card-preview signing to published content and removes unsigned-player fallback. It also adds an opt-in gateway adapter with encrypted sessions, consent/callback/logout, per-request WordPress guards and trusted ingress. It is disabled by default; private runtime installation and complete media/CDN enforcement remain separate requirements. It retains the portable hosting guides and prior payment/admin-login fixes. Activating the theme does not install or change Caddy or Cloudflare.
 
 ## Start here
 
@@ -91,3 +91,5 @@ All reusable application features belong in the theme. Keep actual server config
 Read [AGENTS.md](AGENTS.md) before editing. In the source repository, run the relevant tests in `tests/`, commit changes in reviewable steps and use `./build-theme-zip.sh`. The builder uses committed theme files, lints shipped PHP, creates combined CSS and records hashes in `release-manifest.json`. It excludes debug/maintenance scripts, backups, development dependencies and untracked files.
 
 Do not hand-edit the generated manifest. Keep `Version` in `style.css` and `FLEXPRESS_VERSION` in `functions.php` aligned when making a new release. Verify the exact ZIP contains this README, AGENTS.md, HOSTING.md, UPLOAD-CHECKLIST.md and the Caddy example. Use [UPLOAD-CHECKLIST.md](UPLOAD-CHECKLIST.md) for destination acceptance and rollback.
+
+Focused visitor rollout: retain **Sign in with Yoursafe** as an alternative to **Verify with Didit**. Both methods return to the requested site page. Existing media/payment behaviour remains outside this change; the broad CDN/gallery candidate is separate. See AGE-INTEGRATION.md for proof lifetimes and verification limits.

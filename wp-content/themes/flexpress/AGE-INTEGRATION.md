@@ -1,10 +1,10 @@
 # Optional Exclusv age gateway adapter
 
-Candidate 1.0.42 implements an opt-in gateway adapter. It is disabled by default and has not been installed on a live site. It protects WordPress HTML, REST and AJAX when configured, but **direct uploads, other media helpers, CDN origins and edge caches still require enforcement**. Do not activate it as a complete content-protection solution until those paths and production release gates are verified.
+Focused visitor candidate 1.0.45 implements an opt-in gateway adapter. It is disabled by default and has not been installed on a live site. It protects WordPress HTML, REST and AJAX when configured, but **direct uploads, other media helpers, CDN origins and edge caches still require enforcement**. This is a visitor page gate, not a complete media-protection solution. Direct media hardening is separate from this focused rollout.
 
 ## Installation contract
 
-Requires PHP 8.2+, native Sodium, WordPress 6.2+, InnoDB and a single-site installation at a root origin. The legacy Yoursafe server gate must be disabled. Production WordPress rejects sandbox assertions. Loopback HTTP is allowed only for an explicitly configured local sandbox fixture; production requires HTTPS.
+Requires PHP 8.2+, native Sodium, WordPress 6.2+, InnoDB and a single-site installation at a root origin. Yoursafe remains available with its existing enabled settings and credentials. Either age-gate flag enables that provider; when the gateway flag is on, the combined visitor guard owns redirects so the two guards do not loop. Production WordPress rejects sandbox assertions. Loopback HTTP is allowed only for an explicitly configured local sandbox fixture; production requires HTTPS.
 
 Two artifacts are required: the reviewed theme ZIP and the matching `exclusv-age-php-runtime.zip` from the gateway repository. The private runtime includes locked Facile OIDC/JOSE, Guzzle and PSR dependencies under `ExclusvAgeRuntime`, with a distinct Composer loader. Install the runtime **outside every served web root**, readable by PHP. Do not upload that ZIP through WordPress or put it in `wp-content`. Verify archive hashes and the runtime manifest before installation. No Composer or development tools are needed on the destination. A theme ZIP alone does not supply or activate the gateway.
 
@@ -42,9 +42,9 @@ Keep all HTML, API, redirects and age routes private/no-store at Apache, Caddy a
 - `POST /_age/logout`: exact Origin and session CSRF; local cookie/record removal before attempted remote revocation. An issuer outage cannot retain local access; failed remote revocation may remain until its bounded expiry.
 - `GET /_age/privacy` and `/_age/help`: neutral public guidance and configured operator contact.
 
-Cookies are `__Host-` prefixed, Secure, HttpOnly, host-only, path `/`, SameSite=Lax. The callback uses no-referrer. Entry forms use same-origin referrer policy so native POST Origin checks work, and CSP allows form redirects only to self and the exact issuer. The obsolete self-declaration popup is omitted when gateway enforcement is enabled; localStorage never grants gateway access.
+Gateway cookies are `__Host-` prefixed, Secure, HttpOnly, host-only, path `/`, SameSite=Lax. The callback uses no-referrer. Entry forms use same-origin referrer policy so native POST Origin checks work, and CSP allows form redirects only to self and the exact issuer. The obsolete self-declaration popup is omitted when gateway enforcement is enabled; localStorage never grants gateway access.
 
-Every protected authorization uses current gateway introspection. There is no positive authorization cache or refresh token. Failure denies access. Age access never creates a WordPress login or membership entitlement. Founder paid-access bypass does not bypass age checks.
+A valid existing server-signed Yoursafe cookie is accepted independently of gateway availability. Otherwise, protected authorization uses current gateway introspection, without a positive authorization cache or refresh token. Invalid or expired results deny access. Age access never creates a WordPress login or membership entitlement. Founder paid-access bypass does not bypass age checks.
 
 Native admin/login and WP-CLI/cron retain their own access controls. Only the exact signed Flowguard/PPV payment AJAX actions and Flowguard REST callback bypass the age guard; their existing signature/method checks remain. Other AJAX and all other REST routes require age access, including alternate REST query routing. Admin-post is protected. Third-party payment callbacks need explicit review, not blanket API exemptions.
 
@@ -62,7 +62,7 @@ Rotate storage keys with overlap: new records use the active version; retain pre
 
 The preview signing endpoint requires POST, nonce, a published/password-free episode ID and its exact preview video. Preview/full aliases also require normal paid/release authorization; banned ordinary customers cannot reuse purchases. When gateway enforcement is enabled, signing requires a fresh age check and expiry is the earlier of five minutes and the age-session deadline. The player has no unsigned fallback.
 
-This does not secure all thumbnails, full players, gallery images, direct uploads or CDN origins. Their entitlement checks, signed delivery, renewal, unsigned-origin denial and cache controls remain release blockers.
+This does not secure all thumbnails, full players, gallery images, direct uploads or CDN origins. Their entitlement checks and direct delivery controls are deferred work; do not claim this visitor gate protects direct media URLs.
 
 ## Verification evidence
 
@@ -76,3 +76,13 @@ Disposable fixtures only; no live customers, provider charges or outbound notifi
 Source tests are `tests/run-age-storage.py`, `tests/test-media-authorization.php` and `tests/test-preview-player.cjs`. The gateway repository owns `tests/wordpress/` and the private runtime builder. Existing payment/admin/package regressions remain required. The full fixture uses a synthetic database, intercepted mail/WordPress HTTP and an internal-only Docker network; no live content or secrets are copied.
 
 Before live activation: finish media/CDN/cache enforcement, exact HTTPS ingress validation, ordinary-customer scenarios, cleanup/monitoring and restore drills, provider/privacy/security acceptance and the applicable production approval. Roll back by restoring the reviewed prior theme/runtime/config and retaining payment data. Disabling the flag removes this protection; it is not a safe fallback for a site required to enforce age access.
+
+## Yoursafe alternative
+
+The neutral visitor screen offers **Sign in with Yoursafe** when its existing settings are enabled, alongside **Verify with Didit** through the age gateway. The existing `/age-verification/yoursafe/start/` and `/age-verification/yoursafe/callback/` routes remain unchanged. Only these exact GET routes pass the new guard before verification; no general route or API exemption was added. Cancelled/failed callbacks return to the method choice with the original destination.
+
+Yoursafe still validates the signed RS256 response, issuer, audience, nonce, expiry, active account and `eighteenplus=true` before issuing its signed cookie. The existing cookie lifetime is 90 days; this increment does not change that policy. Gateway sessions remain at most one hour under the existing configuration. An ordinary WordPress login or self-declaration cannot satisfy the combined guard. Both methods require the configured trusted ingress and country allowlist for protected content.
+
+The active-session clear action clears both provider proofs locally before any remote gateway revocation. WordPress logout also clears both. Yoursafe proof validation is local and does not check later provider revocation until another sign-in or cookie expiry; no new online-revocation guarantee is implied.
+
+This focused branch excludes the broader gallery/CDN and full-player entitlement rewrite. Keep the existing provider credentials, callback registration, payment settings and media delivery unchanged during rollout. Production gateway configuration is still required before live activation; sandbox results must never grant live visitor access.

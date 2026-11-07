@@ -30,13 +30,13 @@ function flexpress_yoursafe_settings() {
 /**
  * Whether the provider is ready to use.
  *
- * Requires the age gate master switch plus admin credentials. The gate is
- * parked by default — see flexpress_is_age_gate_enabled().
+ * Requires either age gate plus the existing provider settings and credentials.
  *
  * @return bool
  */
 function flexpress_yoursafe_is_enabled() {
-	if ( function_exists( 'flexpress_is_age_gate_enabled' ) && ! flexpress_is_age_gate_enabled() ) {
+	if ( ! flexpress_is_age_gate_enabled() &&
+        !(function_exists('flexpress_exclusv_age_enabled') && flexpress_exclusv_age_enabled()) ) {
 		return false;
 	}
 
@@ -126,16 +126,15 @@ function flexpress_yoursafe_set_state_cookie( $value, $expires ) {
  * @return void
  */
 function flexpress_yoursafe_fail( $code, $return_url ) {
-	$url = add_query_arg(
-		array(
-			'yoursafe_error' => sanitize_key( $code ),
-			'return_to'      => flexpress_age_gate_return_url( $return_url ),
-		),
-		home_url( '/age-verification/' )
-	);
-	nocache_headers();
-	wp_safe_redirect( $url, 303 );
-	exit;
+    $combined = function_exists('flexpress_exclusv_age_enabled') && flexpress_exclusv_age_enabled();
+    $return_url = flexpress_age_gate_return_url($return_url);
+    $url = add_query_arg(array(
+        'yoursafe_error' => sanitize_key($code),
+        ($combined ? 'return' : 'return_to') => $combined ? wp_make_link_relative($return_url) : $return_url,
+    ), home_url($combined ? '/_age/' : '/age-verification/'));
+    nocache_headers();
+    wp_safe_redirect($url, 303);
+    exit;
 }
 
 /**
@@ -573,13 +572,13 @@ function flexpress_yoursafe_callback() {
 /**
  * Handle virtual Yoursafe ID routes before the general age gate.
  *
- * Parked with the age gate master switch — start/callback are inert until
- * FLEXPRESS_AGE_GATE_ENABLED is true.
+ * Available with either age gate; the existing registered callback remains unchanged.
  *
  * @return void
  */
 function flexpress_yoursafe_route_request() {
-	if ( function_exists( 'flexpress_is_age_gate_enabled' ) && ! flexpress_is_age_gate_enabled() ) {
+	if ( ! flexpress_is_age_gate_enabled() &&
+        !(function_exists('flexpress_exclusv_age_enabled') && flexpress_exclusv_age_enabled()) ) {
 		return;
 	}
 

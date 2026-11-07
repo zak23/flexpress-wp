@@ -30,16 +30,31 @@ final class Adapter
         return ['records' => $this->records->purge(time()), 'limits' => $this->records->purgeLimits()];
     }
 
-    /** No positive cache: each authorization checks the issuer, including media issuance. */
+    /** Gateway proofs are checked online; Yoursafe retains its existing signed local proof. */
     public function eligible(): array
     {
         $country = $this->config->country($_SERVER);
+        if ($country === null) {
+            throw new \Exclusv\Age\Denied();
+        }
+        $yoursafe = $this->yoursafeSession();
+        if ($yoursafe !== null) { return $yoursafe; }
         $session = $this->sessions->read($this->cookieValue(self::SESSION));
-        if ($country === null || $session === null) {
+        if ($session === null) {
             throw new \Exclusv\Age\Denied();
         }
         $this->client->assertEligible($session['proof'], $country);
         return $session;
+    }
+
+    /** Accept only the existing server-signed Yoursafe proof, never a membership login or modal flag. */
+    private function yoursafeSession(): ?array
+    {
+        if (!flexpress_yoursafe_is_enabled() || !flexpress_is_age_verified()) { return null; }
+        $cookie = wp_unslash($_COOKIE[FLEXPRESS_AGE_COOKIE]);
+        $payload = json_decode(flexpress_age_base64url_decode(explode('.', $cookie, 2)[0]), true);
+        return ['provider' => 'yoursafe', 'expires_at' => $payload['exp'],
+            'csrf' => hash_hmac('sha256', 'exclusv-age-logout:' . $cookie, wp_salt('auth'))];
     }
 
     public function mediaDeadline(): int
@@ -72,8 +87,8 @@ final class Adapter
             $this->redirect('/_age/');
         }
         if ($path === '/_age/privacy' && in_array($method, ['GET', 'HEAD'], true)) {
-            $this->page('Your privacy', '<p>The gateway confirms whether you meet the age requirement. '
-                . 'This site receives a pseudonymous reference and a time-limited age result, not your identity documents, '
+            $this->page('Your privacy', '<p>You can use Yoursafe, when configured, or Didit through the age gateway. '
+                . 'This site receives a verification reference and an age result, not your identity documents, '
                 . 'face images, name or date of birth.</p><p>The verification provider handles any identity capture. '
                 . 'Review the gateway and provider notices before continuing. Your membership login and purchases stay separate.</p>'
                 . '<p><a href="/_age/">Back to age access</a></p>');
@@ -115,7 +130,7 @@ final class Adapter
         try {
             $this->rate('entry', 60, 60);
             $session = null;
-            try { $session = $this->eligible(); } catch (\Exclusv\Age\Denied) {}
+            try { $session = $this->eligible(); } catch (\Throwable) {}
             if ($session !== null) {
                 $this->page('Your age access is active', '<p>You can continue browsing. Membership access and purchases still apply.</p>'
                     . '<p><a class="button" href="/">Continue to the site</a></p>'
@@ -125,11 +140,17 @@ final class Adapter
             $csrf = self::random();
             $this->cookie(self::START, $csrf, time() + 600);
             $return = is_string($_GET['return'] ?? null) ? \Exclusv\Age\GatewayClient::returnPath(wp_unslash($_GET['return'])) : '/';
-            $this->page('Confirm your age to continue', '<p>Use the age gateway to confirm you are 18 or older. '
-                . 'If you have already verified, sign in with your passkey.</p>'
+            $yoursafe = flexpress_yoursafe_is_enabled()
+                ? '<p><a class="button" href="' . esc_url(flexpress_yoursafe_start_url($this->config->origin . $return))
+                    . '">Sign in with Yoursafe</a></p><p>Or verify with Didit below.</p>' : '';
+            $error = isset($_GET['yoursafe_error'])
+                ? '<p role="alert">Yoursafe could not confirm your age. Please try again or choose Didit.</p>' : '';
+            $this->page('Confirm your age to continue', '<p>Verify that you are 18 or older to browse this site. '
+                . 'Age verification does not create a membership or unlock purchases.</p>' . $error . $yoursafe
                 . '<form action="/_age/start" method="post"><input type="hidden" name="csrf" value="' . esc_attr($csrf) . '">'
                 . '<input type="hidden" name="return" value="' . esc_attr($return) . '">'
-                . '<button type="submit">Continue to age verification</button></form>');
+                . '<button type="submit">Verify with Didit</button></form>'
+                . '<p>Already verified through the age gateway? You can use your passkey there.</p>');
         } catch (\Throwable) {
             $this->page('Age access is temporarily unavailable', '<p>Please try again shortly.</p>'
                 . '<p><a href="/_age/help">Get help</a></p>', 503);
@@ -173,7 +194,10 @@ final class Adapter
     {
         $this->sameOrigin();
         $handle = $this->cookieValue(self::SESSION);
-        if (!is_string($_POST['csrf'] ?? null) || !$this->sessions->csrfMatches($handle, $_POST['csrf'])) {
+        $yoursafe = $this->yoursafeSession();
+        if (!is_string($_POST['csrf'] ?? null) || ($yoursafe !== null
+            ? !hash_equals($yoursafe['csrf'], $_POST['csrf'])
+            : !$this->sessions->csrfMatches($handle, $_POST['csrf']))) {
             throw new \Exclusv\Age\Denied();
         }
         $this->clear();
@@ -183,6 +207,7 @@ final class Adapter
     /** Also called on WordPress logout; remote failure cannot restore local access. */
     public function clear(): void
     {
+        flexpress_clear_age_verified_cookie();
         $handle = $this->cookieValue(self::SESSION);
         $this->cookie(self::SESSION, '', 0);
         $session = $this->sessions->read($handle);

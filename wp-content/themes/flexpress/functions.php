@@ -5,7 +5,7 @@
  */
 
 // Define theme constants
-define('FLEXPRESS_VERSION', '1.0.42');
+define('FLEXPRESS_VERSION', '1.0.45');
 define('FLEXPRESS_PATH', get_template_directory());
 define('FLEXPRESS_URL', get_template_directory_uri());
 
@@ -999,50 +999,17 @@ function flexpress_is_development()
  */
 function flexpress_add_caching_headers()
 {
-    // Only add headers if not in admin and not doing AJAX
-    if (is_admin() || wp_doing_ajax()) {
+    if (is_admin() || wp_doing_ajax() || headers_sent()) {
         return;
     }
-
-    // Shorter cache duration in development
-    $cache_duration = flexpress_is_development() ? 300 : 3600; // 5 min vs 1 hour
-
-    // Add Cache-Control header for HTML pages
-    if (!headers_sent()) {
-        if (is_user_logged_in()) {
-            // Prevent any shared caching for authenticated users
-            header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0');
-            header('Pragma: no-cache');
-            header('Expires: 0');
-        } else {
-            header('Cache-Control: public, max-age=' . $cache_duration);
-
-            // Add ETag header
-            $etag = md5(get_the_ID() . get_the_modified_time('U'));
-            header('ETag: "' . $etag . '"');
-
-            // Add Last-Modified header
-            if (is_singular()) {
-                $last_modified = get_the_modified_time('D, d M Y H:i:s \G\M\T');
-                if ($last_modified) {
-                    header('Last-Modified: ' . $last_modified);
-                }
-            }
-
-            // Add custom headers that WordPress caching plugins use
-            header('X-Cache-Enabled: true');
-            header('X-Cache-Status: HIT');
-
-            // Add Age header (simulated)
-            header('Age: 0');
-
-            // Add development indicator
-            if (flexpress_is_development()) {
-                header('X-Development-Mode: true');
-            }
-        }
+    nocache_headers();
+    header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0');
+    foreach (['ETag', 'Last-Modified', 'Age', 'X-Cache-Enabled', 'X-Cache-Status'] as $name) {
+        header_remove($name);
     }
 }
+add_action('send_headers', 'flexpress_add_caching_headers', PHP_INT_MAX);
+// Some standalone templates bypass the regular send_headers path.
 add_action('wp_head', 'flexpress_add_caching_headers', 1);
 
 /**

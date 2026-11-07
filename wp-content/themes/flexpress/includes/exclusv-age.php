@@ -26,7 +26,7 @@ function flexpress_exclusv_age_app()
     static $app;
     if ($app) { return $app; }
     if (PHP_VERSION_ID < 80200 || !extension_loaded('sodium') || is_multisite() ||
-        !defined('FLEXPRESS_EXCLUSV_AGE_CONFIG') || flexpress_is_age_gate_enabled()) {
+        !defined('FLEXPRESS_EXCLUSV_AGE_CONFIG')) {
         throw new RuntimeException('Age integration is unavailable.');
     }
     $settings = require flexpress_exclusv_age_private_file(FLEXPRESS_EXCLUSV_AGE_CONFIG);
@@ -114,6 +114,14 @@ add_action('init', function () {
     if (isset($_GET['rest_route']) || $path === $rest_prefix ||
         (is_string($path) && strpos($path, $rest_prefix . '/') === 0)) { return; }
     try {
+        // Keep the registered Yoursafe endpoints reachable before the visitor guard.
+        if (in_array($path, array('/age-verification/yoursafe/start/', '/age-verification/yoursafe/callback/'), true) &&
+            ($_SERVER['REQUEST_METHOD'] ?? '') === 'GET' && flexpress_yoursafe_is_enabled()) {
+            nocache_headers();
+            header('Cache-Control: private, no-store, max-age=0');
+            header('Referrer-Policy: no-referrer');
+            flexpress_yoursafe_route_request();
+        }
         $app = flexpress_exclusv_age_app();
         if ($path === '/_age' || (is_string($path) && strpos($path, '/_age/') === 0)) {
             $app->routes();
@@ -136,11 +144,13 @@ add_filter('rest_pre_dispatch', function ($result, $server, $request) {
 
 add_filter('wp_headers', function ($headers) {
     $headers['Cache-Control'] = 'private, no-store, max-age=0';
-    $headers['Referrer-Policy'] = 'no-referrer';
+    // Content may send the origin to existing media hotlink checks; callbacks stay no-referrer.
+    $headers['Referrer-Policy'] = 'origin';
     return $headers;
 }, PHP_INT_MAX);
 
 add_action('wp_logout', function () {
+    flexpress_clear_age_verified_cookie();
     try { flexpress_exclusv_age_app()->clear(); } catch (Throwable $error) {
         setcookie('__Host-flexpress_age', '', array('expires' => time() - 3600, 'path' => '/', 'secure' => true, 'httponly' => true, 'samesite' => 'Lax'));
     }

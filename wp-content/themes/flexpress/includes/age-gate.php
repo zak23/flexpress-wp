@@ -155,6 +155,17 @@ function flexpress_set_age_verified_cookie() {
 	$_COOKIE[ FLEXPRESS_AGE_COOKIE ] = $value;
 }
 
+/** Clear the existing Yoursafe proof using the same cookie scope used to create it. */
+function flexpress_clear_age_verified_cookie() {
+    setcookie(FLEXPRESS_AGE_COOKIE, '', array(
+        'expires' => time() - 3600,
+        'path' => COOKIEPATH ? COOKIEPATH : '/',
+        'domain' => defined('COOKIE_DOMAIN') && is_string(COOKIE_DOMAIN) ? COOKIE_DOMAIN : '',
+        'secure' => is_ssl(), 'httponly' => true, 'samesite' => 'Lax',
+    ));
+    unset($_COOKIE[FLEXPRESS_AGE_COOKIE]);
+}
+
 /**
  * Return whether the current route may bypass the gate.
  *
@@ -314,6 +325,11 @@ function flexpress_render_age_verification_page() {
  * @return void
  */
 function flexpress_enforce_temporary_age_gate() {
+	// The combined gate owns redirects when enabled; Yoursafe remains a verification method.
+	if (function_exists('flexpress_exclusv_age_enabled') && flexpress_exclusv_age_enabled()) {
+		return;
+	}
+
 	if ( ! flexpress_is_age_gate_enabled() ) {
 		return;
 	}

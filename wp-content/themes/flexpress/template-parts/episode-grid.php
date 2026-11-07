@@ -107,7 +107,7 @@ $episodes = new WP_Query($args);
                 ?>
 
                 <div class="col-md-4 col-lg-3">
-                    <div class="episode-card" data-preview-video="<?php echo esc_attr($preview_video); ?>" data-video-id="<?php echo esc_attr($video_id); ?>">
+                    <div class="episode-card" data-post-id="<?php echo esc_attr(get_the_ID()); ?>" data-preview-video="<?php echo esc_attr($preview_video); ?>" data-video-id="<?php echo esc_attr($video_id); ?>">
                         <div class="card-img-top position-relative">
                             <a href="<?php the_permalink(); ?>">
                                 <div class="preview-container position-absolute top-0 start-0 w-100 h-100"></div>

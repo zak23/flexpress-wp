@@ -113,11 +113,14 @@ while (have_posts()):
     $has_access = $access_info['has_access'];
     $is_active_member = $access_info['is_member'];
 
-    // Get video URL based on access (use fresh access info)
-    $video_id = flexpress_get_episode_video_for_access(get_the_ID(), get_current_user_id(), $ppv_unlocked);
-    $video_url = '';
-    if ($video_id) {
-        $video_url = flexpress_get_bunnycdn_video_url($video_id);
+    $embed_role = '';
+    $embed_url = '';
+    foreach (['full', 'trailer', 'preview'] as $candidate_role) {
+        $embed_url = flexpress_get_content_video_embed_url(get_the_ID(), $candidate_role);
+        if ($embed_url !== '') {
+            $embed_role = $candidate_role;
+            break;
+        }
     }
 
 ?>
@@ -165,87 +168,20 @@ while (have_posts()):
             <div class="row">
                 <div class="col-12">
                     <div class="video-player mb-5">
-                        <?php if ($has_access && $full_video): ?>
-                            <?php
-                            $video_settings = get_option('flexpress_video_settings', array());
-                            $library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
-                            $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
-
-                            // Generate token and expiration
-                            $expires = time() + 3600; // 1 hour expiry
-                            $token = '';
-
-                            if (!empty($token_key)) {
-                                // BunnyCDN token generation - format: hash('sha256', $token_key . $video_id . $expires)
-                                $token = hash('sha256', $token_key . $full_video . $expires);
-                            }
-                            ?>
+                        <?php if ($embed_url): ?>
                             <div style="position:relative;padding-top:56.25%;">
-                                <iframe src="https://iframe.mediadelivery.net/embed/<?php echo esc_attr($library_id); ?>/<?php echo esc_attr($full_video); ?>?token=<?php echo esc_attr($token); ?>&expires=<?php echo esc_attr($expires); ?>&autoplay=true&loop=true&muted=true&controls=false"
+                                <iframe src="<?php echo esc_url($embed_url); ?>"
                                     loading="lazy"
                                     style="border:0;position:absolute;top:0;height:100%;width:100%;"
                                     allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
                                     allowfullscreen="true">
                                 </iframe>
-                            </div>
-                        <?php elseif ($trailer_video): ?>
-                            <?php
-                            $video_settings = get_option('flexpress_video_settings', array());
-                            $library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
-                            $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
-
-                            // Generate token and expiration
-                            $expires = time() + 3600; // 1 hour expiry
-                            $token = '';
-
-                            if (!empty($token_key)) {
-                                // BunnyCDN token generation - format: hash('sha256', $token_key . $video_id . $expires)
-                                $token = hash('sha256', $token_key . $trailer_video . $expires);
-                            }
-                            ?>
-                            <div style="position:relative;padding-top:56.25%;">
-                                <iframe src="https://iframe.mediadelivery.net/embed/<?php echo esc_attr($library_id); ?>/<?php echo esc_attr($trailer_video); ?>?token=<?php echo esc_attr($token); ?>&expires=<?php echo esc_attr($expires); ?>&autoplay=true&loop=true&muted=true&controls=false"
-                                    loading="lazy"
-                                    style="border:0;position:absolute;top:0;height:100%;width:100%;"
-                                    allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
-                                    allowfullscreen="true">
-                                </iframe>
-                                <?php if ($is_unreleased): ?>
+                                <?php if ($is_unreleased && $embed_role === 'trailer'): ?>
                                     <div class="coming-soon-badge">
                                         <i class="fas fa-clock me-2"></i>
-                                        <?php
-                                        if ($release_date) {
-                                            $release_timestamp = strtotime($release_date);
-                                            echo esc_html(date('j M Y', $release_timestamp));
-                                        } else {
-                                            esc_html_e('Coming Soon', 'flexpress');
-                                        }
-                                        ?>
+                                        <?php echo $release_date ? esc_html(date('j M Y', strtotime($release_date))) : esc_html__('Coming Soon', 'flexpress'); ?>
                                     </div>
                                 <?php endif; ?>
-                            </div>
-                        <?php elseif ($preview_video): ?>
-                            <?php
-                            $video_settings = get_option('flexpress_video_settings', array());
-                            $library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
-                            $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
-
-                            // Generate token and expiration
-                            $expires = time() + 3600; // 1 hour expiry
-                            $token = '';
-
-                            if (!empty($token_key)) {
-                                // BunnyCDN token generation - format: hash('sha256', $token_key . $video_id . $expires)
-                                $token = hash('sha256', $token_key . $preview_video . $expires);
-                            }
-                            ?>
-                            <div style="position:relative;padding-top:56.25%;">
-                                <iframe src="https://iframe.mediadelivery.net/embed/<?php echo esc_attr($library_id); ?>/<?php echo esc_attr($preview_video); ?>?token=<?php echo esc_attr($token); ?>&expires=<?php echo esc_attr($expires); ?>&autoplay=true&loop=true&muted=true&controls=false"
-                                    loading="lazy"
-                                    style="border:0;position:absolute;top:0;height:100%;width:100%;"
-                                    allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
-                                    allowfullscreen="true">
-                                </iframe>
                             </div>
                         <?php else: ?>
                             <div class="d-flex align-items-center justify-content-center" style="aspect-ratio: 16/9; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">

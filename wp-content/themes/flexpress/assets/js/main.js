@@ -453,17 +453,21 @@ async function generateBunnyCDNToken(videoId) {
           type: "POST",
           data: {
             action: "flexpress_generate_bunnycdn_token",
+            post_id: String($card.data("post-id") || ""),
             video_id: videoId,
             nonce: FlexPressData.nonce,
           },
         });
 
-        if (response.success) {
+        if (response.success && /^[a-f0-9]{64}$/.test(response.data.token) &&
+            Number.isInteger(response.data.expires) && response.data.expires > Date.now() / 1000) {
           token = response.data.token;
           expires = response.data.expires;
+        } else {
+          return;
         }
       } catch (error) {
-        console.error("Error getting token:", error);
+        return;
       }
 
       // Create video element
@@ -483,9 +487,7 @@ async function generateBunnyCDNToken(videoId) {
         FlexPressData.libraryId +
         "/" +
         videoId;
-      if (token && expires) {
-        videoSrc += "?token=" + token + "&expires=" + expires;
-      }
+      videoSrc += "?token=" + token + "&expires=" + expires;
 
       const $source = $("<source>", {
         src: videoSrc,

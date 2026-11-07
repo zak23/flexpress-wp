@@ -5,7 +5,7 @@
  */
 
 // Define theme constants
-define('FLEXPRESS_VERSION', '1.0.40');
+define('FLEXPRESS_VERSION', '1.0.44');
 define('FLEXPRESS_PATH', get_template_directory());
 define('FLEXPRESS_URL', get_template_directory_uri());
 
@@ -29,9 +29,12 @@ add_action('init', 'flexpress_increase_upload_limits');
 require_once FLEXPRESS_PATH . '/includes/flexpress-permissions.php';
 require_once FLEXPRESS_PATH . '/includes/geolocation.php';
 require_once FLEXPRESS_PATH . '/includes/age-gate.php';
+require_once FLEXPRESS_PATH . '/includes/exclusv-age.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-yoursafe-id.php';
 require_once FLEXPRESS_PATH . '/flexpress-redis-cache.php';
 require_once FLEXPRESS_PATH . '/includes/post-types.php';
+require_once FLEXPRESS_PATH . '/includes/media-authorization.php';
+require_once FLEXPRESS_PATH . '/includes/media-cdn.php';
 require_once FLEXPRESS_PATH . '/includes/bunnycdn.php';
 require_once FLEXPRESS_PATH . '/includes/gallery-system.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-episode-ratings.php';
@@ -524,14 +527,13 @@ function flexpress_enqueue_scripts_and_styles()
     wp_enqueue_script('bootstrap-js', get_template_directory_uri() . '/assets/vendor/js/bootstrap.bundle.min.js', array(), '5.1.3', true);
     wp_script_add_data('bootstrap-js', 'defer', true);
 
-    // Enqueue age verification JavaScript (always loaded) - critical, no defer
-    wp_enqueue_script('flexpress-age-verification', get_template_directory_uri() . '/assets/js/age-verification.js', array(), wp_get_theme()->get('Version') . '.' . time(), true);
-
-    // Localize age verification script with exit URL
-    wp_localize_script('flexpress-age-verification', 'flexpressAgeVerificationData', array(
-        'exit_url' => flexpress_get_age_verification_exit_url(),
-        'timestamp' => time() // Force cache refresh
-    ));
+    // The server-enforced gateway replaces the legacy self-declaration popup.
+    if (!flexpress_exclusv_age_enabled()) {
+        wp_enqueue_script('flexpress-age-verification', get_template_directory_uri() . '/assets/js/age-verification.js', array(), wp_get_theme()->get('Version'), true);
+        wp_localize_script('flexpress-age-verification', 'flexpressAgeVerificationData', array(
+            'exit_url' => flexpress_get_age_verification_exit_url(),
+        ));
+    }
 
     // Enqueue main JavaScript (only on pages that need it)
     if (
@@ -994,55 +996,20 @@ function flexpress_is_development()
     return defined('WP_DEBUG') && WP_DEBUG;
 }
 
-/**
- * Add caching headers for WordPress caching detection
- */
+/** Keep dynamic HTML and embedded bearer links out of browser/shared caches. */
 function flexpress_add_caching_headers()
 {
-    // Only add headers if not in admin and not doing AJAX
-    if (is_admin() || wp_doing_ajax()) {
+    if (is_admin() || wp_doing_ajax() || headers_sent()) {
         return;
     }
-
-    // Shorter cache duration in development
-    $cache_duration = flexpress_is_development() ? 300 : 3600; // 5 min vs 1 hour
-
-    // Add Cache-Control header for HTML pages
-    if (!headers_sent()) {
-        if (is_user_logged_in()) {
-            // Prevent any shared caching for authenticated users
-            header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0');
-            header('Pragma: no-cache');
-            header('Expires: 0');
-        } else {
-            header('Cache-Control: public, max-age=' . $cache_duration);
-
-            // Add ETag header
-            $etag = md5(get_the_ID() . get_the_modified_time('U'));
-            header('ETag: "' . $etag . '"');
-
-            // Add Last-Modified header
-            if (is_singular()) {
-                $last_modified = get_the_modified_time('D, d M Y H:i:s \G\M\T');
-                if ($last_modified) {
-                    header('Last-Modified: ' . $last_modified);
-                }
-            }
-
-            // Add custom headers that WordPress caching plugins use
-            header('X-Cache-Enabled: true');
-            header('X-Cache-Status: HIT');
-
-            // Add Age header (simulated)
-            header('Age: 0');
-
-            // Add development indicator
-            if (flexpress_is_development()) {
-                header('X-Development-Mode: true');
-            }
-        }
+    nocache_headers();
+    header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0');
+    foreach (['ETag', 'Last-Modified', 'Age', 'X-Cache-Enabled', 'X-Cache-Status'] as $name) {
+        header_remove($name);
     }
 }
+add_action('send_headers', 'flexpress_add_caching_headers', PHP_INT_MAX);
+// Some standalone templates bypass the regular send_headers path.
 add_action('wp_head', 'flexpress_add_caching_headers', 1);
 
 /**
@@ -1920,42 +1887,37 @@ add_filter('pre_comment_approved', 'flexpress_restrict_model_comments', 10, 2);
  */
 function flexpress_generate_bunnycdn_token()
 {
+    nocache_headers();
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        wp_send_json_error('Method not allowed', 405);
+        return;
+    }
     // Verify nonce
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'flexpress-nonce')) {
-        wp_send_json_error('Invalid nonce');
+    if (!is_string($_POST['nonce'] ?? null) || !wp_verify_nonce(wp_unslash($_POST['nonce']), 'flexpress-nonce')) {
+        wp_send_json_error('Invalid nonce', 403);
         return;
     }
 
-    // Get video ID from request
-    $video_id = isset($_POST['video_id']) ? sanitize_text_field($_POST['video_id']) : '';
-    if (empty($video_id)) {
-        wp_send_json_error('Invalid video ID');
+    $post_id = $_POST['post_id'] ?? null;
+    $video_id = $_POST['video_id'] ?? null;
+    if (!is_string($post_id) || !preg_match('/^[1-9][0-9]{0,9}$/D', $post_id) || !is_string($video_id)) {
+        wp_send_json_error('Invalid preview request', 400);
+        return;
+    }
+    $video_id = wp_unslash($video_id);
+    require_once get_template_directory() . '/includes/media-authorization.php';
+    if (!flexpress_authorize_preview_video((int) $post_id, $video_id)) {
+        wp_send_json_error('Preview unavailable', 403);
         return;
     }
 
-    // Get video settings
-    $video_settings = get_option('flexpress_video_settings', array());
-    $library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
-    $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
-
-    if (empty($token_key) || empty($library_id)) {
-        wp_send_json_error('Missing BunnyCDN configuration');
+    try {
+        $credentials = flexpress_issue_bunny_embed_token($video_id);
+    } catch (Throwable $error) {
+        wp_send_json_error('Preview unavailable', $error->getCode() === 503 ? 503 : 403);
         return;
     }
-
-    // Generate expiration timestamp
-    $expires = time() + 3600; // 1 hour expiry
-
-    // Generate token
-    // BunnyCDN token generation - format: hash('sha256', $token_key . $video_id . $expires)
-    $token = hash('sha256', $token_key . $video_id . $expires);
-
-    // Return token and expiration
-    wp_send_json_success(array(
-        'token' => $token,
-        'expires' => $expires,
-        'libraryId' => $library_id
-    ));
+    wp_send_json_success($credentials);
 }
 add_action('wp_ajax_flexpress_generate_bunnycdn_token', 'flexpress_generate_bunnycdn_token');
 add_action('wp_ajax_nopriv_flexpress_generate_bunnycdn_token', 'flexpress_generate_bunnycdn_token');
@@ -5029,10 +4991,8 @@ function flexpress_display_extras_gallery($extras_id = null, $columns = null, $h
     // Always get access info (needed for purchase buttons and CTAs)
     $access_info = flexpress_check_extras_access($extras_id);
 
-    // Use provided has_access or get from access_info
-    if ($has_access === null) {
-        $has_access = $access_info['has_access'];
-    }
+    $has_access = !empty($access_info['has_access']);
+    $gallery = flexpress_sort_gallery_images_by_filename($gallery);
 
     // Get gallery settings
     if ($columns === null) {
@@ -5053,20 +5013,15 @@ function flexpress_display_extras_gallery($extras_id = null, $columns = null, $h
         <div class="gallery-grid" style="grid-template-columns: repeat(<?php echo esc_attr($columns); ?>, 1fr);">
             <?php foreach ($display_images as $index => $image) : ?>
                 <?php
-                // Use BunnyCDN thumbnail URL if available, otherwise fallback to WordPress URLs
-                $thumbnail_url = !empty($image['bunnycdn_thumbnail_url']) ?
-                    FlexPress_Gallery_System::generate_bunnycdn_token_url($image['bunnycdn_thumbnail_url'], 24) : (!empty($image['bunnycdn_url']) ?
-                        FlexPress_Gallery_System::generate_bunnycdn_token_url($image['bunnycdn_url'], 24) :
-                        $image['thumbnail']);
-                $large_url = !empty($image['bunnycdn_url']) ?
-                    FlexPress_Gallery_System::generate_bunnycdn_token_url($image['bunnycdn_url'], 24) :
-                    $image['large'];
+                $thumbnail_url = flexpress_get_authorized_gallery_image_url($extras_id, $index, 'thumbnail');
+                $large_url = flexpress_get_authorized_gallery_image_url($extras_id, $index, 'large');
+                if ($thumbnail_url === '') { continue; }
 
                 // Check if this is the 5th image in preview mode
                 $is_last_preview = $preview_mode && $index === 4;
                 ?>
                 <div class="gallery-item" data-index="<?php echo $index; ?>">
-                    <?php if ($has_access || !$is_last_preview): ?>
+                    <?php if ($large_url !== '' && ($has_access || !$is_last_preview)): ?>
                         <a href="<?php echo esc_url($large_url); ?>"
                             class="gallery-link"
                             data-lightbox="extras-gallery-<?php echo $extras_id; ?>"
@@ -5175,25 +5130,9 @@ function flexpress_get_extras_thumbnail($extras_id = null, $size = 'medium')
     if (flexpress_is_extras_gallery($extras_id)) {
         $gallery = flexpress_get_extras_gallery($extras_id);
         if (!empty($gallery)) {
+            $gallery = flexpress_sort_gallery_images_by_filename($gallery);
             $first_image = $gallery[0];
-            // Prefer BunnyCDN URLs with token; fall back to any legacy WP size keys if present
-            $optimized_url = '';
-            if (!empty($first_image['bunnycdn_thumbnail_url']) && ($size === 'thumbnail' || $size === 'medium')) {
-                $optimized_url = FlexPress_Gallery_System::generate_bunnycdn_token_url($first_image['bunnycdn_thumbnail_url'], 24);
-            } elseif (!empty($first_image['bunnycdn_url'])) {
-                $optimized_url = FlexPress_Gallery_System::generate_bunnycdn_token_url($first_image['bunnycdn_url'], 24);
-            } else {
-                // Legacy fallback if older arrays still contain WP-generated sizes
-                if ($size === 'thumbnail') {
-                    $optimized_url = $first_image['thumbnail'] ?? '';
-                } elseif ($size === 'medium') {
-                    $optimized_url = $first_image['medium'] ?? '';
-                } elseif ($size === 'large') {
-                    $optimized_url = $first_image['large'] ?? '';
-                } else {
-                    $optimized_url = $first_image['full'] ?? '';
-                }
-            }
+            $optimized_url = flexpress_get_authorized_gallery_image_url($extras_id, 0, $size);
 
             if (!empty($optimized_url)) {
                 return array(

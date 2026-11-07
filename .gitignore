@@ -271,6 +271,7 @@ check-code.sh
 
 # Reproducible theme release archives and checksums
 /dist/
+__pycache__/
 
 # Required theme templates and browser libraries are release inputs, not Composer dependencies.
 !wp-content/themes/flexpress/index.php

@@ -38,30 +38,12 @@ $hero_episode = new WP_Query($hero_args);
     <!-- Hero Section with video -->
     <?php if ($hero_episode->have_posts()):
         $hero_episode->the_post();
-        $preview_video = get_field('preview_video');
-
-        // Get the BunnyCDN video settings from the options
-        $video_settings = get_option('flexpress_video_settings', array());
-        $library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
-        $bunnycdn_url = isset($video_settings['bunnycdn_url']) ? $video_settings['bunnycdn_url'] : '';
-        $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
+        $hero_embed = flexpress_get_content_video_embed_url(get_the_ID(), 'preview');
     ?>
         <div class="hero-section">
-            <?php if ($preview_video && $library_id): ?>
+            <?php if ($hero_embed): ?>
                 <div class="hero-video-container">
-                    <?php
-                    // Generate a direct embed with no controls for muted autoplay
-                    $expires = time() + 3600; // 1 hour expiry
-                    $token = '';
-
-                    // Only generate token if we have the key
-                    if (!empty($token_key)) {
-                        $token = hash('sha256', $token_key . $preview_video . $expires);
-                    }
-
-                    // Embed iframe with autoplay and muted
-                    ?>
-                    <iframe src="https://iframe.mediadelivery.net/embed/<?php echo esc_attr($library_id); ?>/<?php echo esc_attr($preview_video); ?>?autoplay=true&loop=true&muted=true&controls=false<?php echo (!empty($token) ? '&token=' . esc_attr($token) . '&expires=' . esc_attr($expires) : ''); ?>"
+                    <iframe src="<?php echo esc_url($hero_embed); ?>"
                         allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
                         frameborder="0"
                         allowfullscreen="true">

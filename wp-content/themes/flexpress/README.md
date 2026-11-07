@@ -2,7 +2,7 @@
 
 FlexPress is a portable WordPress membership theme for launching independent content sites. It provides episode and model pages, Extras, paid memberships, per-item purchases, affiliate tools and Bunny media delivery. **Each site keeps its own identity, customer data, provider accounts and hosting configuration.**
 
-Release **1.0.40** adds portable deployment documentation and an agent setup contract. It retains the payment and native admin-login fixes from 1.0.39. The ZIP includes configuration examples; activating the theme does not install or change Caddy or Cloudflare.
+Candidate **1.0.44** binds episode/Extras players and card previews to authorized content, bounds embed links to five minutes/current age access and removes unsigned-player fallback. It also adds an opt-in gateway adapter with encrypted sessions, consent/callback/logout, per-request WordPress guards and trusted ingress. Thumbnails and galleries use separate bounded CDN signatures and current gallery entitlements. Stream/static CDN signing keys must be provisioned before installation; missing keys leave those images unavailable. Dynamic HTML stays private/no-store, including coming-soon mode. The age adapter is disabled by default; private runtime installation and complete media/CDN enforcement remain separate requirements. It retains the portable hosting guides and prior payment/admin-login fixes. Activating the theme does not install or change Caddy or Cloudflare.
 
 ## Start here
 
@@ -13,6 +13,7 @@ Release **1.0.40** adds portable deployment documentation and an agent setup con
 | Install, upgrade, migrate and accept a release | [UPLOAD-CHECKLIST.md](UPLOAD-CHECKLIST.md) |
 | Render a site-specific Caddy configuration | [hosting/Caddyfile.example](hosting/Caddyfile.example) |
 | Inspect existing payment data without changing it | [tools/payment-audit.php](tools/payment-audit.php) through WP-CLI only |
+| Age storage, preview signing and remaining integration | [AGE-INTEGRATION.md](AGE-INTEGRATION.md) |
 
 Use these documents from the extracted theme even when the original Git repository is unavailable. References to repository tests or build scripts are optional tooling available in the source repository, not commands guaranteed to exist in an installed ZIP.
 

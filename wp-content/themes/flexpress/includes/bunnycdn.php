@@ -9,31 +9,11 @@
  */
 function flexpress_get_bunnycdn_video_url($video_id, $type = 'preview')
 {
-    $video_settings = get_option('flexpress_video_settings', array());
-    $api_key = isset($video_settings['bunnycdn_api_key']) ? $video_settings['bunnycdn_api_key'] : '';
-    $library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
-    $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
-    $bunnycdn_url = isset($video_settings['bunnycdn_url']) ? $video_settings['bunnycdn_url'] : '';
-
-    if (empty($api_key) || empty($library_id) || empty($token_key) || empty($bunnycdn_url)) {
+    $post_id = get_the_ID();
+    if (!flexpress_authorize_content_video($post_id, $video_id, $type)) {
         return '';
     }
-
-    // BunnyCDN token signing
-    $expires = time() + 3600; // 1 hour expiry
-
-    // Using SHA256_HEX(token_security_key + video_id + expiration)
-    $token = hash('sha256', $token_key . $video_id . $expires);
-
-    return sprintf(
-        'https://%s/play/%s/%s?token=%s&expires=%d&type=%s',
-        $bunnycdn_url,
-        $library_id,
-        $video_id,
-        $token,
-        $expires,
-        $type
-    );
+    return flexpress_get_content_video_embed_url($post_id, $type);
 }
 
 /**
@@ -44,136 +24,28 @@ function flexpress_get_bunnycdn_video_url($video_id, $type = 'preview')
  */
 function flexpress_get_bunnycdn_video_thumbnail($video_id)
 {
-    if (empty($video_id)) {
+    if (!is_string($video_id) || !preg_match('/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/Di', $video_id)) {
         return '';
     }
-
-    // Get video details from API
-    $video_details = flexpress_get_bunnycdn_video_details($video_id);
-
-    if (!$video_details || !isset($video_details['thumbnailFileName'])) {
-        return '';
-    }
-
-    $video_settings = get_option('flexpress_video_settings', array());
-    $bunnycdn_url = isset($video_settings['bunnycdn_url']) ? $video_settings['bunnycdn_url'] : '';
-    $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
-
-    if (empty($bunnycdn_url) || empty($token_key)) {
-        return '';
-    }
-
-    // BunnyCDN token signing
-    $expires = time() + 3600; // 1 hour expiry
-    $token = hash('sha256', $token_key . $video_id . $expires);
-
-    // Construct URL with the actual thumbnailFileName from API
-    return sprintf(
-        'https://%s/%s/%s?token=%s&expires=%d',
-        $bunnycdn_url,
-        $video_id,
-        $video_details['thumbnailFileName'],
-        $token,
-        $expires
-    );
+    $details = flexpress_get_bunnycdn_video_details($video_id);
+    return is_array($details) && isset($details['thumbnailFileName'])
+        ? flexpress_stream_image_url($video_id, $details['thumbnailFileName']) : '';
 }
 
-/**
- * Get BunnyCDN thumbnail URL
- */
 function flexpress_get_bunnycdn_thumbnail_url($video_id)
 {
-    // Try to get the thumbnail via the API first
-    $api_thumbnail = flexpress_get_bunnycdn_video_thumbnail($video_id);
-    if (!empty($api_thumbnail)) {
-        return $api_thumbnail;
-    }
-
-    // Fallback to the default method if API fails
-    $video_settings = get_option('flexpress_video_settings', array());
-    $bunnycdn_url = isset($video_settings['bunnycdn_url']) ? $video_settings['bunnycdn_url'] : '';
-    $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
-
-    if (empty($bunnycdn_url) || empty($token_key)) {
-        return '';
-    }
-
-    // BunnyCDN token signing
-    $expires = time() + 3600; // 1 hour expiry
-
-    // Using SHA256_HEX(token_security_key + video_id + expiration)
-    $token = hash('sha256', $token_key . $video_id . $expires);
-
-    return sprintf(
-        'https://%s/%s/thumbnail.jpg?token=%s&expires=%d',
-        $bunnycdn_url,
-        $video_id,
-        $token,
-        $expires
-    );
+    $thumbnail = flexpress_get_bunnycdn_video_thumbnail($video_id);
+    return $thumbnail !== '' ? $thumbnail : flexpress_stream_image_url($video_id, 'thumbnail.jpg');
 }
 
-/**
- * Get BunnyCDN poster URL
- */
 function flexpress_get_bunnycdn_poster_url($video_id)
 {
-    // Try to get the thumbnail via the API first
-    $api_thumbnail = flexpress_get_bunnycdn_video_thumbnail($video_id);
-    if (!empty($api_thumbnail)) {
-        return $api_thumbnail;
-    }
-
-    // Fallback to the default method if API fails
-    $video_settings = get_option('flexpress_video_settings', array());
-    $bunnycdn_url = isset($video_settings['bunnycdn_url']) ? $video_settings['bunnycdn_url'] : '';
-    $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
-
-    if (empty($bunnycdn_url) || empty($token_key)) {
-        return '';
-    }
-
-    // BunnyCDN token signing
-    $expires = time() + 3600; // 1 hour expiry
-
-    // Using SHA256_HEX(token_security_key + video_id + expiration)
-    $token = hash('sha256', $token_key . $video_id . $expires);
-
-    return sprintf(
-        'https://%s/%s/thumbnail.jpg?token=%s&expires=%d',
-        $bunnycdn_url,
-        $video_id,
-        $token,
-        $expires
-    );
+    return flexpress_get_bunnycdn_thumbnail_url($video_id);
 }
 
-/**
- * Get BunnyCDN preview URL
- */
 function flexpress_get_bunnycdn_preview_url($video_id)
 {
-    $video_settings = get_option('flexpress_video_settings', array());
-    $bunnycdn_url = isset($video_settings['bunnycdn_url']) ? $video_settings['bunnycdn_url'] : '';
-    $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
-
-    if (empty($bunnycdn_url) || empty($token_key)) {
-        return '';
-    }
-
-    // BunnyCDN token signing
-    $expires = time() + 3600; // 1 hour expiry
-
-    // Using SHA256_HEX(token_security_key + video_id + expiration)
-    $token = hash('sha256', $token_key . $video_id . $expires);
-
-    return sprintf(
-        'https://%s/%s/preview.webp?token=%s&expires=%d',
-        $bunnycdn_url,
-        $video_id,
-        $token,
-        $expires
-    );
+    return flexpress_stream_image_url($video_id, 'preview.webp');
 }
 
 /**
@@ -474,39 +346,24 @@ function flexpress_get_primary_video_id($post_id = null)
  *                          aspect_ratio (e.g. '4:3'), crop (e.g. '650,488')
  * @return string Optimized image URL
  */
-function flexpress_get_bunnycdn_optimized_image_url($image_url, $params = array())
+function flexpress_get_bunnycdn_optimized_image_url($image_url, $params = array(), $admin_post_id = 0)
 {
-    if (empty($image_url)) {
-        return '';
-    }
-
-    // Default parameters
-    $default_params = array(
-        'format' => 'webp',
-        'quality' => 80,
-    );
-
-    // Merge user params with defaults
-    $optimizer_params = array_merge($default_params, $params);
-
-    // Build query string from parameters
-    $query_string = http_build_query($optimizer_params);
-
-    // Only replace hostname if CDN is configured
-    $video_settings = get_option('flexpress_video_settings', array());
-    $cdn_host = !empty($video_settings['bunnycdn_static_host']) ? $video_settings['bunnycdn_static_host'] : '';
-
-    if (!empty($cdn_host)) {
-        // Remove protocol if present
-        $cdn_host = preg_replace('#^https?://#', '', $cdn_host);
-        $source_host = parse_url($image_url, PHP_URL_HOST);
-        if (!empty($source_host)) {
-            $image_url = str_replace($source_host, $cdn_host, $image_url);
+    // Only local uploads or this site's configured static host can be rewritten and signed.
+    $settings = get_option('flexpress_video_settings', []);
+    try {
+        $host = FlexPress_Cdn_Signer::host($settings['bunnycdn_static_host'] ?? '');
+        $parts = is_string($image_url) ? parse_url($image_url) : false;
+        $uploads = wp_get_upload_dir();
+        $source = parse_url($uploads['baseurl']);
+        if (!$parts || ($parts['scheme'] ?? '') !== 'https' || isset($parts['user']) || isset($parts['pass']) ||
+            isset($parts['port']) || isset($parts['query']) || isset($parts['fragment']) ||
+            !in_array($parts['host'] ?? '', [$host, $source['host'] ?? ''], true)) {
+            return '';
         }
-    }
-
-    // Append optimizer parameters to URL (works with or without CDN)
-    $optimized_url = $image_url . (strpos($image_url, '?') === false ? '?' : '&') . $query_string;
-
-    return $optimized_url;
+        $path = $parts['path'] ?? '';
+        $prefix = rtrim($source['path'] ?? '', '/') . '/';
+        if ($prefix === '/' || !str_starts_with($path, $prefix)) { return ''; }
+        FlexPress_Cdn_Signer::path($path, $host);
+        return flexpress_sign_cdn_image($path, 'static', array_merge(['format' => 'webp', 'quality' => 80], $params), $admin_post_id);
+    } catch (Throwable $error) { return ''; }
 }

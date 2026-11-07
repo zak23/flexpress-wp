@@ -1281,49 +1281,8 @@ class FlexPress_Gallery_System
      */
     public static function generate_bunnycdn_token_url($file_path, $expires_in_hours = 24)
     {
-        // Get BunnyCDN settings
-        $video_settings = get_option('flexpress_video_settings', array());
-        $token_key = isset($video_settings['bunnycdn_storage_token_key']) ? $video_settings['bunnycdn_storage_token_key'] : '';
-        $serve_url = isset($video_settings['bunnycdn_serve_url']) ? $video_settings['bunnycdn_serve_url'] : '';
-
-        if (empty($token_key) || empty($serve_url)) {
-            // Return the original URL if token auth not configured
-            return $file_path;
-        }
-
-        // Extract path from URL if it's a full URL
-        if (strpos($file_path, 'https://') === 0) {
-            // Remove the base URL to get just the path
-            $base_url = 'https://' . $serve_url;
-            if (strpos($file_path, $base_url) === 0) {
-                $path = substr($file_path, strlen($base_url));
-            } else {
-                // If it's a different URL, extract the path after the domain
-                $parsed = parse_url($file_path);
-                $path = isset($parsed['path']) ? $parsed['path'] : $file_path;
-            }
-        } else {
-            // It's already just a path
-            $path = $file_path;
-        }
-
-        // Calculate expiration timestamp
-        $expires_timestamp = time() + ($expires_in_hours * 3600);
-
-        // Create the string to sign: TOKEN + PATH + EXPIRATION
-        $string_to_sign = $token_key . $path . $expires_timestamp;
-
-        // Generate SHA256 hash
-        $hash_object = hash('sha256', $string_to_sign, true);
-
-        // Base64 encode
-        $base64_token = base64_encode($hash_object);
-
-        // Replace characters for BunnyCDN compatibility
-        $token = str_replace(array('+', '/', '='), array('-', '_', ''), $base64_token);
-
-        // Construct the authenticated URL
-        return 'https://' . $serve_url . $path . '?token=' . $token . '&expires=' . $expires_timestamp;
+        // Legacy lifetime arguments cannot extend the bounded content authorization.
+        return flexpress_get_bound_gallery_url($file_path, get_the_ID());
     }
 
     /**
@@ -1471,14 +1430,9 @@ function flexpress_display_episode_gallery($post_id = null, $columns = null, $ha
     // Sort gallery images by filename
     $gallery_images = flexpress_sort_gallery_images_by_filename($gallery_images);
 
-    // Check access if not provided
-    if ($has_access === null) {
-        $access_info = function_exists('flexpress_check_episode_access') ? flexpress_check_episode_access($post_id) : array('has_access' => true);
-        $has_access = $access_info['has_access'];
-    } else {
-        // If has_access was provided, we still need access_info for the 5th image logic
-        $access_info = function_exists('flexpress_check_episode_access') ? flexpress_check_episode_access($post_id) : array('has_access' => $has_access);
-    }
+    // A presentation argument cannot grant membership or purchase access.
+    $access_info = flexpress_check_episode_access($post_id);
+    $has_access = !empty($access_info['has_access']);
 
     // Determine if we should show preview mode (only first 5 images)
     $preview_mode = !$has_access && count($gallery_images) > 5;
@@ -1500,20 +1454,15 @@ function flexpress_display_episode_gallery($post_id = null, $columns = null, $ha
         <div class="gallery-grid" style="grid-template-columns: repeat(<?php echo esc_attr($columns); ?>, 1fr);">
             <?php foreach ($display_images as $index => $image) : ?>
                 <?php
-                // Use BunnyCDN thumbnail URL if available, otherwise fallback to WordPress URLs
-                $thumbnail_url = !empty($image['bunnycdn_thumbnail_url']) ?
-                    FlexPress_Gallery_System::generate_bunnycdn_token_url($image['bunnycdn_thumbnail_url'], 24) : (!empty($image['bunnycdn_url']) ?
-                        FlexPress_Gallery_System::generate_bunnycdn_token_url($image['bunnycdn_url'], 24) :
-                        $image['thumbnail']);
-                $large_url = !empty($image['bunnycdn_url']) ?
-                    FlexPress_Gallery_System::generate_bunnycdn_token_url($image['bunnycdn_url'], 24) :
-                    $image['large'];
+                $thumbnail_url = flexpress_get_authorized_gallery_image_url($post_id, $index, 'thumbnail');
+                $large_url = flexpress_get_authorized_gallery_image_url($post_id, $index, 'large');
+                if ($thumbnail_url === '') { continue; }
 
                 // Check if this is the 5th image in preview mode
                 $is_last_preview = $preview_mode && $index === 4;
                 ?>
                 <div class="gallery-item" data-index="<?php echo $index; ?>">
-                    <?php if ($has_access || !$is_last_preview): ?>
+                    <?php if ($large_url !== '' && ($has_access || !$is_last_preview)): ?>
                         <a href="<?php echo esc_url($large_url); ?>"
                             class="gallery-link"
                             data-lightbox="episode-gallery-<?php echo $post_id; ?>"
@@ -1610,19 +1559,14 @@ function flexpress_display_episode_gallery($post_id = null, $columns = null, $ha
  */
 function flexpress_get_gallery_image_url($image_data, $size = 'thumbnail', $expires_hours = 24)
 {
-    if (empty($image_data)) {
-        return '';
-    }
-
-    // Use BunnyCDN URL with token if available, otherwise fallback to WordPress URLs
-    if (!empty($image_data['bunnycdn_url'])) {
-        return FlexPress_Gallery_System::generate_bunnycdn_token_url($image_data['bunnycdn_url'], $expires_hours);
-    }
-
-    // Fallback to WordPress URLs
-    $size_key = $size === 'thumbnail' ? 'thumbnail' : ($size === 'medium' ? 'medium' : ($size === 'large' ? 'large' : 'full'));
-
-    return isset($image_data[$size_key]) ? $image_data[$size_key] : '';
+    $post_id = get_the_ID();
+    $post = get_post($post_id);
+    if (!$post || !in_array($post->post_type, ['episode', 'extras'], true)) { return ''; }
+    $images = $post->post_type === 'episode' ? flexpress_get_episode_gallery($post_id) : flexpress_get_extras_gallery($post_id);
+    if (!is_array($images)) { return ''; }
+    $images = flexpress_sort_gallery_images_by_filename($images);
+    $index = array_search($image_data, $images, true);
+    return $index === false ? '' : flexpress_get_authorized_gallery_image_url($post_id, $index, $size);
 }
 
 // Function flexpress_has_extras_gallery() is already defined in functions.php

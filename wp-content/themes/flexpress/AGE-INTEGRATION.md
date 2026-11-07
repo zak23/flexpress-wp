@@ -1,6 +1,6 @@
 # Optional Exclusv age gateway adapter
 
-Candidate 1.0.42 implements an opt-in gateway adapter. It is disabled by default and has not been installed on a live site. It protects WordPress HTML, REST and AJAX when configured, but **direct uploads, other media helpers, CDN origins and edge caches still require enforcement**. Do not activate it as a complete content-protection solution until those paths and production release gates are verified.
+Candidate 1.0.43 implements an opt-in gateway adapter. It is disabled by default and has not been installed on a live site. It protects WordPress HTML, REST and AJAX when configured, but **direct uploads, thumbnails, galleries, CDN origins and edge caches still require enforcement**. Do not activate it as a complete content-protection solution until those paths and production release gates are verified.
 
 ## Installation contract
 
@@ -32,7 +32,7 @@ Register exactly `site_origin + /_age/callback`; a real registration requires th
 
 Caddy must strip browser-supplied `X-Exclusv-Origin` and set the private value only for this site's verified ingress. Accept Cloudflare country/visitor headers only from verified Cloudflare peers, and overwrite forwarded chains. Restrict the WordPress backend to the exact proxy. Confirm PHP's actual immediate peer and trusted HTTPS handling before choosing `trusted_peers`; do not rewrite `REMOTE_ADDR` to an untrusted visitor address. Unknown country, wrong host, missing secret, untrusted peer or unavailable issuer deny access.
 
-Keep all HTML, API, redirects and age routes private/no-store at Apache, Caddy and Cloudflare. Exclude protected uploads/images from the portable public-static cache exception. Apply the reviewed CDN rules separately. A theme upload cannot secure a public media origin or invalidate existing cached copies.
+Keep all HTML, API, redirects and age routes private/no-store at Apache, Caddy and Cloudflare. The theme now sets private/no-store before rendering and on standalone templates, and no longer advertises public HTML caching or synthetic cache HIT/ETag headers. The coming-soon template is covered by the rendered HTTP regression. Exclude protected uploads/images from the portable public-static cache exception. Apply the reviewed CDN rules separately. A theme upload cannot secure a public media origin or invalidate existing cached copies.
 
 ## Request behavior
 
@@ -62,15 +62,19 @@ Rotate storage keys with overlap: new records use the active version; retain pre
 
 The preview signing endpoint requires POST, nonce, a published/password-free episode ID and its exact preview video. Preview/full aliases also require normal paid/release authorization; banned ordinary customers cannot reuse purchases. When gateway enforcement is enabled, signing requires a fresh age check and expiry is the earlier of five minutes and the age-session deadline. The player has no unsigned fallback.
 
-This does not secure all thumbnails, full players, gallery images, direct uploads or CDN origins. Their entitlement checks, signed delivery, renewal, unsigned-origin denial and cache controls remain release blockers.
+The same signer now serves episode full/trailer/preview, Extras full/preview, homepage preview and the explicitly configured coming-soon marketing clip. Content players bind to a published, password-free post and exact field. Hidden episodes require a WordPress login. Full videos and preview/trailer aliases require current membership/PPV/release eligibility; ordinary banned users cannot use retained purchases, and founder paid bypass never bypasses age. Missing/invalid signing settings or failed age checks produce no iframe URL. The legacy video-URL helper also requires current-post content binding. Player options cannot replace signing credentials.
+
+The coming-soon setting explicitly publishes its configured marketing clip; only select a dedicated clip suitable for that page. This setting does not infer membership restrictions from other posts. Verify configuration during acceptance.
+
+These are **embed issuance** controls. They do not prove that Bunny expires playback segments when the iframe token expires. Thumbnails, gallery images, direct uploads, direct HLS/MP4 and CDN origins still require separate signing/authorization, bounded playback/renewal, unsigned-origin denial and cache controls. Treat those as release blockers. Bunny documents embed token authentication and CDN pull-zone protection as separate layers: [Stream security](https://bunny.net/docs/stream/security), [embed signing](https://bunny.net/docs/stream/token-authentication).
 
 ## Verification evidence
 
 Disposable fixtures only; no live customers, provider charges or outbound notifications:
 
-- Actual WordPress/ACF/theme + MySQL + Node issuer: 95 request assertions, 14 configuration assertions and production rejection of sandbox configuration.
+- Actual WordPress/ACF/theme + MySQL + Node issuer: 171 request assertions, 14 configuration assertions and production rejection of sandbox configuration.
 - Storage: 61 assertions including competing callback/rate workers, ciphertext tampering, key rotation, cleanup and payment-transaction isolation.
-- Preview endpoint: 37 assertions including age expiry/denial and founder behavior; player: six scenarios.
+- Shared media authorization and preview endpoint: 82 assertions including age expiry/denial, ordinary customer entitlements, aliases, hidden/password-protected content, malformed configuration and founder behavior; player: six scenarios.
 - Browser: native entry → gateway consent → WordPress, with session-management/logout checked separately in the gateway repository's fixture record.
 
 Source tests are `tests/run-age-storage.py`, `tests/test-media-authorization.php` and `tests/test-preview-player.cjs`. The gateway repository owns `tests/wordpress/` and the private runtime builder. Existing payment/admin/package regressions remain required. The full fixture uses a synthetic database, intercepted mail/WordPress HTTP and an internal-only Docker network; no live content or secrets are copied.

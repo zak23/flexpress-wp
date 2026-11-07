@@ -21,6 +21,8 @@ $full = '22222222-2222-2222-2222-222222222222';
 $post = (object) ['ID' => 101, 'post_type' => 'episode', 'post_status' => 'publish', 'post_password' => ''];
 $fields = ['preview_video' => $preview, 'full_video' => $full, 'access_type' => 'membership_only'];
 $configured = true;
+$video_settings = ['bunnycdn_library_id' => '123456', 'bunnycdn_token_key' => 'synthetic-signing-key'];
+$general_settings = [];
 $private_headers = 0;
 class MediaResponse extends Exception {
     public function __construct(public bool $success, public $data, public int $status) {}
@@ -40,7 +42,8 @@ function wp_verify_nonce($value, $action) { return $value === 'fixture'; }
 function nocache_headers() { ++$GLOBALS['private_headers']; }
 function get_template_directory() { return $GLOBALS['theme']; }
 function get_option($key, $default) {
-    return $GLOBALS['configured'] ? ['bunnycdn_library_id' => 'fixture', 'bunnycdn_token_key' => 'synthetic-signing-key'] : [];
+    if ($key === 'flexpress_general_settings') { return $GLOBALS['general_settings']; }
+    return $GLOBALS['configured'] ? $GLOBALS['video_settings'] : [];
 }
 function wp_send_json_error($data, $status = 200) { throw new MediaResponse(false, $data, $status); }
 function wp_send_json_success($data, $status = 200) { throw new MediaResponse(true, $data, $status); }
@@ -55,7 +58,7 @@ function loadFunction($name) {
     }
     eval($match[0]);
 }
-foreach (['flexpress_check_episode_access', 'flexpress_get_membership_status', 'flexpress_generate_bunnycdn_token'] as $name) {
+foreach (['flexpress_check_episode_access', 'flexpress_check_extras_access', 'flexpress_get_membership_status', 'flexpress_generate_bunnycdn_token'] as $name) {
     loadFunction($name);
 }
 require $theme . '/includes/media-authorization.php';
@@ -131,4 +134,86 @@ check(request()->status === 403, 'Founder paid bypass also bypassed age access')
 $age_denied = false;
 $age_deadline = time() - 1;
 check(request()->status === 403, 'Expired age proof signed a preview');
-echo "Preview authorization tests passed ($checks assertions). No provider calls or real entitlements used.\n";
+
+// Exercise all template entry points with the real episode/Extras entitlement functions.
+$age_deadline = time() + 40;
+$founder = false;
+$user = 0;
+$fields = ['preview_video' => $preview, 'full_video' => $full, 'trailer_video' => '33333333-3333-3333-3333-333333333333', 'access_type' => 'membership'];
+foreach (['episode', 'extras'] as $post_type) {
+    $post->post_type = $post_type;
+    $user = 0;
+    $meta = [];
+    check(flexpress_get_content_video_embed_url(101, 'full') === '', "$post_type full video issued to signed-out visitor");
+    $url = flexpress_get_content_video_embed_url(101, 'preview');
+    parse_str(parse_url($url, PHP_URL_QUERY), $query);
+    check($query['expires'] === (string) $age_deadline && strlen($query['token']) === 64, "$post_type preview not age bounded");
+    check(str_starts_with($url, 'https://iframe.mediadelivery.net/embed/123456/' . $preview . '?'), 'Player has wrong origin or content binding');
+    check(flexpress_get_content_video_embed_url(101, '../full') === '', 'Unexpected role accepted');
+    $user = 41;
+    $meta = ['membership_status' => 'active', 'membership_expires' => '2099-01-01'];
+    check(flexpress_get_content_video_embed_url(101, 'full') !== '', "$post_type active member denied");
+    $meta['membership_expires'] = '2000-01-01';
+    check(flexpress_get_content_video_embed_url(101, 'full') === '', "$post_type expired membership signed full video");
+    $fields['access_type'] = 'ppv_only';
+    $meta = ['membership_status' => 'active', 'membership_expires' => '2099-01-01', 'ppv_purchases' => [102]];
+    check(flexpress_get_content_video_embed_url(101, 'full') === '', "$post_type another purchase granted full video");
+    $meta['ppv_purchases'] = [101];
+    check(flexpress_get_content_video_embed_url(101, 'full') !== '', "$post_type own purchase denied");
+    $meta['membership_status'] = 'banned';
+    check(flexpress_get_content_video_embed_url(101, 'full') === '', "$post_type banned purchaser granted full video");
+    $fields['preview_video'] = $full;
+    check(flexpress_get_content_video_embed_url(101, 'preview') === '', "$post_type full/preview alias bypassed ban");
+    $founder = true;
+    check(flexpress_get_content_video_embed_url(101, 'full') !== '', "$post_type founder paid bypass changed");
+    $age_denied = true;
+    check(flexpress_get_content_video_embed_url(101, 'full') === '', "$post_type founder bypassed age");
+    $age_denied = false;
+    $founder = false;
+    $fields['preview_video'] = $preview;
+    $fields['access_type'] = 'membership';
+}
+$post->post_type = 'episode';
+$fields['trailer_video'] = $full;
+$user = 0;
+check(flexpress_get_content_video_embed_url(101, 'trailer') === '', 'Trailer/full alias bypassed membership');
+$fields['trailer_video'] = '33333333-3333-3333-3333-333333333333';
+check(flexpress_get_content_video_embed_url(101, 'trailer') !== '', 'Dedicated trailer denied');
+$post->post_type = 'extras';
+check(flexpress_get_content_video_embed_url(101, 'trailer') === '', 'Unsupported Extras trailer accepted');
+$post->post_type = 'episode';
+foreach (['draft', 'private', 'future', 'trash'] as $status) {
+    $post->post_status = $status;
+    check(flexpress_get_content_video_embed_url(101, 'preview') === '', 'Nonpublic template issued video');
+}
+$post->post_status = 'publish';
+$post->post_password = 'fixture';
+check(flexpress_get_content_video_embed_url(101, 'preview') === '', 'Password-protected template issued video');
+$post->post_password = '';
+$fields['hidden_from_public'] = true;
+check(flexpress_get_content_video_embed_url(101, 'preview') === '', 'Anonymous visitor received hidden episode preview');
+check(request()->status === 403, 'AJAX signed hidden episode preview');
+$fields['hidden_from_public'] = false;
+$configured = false;
+check(flexpress_get_content_video_embed_url(101, 'preview') === '', 'Missing key produced an unsigned template URL');
+$configured = true;
+foreach (['../123', '123?x=1', [], 0] as $bad_library) {
+    $video_settings['bunnycdn_library_id'] = $bad_library;
+    check(flexpress_get_content_video_embed_url(101, 'preview') === '', 'Malformed library emitted player URL');
+}
+$video_settings['bunnycdn_library_id'] = '123456';
+$url = flexpress_get_content_video_embed_url(101, 'preview', ['token' => 'attacker', 'expires' => PHP_INT_MAX, 'muted' => false]);
+parse_str(parse_url($url, PHP_URL_QUERY), $query);
+check($query['token'] !== 'attacker' && $query['expires'] === (string) $age_deadline && $query['muted'] === 'false', 'Player options replaced signing credentials');
+$general_settings = ['coming_soon_enabled' => true, 'coming_soon_video_url' => $preview];
+check(flexpress_get_coming_soon_video_embed_url() !== '', 'Configured marketing clip denied');
+$age_denied = true;
+check(flexpress_get_coming_soon_video_embed_url() === '', 'Marketing clip bypassed age');
+$age_denied = false;
+$age_deadline = time() - 1;
+check(flexpress_get_content_video_embed_url(101, 'preview') === '' && flexpress_get_coming_soon_video_embed_url() === '', 'Template signed after age expiry');
+$age_enabled = false;
+check(flexpress_get_content_video_embed_url(101, 'preview') !== '', 'Disabled adapter broke legacy public preview');
+$general_settings['coming_soon_enabled'] = false;
+check(flexpress_get_coming_soon_video_embed_url() === '', 'Disabled marketing clip issued URL');
+echo "Media authorization tests passed ($checks assertions). No provider calls or real entitlements used.\n";

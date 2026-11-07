@@ -1,4 +1,4 @@
-# FlexPress 1.0.42 candidate installation and acceptance
+# FlexPress 1.0.43 candidate installation and acceptance
 
 Use this checklist for a fresh site or an update. The theme ZIP contains reusable code, assets and setup documentation. It does not migrate users, purchases, media, WordPress options, plugins, credentials or hosting configuration.
 
@@ -13,7 +13,7 @@ Use this checklist for a fresh site or an update. The theme ZIP contains reusabl
 
 ## Install and configure
 
-1. Install the reviewed `flexpress-1.0.42.zip` candidate through Appearance → Themes, or the host's deployment mechanism. Retain the prior release for rollback. Activate/check FlexPress, menu assignments, templates, permalinks and content fields. This candidate does not enable age enforcement; read [AGE-INTEGRATION.md](AGE-INTEGRATION.md).
+1. Install the reviewed `flexpress-1.0.43.zip` candidate through Appearance → Themes, or the host's deployment mechanism. Retain the prior release for rollback. Activate/check FlexPress, menu assignments, templates, permalinks and content fields. This candidate does not enable age enforcement; read [AGE-INTEGRATION.md](AGE-INTEGRATION.md).
 2. Follow HOSTING.md separately for DNS, Full (strict), origin restrictions, trusted headers, caching, logs and certificate management. The included Caddy example is not activated by WordPress.
 3. Configure the destination's Flowguard shop, plans and currency. Verify its provider-side callback is `https://YOUR_DOMAIN/wp-admin/admin-ajax.php?action=flowguard_webhook` and browser return URLs use the same intended site. Test/live behaviour is controlled by the provider.
 4. Configure Bunny media zones/signing and optional integrations. Confirm legal/contact content and form recipients belong to this site.
@@ -28,7 +28,7 @@ Use this checklist for a fresh site or an update. The theme ZIP contains reusabl
 
 - Homepage, episode, Extras, models, login, join, account and payment pages work on desktop/mobile. Branding, links, media and forms belong to the destination.
 - Native `/wp-admin/` login works with its redirect destination retained. Test ordinary customer access separately: founders bypass restrictions.
-- Public previews work; locked content remains locked; signed media is delivered correctly. Service worker registration is same-origin and never caches HTML.
+- Public previews work; locked content remains locked; signed media is delivered correctly. Test episode, Extras, homepage and coming-soon players with missing keys and denied/expired age access: no iframe URL should be issued. Test ordinary membership/PPV customers and preview/full aliases separately. A coming-soon clip is explicitly published by its setting; select a dedicated marketing clip. Service worker registration is same-origin and never caches HTML.
 - Deploy the preview PHP, templates and versioned JavaScript together. Preview-token requests must include the published episode ID; arbitrary full-video IDs are denied, and failed signing must not cause an unsigned media request. This endpoint check does not establish direct CDN or age protection.
 - Public HTTPS goes through Cloudflare; origin and backend bypasses are denied; verified visitor/geolocation headers survive. Test both address families where available.
 - Dynamic HTML/login/account/payment/API responses remain private/no-store. Genuine public assets cache only under the HOSTING.md policy; missing asset paths do not become publicly cached HTML. Repeat edge tests after Development Mode is off and remove affected stale cache entries.

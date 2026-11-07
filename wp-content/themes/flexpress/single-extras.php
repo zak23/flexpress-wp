@@ -151,41 +151,14 @@ while (have_posts()):
                             <!-- Video Section -->
                             <div class="video-player mb-4">
                                 <?php
-                                $video_id = flexpress_get_extras_video_for_access(get_the_ID());
-                                $video_settings = get_option('flexpress_video_settings', array());
-                                $library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
-                                $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
-
-                                if ($has_access && $video_id):
-                                    // Generate token and expiration for full video
-                                    $expires = time() + 3600; // 1 hour expiry
-                                    $token = '';
-
-                                    if (!empty($token_key)) {
-                                        $token = hash('sha256', $token_key . $video_id . $expires);
-                                    }
+                                $embed_url = flexpress_get_content_video_embed_url(get_the_ID(), 'full');
+                                if ($embed_url === '') {
+                                    $embed_url = flexpress_get_content_video_embed_url(get_the_ID(), 'preview');
+                                }
+                                if ($embed_url):
                                 ?>
                                     <div style="position:relative;padding-top:56.25%;">
-                                        <iframe src="https://iframe.mediadelivery.net/embed/<?php echo esc_attr($library_id); ?>/<?php echo esc_attr($video_id); ?>?token=<?php echo esc_attr($token); ?>&expires=<?php echo esc_attr($expires); ?>&autoplay=true&loop=true&muted=true&controls=false"
-                                            loading="lazy"
-                                            style="border:0;position:absolute;top:0;height:100%;width:100%;"
-                                            allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
-                                            allowfullscreen="true">
-                                        </iframe>
-                                    </div>
-                                <?php elseif (!$has_access && $preview_video): ?>
-                                    <!-- Preview video for users without access -->
-                                    <?php
-                                    // Generate token and expiration for preview video
-                                    $expires = time() + 3600; // 1 hour expiry
-                                    $token = '';
-
-                                    if (!empty($token_key)) {
-                                        $token = hash('sha256', $token_key . $preview_video . $expires);
-                                    }
-                                    ?>
-                                    <div style="position:relative;padding-top:56.25%;">
-                                        <iframe src="https://iframe.mediadelivery.net/embed/<?php echo esc_attr($library_id); ?>/<?php echo esc_attr($preview_video); ?>?token=<?php echo esc_attr($token); ?>&expires=<?php echo esc_attr($expires); ?>&autoplay=true&loop=true&muted=true&controls=false"
+                                        <iframe src="<?php echo esc_url($embed_url); ?>"
                                             loading="lazy"
                                             style="border:0;position:absolute;top:0;height:100%;width:100%;"
                                             allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"

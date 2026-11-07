@@ -5,7 +5,7 @@
  */
 
 // Define theme constants
-define('FLEXPRESS_VERSION', '1.0.42');
+define('FLEXPRESS_VERSION', '1.0.43');
 define('FLEXPRESS_PATH', get_template_directory());
 define('FLEXPRESS_URL', get_template_directory_uri());
 
@@ -33,6 +33,7 @@ require_once FLEXPRESS_PATH . '/includes/exclusv-age.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-yoursafe-id.php';
 require_once FLEXPRESS_PATH . '/flexpress-redis-cache.php';
 require_once FLEXPRESS_PATH . '/includes/post-types.php';
+require_once FLEXPRESS_PATH . '/includes/media-authorization.php';
 require_once FLEXPRESS_PATH . '/includes/bunnycdn.php';
 require_once FLEXPRESS_PATH . '/includes/gallery-system.php';
 require_once FLEXPRESS_PATH . '/includes/class-flexpress-episode-ratings.php';
@@ -994,55 +995,20 @@ function flexpress_is_development()
     return defined('WP_DEBUG') && WP_DEBUG;
 }
 
-/**
- * Add caching headers for WordPress caching detection
- */
+/** Keep dynamic HTML and embedded bearer links out of browser/shared caches. */
 function flexpress_add_caching_headers()
 {
-    // Only add headers if not in admin and not doing AJAX
-    if (is_admin() || wp_doing_ajax()) {
+    if (is_admin() || wp_doing_ajax() || headers_sent()) {
         return;
     }
-
-    // Shorter cache duration in development
-    $cache_duration = flexpress_is_development() ? 300 : 3600; // 5 min vs 1 hour
-
-    // Add Cache-Control header for HTML pages
-    if (!headers_sent()) {
-        if (is_user_logged_in()) {
-            // Prevent any shared caching for authenticated users
-            header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0');
-            header('Pragma: no-cache');
-            header('Expires: 0');
-        } else {
-            header('Cache-Control: public, max-age=' . $cache_duration);
-
-            // Add ETag header
-            $etag = md5(get_the_ID() . get_the_modified_time('U'));
-            header('ETag: "' . $etag . '"');
-
-            // Add Last-Modified header
-            if (is_singular()) {
-                $last_modified = get_the_modified_time('D, d M Y H:i:s \G\M\T');
-                if ($last_modified) {
-                    header('Last-Modified: ' . $last_modified);
-                }
-            }
-
-            // Add custom headers that WordPress caching plugins use
-            header('X-Cache-Enabled: true');
-            header('X-Cache-Status: HIT');
-
-            // Add Age header (simulated)
-            header('Age: 0');
-
-            // Add development indicator
-            if (flexpress_is_development()) {
-                header('X-Development-Mode: true');
-            }
-        }
+    nocache_headers();
+    header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0');
+    foreach (['ETag', 'Last-Modified', 'Age', 'X-Cache-Enabled', 'X-Cache-Status'] as $name) {
+        header_remove($name);
     }
 }
+add_action('send_headers', 'flexpress_add_caching_headers', PHP_INT_MAX);
+// Some standalone templates bypass the regular send_headers path.
 add_action('wp_head', 'flexpress_add_caching_headers', 1);
 
 /**
@@ -1944,40 +1910,13 @@ function flexpress_generate_bunnycdn_token()
         return;
     }
 
-    // Get video settings
-    $video_settings = get_option('flexpress_video_settings', array());
-    $library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
-    $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
-
-    if (empty($token_key) || empty($library_id)) {
-        wp_send_json_error('Preview unavailable', 503);
+    try {
+        $credentials = flexpress_issue_bunny_embed_token($video_id);
+    } catch (Throwable $error) {
+        wp_send_json_error('Preview unavailable', $error->getCode() === 503 ? 503 : 403);
         return;
     }
-
-    // Generate expiration timestamp
-    $expires = time() + 300; // Card previews receive a bounded five-minute URL.
-    if (function_exists('flexpress_exclusv_age_enabled') && flexpress_exclusv_age_enabled()) {
-        try {
-            $expires = min($expires, flexpress_exclusv_age_media_deadline());
-            if ($expires <= time()) {
-                throw new RuntimeException('Age access expired before signing');
-            }
-        } catch (Throwable $error) {
-            wp_send_json_error('Age access required', 403);
-            return;
-        }
-    }
-
-    // Generate token
-    // BunnyCDN token generation - format: hash('sha256', $token_key . $video_id . $expires)
-    $token = hash('sha256', $token_key . $video_id . $expires);
-
-    // Return token and expiration
-    wp_send_json_success(array(
-        'token' => $token,
-        'expires' => $expires,
-        'libraryId' => $library_id
-    ));
+    wp_send_json_success($credentials);
 }
 add_action('wp_ajax_flexpress_generate_bunnycdn_token', 'flexpress_generate_bunnycdn_token');
 add_action('wp_ajax_nopriv_flexpress_generate_bunnycdn_token', 'flexpress_generate_bunnycdn_token');

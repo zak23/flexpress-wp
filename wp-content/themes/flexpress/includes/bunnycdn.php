@@ -9,31 +9,11 @@
  */
 function flexpress_get_bunnycdn_video_url($video_id, $type = 'preview')
 {
-    $video_settings = get_option('flexpress_video_settings', array());
-    $api_key = isset($video_settings['bunnycdn_api_key']) ? $video_settings['bunnycdn_api_key'] : '';
-    $library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
-    $token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
-    $bunnycdn_url = isset($video_settings['bunnycdn_url']) ? $video_settings['bunnycdn_url'] : '';
-
-    if (empty($api_key) || empty($library_id) || empty($token_key) || empty($bunnycdn_url)) {
+    $post_id = get_the_ID();
+    if (!flexpress_authorize_content_video($post_id, $video_id, $type)) {
         return '';
     }
-
-    // BunnyCDN token signing
-    $expires = time() + 3600; // 1 hour expiry
-
-    // Using SHA256_HEX(token_security_key + video_id + expiration)
-    $token = hash('sha256', $token_key . $video_id . $expires);
-
-    return sprintf(
-        'https://%s/play/%s/%s?token=%s&expires=%d&type=%s',
-        $bunnycdn_url,
-        $library_id,
-        $video_id,
-        $token,
-        $expires,
-        $type
-    );
+    return flexpress_get_content_video_embed_url($post_id, $type);
 }
 
 /**

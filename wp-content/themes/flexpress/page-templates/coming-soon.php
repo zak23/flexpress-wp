@@ -19,18 +19,7 @@ $coming_soon_fallback_image = !empty($general_settings['coming_soon_fallback_ima
 $coming_soon_text = !empty($general_settings['coming_soon_text']) ? $general_settings['coming_soon_text'] : 'Coming Soon';
 $coming_soon_links = !empty($general_settings['coming_soon_links']) ? $general_settings['coming_soon_links'] : array();
 
-// Get BunnyCDN video settings for proper authentication
-$video_settings = get_option('flexpress_video_settings', array());
-$library_id = isset($video_settings['bunnycdn_library_id']) ? $video_settings['bunnycdn_library_id'] : '';
-$bunnycdn_url = isset($video_settings['bunnycdn_url']) ? $video_settings['bunnycdn_url'] : '';
-$token_key = isset($video_settings['bunnycdn_token_key']) ? $video_settings['bunnycdn_token_key'] : '';
-
-// Generate token for BunnyCDN video
-$expires = time() + 3600; // 1 hour expiry
-$token = '';
-if (!empty($token_key) && !empty($coming_soon_video_id)) {
-    $token = hash('sha256', $token_key . $coming_soon_video_id . $expires);
-}
+$coming_soon_embed = flexpress_get_coming_soon_video_embed_url();
 
 // Get primary logo URL (prioritize FlexPress logo, fall back to coming soon logo)
 $logo_url = '';
@@ -86,7 +75,7 @@ wp_localize_script('flexpress-coming-soon', 'flexpressComingSoon', array(
             <div class="row">
                 <div class="col-12">
                     <!-- Video Section (full width in container) -->
-                    <?php if ($coming_soon_video_id && $library_id && $token): ?>
+                    <?php if ($coming_soon_embed): ?>
                         <div class="coming-soon-video-container" id="comingSoonVideo">
                             <?php if ($fallback_image_url): ?>
                                 <!-- Initial thumbnail -->
@@ -95,7 +84,7 @@ wp_localize_script('flexpress-coming-soon', 'flexpressComingSoon', array(
 
                             <!-- BunnyCDN iframe embed player -->
                             <div style="position:relative;padding-top:56.25%;">
-                                <iframe src="https://iframe.mediadelivery.net/embed/<?php echo esc_attr($library_id); ?>/<?php echo esc_attr($coming_soon_video_id); ?>?token=<?php echo esc_attr($token); ?>&expires=<?php echo esc_attr($expires); ?>&autoplay=true&loop=true&muted=false&controls=false"
+                                <iframe src="<?php echo esc_url($coming_soon_embed); ?>"
                                     loading="lazy"
                                     style="border:0;position:absolute;top:0;height:100%;width:100%;"
                                     allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"

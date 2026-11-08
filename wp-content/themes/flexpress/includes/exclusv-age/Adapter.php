@@ -39,6 +39,15 @@ final class Adapter
         }
         $yoursafe = $this->yoursafeSession();
         if ($yoursafe !== null) { return $yoursafe; }
+        $member = flexpress_member_age_result();
+        if ($member !== null && $member['provider'] === 'didit') {
+            $saved = $this->records->get('member', $this->memberKey(), time());
+            if ($saved !== null && ($saved['user_id'] ?? null) === get_current_user_id()) {
+                $receipt = $this->client->memberStatus($saved['reference'], $this->memberKey(), $country);
+                return ['provider' => 'didit', 'member' => true, 'expires_at' => $receipt['age_expires_at'],
+                    'csrf' => $this->memberCsrf()];
+            }
+        }
         $session = $this->sessions->read($this->cookieValue(self::SESSION));
         if ($session === null) {
             throw new \Exclusv\Age\Denied();
@@ -50,7 +59,12 @@ final class Adapter
     /** Accept only the existing server-signed Yoursafe proof, never a membership login or modal flag. */
     private function yoursafeSession(): ?array
     {
-        if (!flexpress_yoursafe_is_enabled() || !flexpress_is_age_verified()) { return null; }
+        if (!flexpress_yoursafe_is_enabled()) { return null; }
+        $member = flexpress_member_age_result();
+        if ($member !== null && $member['provider'] === 'yoursafe_id') {
+            return ['provider' => 'yoursafe', 'member' => true, 'expires_at' => $member['expires_at'], 'csrf' => $this->memberCsrf()];
+        }
+        if (!flexpress_is_age_verified()) { return null; }
         $cookie = wp_unslash($_COOKIE[FLEXPRESS_AGE_COOKIE]);
         $payload = json_decode(flexpress_age_base64url_decode(explode('.', $cookie, 2)[0]), true);
         return ['provider' => 'yoursafe', 'expires_at' => $payload['exp'],
@@ -120,7 +134,7 @@ final class Adapter
             $this->page('Your privacy', '<p>You can use Yoursafe, when configured, or Didit through the age gateway. '
                 . 'This site receives a verification reference and an age result, not your identity documents, '
                 . 'face images, name or date of birth.</p><p>The verification provider handles any identity capture. '
-                . 'Review the gateway and provider notices before continuing. Your membership login and purchases stay separate.</p>'
+                . 'Review the gateway and provider notices before continuing. If you are logged in when verifying, a minimal age result is saved with your membership so future logins can reuse it. Purchases remain separate.</p>'
                 . ($policyUrl ? '<p><a href="' . esc_url($policyUrl) . '">Read the site privacy policy</a></p>' : '')
                 . '<p><a href="/_age/">Back to age access</a></p>');
         }
@@ -135,6 +149,8 @@ final class Adapter
         try {
             if ($path === '/_age/start' && $method === 'POST') {
                 $this->start();
+            } elseif ($path === '/_age/login' && $method === 'POST') {
+                $this->login();
             } elseif ($path === '/_age/callback' && $method === 'GET') {
                 $this->complete();
             } elseif ($path === '/_age/logout' && $method === 'POST') {
@@ -165,8 +181,9 @@ final class Adapter
             if ($session !== null) {
                 $this->page('Your age access is active', '<p>You can continue browsing. Membership access and purchases still apply.</p>'
                     . '<p><a class="button" href="/">Continue to the site</a></p>'
+                    . (is_user_logged_in() ? '<p>Your age result is saved with your membership. <a href="' . esc_url(wp_logout_url($this->config->origin . '/_age/')) . '">Sign out</a></p>' : '')
                     . '<form action="/_age/logout" method="post"><input type="hidden" name="csrf" value="'
-                    . esc_attr($session['csrf']) . '"><button type="submit">Clear access on this device</button></form>');
+                    . esc_attr(is_user_logged_in() ? $this->memberCsrf() : $session['csrf']) . '"><button type="submit">Clear access on this device</button></form>');
             }
             $csrf = self::random();
             $this->cookie(self::START, $csrf, time() + 600);
@@ -176,8 +193,16 @@ final class Adapter
                     . '">Sign in with Yoursafe</a></p><p>Or verify with Didit below.</p>' : '';
             $error = isset($_GET['yoursafe_error'])
                 ? '<p role="alert">Yoursafe could not confirm your age. Please try again or choose Didit.</p>' : '';
-            $this->page('Confirm your age to continue', '<p>Verify that you are 18 or older to browse this site. '
-                . 'Age verification does not create a membership or unlock purchases.</p>' . $error . $yoursafe
+            $this->page(is_user_logged_in() ? 'Verify your age' : 'Verify age or log in', '<p>Verify that you are 18 or older to browse this site. '
+                . 'Age verification does not create a membership or unlock purchases.</p>'
+                . (is_user_logged_in() ? '<p>Signed in. A successful age result will be saved to your membership for future logins.</p>'
+                    : '<p>Already a member? Log in to use your saved age result, or verify your age below. Log in before verifying to save the result to your membership.</p>'
+                    . '<details><summary class="button">Log in</summary><form action="/_age/login" method="post">'
+                    . '<input type="hidden" name="csrf" value="' . esc_attr($csrf) . '"><input type="hidden" name="return" value="' . esc_attr($return) . '">'
+                    . '<p><label>Email or username<input name="username" autocomplete="username" required></label></p>'
+                    . '<p><label>Password<input name="password" type="password" autocomplete="current-password" required></label></p>'
+                    . '<button type="submit">Log in and continue</button></form></details>')
+                . $error . $yoursafe
                 . '<form action="/_age/start" method="post"><input type="hidden" name="csrf" value="' . esc_attr($csrf) . '">'
                 . '<input type="hidden" name="return" value="' . esc_attr($return) . '">'
                 . '<button type="submit">Verify with Didit</button></form>'
@@ -216,6 +241,13 @@ final class Adapter
         $handle = $this->cookieValue(self::TRANSACTION);
         $this->cookie(self::TRANSACTION, '', 0);
         $result = $this->client->complete($this->transactions, $handle, wp_unslash($_GET), $this->config->country($_SERVER));
+        if (is_user_logged_in()) {
+            $receipt = $this->client->registerMember($result['proof'], $this->memberKey(), $this->config->country($_SERVER));
+            $this->records->delete('member', $this->memberKey());
+            $this->records->put('member', $this->memberKey(), ['user_id' => get_current_user_id(),
+                'reference' => $receipt['reference']], $receipt['age_expires_at']);
+            flexpress_save_member_age_result(get_current_user_id(), 'didit', $receipt['age_verified_at'], $receipt['age_expires_at']);
+        }
         $session = $this->sessions->create($result['proof'], $this->cookieValue(self::SESSION));
         $this->cookie(self::SESSION, $session['handle'], $session['expires_at']);
         $this->redirect($result['return_path']);
@@ -226,12 +258,14 @@ final class Adapter
         $this->sameOrigin();
         $handle = $this->cookieValue(self::SESSION);
         $yoursafe = $this->yoursafeSession();
-        if (!is_string($_POST['csrf'] ?? null) || ($yoursafe !== null
+        if (!is_string($_POST['csrf'] ?? null) || (is_user_logged_in()
+            ? !hash_equals($this->memberCsrf(), $_POST['csrf']) : ($yoursafe !== null
             ? !hash_equals($yoursafe['csrf'], $_POST['csrf'])
-            : !$this->sessions->csrfMatches($handle, $_POST['csrf']))) {
+            : !$this->sessions->csrfMatches($handle, $_POST['csrf'])))) {
             throw new \Exclusv\Age\Denied();
         }
         $this->clear();
+        if (is_user_logged_in()) { wp_logout(); }
         $this->redirect('/_age/');
     }
 
@@ -254,6 +288,35 @@ final class Adapter
             (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 4096 || $this->config->country($_SERVER) === null) {
             throw new \Exclusv\Age\Denied();
         }
+    }
+
+    private function memberKey(): string
+    {
+        return hash_hmac('sha256', 'age-member:' . get_current_user_id(), wp_salt('auth'));
+    }
+
+    private function memberCsrf(): string
+    {
+        return hash_hmac('sha256', 'age-member-logout:' . wp_get_session_token(), wp_salt('auth'));
+    }
+
+    private function login(): never
+    {
+        $this->sameOrigin();
+        $csrf = $_POST['csrf'] ?? null;
+        if (!is_string($csrf) || !preg_match('/^[A-Za-z0-9_-]{43}$/D', $csrf) ||
+            !hash_equals($this->cookieValue(self::START), $csrf) || is_user_logged_in()) { throw new \Exclusv\Age\Denied(); }
+        $this->rate('login', 5, 600);
+        $this->cookie(self::START, '', 0);
+        $username = is_string($_POST['username'] ?? null) ? wp_unslash($_POST['username']) : '';
+        $password = is_string($_POST['password'] ?? null) ? wp_unslash($_POST['password']) : '';
+        $user = wp_signon(['user_login' => $username, 'user_password' => $password, 'remember' => false], true);
+        if (is_wp_error($user)) { throw new \Exclusv\Age\Denied(); }
+        // Guest proof is never silently copied onto the account just logged into.
+        $this->clear();
+        wp_set_current_user($user->ID);
+        $return = is_string($_POST['return'] ?? null) ? \Exclusv\Age\GatewayClient::returnPath(wp_unslash($_POST['return'])) : '/';
+        $this->redirect($return);
     }
 
     private function rate(string $purpose, int $maximum, int $seconds): void
@@ -314,7 +377,8 @@ final class Adapter
             ? '<p class="notice">Test environment. This does not grant live content access.</p>' : '';
         echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             . '<title>' . esc_html($title) . '</title><style>html{color-scheme:dark}body{margin:0;background:#101818;color:#eef5f4;'
-            . 'font:18px/1.6 system-ui,sans-serif}main{max-width:36rem;margin:8vh auto;padding:2rem}h1{font-size:2rem;line-height:1.2}'
+            . 'font:18px/1.6 system-ui,sans-serif}main{max-width:36rem;margin:8vh auto;padding:2rem;background:#182726;border:1px solid #34514c;border-radius:1rem;box-shadow:0 2rem 6rem #0008}h1{font-size:2rem;line-height:1.2}'
+            . 'input{box-sizing:border-box;width:100%;padding:.7rem;font:inherit;margin-top:.3rem}summary{cursor:pointer}details{margin:1rem 0}'
             . 'a{color:#7de0cf}button,.button{display:inline-block;background:#74dbc9;color:#10201e;padding:.85rem 1.2rem;'
             . 'border:0;border-radius:.5rem;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}button:focus-visible,a:focus-visible'
             . '{outline:3px solid white;outline-offset:5px}.notice{border:1px solid #74dbc9;padding:.75rem}footer{margin-top:2.5rem;font-size:1rem}'

@@ -14,6 +14,34 @@ define( 'FLEXPRESS_AGE_COOKIE', 'flexpress_age_verified' );
 define( 'FLEXPRESS_AGE_COOKIE_VERSION', 1 );
 define( 'FLEXPRESS_AGE_COOKIE_LIFETIME', 90 * DAY_IN_SECONDS );
 
+/** Minimal member result. The signature binds it to this site and this member. */
+function flexpress_save_member_age_result($user_id, $provider, $verified_at, $expires_at) {
+    if ($user_id < 1 || !in_array($provider, array('didit', 'yoursafe_id'), true) ||
+        $verified_at > time() || $expires_at <= time()) { throw new RuntimeException('Invalid age result.'); }
+    $result = array('user_id' => (int) $user_id, 'provider' => $provider,
+        'verified_at' => (int) $verified_at, 'expires_at' => (int) $expires_at);
+    $payload = wp_json_encode($result);
+    update_user_meta($user_id, 'flexpress_age_verified', 1);
+    update_user_meta($user_id, 'flexpress_age_verified_provider', $provider);
+    update_user_meta($user_id, 'flexpress_age_verified_at', gmdate(DATE_ATOM, $verified_at));
+    update_user_meta($user_id, 'flexpress_age_verified_expires', gmdate(DATE_ATOM, $expires_at));
+    update_user_meta($user_id, '_flexpress_member_age_result', array('payload' => $payload,
+        'signature' => hash_hmac('sha256', 'member-age:' . $payload, wp_salt('auth'))));
+}
+
+function flexpress_member_age_result() {
+    $user_id = get_current_user_id();
+    if (!$user_id || (int) get_user_meta($user_id, 'flexpress_age_verified', true) !== 1) { return null; }
+    $saved = get_user_meta($user_id, '_flexpress_member_age_result', true);
+    if (!is_array($saved) || !is_string($saved['payload'] ?? null) || !is_string($saved['signature'] ?? null) ||
+        !hash_equals(hash_hmac('sha256', 'member-age:' . $saved['payload'], wp_salt('auth')), $saved['signature'])) { return null; }
+    $result = json_decode($saved['payload'], true);
+    if (!is_array($result) || ($result['user_id'] ?? null) !== $user_id ||
+        !is_int($result['expires_at'] ?? null) || $result['expires_at'] <= time() ||
+        !is_int($result['verified_at'] ?? null) || $result['verified_at'] > time()) { return null; }
+    return $result;
+}
+
 /**
  * Whether the Australian age gate + related UX is live.
  *

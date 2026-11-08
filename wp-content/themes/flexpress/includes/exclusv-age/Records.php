@@ -89,7 +89,7 @@ final class Records
     {
         $this->validate($kind, $hash);
         $now = time();
-        if ($expiresAt <= $now || $expiresAt > $now + ($kind === 'transaction' ? 600 : 3600)) {
+        if ($expiresAt <= $now || $expiresAt > $now + ($kind === 'transaction' ? 600 : ($kind === 'member' ? 90 * 86400 : 3600))) {
             throw new StorageUnavailable();
         }
         $envelope = $this->cipher->seal($payload, $this->binding($kind, $hash, $expiresAt));
@@ -173,7 +173,7 @@ final class Records
 
     private function validate(string $kind, string $hash): void
     {
-        if (!in_array($kind, ['transaction', 'session'], true) || !preg_match('/^[a-f0-9]{64}$/D', $hash)) {
+        if (!in_array($kind, ['transaction', 'session', 'member'], true) || !preg_match('/^[a-f0-9]{64}$/D', $hash)) {
             throw new StorageUnavailable();
         }
     }

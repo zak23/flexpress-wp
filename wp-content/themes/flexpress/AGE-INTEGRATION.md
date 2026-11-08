@@ -1,6 +1,6 @@
 # Optional Exclusv age gateway adapter
 
-Focused visitor candidate 1.0.47 implements an opt-in gateway adapter. It is disabled by default and has not been installed on a live site. It protects WordPress HTML, REST and AJAX when configured, but **direct uploads, other media helpers, CDN origins and edge caches still require enforcement**. This is a visitor page gate, not a complete media-protection solution. Direct media hardening is separate from this focused rollout.
+Focused visitor candidate 1.0.48 implements an opt-in gateway adapter. It is disabled by default and has not been installed on a live site. It protects WordPress HTML, REST and AJAX when configured, but **direct uploads, other media helpers, CDN origins and edge caches still require enforcement**. This is a visitor page gate, not a complete media-protection solution. Direct media hardening is separate from this focused rollout.
 
 ## Installation contract
 
@@ -90,3 +90,11 @@ Yoursafe still validates the signed RS256 response, issuer, audience, nonce, exp
 The active-session clear action clears both provider proofs locally before any remote gateway revocation. WordPress logout also clears both. Yoursafe proof validation is local and does not check later provider revocation until another sign-in or cookie expiry; no new online-revocation guarantee is implied.
 
 This focused branch excludes the broader gallery/CDN and full-player entitlement rewrite. Keep the existing provider credentials, callback registration, payment settings and media delivery unchanged during rollout. Production gateway configuration is still required before live activation; sandbox results must never grant live visitor access.
+
+## Saved membership results
+
+The entry panel offers **Verify age or log in**. Existing members should log in before choosing Didit or Yoursafe; the successful callback then saves a minimal signed result on that membership. Login by itself never verifies age. Callbacks are bound to the member who started them; guest proof is not copied when another account signs in.
+
+Didit member records additionally contain an encrypted gateway reference. Every access checks the gateway's local assurance using the confidential site client, without another provider verification. The saved result survives browser-session expiry/logout, but expires at its original deadline (at most 90 days) and fails closed on gateway revocation, withdrawal, disconnect, country/policy mismatch or outage. Yoursafe retains its configured member expiry and existing independent 90-day browser cookie. Historical unsigned membership metadata is not accepted; a successful provider sign-in writes the signed record.
+
+Upgrade the matching gateway migration 006 and PHP runtime before enabling this theme candidate. Do not log or expose member references. Minimal metadata is stored under the existing `flexpress_age_verified*` fields plus signed `_flexpress_member_age_result`; the boolean alone is never authorization. Membership/purchase entitlements remain separate.

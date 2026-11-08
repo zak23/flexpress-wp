@@ -13,11 +13,14 @@ final class Transactions implements \Exclusv\Age\TransactionStore
 
     public function save(string $handleHash, #[\SensitiveParameter] array $transaction, int $expiresAt): void
     {
+        $transaction['member_id'] = get_current_user_id();
         $this->records->put('transaction', $handleHash, $transaction, $expiresAt);
     }
 
     public function consume(string $handleHash, int $now): ?array
     {
-        return $this->records->take('transaction', $handleHash, $now);
+        $transaction = $this->records->take('transaction', $handleHash, $now);
+        // Never attach a flow started as a guest or another member to this account.
+        return $transaction && ($transaction['member_id'] ?? null) === get_current_user_id() ? $transaction : null;
     }
 }

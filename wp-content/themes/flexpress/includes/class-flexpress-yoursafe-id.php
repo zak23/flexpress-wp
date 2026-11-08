@@ -161,6 +161,7 @@ function flexpress_yoursafe_start() {
 			'code_verifier' => $code_verifier,
 			'return_url'    => $return_url,
 			'created_at'    => time(),
+			'member_id'     => get_current_user_id(),
 		),
 		10 * MINUTE_IN_SECONDS
 	);
@@ -448,6 +449,9 @@ function flexpress_yoursafe_callback() {
 
 	delete_transient( 'flexpress_yoursafe_' . $state );
 	flexpress_yoursafe_set_state_cookie( '', time() - HOUR_IN_SECONDS );
+	if (($data['member_id'] ?? 0) !== get_current_user_id()) {
+		flexpress_yoursafe_fail('state_invalid', $return_url);
+	}
 
 	if ( isset( $_GET['error'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Provider error after state validation.
 		flexpress_yoursafe_fail( 'cancelled', $return_url );
@@ -561,6 +565,7 @@ function flexpress_yoursafe_callback() {
 		update_user_meta( $user_id, 'flexpress_age_verified_reference', $alias );
 		update_user_meta( $user_id, 'flexpress_age_verified_at', $verified_at->setTimezone( new DateTimeZone( 'UTC' ) )->format( DATE_ATOM ) );
 		update_user_meta( $user_id, 'flexpress_age_verified_expires', gmdate( DATE_ATOM, time() + $valid_days * DAY_IN_SECONDS ) );
+		flexpress_save_member_age_result($user_id, 'yoursafe_id', $verified_at->getTimestamp(), time() + $valid_days * DAY_IN_SECONDS);
 	}
 
 	nocache_headers();

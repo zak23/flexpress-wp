@@ -7,24 +7,19 @@ addresses or request identifiers are stored.
 
 ## How classification is used
 
-The geolocation module itself only classifies. The temporary Australian age gate
-in `includes/age-gate.php` consumes that classification **when enabled**.
+The aggregate classifier does not enforce access. The Exclusv.Ai adapter uses
+`includes/exclusv-age/SiteConfig.php` to validate the Cloudflare country header,
+configured proxy peer, ingress secret, site host and TLS before accepting a
+country from its configured list. Unknown or untrusted location cannot grant
+age access. The configured gateway applies the country-specific proof policy.
 
-**Parked (September 2026):** `flexpress_is_age_gate_enabled()` defaults to
-false, so AU visitors are not redirected. Resume with
-`define( 'FLEXPRESS_AGE_GATE_ENABLED', true );` in `wp-config.php`.
-
-When the gate is live:
-
-- **AU** — unverified visitors are redirected to `/age-verification/` (Yoursafe ID
-  or login). Signed cookie `flexpress_age_verified` (90 days) bypasses the gate.
-- **NON_AU** / **UNKNOWN** — pass through under the current temporary policy.
-- Exempt paths include age-verification, privacy/terms, support/contact, 2257,
-  anti-slavery, and login. Logged-in users bypass the gate.
-
-See [YOURSAFE_ID_AGE_VERIFICATION.md](YOURSAFE_ID_AGE_VERIFICATION.md) for the
-OIDC proof flow. Keep origin access behind Cloudflare so the country header
-cannot be forged by hitting WordPress directly.
+When general enforcement is enabled, unverified visitors go to `/_age/`.
+Logged-in members must have valid age proof; login alone is not a bypass.
+The old AU-only gate is retired. `/age-verification[/]` redirects to `/_age/`,
+preserving safe return paths. The registered Yoursafe start/callback endpoints
+are preserved. The old `FLEXPRESS_AGE_GATE_ENABLED` constant does not activate
+visitor enforcement; that uses `FLEXPRESS_EXCLUSV_AGE_ENABLED` with private
+configuration. Enabling only acceptance routes is not general enforcement.
 
 ## Cloudflare configuration
 
@@ -53,7 +48,8 @@ define( 'WP_ENVIRONMENT_TYPE', 'local' );
 define( 'FLEXPRESS_COUNTRY_OVERRIDE', 'AU' );
 ```
 
-The override is ignored when WordPress reports `staging` or `production`.
+This override only affects aggregate classification, not the Exclusv adapter.
+It is ignored when WordPress reports `staging` or `production`.
 
 Run the classifier regression test with:
 
@@ -68,7 +64,7 @@ php tests/test-geolocation.php
 - IPv4 and IPv6 clients should both work through Cloudflare.
 - Connecting directly to the origin on ports 80, 443, or 8085 must fail,
   including when a forged `CF-IPCountry` header is supplied.
-- Australian visitors without a valid age cookie (and not logged in) must land on
-  `/age-verification/`.
+- With general enforcement enabled, unverified visitors must land on `/_age/`;
+  valid member proof or a verified guest session is required for access.
 - The `flexpress_geo_YYYYMMDD_*` options contain aggregate counts only; they do
   not contain IP addresses or request identifiers.

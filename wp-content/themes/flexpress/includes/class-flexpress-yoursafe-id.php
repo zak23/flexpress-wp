@@ -126,12 +126,7 @@ function flexpress_yoursafe_set_state_cookie( $value, $expires ) {
  * @return void
  */
 function flexpress_yoursafe_fail( $code, $return_url ) {
-    $combined = function_exists('flexpress_exclusv_age_enabled') && flexpress_exclusv_age_enabled();
-    $return_url = flexpress_age_gate_return_url($return_url);
-    $url = add_query_arg(array(
-        'yoursafe_error' => sanitize_key($code),
-        ($combined ? 'return' : 'return_to') => $combined ? wp_make_link_relative($return_url) : $return_url,
-    ), home_url($combined ? '/_age/' : '/age-verification/'));
+    $url = add_query_arg('yoursafe_error', sanitize_key($code), flexpress_age_access_url($return_url));
     nocache_headers();
     wp_safe_redirect($url, 303);
     exit;

@@ -1,25 +1,15 @@
 # Yoursafe ID age verification
 
-**Status (September 2026): AU/Yoursafe server gate parked.** Soft “I am 18”
-modal and newsletter modal still run. Yoursafe OIDC routes and AU redirects are
-disabled until `FLEXPRESS_AGE_GATE_ENABLED` is set to `true` in `wp-config.php`
-(or the `flexpress_age_gate_enabled` filter returns true). Code and the
-**FlexPress → Yoursafe ID** admin screen remain for continued development.
+Yoursafe ID is retained as an alternative on the current Exclusv.Ai `/_age/`
+panel. Its registered `/age-verification/yoursafe/start/` and callback URLs
+remain unchanged. Errors now return to `/_age/`; the old standalone page is
+an uncached redirect and its AU-only enforcement has been retired.
 
-FlexPress uses Yoursafe ID to age-verify existing Yoursafe YOU account holders.
-It is disabled until credentials are configured; while disabled, new visitors
-cannot pass the age gate unless they log in with an already verified account.
-
-When the master switch is on, the gate applies to **AU** geolocation
-classifications only (temporary policy). See
-[CLOUDFLARE_GEOLOCATION.md](CLOUDFLARE_GEOLOCATION.md) for Cloudflare header
-setup and origin binding.
-
-## Resume local work
-
-```php
-define( 'FLEXPRESS_AGE_GATE_ENABLED', true );
-```
+The configured `FLEXPRESS_EXCLUSV_AGE_ENABLED` adapter controls visitor access.
+The old `FLEXPRESS_AGE_GATE_ENABLED` switch remains available for legacy
+provider configuration but no longer enables a visitor gate. An ordinary
+membership login alone is not valid age proof. See
+[CLOUDFLARE_GEOLOCATION.md](CLOUDFLARE_GEOLOCATION.md) for trusted country routing.
 
 ## Setup
 
@@ -27,8 +17,8 @@ define( 'FLEXPRESS_AGE_GATE_ENABLED', true );
 2. Register the callback URL shown under **FlexPress > Yoursafe ID** exactly.
 3. Use the `openid default` scope unless Yoursafe instructs otherwise.
 4. Save the Client ID and Client Secret in FlexPress, then enable the provider.
-5. Enable the age gate master switch (above), then test with an active, fully
-   identified Yoursafe YOU account before production.
+5. Configure the current Exclusv.Ai adapter and test the retained Yoursafe flow
+   with an active, fully identified Yoursafe YOU account before general enforcement.
 
 ## Flow
 

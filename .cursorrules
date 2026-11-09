@@ -10,20 +10,14 @@ PHP indent: 4 spaces; JS: 2 spaces; CSS: 2 spaces
 Do not alter `.wakatime-project` once created
 Bundled webfonts must use `font-display: swap`
 
-## Australian Age Gate + Yoursafe ID (parked September 2026)
+## Age access and Yoursafe ID
 
-- **Parked by default.** `flexpress_is_age_gate_enabled()` returns false unless `define( 'FLEXPRESS_AGE_GATE_ENABLED', true );` in wp-config (or filter `flexpress_age_gate_enabled`).
-- While parked: no AU redirects, no Yoursafe start/callback routes. Soft “I am 18” modal + newsletter modal stay live. Code + **FlexPress → Yoursafe ID** admin remain for later work.
-- Geolocation (`includes/geolocation.php`): classify Cloudflare `CF-IPCountry` as `AU` / `NON_AU` / `UNKNOWN` only; store aggregate counters, never IPs. (Still loads; does not gate while parked.)
-- Age gate (`includes/age-gate.php`): when enabled, on `template_redirect` priority 0, redirect **AU** visitors without valid signed cookie / login to `/age-verification/`. NON_AU and UNKNOWN currently pass (temporary policy).
-- Helpers: `flexpress_is_age_gate_enabled()`, `flexpress_get_request_geolocation()`, `flexpress_age_gate_applies_to_geolocation()`, `flexpress_is_age_verified()`, `flexpress_yoursafe_is_enabled()`, `flexpress_yoursafe_start_url()`.
-- Yoursafe ID (`includes/class-flexpress-yoursafe-id.php`): OIDC auth-code + PKCE; token exchange must be HTTP `POST` (not PUT); try `client_secret_post` then `client_secret_basic` on 401/403. `flexpress_yoursafe_is_enabled()` also requires the gate master switch.
-- Local proof: HMAC cookie `flexpress_age_verified` (90 days). Account Proof Lifetime in **FlexPress → Yoursafe ID** controls local cookie/user-meta expiry; do not reject historical `idverifieddate` solely for age.
-- Never log Client Secret, authorization codes, or tokens. Admin diagnostics: UTC time, stage, HTTP status, provider error id only.
-- Exempt paths: age-verification, privacy/terms, support/contact, content-removal, 2257, anti-slavery, login, admin/AJAX/REST/cron.
-- Legacy `assets/js/age-verification.js` localStorage modal remains live independently of the parked AU gate.
-- Origin must stay behind Cloudflare/Caddy; WordPress is loopback-bound so forged `CF-IPCountry` via direct origin access fails.
-- Docs: `docs/YOURSAFE_ID_AGE_VERIFICATION.md`, `docs/CLOUDFLARE_GEOLOCATION.md`, `docs/YOURSAFE_INTEGRATIONS.md`.
+- `/_age/` is the current Exclusv.Ai panel. The exact `/age-verification[/]` page is a compatibility redirect; its old renderer and AU-only gate are removed.
+- Enforcement uses `FLEXPRESS_EXCLUSV_AGE_ENABLED` and private configuration. The legacy `FLEXPRESS_AGE_GATE_ENABLED` switch only supports existing Yoursafe provider configuration.
+- Keep registered Yoursafe start/callback paths unchanged. Verify signed results, member binding, expiry and callback replay; a membership login or self-declaration is not proof.
+- The Exclusv adapter validates the Cloudflare country, immediate peer, ingress secret, host and TLS. Unknown/untrusted locations cannot grant access. The separate geolocation module stores aggregate counters only.
+- Keep payment webhooks and native operator login reachable. Never log credentials, authorization codes or full provider payloads.
+- See `docs/CLOUDFLARE_GEOLOCATION.md` and `docs/YOURSAFE_ID_AGE_VERIFICATION.md`.
 
 ## Model Hero Image Optimization (November 2025)
 

@@ -7,13 +7,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
       - name: Payment and release regressions
         run: |
+          php tests/test-age-gate.php
+          php tests/test-yoursafe-id.php
           php tests/test-admin-login.php
           php tests/test-payment-security.php
           php tests/test-payment-effects.php
           node tests/test-payment-buttons.cjs
+          php tests/test-media-authorization.php
+          node tests/test-preview-player.cjs
           python3 tests/test-theme-package.py
+      - name: Isolated encrypted age storage and concurrent callbacks
+        run: python3 tests/run-age-storage.py
       - name: Build and validate uploadable theme
         run: bash build-theme-zip.sh
       - uses: actions/upload-artifact@v4

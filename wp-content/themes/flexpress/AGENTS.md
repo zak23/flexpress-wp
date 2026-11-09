@@ -33,7 +33,7 @@ These instructions travel with the theme. Apply them to this directory and its d
 - Lifetime checkout remains unsupported until implemented and verified deliberately. Do not silently map it to another purchase type.
 - Do not charge a real card for tests. Use only a provider test instrument authorized for this destination or a confirmed provider test environment. Prepare non-charging tests while that is unknown.
 - Do not copy customer databases, entitlements, provider secrets or the previous site's test card as part of a theme upload. Audit historical anomalies without automatically removing access.
-- Leave the AU server-side age gate parked unless requested. Enabling it requires the master flag, Yoursafe configuration, trusted geolocation and callback/exemption tests.
+- The old AU-only gate is retired. Use the configured Exclusv.Ai adapter and `/_age/` for verification; `/age-verification/` is a compatibility redirect. Preserve registered Yoursafe endpoints. General enforcement requires explicit rollout scope, trusted geolocation and callback/exemption tests; replacing the entry page does not activate enforcement.
 - Settings sharing `flexpress_general_settings` must merge changes without deleting other tabs' keys. Include hidden `0` values for checkboxes. Preserve existing form recipients and destination credentials.
 - The service worker is same-origin, static-assets-only. Runtime vendor files ship; development dependencies, backups and diagnostics do not.
 

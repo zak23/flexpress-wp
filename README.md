@@ -1,3 +1,7 @@
+## Age access styling — 9 November 2026
+
+Theme 1.0.50 gives `/_age/` the original age-verification layout with the configured logo and accent, blue Yoursafe and white login controls, and responsive forms. Verification and member-sharing behaviour are unchanged.
+
 ## Portable setup release 1.0.40
 
 The theme now ships a concise [README](wp-content/themes/flexpress/README.md), [AGENTS.md](wp-content/themes/flexpress/AGENTS.md), [hosting runbook](wp-content/themes/flexpress/HOSTING.md), [parameterized Caddy example](wp-content/themes/flexpress/hosting/Caddyfile.example) and [upload checklist](wp-content/themes/flexpress/UPLOAD-CHECKLIST.md). They are required release contents. Each new site must discover and configure its own domain, origin, Cloudflare zone and provider credentials. The example is documentation, not automatically installed hosting configuration. Build `dist/flexpress-1.0.40.zip` from committed files with `./build-theme-zip.sh`. Previous detailed theme notes are archived in [the legacy README](docs/FLEXPRESS_LEGACY_README.md); previous provider test evidence is in [the 1.0.39 record](docs/RELEASE_VERIFICATION_1.0.39.md).
@@ -105,22 +109,11 @@ Use this section if you are returning to the project. Deep changelogs remain bel
 - Prefer **IP over localhost** for browser automation
 - Redis object cache is **optional**; enable with `define('WP_REDIS_ENABLED', true)` in `wp-config.php`
 
-### Compliance & age verification (parked September 2026)
+### Age verification
 
-**Currently offline for the AU/Yoursafe server gate.** Soft “I am 18” modal and newsletter modal still run. Code and **FlexPress → Yoursafe ID** remain for later work.
+The current panel is `/_age/` through the Exclusv.Ai adapter, with Didit and the retained Yoursafe alternative. `/age-verification` and `/age-verification/` are uncached 302 aliases; safe legacy `return_to` paths become `return`. The old AU-only gate and page renderer have been removed. Yoursafe's registered `/age-verification/yoursafe/start/` and callback endpoints remain unchanged.
 
-To resume the AU gate locally, add to `wp-config.php`:
-
-```php
-define( 'FLEXPRESS_AGE_GATE_ENABLED', true );
-```
-
-When re-enabled:
-
-1. Cloudflare supplies `CF-IPCountry` → `includes/geolocation.php` classifies `AU` / `NON_AU` / `UNKNOWN`.
-2. `includes/age-gate.php` redirects **AU-only** unverified visitors to `/age-verification/`.
-3. Yoursafe ID OIDC flow proves 18+ and sets signed cookie `flexpress_age_verified`.
-4. Details: [docs/YOURSAFE_ID_AGE_VERIFICATION.md](docs/YOURSAFE_ID_AGE_VERIFICATION.md), [docs/CLOUDFLARE_GEOLOCATION.md](docs/CLOUDFLARE_GEOLOCATION.md).
+Visitor enforcement uses `FLEXPRESS_EXCLUSV_AGE_ENABLED` and private runtime configuration. Trusted Cloudflare country headers are validated by `includes/exclusv-age/SiteConfig.php`; an unknown/untrusted country does not grant access. A membership login alone is not age proof. The old `FLEXPRESS_AGE_GATE_ENABLED` switch no longer enables the retired gate. Deployment may enable only acceptance routes until general enforcement is deliberately activated.
 
 ### Feature map (high level)
 

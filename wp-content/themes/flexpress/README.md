@@ -2,7 +2,13 @@
 
 FlexPress is a portable WordPress membership theme for launching independent content sites. It provides episode and model pages, Extras, paid memberships, per-item purchases, affiliate tools and Bunny media delivery. **Each site keeps its own identity, customer data, provider accounts and hosting configuration.**
 
-Release **1.0.40** adds portable deployment documentation and an agent setup contract. It retains the payment and native admin-login fixes from 1.0.39. The ZIP includes configuration examples; activating the theme does not install or change Caddy or Cloudflare.
+Release **1.0.55** keeps age/login form tokens stable across panel refreshes and browser tabs, consuming them on successful login or verification start. It also adds a private `required_countries` policy for trusted country-based HTML/REST/AJAX enforcement, independently from provider availability. It also replaces the retired `/age-verification/` page with an uncached redirect to `/_age/`, removes the old AU-only gate and sends Yoursafe errors to the new panel. It preserves the registered Yoursafe endpoints and existing Exclusv.Ai integration. General enforcement still requires explicit private host configuration; installing this theme does not enable it or change Caddy or Cloudflare.
+
+The age panel distinguishes active guest access from a result saved to membership. A signed-in visitor with a guest result can start a fresh authenticated sharing flow to save their existing valid gateway proof; login alone never links it.
+
+The standalone `/_age/` pages use the configured site logo and accent colour with the original age-verification layout: charcoal background, centered content, full-width provider and login controls, and responsive form fields. No frontend scripts are loaded.
+
+The age journey offers **Verify with Exclusv.Ai**, with Didit identified as the check provider. Returning visitors can use an existing gateway passkey. Members with a saved valid result return directly after login; members still needing verification stay on the age panel.
 
 ## Start here
 
@@ -13,6 +19,7 @@ Release **1.0.40** adds portable deployment documentation and an agent setup con
 | Install, upgrade, migrate and accept a release | [UPLOAD-CHECKLIST.md](UPLOAD-CHECKLIST.md) |
 | Render a site-specific Caddy configuration | [hosting/Caddyfile.example](hosting/Caddyfile.example) |
 | Inspect existing payment data without changing it | [tools/payment-audit.php](tools/payment-audit.php) through WP-CLI only |
+| Age storage, preview signing and remaining integration | [AGE-INTEGRATION.md](AGE-INTEGRATION.md) |
 
 Use these documents from the extracted theme even when the original Git repository is unavailable. References to repository tests or build scripts are optional tooling available in the source repository, not commands guaranteed to exist in an installed ZIP.
 
@@ -65,7 +72,7 @@ Dynamic HTML, authentication, customer/account pages, API/AJAX responses and pay
 
 - Use `/wp-admin/` for WordPress administration; it redirects to native `/wp-login.php` when signed out. Customer login is `/login/`. Never infer the administrator email from a previous site.
 - Founder permissions use `manage_flexpress_founder_settings`; preserve founder safeguards and access bypass. Use separate ordinary accounts for customer tests.
-- The AU server-side age gate is parked by default. `FLEXPRESS_AGE_GATE_ENABLED` is an explicit opt-in in WordPress configuration; enabling it requires a configured Yoursafe flow and a complete test of geolocation, callbacks and exemptions. The soft age-confirmation modal is separate.
+- The current verification panel is `/_age/`, provided by the configured Exclusv.Ai adapter. The old `/age-verification` and `/age-verification/` pages redirect there, translating safe `return_to` paths to `return`. The old AU-only gate and renderer have been removed. `FLEXPRESS_AGE_GATE_ENABLED` remains a legacy Yoursafe provider switch; visitor enforcement uses `FLEXPRESS_EXCLUSV_AGE_ENABLED` and private configuration. Keep the registered Yoursafe start/callback paths unchanged. Logged-in members require valid age proof.
 - Preserve existing Contact Form 7 recipients when adjusting branding or settings. Check actual delivery through the destination's mail provider.
 - Keep paid media protected with the configured Bunny signing/access controls. Changing theme appearance does not secure a public media origin.
 
@@ -90,3 +97,5 @@ All reusable application features belong in the theme. Keep actual server config
 Read [AGENTS.md](AGENTS.md) before editing. In the source repository, run the relevant tests in `tests/`, commit changes in reviewable steps and use `./build-theme-zip.sh`. The builder uses committed theme files, lints shipped PHP, creates combined CSS and records hashes in `release-manifest.json`. It excludes debug/maintenance scripts, backups, development dependencies and untracked files.
 
 Do not hand-edit the generated manifest. Keep `Version` in `style.css` and `FLEXPRESS_VERSION` in `functions.php` aligned when making a new release. Verify the exact ZIP contains this README, AGENTS.md, HOSTING.md, UPLOAD-CHECKLIST.md and the Caddy example. Use [UPLOAD-CHECKLIST.md](UPLOAD-CHECKLIST.md) for destination acceptance and rollback.
+
+Focused visitor rollout: retain **Sign in with Yoursafe** as an alternative to **Verify with Didit**. Both methods return to the requested site page. Existing media/payment behaviour remains outside this change; the broad CDN/gallery candidate is separate. See AGE-INTEGRATION.md for proof lifetimes and verification limits.

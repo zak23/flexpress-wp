@@ -77,8 +77,15 @@ final class Adapter
         return min(time() + 300, $session['expires_at']);
     }
 
+    public function requiresAge(): bool
+    {
+        return $this->config->requiresAge($_SERVER);
+    }
+
     public function guard(bool $api): void
     {
+        self::privateHeaders();
+        if (!$this->requiresAge()) { return; }
         try {
             $this->eligible();
             self::privateHeaders();

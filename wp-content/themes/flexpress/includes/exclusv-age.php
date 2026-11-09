@@ -134,7 +134,8 @@ add_action('init', function () {
 add_filter('rest_pre_dispatch', function ($result, $server, $request) {
     if ($request->get_route() === '/flexpress/v1/flowguard/webhook') { return $result; }
     try {
-        flexpress_exclusv_age_app()->eligible();
+        $app = flexpress_exclusv_age_app();
+        if ($app->requiresAge()) { $app->eligible(); }
         \FlexPress\Age\Adapter::privateHeaders();
         return $result;
     } catch (Throwable $error) {

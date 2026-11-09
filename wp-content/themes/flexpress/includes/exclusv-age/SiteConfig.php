@@ -10,6 +10,7 @@ final readonly class SiteConfig
     public string $origin;
     public string $supportEmail;
     public array $peers;
+    public array $requiredCountries;
     public string $peerSource;
     public string $ingressSecret;
     public array $keys;
@@ -29,6 +30,19 @@ final readonly class SiteConfig
         if (!is_array($parts) || isset($parts['path']) || $this->origin !== rtrim(home_url(), '/')) {
             throw new StorageUnavailable();
         }
+        // Provider availability is separate from the site's country enforcement policy.
+        // Missing policy preserves the previous all-configured-countries behavior.
+        $required = array_key_exists('required_countries', $values) ? $values['required_countries'] : $this->client->countries;
+        if (!is_array($required) || !array_is_list($required) || count(array_unique($required, SORT_REGULAR)) !== count($required)) {
+            throw new StorageUnavailable();
+        }
+        foreach ($required as $country) {
+            if (!is_string($country) || !preg_match('/^[A-Z]{2}$/D', $country) ||
+                !in_array($country, $this->client->countries, true)) {
+                throw new StorageUnavailable();
+            }
+        }
+        $this->requiredCountries = $required;
         $this->loopback = $this->client->allowLoopback && $this->client->environment === 'sandbox' &&
             in_array($parts['host'], ['localhost', '127.0.0.1'], true);
         if ($this->client->environment === 'sandbox' && wp_get_environment_type() === 'production') {
@@ -73,6 +87,13 @@ final readonly class SiteConfig
             return null;
         }
         return $country;
+    }
+
+    public function requiresAge(array $server): bool
+    {
+        $country = $this->country($server);
+        // Unknown location or untrusted ingress must never select the ungated path.
+        return $country === null || in_array($country, $this->requiredCountries, true);
     }
 
     public function rateBucket(string $purpose, array $server): string

@@ -218,7 +218,7 @@ final class Adapter
                     . '<p><a class="button button-yoursafe" href="' . esc_url(flexpress_yoursafe_start_url($this->config->origin . $return))
                     . '">Sign in with Yoursafe</a></p></section>' : '';
             $error = isset($_GET['yoursafe_error'])
-                ? '<p role="alert">Yoursafe could not confirm your age. Try again or continue with Exclusv.</p>' : '';
+                ? '<p role="alert">Yoursafe could not confirm your age. Try again or continue with Exclusv.Ai.</p>' : '';
             $this->page(is_user_logged_in() ? 'Verify your age' : 'Verify age or log in', '<p>Confirm you are 18 or older to continue.</p>'
                 . (is_user_logged_in() ? '<p class="notice">You are signed in to your membership. Your successful age result will be saved for future logins.</p>'
                     : '<section class="age-option"><h2>Already a member?</h2>'

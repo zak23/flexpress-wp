@@ -1,0 +1,194 @@
+/* Standalone age access pages, following the original age-verification layout. */
+html {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #111;
+  color: #fff;
+  font: 16px/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  text-align: center;
+}
+
+main {
+  width: 100%;
+  max-width: 34rem;
+  margin: 7vh auto;
+  padding: 2rem;
+  overflow-wrap: anywhere;
+}
+
+.age-logo {
+  margin: 0 auto 2rem;
+}
+
+.age-logo img {
+  display: block;
+  max-width: min(300px, 100%);
+  max-height: 110px;
+  width: auto;
+  height: auto;
+  margin: auto;
+}
+
+.site-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+h1 {
+  margin: 0 0 1.25rem;
+  font-size: clamp(1.75rem, 5vw, 2rem);
+  line-height: 1.2;
+}
+
+p {
+  margin: 0 0 1.25rem;
+  color: #bbb;
+}
+
+.age-content > p:first-child {
+  color: #fff;
+}
+
+a {
+  color: #fff;
+  text-underline-offset: .2em;
+}
+
+button,
+.button {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: .8rem 1rem;
+  border: 1px solid transparent;
+  border-radius: .25rem;
+  background: var(--age-accent);
+  color: var(--age-accent-text);
+  font: inherit;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+button:hover,
+.button:hover {
+  filter: brightness(.92);
+}
+
+.button-yoursafe {
+  background: #1976d2;
+  color: #fff;
+}
+
+summary.button {
+  background: #fff;
+  color: #111;
+  list-style: none;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+summary::after {
+  content: "+";
+  float: right;
+  font-size: 1.2rem;
+  line-height: 1.25;
+}
+
+details[open] summary::after {
+  content: "−";
+}
+
+details,
+form {
+  margin: 0 0 1.25rem;
+}
+
+details form {
+  margin: 1.25rem 0 0;
+  padding: 1.25rem;
+  border: 1px solid #333;
+  border-radius: .25rem;
+  background: #0a0a0a;
+  text-align: left;
+}
+
+label {
+  display: block;
+  color: #fff;
+  font-weight: 500;
+}
+
+input:not([type="hidden"]) {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin-top: .4rem;
+  padding: .7rem;
+  border: 1px solid #555;
+  border-radius: .25rem;
+  background: #111;
+  color: #fff;
+  font: inherit;
+}
+
+:is(a, button, summary, input):focus-visible {
+  outline: 3px solid var(--age-accent);
+  outline-offset: 4px;
+}
+
+.separator,
+.note {
+  color: #aaa;
+  font-size: .9rem;
+}
+
+[role="alert"],
+.notice {
+  padding: 1rem;
+  border: 1px solid #a64b4b;
+  border-radius: .25rem;
+  background: #401d1d;
+  color: #fff;
+}
+
+.notice {
+  border-color: #777;
+  background: #222;
+}
+
+footer {
+  display: flex;
+  justify-content: center;
+  gap: .75rem;
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #333;
+  color: #999;
+  font-size: .9rem;
+}
+
+.age-content:has(h2) {
+  text-align: left;
+}
+
+@media (max-width: 480px) {
+  main {
+    margin: 3vh auto;
+    padding: 1.5rem;
+  }
+
+  details form {
+    padding: 1rem;
+  }
+}

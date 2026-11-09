@@ -1,3 +1,7 @@
+## Age access styling — 9 November 2026
+
+Theme 1.0.50 gives `/_age/` the original age-verification layout with the configured logo and accent, blue Yoursafe and white login controls, and responsive forms. Verification and member-sharing behaviour are unchanged.
+
 ## Portable setup release 1.0.40
 
 The theme now ships a concise [README](wp-content/themes/flexpress/README.md), [AGENTS.md](wp-content/themes/flexpress/AGENTS.md), [hosting runbook](wp-content/themes/flexpress/HOSTING.md), [parameterized Caddy example](wp-content/themes/flexpress/hosting/Caddyfile.example) and [upload checklist](wp-content/themes/flexpress/UPLOAD-CHECKLIST.md). They are required release contents. Each new site must discover and configure its own domain, origin, Cloudflare zone and provider credentials. The example is documentation, not automatically installed hosting configuration. Build `dist/flexpress-1.0.40.zip` from committed files with `./build-theme-zip.sh`. Previous detailed theme notes are archived in [the legacy README](docs/FLEXPRESS_LEGACY_README.md); previous provider test evidence is in [the 1.0.39 record](docs/RELEASE_VERIFICATION_1.0.39.md).

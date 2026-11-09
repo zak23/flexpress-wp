@@ -210,8 +210,8 @@ final class Adapter
             $this->cookie(self::START, $csrf, time() + 600);
             $return = is_string($_GET['return'] ?? null) ? \Exclusv\Age\GatewayClient::returnPath(wp_unslash($_GET['return'])) : '/';
             $yoursafe = flexpress_yoursafe_is_enabled()
-                ? '<p><a class="button" href="' . esc_url(flexpress_yoursafe_start_url($this->config->origin . $return))
-                    . '">Sign in with Yoursafe</a></p><p>Or verify with Didit below.</p>' : '';
+                ? '<p><a class="button button-yoursafe" href="' . esc_url(flexpress_yoursafe_start_url($this->config->origin . $return))
+                    . '">Sign in with Yoursafe</a></p><p class="separator">Or verify with Didit below.</p>' : '';
             $error = isset($_GET['yoursafe_error'])
                 ? '<p role="alert">Yoursafe could not confirm your age. Please try again or choose Didit.</p>' : '';
             $this->page(is_user_logged_in() ? 'Verify your age' : 'Verify age or log in', '<p>Verify that you are 18 or older to browse this site. '
@@ -227,7 +227,7 @@ final class Adapter
                 . '<form action="/_age/start" method="post"><input type="hidden" name="csrf" value="' . esc_attr($csrf) . '">'
                 . '<input type="hidden" name="return" value="' . esc_attr($return) . '">'
                 . '<button type="submit">Verify with Didit</button></form>'
-                . '<p>Already verified through the age gateway? You can use your passkey there.</p>');
+                . '<p class="note">Already verified through the age gateway? You can use your passkey there.</p>');
         } catch (\Throwable) {
             $this->page('Age access is temporarily unavailable', '<p>Please try again shortly.</p>'
                 . '<p><a href="/_age/help">Get help</a></p>', 503);
@@ -389,22 +389,39 @@ final class Adapter
         // Native form POSTs send Origin:null under no-referrer. Keep origin validation intact
         // while withholding referrers from the external issuer. Callback redirects stay no-referrer.
         header('Referrer-Policy: same-origin');
+        $settings = get_option('flexpress_general_settings', []);
+        $accent = sanitize_hex_color($settings['accent_color'] ?? '') ?: '#ff5093';
+        $accentText = function_exists('flexpress_get_contrast_text_color')
+            ? flexpress_get_contrast_text_color($accent) : '#000000';
+        $logo = function_exists('flexpress_get_custom_logo') ? flexpress_get_custom_logo('full', 'primary') : false;
+        $logoUrl = $logo ? esc_url($logo['url'], ['http', 'https']) : '';
+        $imageSource = "'self'";
+        if ($logoUrl !== '') {
+            // Permit only the configured logo's origin; the age panel still loads no scripts.
+            $parts = wp_parse_url($logoUrl);
+            if (isset($parts['scheme'], $parts['host']) && preg_match('/^[a-z0-9.-]+$/iD', $parts['host'])) {
+                $imageSource .= ' ' . $parts['scheme'] . '://' . $parts['host']
+                    . (isset($parts['port']) ? ':' . (int) $parts['port'] : '');
+            }
+        }
         // Browsers also apply form-action to the start POST's 303 redirect to the pinned issuer.
-        header("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; form-action 'self' "
+        header("Content-Security-Policy: default-src 'none'; img-src " . $imageSource . "; style-src 'unsafe-inline'; form-action 'self' "
             . $this->config->client->issuer . "; base-uri 'none'; frame-ancestors 'none'");
         header('Content-Type: text/html; charset=utf-8');
         if (($_SERVER['REQUEST_METHOD'] ?? '') === 'HEAD') { exit; }
         $sandbox = $this->config->client->environment === 'sandbox'
             ? '<p class="notice">Test environment. This does not grant live content access.</p>' : '';
+        $brand = $logoUrl !== ''
+            ? '<img src="' . $logoUrl . '" alt="' . esc_attr(get_bloginfo('name')) . '" decoding="async">'
+            : '<span class="site-title">' . esc_html(get_bloginfo('name')) . '</span>';
+        // Inline the small, dedicated stylesheet so this isolated page needs no theme scripts or CSS requests.
+        $styles = file_get_contents(__DIR__ . '/../../assets/css/age-access.css');
         echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-            . '<title>' . esc_html($title) . '</title><style>html{color-scheme:dark}body{margin:0;background:#101818;color:#eef5f4;'
-            . 'font:18px/1.6 system-ui,sans-serif}main{max-width:36rem;margin:8vh auto;padding:2rem;background:#182726;border:1px solid #34514c;border-radius:1rem;box-shadow:0 2rem 6rem #0008}h1{font-size:2rem;line-height:1.2}'
-            . 'input{box-sizing:border-box;width:100%;padding:.7rem;font:inherit;margin-top:.3rem}summary{cursor:pointer}details{margin:1rem 0}'
-            . 'a{color:#7de0cf}button,.button{display:inline-block;background:#74dbc9;color:#10201e;padding:.85rem 1.2rem;'
-            . 'border:0;border-radius:.5rem;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}button:focus-visible,a:focus-visible'
-            . '{outline:3px solid white;outline-offset:5px}.notice{border:1px solid #74dbc9;padding:.75rem}footer{margin-top:2.5rem;font-size:1rem}'
-            . '</style></head><body><main><p>Age access</p><h1>' . esc_html($title) . '</h1>' . $sandbox . $content
-            . '<footer><a href="/_age/privacy">Privacy</a> · <a href="/_age/help">Help</a></footer></main></body></html>';
+            . '<title>' . esc_html($title . ' – ' . get_bloginfo('name')) . '</title><style>'
+            . ':root{--age-accent:' . $accent . ';--age-accent-text:' . sanitize_hex_color($accentText) . '}' . $styles
+            . '</style></head><body><main><div class="age-logo">' . $brand . '</div><h1>' . esc_html($title) . '</h1>'
+            . $sandbox . '<div class="age-content">' . $content . '</div>'
+            . '<footer><a href="/_age/privacy">Privacy policy</a><span aria-hidden="true">·</span><a href="/_age/help">Help</a></footer></main></body></html>';
         exit;
     }
 

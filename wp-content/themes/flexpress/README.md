@@ -2,7 +2,9 @@
 
 FlexPress is a portable WordPress membership theme for launching independent content sites. It provides episode and model pages, Extras, paid memberships, per-item purchases, affiliate tools and Bunny media delivery. **Each site keeps its own identity, customer data, provider accounts and hosting configuration.**
 
-Candidate **1.0.47** binds card-preview signing to published content and removes unsigned-player fallback. It also adds an opt-in gateway adapter with encrypted sessions, consent/callback/logout, per-request WordPress guards and trusted ingress. It is disabled by default; private runtime installation and complete media/CDN enforcement remain separate requirements. It retains the portable hosting guides and prior payment/admin-login fixes. Activating the theme does not install or change Caddy or Cloudflare.
+Candidate **1.0.49** binds card-preview signing to published content and removes unsigned-player fallback. It also adds an opt-in gateway adapter with encrypted sessions, consent/callback/logout, per-request WordPress guards and trusted ingress. It is disabled by default; private runtime installation and complete media/CDN enforcement remain separate requirements. It retains the portable hosting guides and prior payment/admin-login fixes. Activating the theme does not install or change Caddy or Cloudflare.
+
+The age panel distinguishes active guest access from a result saved to membership. A signed-in visitor with a guest result can start a fresh authenticated sharing flow to save their existing valid gateway proof; login alone never links it.
 
 ## Start here
 

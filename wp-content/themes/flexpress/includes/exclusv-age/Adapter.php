@@ -179,9 +179,30 @@ final class Adapter
             $session = null;
             try { $session = $this->eligible(); } catch (\Throwable) {}
             if ($session !== null) {
+                $membership = '';
+                if (is_user_logged_in()) {
+                    if (($session['member'] ?? false) === true) {
+                        $membership = '<p>Your age result is saved with your membership.</p>';
+                    } else {
+                        // A valid guest cookie is not an account-bound member result.
+                        $membership = '<p>Your age access is active on this device, but is not saved to your membership yet.</p>';
+                        if (($session['provider'] ?? 'didit') === 'yoursafe') {
+                            $membership .= '<p><a class="button" href="' . esc_url(flexpress_yoursafe_start_url($this->config->origin . '/_age/'))
+                                . '">Sign in with Yoursafe to save your result</a></p>';
+                        } else {
+                            $csrf = self::random();
+                            $this->cookie(self::START, $csrf, time() + 600);
+                            $membership .= '<form action="/_age/start" method="post"><input type="hidden" name="csrf" value="'
+                                . esc_attr($csrf) . '"><input type="hidden" name="return" value="/_age/">'
+                                . '<button type="submit">Save verification to membership</button></form>'
+                                . '<p>Use your existing gateway passkey and share your valid age result. No new age check is needed while that result remains valid for this site.</p>';
+                        }
+                    }
+                    $membership .= '<p><a href="' . esc_url(wp_logout_url($this->config->origin . '/_age/')) . '">Sign out</a></p>';
+                }
                 $this->page('Your age access is active', '<p>You can continue browsing. Membership access and purchases still apply.</p>'
                     . '<p><a class="button" href="/">Continue to the site</a></p>'
-                    . (is_user_logged_in() ? '<p>Your age result is saved with your membership. <a href="' . esc_url(wp_logout_url($this->config->origin . '/_age/')) . '">Sign out</a></p>' : '')
+                    . $membership
                     . '<form action="/_age/logout" method="post"><input type="hidden" name="csrf" value="'
                     . esc_attr(is_user_logged_in() ? $this->memberCsrf() : $session['csrf']) . '"><button type="submit">Clear access on this device</button></form>');
             }

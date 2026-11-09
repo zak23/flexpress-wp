@@ -183,8 +183,7 @@ final class Adapter
         }
         $return = is_string($_GET['return'] ?? null) ? \Exclusv\Age\GatewayClient::returnPath(wp_unslash($_GET['return'])) : '/';
         try {
-            $csrf = self::random();
-            $this->cookie(self::START, $csrf, time() + 600);
+            $csrf = $this->startToken();
             $this->rate('entry', 60, 60);
             $session = null;
             try { $session = $this->eligible(); } catch (\Throwable) {}
@@ -200,8 +199,6 @@ final class Adapter
                             $membership .= '<p><a class="button" href="' . esc_url(flexpress_yoursafe_start_url($this->config->origin . '/_age/'))
                                 . '">Sign in with Yoursafe to save your result</a></p>';
                         } else {
-                            $csrf = self::random();
-                            $this->cookie(self::START, $csrf, time() + 600);
                             $membership .= '<form action="/_age/start" method="post"><input type="hidden" name="csrf" value="'
                                 . esc_attr($csrf) . '"><input type="hidden" name="return" value="/_age/">'
                                 . '<button type="submit">Save verification to membership</button></form>'
@@ -245,6 +242,16 @@ final class Adapter
             $this->page('Age access is temporarily unavailable', '<p>Please try again shortly.</p>'
                 . '<p><a href="/_age/help">Get help</a></p>', 503);
         }
+    }
+
+    private function startToken(): string
+    {
+        // Refreshing another panel must not invalidate an already open form.
+        // A successful login/start still consumes this browser-bound token.
+        $csrf = $this->cookieValue(self::START);
+        if ($csrf === '') { $csrf = self::random(); }
+        $this->cookie(self::START, $csrf, time() + 600);
+        return $csrf;
     }
 
     private function loginPanel(string $csrf, string $return): string

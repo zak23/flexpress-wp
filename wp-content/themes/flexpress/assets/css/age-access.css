@@ -192,3 +192,26 @@ footer {
     padding: 1rem;
   }
 }
+
+.age-option {
+  margin: 1.5rem 0;
+}
+
+.age-option h2 {
+  margin: 0 0 .5rem;
+  font-size: 1.1rem;
+}
+
+.age-option form {
+  margin-bottom: .7rem;
+}
+
+.flow-path {
+  color: #ddd;
+  font-size: .85rem;
+}
+
+.flow-path span {
+  padding: 0 .35rem;
+  color: var(--age-accent);
+}

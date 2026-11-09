@@ -131,7 +131,7 @@ final class Adapter
         }
         if ($path === '/_age/privacy' && in_array($method, ['GET', 'HEAD'], true)) {
             $policyUrl = get_privacy_policy_url();
-            $this->page('Your privacy', '<p>You can use Yoursafe, when configured, or Didit through the age gateway. '
+            $this->page('Your privacy', '<p>You can use Yoursafe, when configured, or Exclusv with age checks powered by Didit. '
                 . 'This site receives a verification reference and an age result, not your identity documents, '
                 . 'face images, name or date of birth.</p><p>The verification provider handles any identity capture. '
                 . 'Review the gateway and provider notices before continuing. If you are logged in when verifying, a minimal age result is saved with your membership so future logins can reuse it. Purchases remain separate.</p>'
@@ -174,7 +174,10 @@ final class Adapter
             $this->page('Age access is unavailable here', '<p>We cannot confirm an eligible location for this request.</p>'
                 . '<p><a href="/_age/help">Get help</a></p>', 403);
         }
+        $return = is_string($_GET['return'] ?? null) ? \Exclusv\Age\GatewayClient::returnPath(wp_unslash($_GET['return'])) : '/';
         try {
+            $csrf = self::random();
+            $this->cookie(self::START, $csrf, time() + 600);
             $this->rate('entry', 60, 60);
             $session = null;
             try { $session = $this->eligible(); } catch (\Throwable) {}
@@ -195,43 +198,55 @@ final class Adapter
                             $membership .= '<form action="/_age/start" method="post"><input type="hidden" name="csrf" value="'
                                 . esc_attr($csrf) . '"><input type="hidden" name="return" value="/_age/">'
                                 . '<button type="submit">Save verification to membership</button></form>'
-                                . '<p>Use your existing gateway passkey and share your valid age result. No new age check is needed while that result remains valid for this site.</p>';
+                                . '<p class="note">Continue to Exclusv, use your passkey, then share your existing age result. A new check is only needed if that result is no longer valid for this site.</p>';
                         }
                     }
                     $membership .= '<p><a href="' . esc_url(wp_logout_url($this->config->origin . '/_age/')) . '">Sign out</a></p>';
+                } else {
+                    $membership = '<section class="age-option"><h2>Keep access with your membership</h2>'
+                        . '<p>Log in, then save your existing result with Exclusv so future logins can reuse it.</p>'
+                        . $this->loginPanel($csrf, '/_age/') . '</section>';
                 }
                 $this->page('Your age access is active', '<p>You can continue browsing. Membership access and purchases still apply.</p>'
-                    . '<p><a class="button" href="/">Continue to the site</a></p>'
+                    . '<p><a class="button" href="' . esc_url($this->config->origin . $return) . '">Continue to the site</a></p>'
                     . $membership
                     . '<form action="/_age/logout" method="post"><input type="hidden" name="csrf" value="'
                     . esc_attr(is_user_logged_in() ? $this->memberCsrf() : $session['csrf']) . '"><button type="submit">Clear access on this device</button></form>');
             }
-            $csrf = self::random();
-            $this->cookie(self::START, $csrf, time() + 600);
-            $return = is_string($_GET['return'] ?? null) ? \Exclusv\Age\GatewayClient::returnPath(wp_unslash($_GET['return'])) : '/';
             $yoursafe = flexpress_yoursafe_is_enabled()
-                ? '<p><a class="button button-yoursafe" href="' . esc_url(flexpress_yoursafe_start_url($this->config->origin . $return))
-                    . '">Sign in with Yoursafe</a></p><p class="separator">Or verify with Didit below.</p>' : '';
+                ? '<section class="age-option"><p class="separator">Or use Yoursafe</p>'
+                    . '<p><a class="button button-yoursafe" href="' . esc_url(flexpress_yoursafe_start_url($this->config->origin . $return))
+                    . '">Sign in with Yoursafe</a></p></section>' : '';
             $error = isset($_GET['yoursafe_error'])
-                ? '<p role="alert">Yoursafe could not confirm your age. Please try again or choose Didit.</p>' : '';
-            $this->page(is_user_logged_in() ? 'Verify your age' : 'Verify age or log in', '<p>Verify that you are 18 or older to browse this site. '
-                . 'Age verification does not create a membership or unlock purchases.</p>'
-                . (is_user_logged_in() ? '<p>Signed in. A successful age result will be saved to your membership for future logins.</p>'
-                    : '<p>Already a member? Log in to use your saved age result, or verify your age below. Log in before verifying to save the result to your membership.</p>'
-                    . '<details><summary class="button">Log in</summary><form action="/_age/login" method="post">'
-                    . '<input type="hidden" name="csrf" value="' . esc_attr($csrf) . '"><input type="hidden" name="return" value="' . esc_attr($return) . '">'
-                    . '<p><label>Email or username<input name="username" autocomplete="username" required></label></p>'
-                    . '<p><label>Password<input name="password" type="password" autocomplete="current-password" required></label></p>'
-                    . '<button type="submit">Log in and continue</button></form></details>')
-                . $error . $yoursafe
+                ? '<p role="alert">Yoursafe could not confirm your age. Try again or continue with Exclusv.</p>' : '';
+            $this->page(is_user_logged_in() ? 'Verify your age' : 'Verify age or log in', '<p>Confirm you are 18 or older to continue.</p>'
+                . (is_user_logged_in() ? '<p class="notice">You are signed in to your membership. Your successful age result will be saved for future logins.</p>'
+                    : '<section class="age-option"><h2>Already a member?</h2>'
+                    . '<p>Log in first to use a saved age result or save your next verification.</p>'
+                    . $this->loginPanel($csrf, $return) . '</section>')
+                . $error
+                . '<section class="age-option"><h2>' . (is_user_logged_in() ? 'Connect your age result' : 'Verify your age') . '</h2>'
                 . '<form action="/_age/start" method="post"><input type="hidden" name="csrf" value="' . esc_attr($csrf) . '">'
                 . '<input type="hidden" name="return" value="' . esc_attr($return) . '">'
-                . '<button type="submit">Verify with Didit</button></form>'
-                . '<p class="note">Already verified through the age gateway? You can use your passkey there.</p>');
+                . '<button type="submit" aria-describedby="exclusv-next">Verify with Exclusv</button></form>'
+                . '<p class="note" id="exclusv-next">Continue to Exclusv at ' . esc_html((string) parse_url($this->config->client->issuer, PHP_URL_HOST))
+                . ' to use your existing passkey or complete an age check. Powered by Didit.</p>'
+                . '<p class="flow-path" aria-label="Verification journey">This site <span aria-hidden="true">→</span> Exclusv <span aria-hidden="true">→</span> Back here</p></section>'
+                . $yoursafe
+                . '<p class="note">Age verification does not create a membership or unlock purchases.</p>');
         } catch (\Throwable) {
             $this->page('Age access is temporarily unavailable', '<p>Please try again shortly.</p>'
                 . '<p><a href="/_age/help">Get help</a></p>', 503);
         }
+    }
+
+    private function loginPanel(string $csrf, string $return): string
+    {
+        return '<details><summary class="button">Log in to membership</summary><form action="/_age/login" method="post">'
+            . '<input type="hidden" name="csrf" value="' . esc_attr($csrf) . '"><input type="hidden" name="return" value="' . esc_attr($return) . '">'
+            . '<p><label>Email or username<input name="username" autocomplete="username" required></label></p>'
+            . '<p><label>Password<input name="password" type="password" autocomplete="current-password" required></label></p>'
+            . '<button type="submit">Log in and continue</button></form></details>';
     }
 
     private function start(): never
@@ -337,7 +352,11 @@ final class Adapter
         $this->clear();
         wp_set_current_user($user->ID);
         $return = is_string($_POST['return'] ?? null) ? \Exclusv\Age\GatewayClient::returnPath(wp_unslash($_POST['return'])) : '/';
-        $this->redirect($return);
+        // Saved proof returns directly; an unverified member stays in the verification journey.
+        try {
+            if (($this->eligible()['member'] ?? false) === true) { $this->redirect($return); }
+        } catch (\Throwable) {}
+        $this->redirect('/_age/?return=' . rawurlencode($return));
     }
 
     private function rate(string $purpose, int $maximum, int $seconds): void

@@ -131,7 +131,7 @@ final class Adapter
         }
         if ($path === '/_age/privacy' && in_array($method, ['GET', 'HEAD'], true)) {
             $policyUrl = get_privacy_policy_url();
-            $this->page('Your privacy', '<p>You can use Yoursafe, when configured, or Exclusv with age checks powered by Didit. '
+            $this->page('Your privacy', '<p>You can use Yoursafe, when configured, or Exclusv.Ai with age checks powered by Didit. '
                 . 'This site receives a verification reference and an age result, not your identity documents, '
                 . 'face images, name or date of birth.</p><p>The verification provider handles any identity capture. '
                 . 'Review the gateway and provider notices before continuing. If you are logged in when verifying, a minimal age result is saved with your membership so future logins can reuse it. Purchases remain separate.</p>'
@@ -198,13 +198,13 @@ final class Adapter
                             $membership .= '<form action="/_age/start" method="post"><input type="hidden" name="csrf" value="'
                                 . esc_attr($csrf) . '"><input type="hidden" name="return" value="/_age/">'
                                 . '<button type="submit">Save verification to membership</button></form>'
-                                . '<p class="note">Continue to Exclusv, use your passkey, then share your existing age result. A new check is only needed if that result is no longer valid for this site.</p>';
+                                . '<p class="note">Continue to Exclusv.Ai, use your passkey, then share your existing age result. A new check is only needed if that result is no longer valid for this site.</p>';
                         }
                     }
                     $membership .= '<p><a href="' . esc_url(wp_logout_url($this->config->origin . '/_age/')) . '">Sign out</a></p>';
                 } else {
                     $membership = '<section class="age-option"><h2>Keep access with your membership</h2>'
-                        . '<p>Log in, then save your existing result with Exclusv so future logins can reuse it.</p>'
+                        . '<p>Log in, then save your existing result with Exclusv.Ai so future logins can reuse it.</p>'
                         . $this->loginPanel($csrf, '/_age/') . '</section>';
                 }
                 $this->page('Your age access is active', '<p>You can continue browsing. Membership access and purchases still apply.</p>'
@@ -228,10 +228,10 @@ final class Adapter
                 . '<section class="age-option"><h2>' . (is_user_logged_in() ? 'Connect your age result' : 'Verify your age') . '</h2>'
                 . '<form action="/_age/start" method="post"><input type="hidden" name="csrf" value="' . esc_attr($csrf) . '">'
                 . '<input type="hidden" name="return" value="' . esc_attr($return) . '">'
-                . '<button type="submit" aria-describedby="exclusv-next">Verify with Exclusv</button></form>'
-                . '<p class="note" id="exclusv-next">Continue to Exclusv at ' . esc_html((string) parse_url($this->config->client->issuer, PHP_URL_HOST))
+                . '<button type="submit" aria-describedby="exclusv-next">Verify with Exclusv.Ai</button></form>'
+                . '<p class="note" id="exclusv-next">Continue to Exclusv.Ai at ' . esc_html((string) parse_url($this->config->client->issuer, PHP_URL_HOST))
                 . ' to use your existing passkey or complete an age check. Powered by Didit.</p>'
-                . '<p class="flow-path" aria-label="Verification journey">This site <span aria-hidden="true">→</span> Exclusv <span aria-hidden="true">→</span> Back here</p></section>'
+                . '<p class="flow-path" aria-label="Verification journey">This site <span aria-hidden="true">→</span> Exclusv.Ai <span aria-hidden="true">→</span> Back here</p></section>'
                 . $yoursafe
                 . '<p class="note">Age verification does not create a membership or unlock purchases.</p>');
         } catch (\Throwable) {
